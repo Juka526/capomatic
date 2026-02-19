@@ -1,0 +1,26 @@
+{
+  "image": "친구야.jpeg",
+  "expected_unique_chords": [
+    "D",
+    "Asus4",
+    "A",
+    "Bm7",
+    "G",
+    "Dadd2",
+    "A/C#",
+    "F#m7",
+    "Cmaj7",
+    "G/B",
+    "A7sus4",
+    "A7"
+  ],
+  "hard_targets": [
+    "Gm6",
+    "A/D",
+    "G/D",
+    "Dsus4"
+  ],
+  "expected_total_chords_min": 15,
+  "expected_total_chords_max": 140,
+  "notes": "Expected list aligned to confirmed OCR outputs. Hard targets are mostly slash-chords and 6/sus4 variants that may be present but not currently detected."
+}

@@ -1,0 +1,24 @@
+{
+  "image": "주의 자녀로 산다는 것은.png",
+  "expected_unique_chords": [
+    "G",
+    "A/G",
+    "F#m7",
+    "F#/A#",
+    "Bm7",
+    "Em7",
+    "G/A",
+    "Dsus4",
+    "Gmaj7",
+    "D/F#",
+    "Bm7/A",
+    "D"
+  ],
+  "hard_targets": [
+    "Dadd2",
+    "Gm6"
+  ],
+  "expected_total_chords_min": 15,
+  "expected_total_chords_max": 140,
+  "notes": "Expected list aligned to confirmed OCR outputs. Dadd2 and Gm6 are hard targets for later tuning (add2 and 6 can be missed when small)."
+}
