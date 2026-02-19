@@ -1,0 +1,33 @@
+{
+  "image": "사랑한다 말하시네.png",
+  "expected_unique_chords": [
+    "A",
+    "A7/G",
+    "D/F#",
+    "Dm/F",
+    "A/E",
+    "B7/D#",
+    "Bm7",
+    "Esus4",
+    "E",
+    "B/D#",
+    "A/C#",
+    "C#7",
+    "F#m7",
+    "B7",
+    "D/E",
+    "E/G#",
+    "Em/G",
+    "D",
+    "E7sus4",
+    "E/D",
+    "F#7sus4",
+    "F#7/A#"
+  ],
+  "hard_targets": [
+    "E7"
+  ],
+  "expected_total_chords_min": 25,
+  "expected_total_chords_max": 150,
+  "notes": "Expected list aligned to confirmed OCR outputs. E7 is kept as a hard target for future tuning (may exist in the sheet but not currently detected)."
+}

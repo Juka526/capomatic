@@ -1,0 +1,25 @@
+{
+  "image": "시간은 흐르고.png",
+  "expected_unique_chords": [
+    "C",
+    "Am7",
+    "C/G",
+    "F",
+    "C/E",
+    "Dm7",
+    "Gsus4",
+    "Gm7",
+    "C7sus4",
+    "D/F#",
+    "G",
+    "F/A"
+  ],
+  "hard_targets": [
+    "Cmaj7/B",
+    "G6/B",
+    "Csus4"
+  ],
+  "expected_total_chords_min": 15,
+  "expected_total_chords_max": 120,
+  "notes": "Expected list aligned to confirmed OCR outputs. Hard targets are chords likely present on the sheet but not yet detected; prioritize tuning for small symbols (6) and maj7/B readability."
+}

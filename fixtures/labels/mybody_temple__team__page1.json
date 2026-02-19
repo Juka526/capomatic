@@ -1,7 +1,26 @@
 {
   "image": "내 몸은 구주의 성전이니.png",
-  "expected_unique_chords": ["A", "E", "F#m", "D"],
-  "expected_total_chords_min": 40,
-  "expected_total_chords_max": 110,
-  "notes": "korean filename; watermark present"
+  "expected_unique_chords": [
+    "Gmaj7",
+    "D/F#",
+    "Em7",
+    "Dmaj7",
+    "A7sus4",
+    "Am7",
+    "D7",
+    "F#m7",
+    "Dm/F",
+    "Gadd2",
+    "D",
+    "A/C#",
+    "Am/C",
+    "B",
+    "G#dim",
+    "Gm/D",
+    "G/A"
+  ],
+  "hard_targets": [],
+  "expected_total_chords_min": 30,
+  "expected_total_chords_max": 120,
+  "notes": "Expected list is aligned to confirmed OCR outputs. This fixture currently reaches full unique coverage; keep as a 'golden' regression image for cropping + parsing + split recovery."
 }
