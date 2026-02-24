@@ -1,0 +1,19 @@
+{
+  "image": "주 사랑이 나를 숨쉬게 해.png",
+  "expected_unique_chords": [
+    "F",
+    "C/E",
+    "Bb/D",
+    "Gm",
+    "C",
+    "Bb/F",
+    "Bb/C",
+    "Dm",
+    "G/B",
+    "Bb",
+    "Bb6"
+  ],
+  "expected_total_chords_min": 10,
+  "expected_total_chords_max": 80,
+  "notes": "Non-GIFTED format (flat key). Chords appear above each staff system. Includes Bb-based slash chords and Bb6."
+}

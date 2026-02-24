@@ -77,8 +77,10 @@ def detect_staff_systems(img) -> list[tuple[int, int]]:
                                   cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
         # --- Morphological open: keep only long horizontal strokes ---
-        # Kernel width covers at least 25% of page width to ignore noteheads/clefs.
-        kw = max(30, int(W * 0.25))
+        # Kernel width covers at least 20% of page width to ignore noteheads/clefs
+        # while still detecting lines in lower-resolution or JPEG-compressed scans
+        # where staff lines may have gaps (raised from 0.25 → 0.20 for that reason).
+        kw = max(30, int(W * 0.20))
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kw, 1))
         h_lines = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
 
@@ -88,7 +90,7 @@ def detect_staff_systems(img) -> list[tuple[int, int]]:
         )
 
         # stats columns: LEFT, TOP, WIDTH, HEIGHT, AREA
-        min_w = int(W * 0.25)
+        min_w = int(W * 0.20)
         max_h = 8
         line_ys: list[int] = []
 
@@ -103,11 +105,15 @@ def detect_staff_systems(img) -> list[tuple[int, int]]:
         if not line_ys:
             return []
 
-        line_ys.sort()
+        # Deduplicate y-values that land on the same pixel (e.g. two thin
+        # connected components sharing the same centroid row).
+        line_ys = sorted(set(line_ys))
 
         # --- Cluster consecutive y-values into staff groups ---
-        # Gap threshold: 12px or ~0.9% of image height, whichever is larger.
-        gap_threshold = max(12, int(H * 0.009))
+        # Gap threshold: 15px or ~0.9% of image height, whichever is larger.
+        # 15px (raised from 12) avoids splitting a staff whose lines are
+        # unevenly spaced by up to ~13px (common in lower-res scans).
+        gap_threshold = max(15, int(H * 0.009))
         clusters: list[list[int]] = []
         current: list[int] = [line_ys[0]]
 
@@ -119,10 +125,12 @@ def detect_staff_systems(img) -> list[tuple[int, int]]:
                 current = [y]
         clusters.append(current)
 
-        # --- Keep clusters that look like a staff (3–6 lines) ---
+        # --- Keep clusters that look like a staff (2–6 lines) ---
+        # Minimum lowered to 2: JPEG-compressed scans can lose most staff lines
+        # to the morphological open, leaving only 2 clearly detectable segments.
         systems: list[tuple[int, int]] = []
         for cluster in clusters:
-            if 3 <= len(cluster) <= 6:
+            if 2 <= len(cluster) <= 6:
                 systems.append((cluster[0], cluster[-1]))
 
         return systems
@@ -163,13 +171,20 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
     bands: list[dict] = []
 
     for (top, bottom) in systems:
-        staff_h = max(1, bottom - top)
-        band_h = max(40, min(140, int(staff_h * 1.0)))
-        margin = max(6, min(18, int(staff_h * 0.15)))
-        band_bottom = top - margin
-        band_top = max(0, band_bottom - band_h)
+        if bottom <= top:
+            continue
 
-        if band_top >= band_bottom:
+        staff_h = bottom - top
+        line_spacing = max(6, staff_h / 4)  # 5 lines → 4 gaps
+
+        gap_above = max(8,  min(26,  int(line_spacing * 0.70)))
+        pad_below = max(4,  min(16,  int(line_spacing * 0.40)))
+        band_h    = max(80, min(190, int(line_spacing * 3.40)))
+
+        band_bottom = min(H, top + pad_below)
+        band_top    = max(0, top - gap_above - band_h)
+
+        if band_bottom <= band_top:
             continue
 
         crop = arr[band_top:band_bottom, :, :]
@@ -181,6 +196,10 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
             "h":            band_bottom - band_top,
             "staff_top":    top,
             "staff_bottom": bottom,
+            "line_spacing": line_spacing,
+            "gap_above":    gap_above,
+            "pad_below":    pad_below,
+            "band_h":       band_h,
         })
 
     if not bands:
@@ -191,11 +210,11 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
     merged: list[dict] = [bands[0]]
 
     for band in bands[1:]:
-        prev = merged[-1]
+        prev     = merged[-1]
         prev_end = prev["y0"] + prev["h"]
-        if band["y0"] <= prev_end + 10:
-            # Extend current merged band
-            new_y0 = min(prev["y0"], band["y0"])
+        merge_gap = max(10, min(28, int(prev["line_spacing"] * 0.9)))
+        if band["y0"] <= prev_end + merge_gap:
+            new_y0  = min(prev["y0"], band["y0"])
             new_end = max(prev_end, band["y0"] + band["h"])
             merged[-1] = {
                 "crop":         arr[new_y0:new_end, :, :],
@@ -205,6 +224,10 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
                 "h":            new_end - new_y0,
                 "staff_top":    prev["staff_top"],
                 "staff_bottom": band["staff_bottom"],
+                "line_spacing": prev["line_spacing"],
+                "gap_above":    prev["gap_above"],
+                "pad_below":    prev["pad_below"],
+                "band_h":       prev["band_h"],
             }
         else:
             merged.append(band)

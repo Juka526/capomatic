@@ -13,6 +13,11 @@ import re
 from backend.chords.normalize import normalize_chord_text
 from backend.chords.parser import parse_chord
 
+# Minimum OCR confidence score required to consider any detection at all.
+# Items below this threshold are dropped before chord matching so that
+# low-confidence noise never accidentally passes the chord filter.
+CONFIDENCE_THRESHOLD = 0.73
+
 # ---------------------------------------------------------------------------
 # Strict regex (pass 1)
 # ---------------------------------------------------------------------------
@@ -58,6 +63,20 @@ _LOOSE_RE = re.compile(r"^[A-G][#b]?[A-Za-z0-9()/#b+\-]{0,14}$")
 # Find a chord root that is NOT immediately preceded by a slash-bass slash.
 # Used to locate candidate split points in concatenated strings like "Em7G/A".
 _SPLIT_ROOT_RE = re.compile(r"(?<=[^/])([A-G][#b]?)")
+
+# Matches a leading digit sequence followed by a chord root, e.g. "7Am", "4G/B".
+# The captured group is the chord portion (everything after the digits).
+_LEADING_NUM_RE = re.compile(r"^\d+([A-G].*)$")
+
+
+def _strip_leading_number(text: str) -> str | None:
+    """Strip a leading digit sequence when the remainder starts with a chord root.
+
+    Examples: "7Am" -> "Am",  "4G/B" -> "G/B",  "12Cmaj7" -> "Cmaj7"
+    Returns None if the text does not match the pattern.
+    """
+    m = _LEADING_NUM_RE.match(text)
+    return m.group(1) if m else None
 
 
 def _split_concatenated(text: str) -> list[str]:
@@ -109,6 +128,17 @@ def recover_candidates(
     for item in items:
         text = item["text"]
 
+        # --- leading-number strip recovery ---
+        # Handles OCR artefacts like "7Am" or "4G/B" where a measure/beat
+        # number is fused to the chord root.
+        stripped = _strip_leading_number(text)
+        if stripped is not None:
+            norm = normalize_chord_text(stripped)
+            if is_chord_candidate(norm):
+                recovered.append({**item, "text": norm})
+                parse_count += 1
+                continue
+
         # Pre-screen: skip items that clearly cannot be chords.
         if not _LOOSE_RE.match(text):
             continue
@@ -155,7 +185,8 @@ def filter_candidates(ocr_items: list[dict]) -> list[dict]:
     Runs the strict regex first, then attempts recovery on failing items.
     Bbox and confidence are preserved (split items share the source bbox).
     """
-    strict = [item for item in ocr_items if is_chord_candidate(item["text"])]
-    failed = [item for item in ocr_items if not is_chord_candidate(item["text"])]
+    candidates = [item for item in ocr_items if item["confidence"] > CONFIDENCE_THRESHOLD]
+    strict = [item for item in candidates if is_chord_candidate(item["text"])]
+    failed = [item for item in candidates if not is_chord_candidate(item["text"])]
     extra, _, _ = recover_candidates(failed)
     return strict + extra
