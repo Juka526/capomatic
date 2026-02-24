@@ -1,0 +1,18 @@
+{
+  "image": "빛으로 비추시네.jpg",
+  "expected_unique_chords": [
+    "G",
+    "D/G",
+    "C/G",
+    "C",
+    "G/B",
+    "Am7",
+    "D",
+    "Em7",
+    "Dm7",
+    "D/C"
+  ],
+  "expected_total_chords_min": 8,
+  "expected_total_chords_max": 70,
+  "notes": "Non-GIFTED format. Repeats/sections (Intro/Verse/Chorus) with markers like 1.D / 2.D. Ignore small '~D/~G' cue-like markings if OCR picks them up."
+}

@@ -25,7 +25,7 @@ def build_runner(engine: str):
         get_ocr()  # initialise singleton before timed evaluation begins
         print("Engine ready.\n", flush=True)
 
-        from backend.ocr.filter import recover_candidates, is_chord_candidate  # noqa: PLC0415
+        from backend.ocr.filter import recover_candidates, is_chord_candidate, CONFIDENCE_THRESHOLD  # noqa: PLC0415
 
         _meta: dict = {}      # side-channel: crop mode + region info
         _recovery: dict = {}  # side-channel: parse/split recovery counts
@@ -34,8 +34,9 @@ def build_runner(engine: str):
             items, meta = run_ocr_paddle(path)
             _meta.clear()
             _meta.update(meta)
-            strict  = [i for i in items if is_chord_candidate(i["text"])]
-            failed  = [i for i in items if not is_chord_candidate(i["text"])]
+            confident = [i for i in items if i["confidence"] > CONFIDENCE_THRESHOLD]
+            strict  = [i for i in confident if is_chord_candidate(i["text"])]
+            failed  = [i for i in confident if not is_chord_candidate(i["text"])]
             extra, pc, sc = recover_candidates(failed)
             _recovery["parse"] = pc
             _recovery["split"] = sc

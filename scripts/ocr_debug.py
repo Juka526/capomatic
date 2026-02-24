@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from PIL import Image, ImageDraw
 from backend.ocr.paddle_ocr import run_ocr_paddle
-from backend.ocr.filter import filter_candidates, recover_candidates, is_chord_candidate
+from backend.ocr.filter import filter_candidates, recover_candidates, is_chord_candidate, CONFIDENCE_THRESHOLD
 
 
 # Colours for region rectangles (cycles if > 6 regions)
@@ -51,9 +51,13 @@ def _draw_overlay(image_path: str, meta: dict) -> str:
         # Band rectangle
         draw.rectangle([0, y0, W - 1, y1], outline=colour, width=3)
         # Label
-        label = f"R{i + 1}  y={y0}–{y1}"
-        if region.get("staff_top") is not None:
-            label += f"  staff={region['staff_top']}–{region['staff_bottom']}"
+        label = f"R{i + 1} y={y0}–{y1}"
+        if region.get("line_spacing") is not None:
+            label += (
+                f" ls={region['line_spacing']:.1f}"
+                f" gap={region['gap_above']}"
+                f" below={region['pad_below']}"
+            )
         draw.text((4, max(0, y0 + 2)), label, fill=colour)
 
     os.makedirs("tmp", exist_ok=True)
@@ -82,8 +86,9 @@ def main() -> None:
 
     # --- Filter (strict + recovery) ---
     t1 = time.perf_counter()
-    strict_items = [i for i in raw_items if is_chord_candidate(i["text"])]
-    failed_items = [i for i in raw_items if not is_chord_candidate(i["text"])]
+    confident_items = [i for i in raw_items if i["confidence"] > CONFIDENCE_THRESHOLD]
+    strict_items = [i for i in confident_items if is_chord_candidate(i["text"])]
+    failed_items = [i for i in confident_items if not is_chord_candidate(i["text"])]
     recovered, parse_count, split_count = recover_candidates(failed_items)
     chord_items = strict_items + recovered
     filter_ms = (time.perf_counter() - t1) * 1000
@@ -91,7 +96,6 @@ def main() -> None:
     # --- Crop mode + region breakdown ---
     print(f"Crop mode         : {meta['crop_mode']}")
     print(f"Regions           : {meta['num_regions']}")
-    print(f"Stitched          : {meta.get('stitched', '?')}  (predict calls: {meta.get('predict_calls', '?')})")
     for i, r in enumerate(meta["regions"]):
         y1 = r["y0"] + r["h"]
         staff_str = ""

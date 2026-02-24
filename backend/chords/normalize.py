@@ -14,6 +14,10 @@ def normalize_chord_text(s: str) -> str:
     s = s.strip()
     s = s.replace("\u266f", "#").replace("\u266d", "b")  # ♯ → #, ♭ → b
     s = re.sub(r"\s+", "", s)
+    # Strip OCR noise characters that are never part of a chord symbol
+    # (e.g. "$A_$2$" → "A2", "$G_m}$" → "Gm", "B_m7" → "Bm7").
+    # Allowed set: letters, digits, #, /, (, ), +, -
+    s = re.sub(r"[^A-Za-z0-9#/()+\-]", "", s)
     # Case-fold OCR-mangled quality/modifier tokens (e.g. engraving fonts).
     # Applied before min→m so ordering is safe.
     s = re.sub(r"(?i)maj", "maj", s)   # mAj, MAj, MAJ → maj
