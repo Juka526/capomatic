@@ -44,6 +44,24 @@ def build_runner(engine: str):
 
         run_ocr.last_meta     = _meta      # type: ignore[attr-defined]
         run_ocr.last_recovery = _recovery  # type: ignore[attr-defined]
+    elif engine == "hybrid":
+        from backend.ocr.paddle_ocr import get_ocr  # noqa: PLC0415
+        from backend.ocr.hybrid_detect import detect_chords_hybrid  # noqa: PLC0415
+
+        print("Warming up OCR engine (first-run model load)...", flush=True)
+        get_ocr()
+        print("Engine ready.\n", flush=True)
+
+        _meta: dict = {}
+        ai_provider = os.environ.get("AI_PROVIDER", "mock")
+
+        def run_ocr(path: str) -> list[dict]:
+            items, meta = detect_chords_hybrid(path, ai_provider=ai_provider)
+            _meta.clear()
+            _meta.update(meta)
+            return items
+
+        run_ocr.last_meta = _meta  # type: ignore[attr-defined]
     else:
         from backend.ocr.stub_ocr import run_ocr_stub
 
@@ -88,7 +106,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="OCR fixture evaluation.")
     parser.add_argument(
         "--engine",
-        choices=["stub", "paddle"],
+        choices=["stub", "paddle", "hybrid"],
         default="stub",
         help="OCR engine to use (default: stub)",
     )
@@ -158,6 +176,13 @@ def main() -> None:
         if hasattr(run_ocr, "last_recovery") and run_ocr.last_recovery:
             rec = run_ocr.last_recovery
             print(f"Recovered        : parse={rec.get('parse', 0)} split={rec.get('split', 0)}")
+        if hasattr(run_ocr, "last_meta") and run_ocr.last_meta.get("gate"):
+            g = run_ocr.last_meta["gate"]
+            gate_str = "PASS" if g["pass"] else f"FAIL – {'; '.join(g['reasons'])}"
+            print(f"Gate             : {gate_str}  (score={g['score']:.3f})")
+            print(f"AI used          : {run_ocr.last_meta.get('ai_used', False)}"
+                  + (f"  (provider={run_ocr.last_meta['ai_provider']})"
+                     if run_ocr.last_meta.get("ai_used") else ""))
         print("-" * 50)
 
     # Warn about images present on disk that have no label.
