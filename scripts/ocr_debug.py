@@ -123,6 +123,19 @@ def main() -> None:
                 print(f'  "{item["text"]}"  →  "{parts[0]}" + "{parts[1]}"')
     print()
 
+    # --- Quality gate (shown when hybrid_detect was used, skipped for raw paddle) ---
+    if meta.get("gate"):
+        g = meta["gate"]
+        gate_str = "PASS" if g["pass"] else f"FAIL – {'; '.join(g['reasons'])}"
+        print(f"Gate              : {gate_str}  (score={g['score']:.3f})")
+        s = g["stats"]
+        print(f"  strict={s['strict_count']}  recovered={s['recovered_count']}"
+              f"  failed={s['failed_count']}  suspicious={s['suspicious_count']}"
+              f"  parseable_unique={s['parseable_unique']}")
+        print(f"AI used           : {meta.get('ai_used', False)}"
+              + (f"  (provider={meta['ai_provider']})" if meta.get("ai_used") else ""))
+        print()
+
     # --- Debug overlay image ---
     overlay_path = _draw_overlay(image_path, meta)
     print(f"Debug overlay     : {overlay_path}")

@@ -7,3 +7,6 @@ paddlepaddle          # CPU build; see README for mac install if this fails
 opencv-python-headless
 Pillow
 numpy<2               # PaddleOCR/matplotlib compiled against NumPy 1.x; 2.x causes ImportError
+
+# Section 4 (AI fallback — only required when using provider="claude")
+anthropic             # pip install anthropic; set ANTHROPIC_API_KEY env var to enable
