@@ -173,6 +173,15 @@ def main() -> None:
             print(f"Crop mode        : {m.get('crop_mode', '?')}")
             print(f"Regions          : {m.get('num_regions', '?')}")
             print(f"Stitched         : {m.get('stitched', '?')}  (predict calls: {m.get('predict_calls', '?')})")
+            if m.get("predict_ms") is not None:
+                print(f"Predict time     : {m['predict_ms']:.1f} ms")
+                r["predict_ms"] = m["predict_ms"]
+            if m.get("stitched_shape"):
+                H, W = m["stitched_shape"]
+                print(f"Stitched shape   : {H}×{W}  ({m['stitched_pixels']:,} px)")
+            if m.get("resize_applied"):
+                print(f"Resize           : scale={m['resize_scale']:.3f}"
+                      f"  → {m['resized_shape'][0]}×{m['resized_shape'][1]}")
         if hasattr(run_ocr, "last_recovery") and run_ocr.last_recovery:
             rec = run_ocr.last_recovery
             print(f"Recovered        : parse={rec.get('parse', 0)} split={rec.get('split', 0)}")
@@ -208,6 +217,10 @@ def main() -> None:
     print(f"Avg coverage       : {avg_coverage:.2%}")
     print(f"Avg OCR time       : {avg_time_s * 1000:.1f} ms  (limit: {int(MAX_AVG_TIME_S * 1000)} ms)")
     print(f"Median OCR time    : {median_time_s * 1000:.1f} ms")
+    predict_ms_list = [r["predict_ms"] for r in results if "predict_ms" in r]
+    if predict_ms_list:
+        print(f"Avg predict time   : {sum(predict_ms_list) / len(predict_ms_list):.1f} ms")
+        print(f"Median predict time: {statistics.median(predict_ms_list):.1f} ms")
 
     if any_coverage_fail:
         print("\nFAIL: one or more fixtures below 0.70 coverage threshold.")
