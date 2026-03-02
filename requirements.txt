@@ -10,3 +10,8 @@ numpy<2               # PaddleOCR/matplotlib compiled against NumPy 1.x; 2.x cau
 
 # Section 4 (AI fallback — only required when using provider="claude")
 anthropic             # pip install anthropic; set ANTHROPIC_API_KEY env var to enable
+
+# Section 5 (API server)
+fastapi
+uvicorn[standard]
+python-multipart      # required for UploadFile form parsing

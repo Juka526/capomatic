@@ -113,6 +113,18 @@ def main() -> None:
     print(f"OCR time          : {ocr_ms:.1f} ms")
     print(f"Filter time       : {filter_ms:.1f} ms")
     print(f"Total             : {ocr_ms + filter_ms:.1f} ms")
+    if meta.get("predict_ms") is not None:
+        print(f"  preprocess      : {meta['preprocess_ms']:.1f} ms")
+        print(f"  stitch          : {meta['stitch_ms']:.1f} ms")
+        print(f"  predict         : {meta['predict_ms']:.1f} ms")
+        print(f"  post            : {meta['post_ms']:.1f} ms")
+        print(f"  paddle total    : {meta['total_ms']:.1f} ms")
+    if meta.get("stitched_shape"):
+        H, W = meta["stitched_shape"]
+        print(f"Stitched shape    : {H}×{W}  ({meta['stitched_pixels']:,} px)")
+    if meta.get("resize_applied"):
+        H, W = meta["resized_shape"]
+        print(f"Resize applied    : scale={meta['resize_scale']:.3f}  → {H}×{W}")
     if split_count > 0:
         print()
         print("Split recoveries:")

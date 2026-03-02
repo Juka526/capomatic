@@ -5,8 +5,12 @@ the already-initialised models without re-loading weights.
 """
 from __future__ import annotations
 
+import math
+import os
+import time
 from typing import TYPE_CHECKING
 
+import cv2
 from PIL import Image
 
 from backend.ocr.preprocess import select_ocr_regions, stitch_regions
@@ -15,14 +19,27 @@ from backend.chords.normalize import normalize_chord_text
 if TYPE_CHECKING:
     from paddleocr import PaddleOCR as _PaddleOCRType
 
-_ocr_instance: "_PaddleOCRType | None" = None
+_ocr_instances: "dict[str, _PaddleOCRType]" = {}
+
+# Maximum total pixel count of the stitched canvas fed to predict().
+# Canvases larger than this are downscaled proportionally with INTER_AREA before
+# inference and their OCR coordinates are scaled back afterward.
+# Lower values reduce predict() time; too low degrades small-text accuracy.
+MAX_STITCHED_PIXELS = 450_000
 
 
-def get_ocr():
-    """Return the singleton PaddleOCR engine, initialising it on first call.
+def get_ocr(det_variant: "str | None" = None) -> "_PaddleOCRType":
+    """Return a cached PaddleOCR engine for *det_variant*, initialising on first call.
 
     PaddleOCR is imported lazily so the module can be imported without
     PaddlePaddle installed (useful when running with --engine stub).
+
+    Parameters
+    ----------
+    det_variant : "server" | "mobile" | None
+        Which detector to use. When None the value is read from the env var
+        TRANSCHORD_OCR_DET_MODEL (default "server"). Separate cached instances
+        are kept per variant so switching does not reuse the wrong model.
 
     Tuning notes
     ------------
@@ -32,17 +49,27 @@ def get_ocr():
       flat and upright so these add time with no benefit.
     * use_textline_orientation=False — skips per-line rotation model for speed.
     * Set PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True to skip connectivity check.
+    * TRANSCHORD_OCR_DET_MODEL=server|mobile selects the detection model variant.
     """
-    global _ocr_instance
-    if _ocr_instance is None:
+    global _ocr_instances
+    if det_variant is None:
+        det_variant = os.environ.get("TRANSCHORD_OCR_DET_MODEL", "server").lower()
+    if det_variant not in ("server", "mobile"):
+        raise ValueError(
+            f"TRANSCHORD_OCR_DET_MODEL must be 'server' or 'mobile', got {det_variant!r}"
+        )
+    if det_variant not in _ocr_instances:
         from paddleocr import PaddleOCR  # noqa: PLC0415
-        _ocr_instance = PaddleOCR(
+        kwargs: dict = dict(
             lang="en",
             use_doc_orientation_classify=False,
             use_doc_unwarping=False,
             use_textline_orientation=False,
         )
-    return _ocr_instance
+        if det_variant == "mobile":
+            kwargs["text_detection_model_name"] = "PP-OCRv5_mobile_det"
+        _ocr_instances[det_variant] = PaddleOCR(**kwargs)
+    return _ocr_instances[det_variant]
 
 
 def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
@@ -58,30 +85,99 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
         confidence  : float — OCR confidence score 0..1
         bbox        : [x1, y1, x2, y2] — axis-aligned box in original coords
     meta : dict with keys:
-        crop_mode   : "staff_bands" | "top40_fallback"
-        num_regions : int
-        regions     : list of {y0, h, staff_top, staff_bottom}
+        crop_mode        : "staff_bands" | "top40_fallback"
+        num_regions      : int
+        regions          : list of {y0, h, staff_top, staff_bottom}
+        stitched         : bool
+        predict_calls    : int
+        preprocess_ms    : float  — image load + region selection time
+        stitch_ms        : float  — stitch_regions() time (0 if not stitched)
+        predict_ms       : float  — ocr.predict() time (summed for per-region)
+        post_ms          : float  — coordinate mapping + item building time
+        total_ms         : float  — total wall time inside run_ocr_paddle
+        stitched_shape   : [H, W] or None
+        stitched_pixels  : int (H*W) or 0
+        resize_applied   : bool
+        resize_scale     : float or None
+        resized_shape    : [H, W] or None
+        det_model_variant: "server" | "mobile"
     """
+    t_start = time.perf_counter()
+
+    det_variant = os.environ.get("TRANSCHORD_OCR_DET_MODEL", "server").lower()
+    if det_variant not in ("server", "mobile"):
+        raise ValueError(
+            f"TRANSCHORD_OCR_DET_MODEL must be 'server' or 'mobile', got {det_variant!r}"
+        )
+
+    # ------------------------------------------------------------------
+    # Stage 1 — preprocess: load image + select OCR regions
+    # ------------------------------------------------------------------
+    t0 = time.perf_counter()
     img = Image.open(image_path).convert("RGB")
     regions, mode = select_ocr_regions(img)
+    preprocess_ms = (time.perf_counter() - t0) * 1000
 
-    ocr = get_ocr()
+    ocr = get_ocr(det_variant)
     items: list[dict] = []
 
     region_meta = [
         {
-            "y0":          r["y0"],
-            "h":           r["h"],
-            "staff_top":   r.get("staff_top"),
+            "y0":           r["y0"],
+            "h":            r["h"],
+            "staff_top":    r.get("staff_top"),
             "staff_bottom": r.get("staff_bottom"),
         }
         for r in regions
     ]
 
+    # Shared timing accumulators (filled by whichever path runs)
+    stitch_ms       = 0.0
+    predict_ms      = 0.0
+    post_ms         = 0.0
+    stitched_shape  = None
+    stitched_pixels = 0
+    resize_applied  = False
+    resize_scale    = 1.0
+    resized_shape   = None
+
     if mode == "staff_bands" and len(regions) > 1:
-        # --- STITCHED PATH: one predict() call for all bands combined ---
+        # --------------------------------------------------------------
+        # Stage 2 — stitch all bands into one canvas
+        # --------------------------------------------------------------
+        t0 = time.perf_counter()
         stitched, stitch_map = stitch_regions(regions)
-        raw_result = ocr.predict(stitched)
+        stitch_ms = (time.perf_counter() - t0) * 1000
+
+        H_s, W_s = stitched.shape[:2]
+        stitched_shape  = [H_s, W_s]
+        stitched_pixels = H_s * W_s
+
+        # --------------------------------------------------------------
+        # Stage 2b — resize cap: shrink large canvases to MAX_STITCHED_PIXELS
+        # --------------------------------------------------------------
+        predict_input = stitched
+        orig_pixels   = H_s * W_s
+        if orig_pixels > MAX_STITCHED_PIXELS:
+            resize_scale  = math.sqrt(MAX_STITCHED_PIXELS / orig_pixels)
+            new_W         = max(1, round(W_s * resize_scale))
+            new_H         = max(1, round(H_s * resize_scale))
+            predict_input = cv2.resize(stitched, (new_W, new_H),
+                                       interpolation=cv2.INTER_AREA)
+            resize_applied = True
+            resized_shape  = [new_H, new_W]
+
+        # --------------------------------------------------------------
+        # Stage 3 — predict (single call on stitched/resized canvas)
+        # --------------------------------------------------------------
+        t0 = time.perf_counter()
+        raw_result = ocr.predict(predict_input)
+        predict_ms = (time.perf_counter() - t0) * 1000
+
+        # --------------------------------------------------------------
+        # Stage 4 — post-process: map coords back to original image
+        # --------------------------------------------------------------
+        t0 = time.perf_counter()
         if raw_result:
             res = raw_result[0]
             rec_texts  = res.get("rec_texts",  []) or []
@@ -91,6 +187,12 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
             for text, confidence, poly in zip(rec_texts, rec_scores, rec_polys):
                 xs = [p[0] for p in poly]
                 ys = [p[1] for p in poly]
+
+                # Scale back from resized → stitched coordinates
+                if resize_applied:
+                    xs = [x / resize_scale for x in xs]
+                    ys = [y / resize_scale for y in ys]
+
                 center_y = (min(ys) + max(ys)) / 2
 
                 # Map stitched-canvas y back to original image y.
@@ -111,22 +213,29 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
                         int(max(ys)) + y_offset,
                     ],
                 })
+        post_ms = (time.perf_counter() - t0) * 1000
 
         meta = {
-            "crop_mode":    mode,
-            "num_regions":  len(regions),
-            "stitched":     True,
+            "crop_mode":     mode,
+            "num_regions":   len(regions),
+            "stitched":      True,
             "predict_calls": 1,
-            "regions":      region_meta,
+            "regions":       region_meta,
         }
 
     else:
-        # --- PER-REGION PATH: one predict() call per region (fallback) ---
+        # --------------------------------------------------------------
+        # PER-REGION PATH — one predict() call per region (fallback)
+        # --------------------------------------------------------------
         for region in regions:
+            t0 = time.perf_counter()
             raw_result = ocr.predict(region["crop"])
+            predict_ms += (time.perf_counter() - t0) * 1000
+
             if not raw_result:
                 continue
 
+            t0 = time.perf_counter()
             res = raw_result[0]
             x0 = region["x0"]
             y0 = region["y0"]
@@ -148,13 +257,31 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
                         int(max(ys)) + y0,
                     ],
                 })
+            post_ms += (time.perf_counter() - t0) * 1000
 
         meta = {
-            "crop_mode":    mode,
-            "num_regions":  len(regions),
-            "stitched":     False,
+            "crop_mode":     mode,
+            "num_regions":   len(regions),
+            "stitched":      False,
             "predict_calls": len(regions),
-            "regions":      region_meta,
+            "regions":       region_meta,
         }
+
+    # ------------------------------------------------------------------
+    # Attach timing + geometry to meta (both paths)
+    # ------------------------------------------------------------------
+    meta.update({
+        "preprocess_ms":  round(preprocess_ms, 1),
+        "stitch_ms":      round(stitch_ms, 1),
+        "predict_ms":     round(predict_ms, 1),
+        "post_ms":        round(post_ms, 1),
+        "total_ms":       round((time.perf_counter() - t_start) * 1000, 1),
+        "stitched_shape":  stitched_shape,
+        "stitched_pixels": stitched_pixels,
+        "resize_applied":  resize_applied,
+        "resize_scale":    round(resize_scale, 4) if resize_applied else None,
+        "resized_shape":   resized_shape,
+        "det_model_variant": det_variant,
+    })
 
     return items, meta
