@@ -14,15 +14,26 @@ from __future__ import annotations
 
 import os
 import tempfile
+from contextlib import asynccontextmanager
 from typing import Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 
 from backend.ocr.hybrid_detect import detect_chords_hybrid
+from backend.ocr.paddle_ocr import get_ocr
 from backend.chords.parser import parse_chord
 from backend.chords.transpose import transpose_chord
 
-app = FastAPI(title="transchord", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Pre-load the OCR model so the first /detect request doesn't pay the
+    # ~20s cold-start penalty from lazy model initialisation.
+    get_ocr()
+    yield
+
+
+app = FastAPI(title="transchord", version="0.1.0", lifespan=lifespan)
 
 
 @app.get("/health")
