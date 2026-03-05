@@ -1,17 +1,26 @@
 """Hybrid chord detection pipeline.
 
-Orchestrates the full Section 4 pipeline:
+Orchestrates the full pipeline:
 
-  1. PaddleOCR  → raw items + spatial metadata
-  2. Filter     → strict regex + recovery pass (with confidence gate)
-  3. Quality gate → decide if Paddle result is trustworthy
-  4. AI fallback  → (optional) ask Claude when gate fails
+  1. PaddleOCR  → raw items + spatial metadata        ┐ run in parallel
+  2. Claude Vision → authoritative chord text (rows)   ┘
+  3. Filter     → strict regex + recovery pass (with confidence gate)
+  4. Quality gate → diagnostic score (no longer gates Claude invocation)
+  5. Merge      → align Claude rows to PaddleOCR rows by position;
+                  Claude text is authoritative, PaddleOCR bboxes are reused
 
-The output (items, meta) has the same shape as run_ocr_paddle so all
-existing callers are drop-in compatible.  Items from the AI path carry
-``bbox=None`` and ``confidence=1.0`` instead of real OCR values.
+Claude Vision always runs when ``use_ai_fallback=True`` (not just on gate
+failure), fixing two categories of error:
+  • PaddleOCR completely misses a chord  → Claude adds it with bbox=None
+  • PaddleOCR misreads a chord symbol    → Claude's text replaces it,
+                                           PaddleOCR's bbox is preserved
+
+Items from the AI path carry ``bbox=None`` and ``confidence=1.0`` instead
+of real OCR values.  All existing callers are drop-in compatible.
 """
 from __future__ import annotations
+
+import concurrent.futures
 
 from backend.ocr.paddle_ocr import run_ocr_paddle
 from backend.ocr.filter import (
@@ -22,9 +31,11 @@ from backend.ocr.filter import (
 from backend.ocr.quality_gate import evaluate_ocr_quality, GateDecision
 from backend.ocr.ai_fallback import (
     ai_detect_chords_rows,
-    flatten_rows_to_items,
     AIFallbackResult,
 )
+from backend.ocr.merge import cluster_paddle_items_by_row, merge_rows
+
+_CLAUDE_TIMEOUT_S = 20.0  # max seconds to wait for Claude before falling back
 
 
 def detect_chords_hybrid(
@@ -38,8 +49,8 @@ def detect_chords_hybrid(
     Parameters
     ----------
     image_path      : Path to the chord sheet image.
-    use_ai_fallback : If False, skip AI even when the gate fails (Paddle
-                      result is returned as-is).  Useful for benchmarking.
+    use_ai_fallback : If False, skip Claude entirely and return Paddle-only
+                      result (useful for benchmarking / offline mode).
     ai_provider     : ``"mock"`` (default, no API key needed) or ``"claude"``
                       (requires ANTHROPIC_API_KEY).
 
@@ -47,18 +58,33 @@ def detect_chords_hybrid(
     -------
     items : list[dict]
         Each dict has ``text``, ``confidence``, ``bbox``.
-        ``bbox`` is None for items that came from the AI fallback.
+        ``bbox`` is None for chords that had no matching PaddleOCR detection.
     meta  : dict
         Superset of the paddle_ocr meta dict, with extra keys:
         ``gate``        — GateDecision fields (pass, score, reasons, stats)
-        ``ai_used``     — bool: whether AI items are in the final output
+        ``ai_used``     — bool: whether Claude items are in the final output
         ``ai_provider`` — provider name or None
         ``recovery``    — {"parse": int, "split": int}
+        ``merge_stats`` — {"paddle_rows", "claude_rows", "final_count"} or None
     """
     # ------------------------------------------------------------------
-    # 1. Paddle OCR
+    # 1. PaddleOCR + Claude Vision — run concurrently
     # ------------------------------------------------------------------
-    raw_items, paddle_meta = run_ocr_paddle(image_path)
+    ai_result: AIFallbackResult | None = None
+
+    if use_ai_fallback:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            paddle_future = executor.submit(run_ocr_paddle, image_path)
+            claude_future = executor.submit(
+                ai_detect_chords_rows, image_path, provider=ai_provider
+            )
+            raw_items, paddle_meta = paddle_future.result()
+            try:
+                ai_result = claude_future.result(timeout=_CLAUDE_TIMEOUT_S)
+            except concurrent.futures.TimeoutError:
+                ai_result = None  # fall through to legacy path
+    else:
+        raw_items, paddle_meta = run_ocr_paddle(image_path)
 
     # ------------------------------------------------------------------
     # 2. Filter (mirrors the logic in eval_ocr.py / ocr_debug.py)
@@ -69,20 +95,29 @@ def detect_chords_hybrid(
     recovered, parse_count, split_count = recover_candidates(failed)
 
     # ------------------------------------------------------------------
-    # 3. Quality gate
+    # 3. Quality gate (kept for diagnostics; no longer gates Claude)
     # ------------------------------------------------------------------
     gate: GateDecision = evaluate_ocr_quality(raw_items, strict, recovered)
 
     # ------------------------------------------------------------------
-    # 4. AI fallback (only when gate fails and caller allows it)
+    # 4. Merge or legacy fallback
     # ------------------------------------------------------------------
-    ai_result: AIFallbackResult | None = None
-    final_items = strict + recovered
-
-    if not gate.pass_gate and use_ai_fallback:
-        ai_result = ai_detect_chords_rows(image_path, provider=ai_provider)
-        if ai_result.rows:
-            final_items = flatten_rows_to_items(ai_result.rows)
+    if ai_result is not None and ai_result.rows:
+        # Always-on merge: Claude text is authoritative, Paddle bboxes reused
+        paddle_rows = cluster_paddle_items_by_row(strict + recovered)
+        final_items = merge_rows(paddle_rows, ai_result.rows)
+        ai_used = True
+        merge_stats: dict | None = {
+            "paddle_rows": len(paddle_rows),
+            "claude_rows": len(ai_result.rows),
+            "final_count": len(final_items),
+        }
+    else:
+        # Legacy path: Claude unavailable (mock, timeout, API error)
+        # Exact pre-refineOCR behaviour preserved for backward compatibility
+        final_items = strict + recovered
+        ai_used = False
+        merge_stats = None
 
     # ------------------------------------------------------------------
     # 5. Build enriched meta
@@ -95,9 +130,10 @@ def detect_chords_hybrid(
             "reasons": gate.reasons,
             "stats":   gate.stats,
         },
-        "ai_used":     ai_result is not None and bool(ai_result.rows),
+        "ai_used":     ai_used,
         "ai_provider": ai_result.provider if ai_result is not None else None,
         "recovery":    {"parse": parse_count, "split": split_count},
+        "merge_stats": merge_stats,
     }
 
     return final_items, meta

@@ -83,8 +83,9 @@ def _run_mock(image_path: str) -> tuple[list[list[str]], str | None]:  # noqa: A
 _CLAUDE_MODEL   = "claude-haiku-4-5-20251001"
 _CLAUDE_PROMPT  = (
     "This is a chord sheet for a song. "
-    "List every chord symbol exactly as written, row by row "
+    "List EVERY chord symbol exactly as written, row by row "
     "(each row = one staff system / line of music). "
+    "Include chords with parenthetical extensions such as D(add2), A(sus4), G(b5). "
     "Do NOT transpose or modify any chord. "
     "Return ONLY valid JSON with no extra text:\n"
     '{"rows": [["D", "Asus4", "A", "Bm7"], ["G", "D", "A"]]}'
