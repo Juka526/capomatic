@@ -16,7 +16,7 @@ from backend.chords.parser import parse_chord
 # Minimum OCR confidence score required to consider any detection at all.
 # Items below this threshold are dropped before chord matching so that
 # low-confidence noise never accidentally passes the chord filter.
-CONFIDENCE_THRESHOLD = 0.73
+CONFIDENCE_THRESHOLD = 0.78
 
 # ---------------------------------------------------------------------------
 # Strict regex (pass 1)
