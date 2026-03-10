@@ -195,21 +195,23 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
 
                 center_y = (min(ys) + max(ys)) / 2
 
-                # Map stitched-canvas y back to original image y.
-                # All staff bands have x0=0 so x needs no adjustment.
+                # Map stitched-canvas coords back to original image coords.
+                # x_offset accounts for left-margin crop (bar numbers / segno).
                 y_offset = 0
+                x_offset = 0
                 for entry in stitch_map:
                     if entry["dst_y0"] <= center_y < entry["dst_y0"] + entry["dst_h"]:
                         y_offset = entry["src_y0"] - entry["dst_y0"]
+                        x_offset = entry.get("x0", 0)
                         break
 
                 items.append({
                     "text":       normalize_chord_text(str(text)),
                     "confidence": float(confidence),
                     "bbox":       [
-                        int(min(xs)),
+                        int(min(xs)) + x_offset,
                         int(min(ys)) + y_offset,
-                        int(max(xs)),
+                        int(max(xs)) + x_offset,
                         int(max(ys)) + y_offset,
                     ],
                 })
