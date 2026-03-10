@@ -4,6 +4,14 @@ import cv2
 import numpy as np
 from PIL import Image
 
+# ---------------------------------------------------------------------------
+# Left-margin crop constants
+# ---------------------------------------------------------------------------
+# Fraction of image width scanned for bar numbers / segno on the left margin.
+_CHORD_X_MARGIN_RATIO = 0.08
+# Minimum consecutive blank columns required to confirm a margin/chord gap.
+_GAP_MIN_COLS = 4
+
 
 # ---------------------------------------------------------------------------
 # Fallback: global top-N% crop (original Section 3 implementation)
@@ -139,6 +147,42 @@ def detect_staff_systems(img) -> list[tuple[int, int]]:
         return []
 
 
+def find_chord_x_start(band_crop: np.ndarray) -> int:
+    """Return x-pixel offset where chord content begins (after bar numbers/segno).
+
+    Scans the leftmost ``_CHORD_X_MARGIN_RATIO`` fraction of the band for
+    content (bar numbers, segno).  If found, skips over it and the following
+    gap, returning the x-column where chord symbols resume.
+
+    Returns 0 if no leading margin content is detected (safe default: keep
+    full-width scan).
+    """
+    H, W = band_crop.shape[:2]
+    margin = int(W * _CHORD_X_MARGIN_RATIO)
+    if margin < 10:
+        return 0
+
+    gray = cv2.cvtColor(band_crop, cv2.COLOR_RGB2GRAY) if band_crop.ndim == 3 else band_crop
+    _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    col_proj = (binary > 0).sum(axis=0)
+    noise_floor = max(2, int(H * 0.03))
+
+    # Rightmost content column within left margin
+    margin_cols = [x for x in range(margin) if col_proj[x] > noise_floor]
+    if not margin_cols:
+        return 0  # no bar number / segno in margin
+
+    right_edge = max(margin_cols) + 1
+
+    # Skip gap after margin content; find where chords resume
+    x = right_edge
+    while x < W and col_proj[x] <= noise_floor:
+        x += 1
+
+    # Only crop if there is a meaningful gap (avoids splitting continuous content)
+    return x if x >= right_edge + _GAP_MIN_COLS else 0
+
+
 def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
     """Build chord-band crop dicts for each staff system.
 
@@ -187,12 +231,14 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
         if band_bottom <= band_top:
             continue
 
-        crop = arr[band_top:band_bottom, :, :]
+        full_crop = arr[band_top:band_bottom, :, :]
+        x0 = find_chord_x_start(full_crop)
+        crop = arr[band_top:band_bottom, x0:, :]
         bands.append({
             "crop":         crop,
-            "x0":           0,
+            "x0":           x0,
             "y0":           band_top,
-            "w":            W,
+            "w":            W - x0,
             "h":            band_bottom - band_top,
             "staff_top":    top,
             "staff_bottom": bottom,
@@ -216,11 +262,13 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
         if band["y0"] <= prev_end + merge_gap:
             new_y0  = min(prev["y0"], band["y0"])
             new_end = max(prev_end, band["y0"] + band["h"])
+            full_merged = arr[new_y0:new_end, :, :]
+            x0 = find_chord_x_start(full_merged)
             merged[-1] = {
-                "crop":         arr[new_y0:new_end, :, :],
-                "x0":           0,
+                "crop":         arr[new_y0:new_end, x0:, :],
+                "x0":           x0,
                 "y0":           new_y0,
-                "w":            W,
+                "w":            W - x0,
                 "h":            new_end - new_y0,
                 "staff_top":    prev["staff_top"],
                 "staff_bottom": band["staff_bottom"],
@@ -269,6 +317,7 @@ def stitch_regions(regions: list[dict], pad: int = 10, bg: int = 255) -> tuple[n
             "src_h":  h,
             "dst_y0": dst_y,
             "dst_h":  h,
+            "x0":     region.get("x0", 0),
         })
         dst_y += h + pad
 

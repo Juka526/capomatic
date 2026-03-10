@@ -16,6 +16,7 @@ from __future__ import annotations
 import io
 import os
 import tempfile
+import time
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -124,7 +125,7 @@ async def overlay(
     image: UploadFile = File(...),
     semitones: int = Form(0),
     target_key: Optional[str] = Form(None),
-    mode: str = Form("replace"),
+    mode: str = Form("above"),
 ) -> StreamingResponse:
     """Detect chords, transpose, render overlay, return PNG image.
 
@@ -133,7 +134,7 @@ async def overlay(
     image      : JPEG or PNG sheet music image.
     semitones  : Semitone shift applied to every detected chord (-11 to +11).
     target_key : Optional target key for enharmonic spelling preference.
-    mode       : "beside" — orange transposed chord to the right of each original.
+    mode       : "above"   — orange transposed chord printed above each original (default).
                  "replace" — white box over original chord, new chord on top.
     """
     if not (-11 <= semitones <= 11):
@@ -141,11 +142,13 @@ async def overlay(
             status_code=422,
             detail=f"semitones must be between -11 and 11, got {semitones}",
         )
-    if mode not in ("beside", "replace"):
+    if mode not in ("above", "replace"):
         raise HTTPException(
             status_code=422,
-            detail=f"mode must be 'beside' or 'replace', got {mode!r}",
+            detail=f"mode must be 'above' or 'replace', got {mode!r}",
         )
+
+    t_start = time.perf_counter()
 
     suffix = os.path.splitext(image.filename or "upload.png")[1] or ".png"
     tmp_path: str | None = None
@@ -177,7 +180,13 @@ async def overlay(
 
     result = render_overlay(img, chords, mode)
 
+    elapsed_ms = int((time.perf_counter() - t_start) * 1000)
+
     buf = io.BytesIO()
     result.save(buf, format="PNG")
     buf.seek(0)
-    return StreamingResponse(buf, media_type="image/png")
+    return StreamingResponse(
+        buf,
+        media_type="image/png",
+        headers={"X-Processing-Time-Ms": str(elapsed_ms)},
+    )

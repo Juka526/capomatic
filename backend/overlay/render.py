@@ -2,7 +2,7 @@
 
 Renders transposed chord symbols onto a PIL image using one of two modes:
 
-  beside  — orange transposed chord printed above each original chord.
+  above   — orange transposed chord printed above each original chord.
              One uniform font size across all rows (median bbox height × scale).
              Labels within a row are shifted right as needed to avoid horizontal
              overlap.  If the row has insufficient space above it, white rows
@@ -66,21 +66,21 @@ def render_overlay(
     img    : PIL RGB image (original, not modified in-place).
     chords : List of dicts with keys: text, transposed, bbox.
              Entries where transposed or bbox is None are skipped.
-    mode   : "beside" or "replace".
+    mode   : "above" or "replace".
     """
     eligible = [
         c for c in chords
         if c.get("transposed") is not None and c.get("bbox") is not None
     ]
 
-    if mode == "beside":
-        return _render_beside(img.copy(), eligible)
+    if mode == "above":
+        return _render_above(img.copy(), eligible)
     else:
         return _render_replace(img.copy(), eligible)
 
 
 # ---------------------------------------------------------------------------
-# beside mode — labels placed ABOVE the original chord boxes
+# above mode — labels placed ABOVE the original chord boxes
 # ---------------------------------------------------------------------------
 
 def _cluster_by_row(chords: list[dict]) -> list[list[dict]]:
@@ -161,7 +161,7 @@ def _insert_whitespace(
     return new_img
 
 
-def _render_beside(img: Image.Image, chords: list[dict]) -> Image.Image:
+def _render_above(img: Image.Image, chords: list[dict]) -> Image.Image:
     W, H = img.size
     rows = _cluster_by_row(chords)
     if not rows:
@@ -209,9 +209,8 @@ def _render_beside(img: Image.Image, chords: list[dict]) -> Image.Image:
     # ------------------------------------------------------------------
     draw = ImageDraw.Draw(img)
     for row in rows:
-        min_y1 = min(c["bbox"][1] for c in row)
-        offset = _y_offset_for(min_y1)
         for chord, label_x in _place_row_labels(row, font, W):
+            offset     = _y_offset_for(chord["bbox"][1])
             shifted_y1 = chord["bbox"][1] + offset
             label_y    = shifted_y1 - font_size - _GAP
             draw.text((label_x, label_y), chord["transposed"], fill=_ORANGE, font=font)
