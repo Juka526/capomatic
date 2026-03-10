@@ -21,8 +21,11 @@ of real OCR values.  All existing callers are drop-in compatible.
 from __future__ import annotations
 
 import concurrent.futures
+import logging
 
 from backend.ocr.paddle_ocr import run_ocr_paddle
+
+logger = logging.getLogger(__name__)
 from backend.ocr.filter import (
     CONFIDENCE_THRESHOLD,
     is_chord_candidate,
@@ -78,11 +81,19 @@ def detect_chords_hybrid(
             claude_future = executor.submit(
                 ai_detect_chords_rows, image_path, provider=ai_provider
             )
-            raw_items, paddle_meta = paddle_future.result()
+            try:
+                raw_items, paddle_meta = paddle_future.result()
+            except Exception:
+                logger.exception("PaddleOCR failed; returning empty results")
+                raw_items, paddle_meta = [], {}
             try:
                 ai_result = claude_future.result(timeout=_CLAUDE_TIMEOUT_S)
             except concurrent.futures.TimeoutError:
+                logger.warning("Claude timed out after %.1fs", _CLAUDE_TIMEOUT_S)
                 ai_result = None  # fall through to legacy path
+            except Exception:
+                logger.exception("Claude fallback failed")
+                ai_result = None
     else:
         raw_items, paddle_meta = run_ocr_paddle(image_path)
 
