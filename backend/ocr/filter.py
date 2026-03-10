@@ -100,6 +100,31 @@ def _split_concatenated(text: str) -> list[str]:
     return []
 
 
+def _split_bbox(
+    item: dict,
+    parts: list[str],
+    bbox: list[int] | None,
+) -> list[dict]:
+    """Create split items with proportionally divided bboxes.
+
+    When a concatenated detection like "Gsus4C" is split into ["Gsus4", "C"],
+    the original bbox is divided horizontally by character-length ratio so each
+    chord gets its own approximate bounding box.  If bbox is None, both items
+    share bbox=None.
+    """
+    if bbox is None or len(parts) != 2:
+        return [{**item, "text": part} for part in parts]
+
+    x1, y1, x2, y2 = bbox
+    total_len = sum(len(p) for p in parts)
+    ratio = len(parts[0]) / total_len if total_len > 0 else 0.5
+    x_split = x1 + int((x2 - x1) * ratio)
+    return [
+        {**item, "text": parts[0], "bbox": [x1, y1, x_split, y2]},
+        {**item, "text": parts[1], "bbox": [x_split, y1, x2, y2]},
+    ]
+
+
 def recover_candidates(
     items: list[dict],
 ) -> tuple[list[dict], int, int]:
@@ -168,8 +193,9 @@ def recover_candidates(
         # --- split recovery ---
         parts = _split_concatenated(text)
         if parts:
-            for part in parts:
-                recovered.append({**item, "text": part})
+            bbox = item.get("bbox")
+            split_items = _split_bbox(item, parts, bbox)
+            recovered.extend(split_items)
             split_count += 1
 
     return recovered, parse_count, split_count

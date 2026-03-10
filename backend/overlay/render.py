@@ -238,11 +238,14 @@ def _render_replace(img: Image.Image, chords: list[dict]) -> Image.Image:
     composited = Image.alpha_composite(img_rgba, overlay).convert("RGB")
 
     # Pass 2 — draw transposed text on top of the white boxes
+    # Use a uniform median font size across all chords (same as above mode).
     draw = ImageDraw.Draw(composited)
+    all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)
+    median_h  = all_heights[len(all_heights) // 2]
+    font_size = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
+    font      = _load_font(font_size)
     for chord in chords:
         x1, y1, x2, y2 = chord["bbox"]
-        font_size = int((y2 - y1) * _FONT_SCALE)
-        font = _load_font(font_size)
         draw.text((x1, y1), chord["transposed"], fill=_DARK_BLUE, font=font)
 
     return composited

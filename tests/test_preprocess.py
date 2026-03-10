@@ -1,10 +1,10 @@
-"""Unit tests for backend.ocr.preprocess.find_chord_x_start."""
+"""Unit tests for backend.ocr.preprocess: find_chord_x_start and build_chord_bands."""
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
-from backend.ocr.preprocess import find_chord_x_start
+from backend.ocr.preprocess import build_chord_bands, find_chord_x_start
 
 
 def _white(h: int, w: int) -> np.ndarray:
@@ -27,9 +27,10 @@ class TestFindChordXStart:
         assert find_chord_x_start(band) == 0
 
     def test_bar_number_then_gap_then_chords(self):
-        # Bar number cols 5–19, gap 20–34, chord content 35–200
+        # Bar number at cols 2–9 (right_edge=9 ≤ narrow_margin=12 for 400px)
+        # gap 10–34, chord content 35–200
         band = _white(80, 400)
-        band = _black_cols(band, 5, 20)    # bar number
+        band = _black_cols(band, 2, 10)    # bar number (narrow)
         band = _black_cols(band, 35, 200)  # chords
         assert find_chord_x_start(band) == 35
 
@@ -46,10 +47,18 @@ class TestFindChordXStart:
         assert find_chord_x_start(band) == 0
 
     def test_gap_too_small_returns_zero(self):
-        # Bar number at col 5–19, gap only 2 cols (< _GAP_MIN_COLS=4), then chords
+        # Bar number at cols 2–7 (within narrow_margin=12), gap only 2 cols, then chords
         band = _white(80, 400)
-        band = _black_cols(band, 5, 20)    # bar number
-        band = _black_cols(band, 22, 200)  # chords (gap = 2 cols)
+        band = _black_cols(band, 2, 8)     # bar number (narrow)
+        band = _black_cols(band, 10, 200)  # chords (gap = 2 cols, < _GAP_MIN_COLS=4)
+        assert find_chord_x_start(band) == 0
+
+    def test_wide_margin_content_returns_zero(self):
+        # Tempo marking spans cols 0–20 (right_edge=20 > narrow_margin=12 for 400px)
+        # → treated as tempo/clef, not a bar number; no crop applied
+        band = _white(80, 400)
+        band = _black_cols(band, 0, 20)    # wide content (tempo marking)
+        band = _black_cols(band, 35, 200)  # chords
         assert find_chord_x_start(band) == 0
 
     def test_margin_content_at_very_left_edge(self):
@@ -58,3 +67,70 @@ class TestFindChordXStart:
         band = _black_cols(band, 0, 10)
         band = _black_cols(band, 35, 300)
         assert find_chord_x_start(band) == 35
+
+
+class TestBuildChordBands:
+    """Tests for build_chord_bands inter-system boundary geometry.
+
+    Image: 600 H × 400 W, all white.  Systems are (top, bottom) tuples.
+    For staff_h=50: line_spacing=12.5, max_above=max(40,min(80,37))=40,
+    pad_below=max(4,min(8,3))=4.
+    """
+
+    def _img(self, h: int = 600, w: int = 400) -> np.ndarray:
+        return np.full((h, w, 3), 255, dtype=np.uint8)
+
+    def test_single_system_band_top_respects_max_above(self):
+        # First system: prev_bottom=0, band_top = max(0, top - max_above).
+        # top=200, max_above=40 → band_top=160.
+        img = self._img()
+        systems = [(200, 250)]
+        bands = build_chord_bands(img, systems)
+        assert len(bands) == 1
+        assert bands[0]["y0"] == 160           # top - max_above
+        assert bands[0]["staff_top"] == 200
+
+    def test_first_system_at_top_does_not_go_negative(self):
+        # top=30, max_above=40 → top - max_above = -10 → clamped to prev_bottom=0.
+        img = self._img()
+        systems = [(30, 80)]
+        bands = build_chord_bands(img, systems)
+        assert len(bands) == 1
+        assert bands[0]["y0"] == 0
+
+    def test_second_system_band_top_uses_prev_bottom(self):
+        # System 1: top=200, bottom=250.
+        # System 2: top=350, bottom=400.
+        #   max_above=40 → top - max_above = 310.
+        #   prev_bottom=250 → band_top = max(250, 310) = 310.
+        img = self._img()
+        systems = [(200, 250), (350, 400)]
+        bands = build_chord_bands(img, systems)
+        assert len(bands) == 2
+        assert bands[1]["y0"] == 310           # limited by top - max_above (310 > 250)
+
+    def test_tight_staves_band_top_clamped_to_prev_bottom(self):
+        # System 1: top=200, bottom=250.
+        # System 2: top=260, bottom=310 (only 10 px gap).
+        #   max_above=40 → top - max_above = 220.
+        #   prev_bottom=250 → band_top = max(250, 220) = 250.
+        img = self._img()
+        systems = [(200, 250), (260, 310)]
+        bands = build_chord_bands(img, systems)
+        assert len(bands) >= 1
+        # Find the band for the second system (staff_top=260)
+        second = next((b for b in bands if b["staff_top"] == 260), None)
+        if second is not None:
+            # band_top must not intrude into previous system (y ≥ 250)
+            assert second["y0"] >= 250
+
+    def test_empty_systems_returns_empty(self):
+        img = self._img()
+        assert build_chord_bands(img, []) == []
+
+    def test_degenerate_system_skipped(self):
+        # bottom <= top: invalid staff, should be skipped.
+        img = self._img()
+        systems = [(200, 200), (300, 350)]
+        bands = build_chord_bands(img, systems)
+        assert all(b["staff_top"] != 200 for b in bands)

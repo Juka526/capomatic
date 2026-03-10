@@ -29,6 +29,17 @@ def test_normalize_maj_unchanged():
 def test_normalize_dim_unchanged():
     assert normalize_chord_text("Bdim") == "Bdim"
 
+def test_normalize_uppercase_M_to_maj():
+    """Uppercase M before a digit is major quality: CM7 → Cmaj7."""
+    assert normalize_chord_text("CM7") == "Cmaj7"
+    assert normalize_chord_text("CM7/B") == "Cmaj7/B"
+    assert normalize_chord_text("FM7/A") == "Fmaj7/A"
+    assert normalize_chord_text("C#M7") == "C#maj7"
+
+def test_normalize_uppercase_M_without_digit_unchanged():
+    """Uppercase M without a following digit is not modified."""
+    assert normalize_chord_text("CM") == "CM"
+
 
 # ---------------------------------------------------------------------------
 # Asus4 variant equivalence

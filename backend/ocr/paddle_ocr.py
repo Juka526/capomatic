@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import math
 import os
+import re
 import time
 from typing import TYPE_CHECKING
 
@@ -26,6 +27,104 @@ _ocr_instances: "dict[str, _PaddleOCRType]" = {}
 # inference and their OCR coordinates are scaled back afterward.
 # Lower values reduce predict() time; too low degrades small-text accuracy.
 MAX_STITCHED_PIXELS = 450_000
+
+# ---------------------------------------------------------------------------
+# Spatial context filter — direction-marker proximity rejection
+# ---------------------------------------------------------------------------
+
+# Matches tokens that are musical direction markers, not chord symbols.
+# Used to build a list of "direction toxins" from all raw OCR detections.
+_DIRECTION_RE = re.compile(
+    r'^[\.\-\s]|^al$|^[Cc]oda$|^[Ff]ine$|^segno',
+    re.IGNORECASE,
+)
+
+# A bare chord root is a single letter A–G with no extension.
+# When such a root appears near direction tokens it is likely a false positive
+# from a segmented direction phrase (e.g. "D" from "D.S. al Coda").
+_BARE_ROOT_RE = re.compile(r'^[A-G]$')
+
+# Proximity thresholds for the direction-toxin check.
+_DIRECTION_PROXIMITY_X = 150  # px: horizontal distance to direction token center
+_DIRECTION_PROXIMITY_Y = 30   # px: vertical distance to direction token center
+
+
+def _is_direction_token(raw_text: str) -> bool:
+    """Return True if *raw_text* matches a known musical direction marker token."""
+    return bool(_DIRECTION_RE.search(raw_text.strip()))
+
+
+def _is_bare_root(text: str) -> bool:
+    """Return True if *text* is a bare chord root with no extension (A–G only)."""
+    return bool(_BARE_ROOT_RE.match(text))
+
+
+def _near_any_direction(
+    bbox: list[int],
+    direction_bboxes: list[list[int]],
+) -> bool:
+    """Return True if *bbox* center is within proximity of any direction-token bbox.
+
+    Proximity is ±_DIRECTION_PROXIMITY_X px horizontally and
+    ±_DIRECTION_PROXIMITY_Y px vertically (center-to-center).
+    """
+    x1, y1, x2, y2 = bbox
+    cx = (x1 + x2) / 2
+    cy = (y1 + y2) / 2
+    for db in direction_bboxes:
+        dcx = (db[0] + db[2]) / 2
+        dcy = (db[1] + db[3]) / 2
+        if (abs(cx - dcx) <= _DIRECTION_PROXIMITY_X
+                and abs(cy - dcy) <= _DIRECTION_PROXIMITY_Y):
+            return True
+    return False
+
+
+def _apply_direction_filter(raw_items: list[dict]) -> list[dict]:
+    """Convert raw OCR items to chord dicts, rejecting direction-contaminated detections.
+
+    Collects all detections, identifies direction-marker tokens (al, Coda, Fine,
+    segno, period-prefixed), then rejects any bare single-root chord (A–G) that
+    lies within spatial proximity of a direction token.  This prevents false
+    positives such as 'D' being accepted when PaddleOCR segments 'D.S. al Coda'
+    into separate boxes.
+
+    Parameters
+    ----------
+    raw_items : list of {raw_text, confidence, bbox} in original image coords
+
+    Returns
+    -------
+    list of {text, confidence, bbox} — verified chord candidates only
+    """
+    direction_bboxes: list[list[int]] = [
+        item["bbox"] for item in raw_items
+        if _is_direction_token(item["raw_text"])
+    ]
+
+    chords: list[dict] = []
+    for item in raw_items:
+        raw_text = item["raw_text"]
+
+        # Period in the raw text → definitely a direction marker, not a chord.
+        if "." in raw_text:
+            continue
+
+        normalized = normalize_chord_text(raw_text)
+
+        # Spatial context: bare single root near a direction token → false positive.
+        if _is_bare_root(normalized) and _near_any_direction(
+            item["bbox"], direction_bboxes
+        ):
+            continue
+
+        chords.append({
+            "text":       normalized,
+            "confidence": item["confidence"],
+            "bbox":       item["bbox"],
+        })
+
+    return chords
 
 
 def get_ocr(det_variant: "str | None" = None) -> "_PaddleOCRType":
@@ -178,6 +277,7 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
         # Stage 4 — post-process: map coords back to original image
         # --------------------------------------------------------------
         t0 = time.perf_counter()
+        raw_items: list[dict] = []
         if raw_result:
             res = raw_result[0]
             rec_texts  = res.get("rec_texts",  []) or []
@@ -205,16 +305,18 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
                         x_offset = entry.get("x0", 0)
                         break
 
-                items.append({
-                    "text":       normalize_chord_text(str(text)),
+                raw_items.append({
+                    "raw_text":   str(text),
                     "confidence": float(confidence),
-                    "bbox":       [
+                    "bbox": [
                         int(min(xs)) + x_offset,
                         int(min(ys)) + y_offset,
                         int(max(xs)) + x_offset,
                         int(max(ys)) + y_offset,
                     ],
                 })
+
+        items.extend(_apply_direction_filter(raw_items))
         post_ms = (time.perf_counter() - t0) * 1000
 
         meta = {
@@ -246,19 +348,21 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
             rec_scores = res.get("rec_scores", []) or []
             rec_polys  = res.get("rec_polys",  []) or []
 
+            raw_region_items: list[dict] = []
             for text, confidence, poly in zip(rec_texts, rec_scores, rec_polys):
                 xs = [p[0] for p in poly]
                 ys = [p[1] for p in poly]
-                items.append({
-                    "text":       normalize_chord_text(str(text)),
+                raw_region_items.append({
+                    "raw_text":   str(text),
                     "confidence": float(confidence),
-                    "bbox":       [
+                    "bbox": [
                         int(min(xs)) + x0,
                         int(min(ys)) + y0,
                         int(max(xs)) + x0,
                         int(max(ys)) + y0,
                     ],
                 })
+            items.extend(_apply_direction_filter(raw_region_items))
             post_ms += (time.perf_counter() - t0) * 1000
 
         meta = {

@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import logging
+
 import cv2
 import numpy as np
 from PIL import Image
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Left-margin crop constants
@@ -11,6 +15,11 @@ from PIL import Image
 _CHORD_X_MARGIN_RATIO = 0.08
 # Minimum consecutive blank columns required to confirm a margin/chord gap.
 _GAP_MIN_COLS = 4
+# Bar numbers end within this fraction; tempo/clef markings extend past it.
+# Used to avoid over-cropping on the first staff row where the tempo marking
+# (♩=62, time sig) sits in the chord band but must NOT be treated as a
+# bar-number margin.
+_NARROW_MARGIN_RATIO = 0.03
 
 
 # ---------------------------------------------------------------------------
@@ -79,6 +88,8 @@ def detect_staff_systems(img) -> list[tuple[int, int]]:
             gray = np.array(img.convert("L"))
 
         H, W = gray.shape
+        if H < 10 or W < 10:
+            return []
 
         # --- Binarise (Otsu) ---
         _, binary = cv2.threshold(gray, 0, 255,
@@ -144,6 +155,7 @@ def detect_staff_systems(img) -> list[tuple[int, int]]:
         return systems
 
     except Exception:
+        logger.warning("Staff detection failed; returning empty systems", exc_info=True)
         return []
 
 
@@ -174,6 +186,13 @@ def find_chord_x_start(band_crop: np.ndarray) -> int:
 
     right_edge = max(margin_cols) + 1
 
+    # Guard: if margin content extends past the narrow zone it is likely a
+    # tempo/clef marking on the first staff row, not a bar number.  Do not
+    # crop — returning 0 keeps the full-width scan for that row.
+    narrow_margin = int(W * _NARROW_MARGIN_RATIO)
+    if right_edge > narrow_margin:
+        return 0
+
     # Skip gap after margin content; find where chords resume
     x = right_edge
     while x < W and col_proj[x] <= noise_floor:
@@ -186,8 +205,11 @@ def find_chord_x_start(band_crop: np.ndarray) -> int:
 def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
     """Build chord-band crop dicts for each staff system.
 
-    For each system the chord band is the strip directly above the staff top
-    line where chord symbols are printed.
+    For each system the chord band is the inter-system gap between the previous
+    system's bottom line and the current system's top line.  This follows the
+    standard OMR approach (arXiv:1908.03608): the band is bounded above by the
+    previous system's bottom (preventing overlap with its notes/lyrics) and
+    below by a small pad below the current staff's top line.
 
     Parameters
     ----------
@@ -198,9 +220,9 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
     -------
     list of dicts (sorted by y0, overlapping bands merged):
         crop         : np.ndarray  RGB uint8 (h, W, 3)
-        x0           : int  always 0
+        x0           : int  left-margin crop offset (bar number / segno skip)
         y0           : int  band top in original coords
-        w            : int  image width
+        w            : int  crop width (image width minus x0)
         h            : int  band height
         staff_top    : int  top staff line Y of the associated system
         staff_bottom : int  bottom staff line Y of the associated system
@@ -214,19 +236,26 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
     H, W = arr.shape[:2]
     bands: list[dict] = []
 
-    for (top, bottom) in systems:
+    for i, (top, bottom) in enumerate(systems):
         if bottom <= top:
             continue
 
         staff_h = bottom - top
         line_spacing = max(6, staff_h / 4)  # 5 lines → 4 gaps
 
-        gap_above = max(8,  min(26,  int(line_spacing * 0.70)))
-        pad_below = max(4,  min(16,  int(line_spacing * 0.40)))
-        band_h    = max(80, min(190, int(line_spacing * 3.40)))
+        # Allow up to 3 × line_spacing above the staff; floor at 40 px for
+        # small staves.  This matches the 2–4 × unit_size range from OMR
+        # literature while being conservative enough to avoid notes below.
+        max_above = max(40, min(80, int(line_spacing * 3.0)))
+        pad_below = max(4,  min(8,  int(line_spacing * 0.30)))
+
+        # Inter-system boundary: the band must not extend above the previous
+        # system's bottom line (which would capture its notes or lyrics).
+        # For the first system the boundary is the top of the image (0).
+        prev_bottom = systems[i - 1][1] if i > 0 else 0
 
         band_bottom = min(H, top + pad_below)
-        band_top    = max(0, top - gap_above - band_h)
+        band_top    = max(prev_bottom, top - max_above)
 
         if band_bottom <= band_top:
             continue
@@ -243,9 +272,7 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
             "staff_top":    top,
             "staff_bottom": bottom,
             "line_spacing": line_spacing,
-            "gap_above":    gap_above,
             "pad_below":    pad_below,
-            "band_h":       band_h,
         })
 
     if not bands:
@@ -273,9 +300,7 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
                 "staff_top":    prev["staff_top"],
                 "staff_bottom": band["staff_bottom"],
                 "line_spacing": prev["line_spacing"],
-                "gap_above":    prev["gap_above"],
                 "pad_below":    prev["pad_below"],
-                "band_h":       prev["band_h"],
             }
         else:
             merged.append(band)

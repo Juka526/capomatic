@@ -115,7 +115,7 @@ def _run_claude(image_path: str) -> tuple[list[list[str]], str | None]:
             "Set it to use provider='claude'."
         )
 
-    ext = image_path.rsplit(".", 1)[-1].lower()
+    ext = image_path.rsplit(".", 1)[-1].lower() if "." in image_path else "png"
     media_type = _MEDIA_TYPES.get(ext, "image/jpeg")
 
     with open(image_path, "rb") as f:
@@ -142,8 +142,11 @@ def _run_claude(image_path: str) -> tuple[list[list[str]], str | None]:
     )
 
     raw_text = response.content[0].text
-    data = json.loads(raw_text)
-    rows = data["rows"]
+    try:
+        data = json.loads(raw_text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Claude returned invalid JSON: {exc}") from exc
+    rows = data.get("rows")
     if not isinstance(rows, list):
         raise ValueError(f"Expected 'rows' to be a list, got {type(rows)}")
     return rows, raw_text

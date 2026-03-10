@@ -21,6 +21,12 @@ def normalize_chord_text(s: str) -> str:
     # Case-fold OCR-mangled quality/modifier tokens (e.g. engraving fonts).
     # Applied before min→m so ordering is safe.
     s = re.sub(r"(?i)maj", "maj", s)   # mAj, MAj, MAJ → maj
+    # Uppercase M as standalone major quality: CM7 → Cmaj7, FM7/A → Fmaj7/A.
+    # Must run after "maj" folding to avoid double-replacement (Cmaj → Cmajaj).
+    # Pattern: root [A-G][#b]? followed by M then digit — the M is major.
+    # Uses two fixed-width lookbehinds (Python 3.9 requires fixed width).
+    s = re.sub(r"(?<=[A-Ga-g][#b])M(?=\d)", "maj", s)
+    s = re.sub(r"(?<=[A-Ga-g])M(?=\d)", "maj", s)
     s = re.sub(r"(?i)dim", "dim", s)   # DIm, DIM, dIm → dim
     s = re.sub(r"(?i)sus", "sus", s)   # SUS, Sus       → sus
     s = re.sub(r"(?i)add", "add", s)   # ADD, Add       → add
