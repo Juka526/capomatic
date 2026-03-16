@@ -39,6 +39,34 @@ python scripts/ocr_debug.py "fixtures/images/<filename>"
 Writes `tmp/debug_regions.png` — the original image with each OCR band
 highlighted so you can verify the crop geometry visually.
 
+**Start the API server:**
+```bash
+PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True uvicorn backend.api.main:app --port 8000
+```
+
+**Overlay (detect → transpose → render):**
+```bash
+curl -X POST http://localhost:8000/overlay \
+  -F "image=@fixtures/images/친구야.jpeg" \
+  -F "semitones=2" \
+  -F "mode=replace" \
+  -o tmp/overlay_output.png
+```
+
+| Parameter    | Description                                              |
+|--------------|----------------------------------------------------------|
+| `image`      | JPEG or PNG sheet music image                            |
+| `semitones`  | Semitone shift, `-11` to `11`                            |
+| `target_key` | Optional key name (e.g. `Bb`, `F#`) for spelling         |
+| `mode`       | `replace` (white box + new chord) or `above` (orange above original) |
+
+**Detect only (JSON response):**
+```bash
+curl -X POST http://localhost:8000/detect \
+  -F "image=@fixtures/images/친구야.jpeg" \
+  -F "semitones=2"
+```
+
 **Unit tests:**
 ```bash
 python -m pytest
@@ -99,8 +127,10 @@ top-40% global crop.  MVP assumes minimal skew (no deskew required).
 ```
 transchord/
 ├── backend/
+│   ├── api/            FastAPI server (detect + overlay endpoints)
 │   ├── chords/         chord parser + transpose engine
-│   └── ocr/            OCR runners (stub + PaddleOCR) + filter
+│   ├── ocr/            OCR runners (stub + PaddleOCR) + filter
+│   └── overlay/        render transposed chords onto sheet image
 ├── fixtures/
 │   ├── images/         test images (drop .jpg/.png here)
 │   └── labels/         ground-truth JSON labels

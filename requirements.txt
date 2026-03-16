@@ -3,7 +3,7 @@ pytest
 
 # Section 3
 paddleocr>=3.0.1
-paddlepaddle>=3.3.0,<4   # CPU build; see README for mac install if this fails
+paddlepaddle>=3.3.0,<4   # CPU build; install via: pip install paddlepaddle -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
 opencv-python-headless
 Pillow
 numpy<2               # PaddleOCR/matplotlib compiled against NumPy 1.x; 2.x causes ImportError
