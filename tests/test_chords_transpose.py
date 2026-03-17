@@ -1,6 +1,6 @@
 import pytest
 from backend.chords.parser import parse_chord
-from backend.chords.transpose import transpose_note, transpose_chord
+from backend.chords.transpose import transpose_note, transpose_chord, compute_target_key
 
 # ---------------------------------------------------------------------------
 # transpose_note — basic pitch arithmetic
@@ -24,25 +24,15 @@ def test_transpose_note_zero():
 # Forbidden spelling guards
 # ---------------------------------------------------------------------------
 
-def test_no_b_sharp():
-    # B + 1 must be C, never B#
-    assert transpose_note("B", 1) == "C"
-
-def test_no_e_sharp():
-    # E + 1 must be F, never E#
-    assert transpose_note("E", 1) == "F"
-
-def test_no_f_double_sharp():
-    # F# + 1 with sharp preference must be G, never F##
-    assert transpose_note("F#", 1, "sharp") == "G"
-
-def test_no_c_flat():
-    # C - 1 with flat preference must be B, never Cb
-    assert transpose_note("C", -1, "flat") == "B"
-
-def test_no_f_flat():
-    # F - 1 with flat preference must be E, never Fb
-    assert transpose_note("F", -1, "flat") == "E"
+@pytest.mark.parametrize("note,semi,prefer,expected", [
+    ("B",  1, "sharp", "C"),   # never B#
+    ("E",  1, "sharp", "F"),   # never E#
+    ("F#", 1, "sharp", "G"),   # never F##
+    ("C", -1, "flat",  "B"),   # never Cb
+    ("F", -1, "flat",  "E"),   # never Fb
+])
+def test_forbidden_spellings(note, semi, prefer, expected):
+    assert transpose_note(note, semi, prefer) == expected
 
 
 # ---------------------------------------------------------------------------
@@ -50,30 +40,20 @@ def test_no_f_flat():
 # ---------------------------------------------------------------------------
 
 def test_flat_preference_a_sharp_to_bb():
-    # A + 1 semitone with flat preference = Bb, not A#
     assert transpose_note("A", 1, "flat") == "Bb"
 
 def test_sharp_preference_a_sharp():
     assert transpose_note("A", 1, "sharp") == "A#"
 
-def test_target_key_bb_gives_flat():
-    # A + 1 with target_key="Bb" -> Bb
+@pytest.mark.parametrize("target_key,expected", [
+    ("Bb", "Bb"),   # flat key → flat
+    ("F",  "Bb"),   # flat key → flat
+    ("E",  "A#"),   # sharp key → sharp
+    ("F#", "A#"),   # sharp key → sharp
+])
+def test_target_key_preference(target_key, expected):
     c = parse_chord("A")
-    assert transpose_chord(c, 1, target_key="Bb") == "Bb"
-
-def test_target_key_e_gives_sharp():
-    # A + 1 with target_key="E" -> A# (sharp-preferred key)
-    c = parse_chord("A")
-    assert transpose_chord(c, 1, target_key="E") == "A#"
-
-def test_target_key_f_gives_flat():
-    c = parse_chord("A")
-    assert transpose_chord(c, 1, target_key="F") == "Bb"
-
-def test_target_key_fsharp_gives_sharp():
-    # F# is sharp-preferred per spec (not in flat keys)
-    c = parse_chord("A")
-    assert transpose_chord(c, 1, target_key="F#") == "A#"
+    assert transpose_chord(c, 1, target_key=target_key) == expected
 
 
 # ---------------------------------------------------------------------------
@@ -140,3 +120,40 @@ def test_roundtrip_fsharp_m7():
     c2 = parse_chord(up)
     down = transpose_chord(c2, -2)
     assert down == "F#m7"
+
+
+# ---------------------------------------------------------------------------
+# compute_target_key — key name transposition
+# ---------------------------------------------------------------------------
+
+class TestComputeTargetKey:
+    def test_c_up_2(self):
+        assert compute_target_key("C", 2) == "D"
+
+    def test_a_up_3(self):
+        assert compute_target_key("A", 3) == "C"
+
+    def test_b_up_1_wraps(self):
+        assert compute_target_key("B", 1) == "C"
+
+    def test_zero_no_change(self):
+        assert compute_target_key("G", 0) == "G"
+
+    def test_standard_flat_name(self):
+        """Index 1 should be Db, not C#."""
+        assert compute_target_key("C", 1) == "Db"
+
+    def test_f_sharp_not_gb(self):
+        """Index 6 should be F#, not Gb."""
+        assert compute_target_key("C", 6) == "F#"
+
+    def test_negative_semitones(self):
+        assert compute_target_key("C", -3) == "A"
+
+    def test_enharmonic_input_normalized(self):
+        """Gb input should resolve to the same index as F#."""
+        assert compute_target_key("Gb", 0) == "F#"
+
+    def test_invalid_note_raises(self):
+        with pytest.raises(ValueError):
+            compute_target_key("Z", 3)

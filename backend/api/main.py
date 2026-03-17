@@ -28,7 +28,8 @@ from PIL import Image
 from backend.ocr.hybrid_detect import detect_chords_hybrid
 from backend.ocr.paddle_ocr import get_ocr
 from backend.chords.parser import parse_chord
-from backend.chords.transpose import transpose_chord
+from backend.chords.transpose import transpose_chord, compute_target_key
+from backend.chords.key_detect import infer_key
 from backend.overlay.render import render_overlay
 
 logger = logging.getLogger(__name__)
@@ -56,7 +57,8 @@ app = FastAPI(title="transchord", version="0.1.0", lifespan=lifespan)
 
 def _validate_params(
     semitones: int,
-    target_key: str | None,
+    target_key: str | None = None,
+    original_key: str | None = None,
 ) -> None:
     """Validate common request parameters; raise HTTPException on failure."""
     if not (-11 <= semitones <= 11):
@@ -69,6 +71,30 @@ def _validate_params(
             status_code=422,
             detail=f"target_key must be one of {sorted(_VALID_KEYS)}, got {target_key!r}",
         )
+    if original_key is not None and original_key not in _VALID_KEYS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"original_key must be one of {sorted(_VALID_KEYS)}, got {original_key!r}",
+        )
+
+
+def _resolve_keys(
+    items: list[dict],
+    semitones: int,
+    original_key: str | None = None,
+    target_key: str | None = None,
+) -> tuple[str | None, str | None]:
+    """Resolve original and target keys from detected chords.
+
+    Auto-detects original_key from chord roots if not provided.
+    Auto-computes target_key from original_key + semitones if not provided.
+    Explicit overrides take precedence over auto-detection.
+    """
+    if original_key is None:
+        original_key = infer_key(items)
+    if target_key is None and original_key is not None:
+        target_key = compute_target_key(original_key, semitones)
+    return original_key, target_key
 
 
 def _build_chord_item(item: dict, semitones: int, target_key: str | None) -> dict:
@@ -111,18 +137,20 @@ async def detect(
     image: UploadFile = File(...),
     semitones: int = Form(0),
     target_key: Optional[str] = Form(None),
+    original_key: Optional[str] = Form(None),
 ) -> dict:
     """Detect chord symbols in *image*, transpose by *semitones*, return JSON.
 
     Parameters
     ----------
-    image       : JPEG or PNG sheet music image.
-    semitones   : Semitone shift applied to every detected chord (-11 to +11).
-    target_key  : Optional target key name (e.g. "F", "Bb") used to select
-                  flat vs sharp enharmonic spelling in the transposed output.
-                  When omitted the spelling is inferred from semitones alone.
+    image        : JPEG or PNG sheet music image.
+    semitones    : Semitone shift applied to every detected chord (-11 to +11).
+    target_key   : Optional override for enharmonic spelling preference.
+                   When omitted, auto-computed from the detected original key.
+    original_key : Optional override for the original key of the song.
+                   When omitted, auto-detected from the chord progression.
     """
-    _validate_params(semitones, target_key)
+    _validate_params(semitones, target_key, original_key)
 
     data = await _read_upload(image)
     suffix = os.path.splitext(image.filename or "upload.png")[1] or ".png"
@@ -138,6 +166,9 @@ async def detect(
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
+    original_key, target_key = _resolve_keys(
+        items, semitones, original_key, target_key,
+    )
     chords = [_build_chord_item(item, semitones, target_key) for item in items]
 
     # Return a small, JSON-safe subset of the pipeline metadata.
@@ -151,11 +182,12 @@ async def detect(
     }
 
     return {
-        "chords":     chords,
-        "count":      len(chords),
-        "semitones":  semitones,
-        "target_key": target_key,
-        "meta":       meta,
+        "chords":      chords,
+        "count":       len(chords),
+        "semitones":   semitones,
+        "original_key": original_key,
+        "target_key":  target_key,
+        "meta":        meta,
     }
 
 
@@ -164,19 +196,23 @@ async def overlay(
     image: UploadFile = File(...),
     semitones: int = Form(0),
     target_key: Optional[str] = Form(None),
+    original_key: Optional[str] = Form(None),
     mode: str = Form("above"),
 ) -> StreamingResponse:
     """Detect chords, transpose, render overlay, return PNG image.
 
     Parameters
     ----------
-    image      : JPEG or PNG sheet music image.
-    semitones  : Semitone shift applied to every detected chord (-11 to +11).
-    target_key : Optional target key for enharmonic spelling preference.
-    mode       : "above"   — orange transposed chord printed above each original (default).
-                 "replace" — white box over original chord, new chord on top.
+    image        : JPEG or PNG sheet music image.
+    semitones    : Semitone shift applied to every detected chord (-11 to +11).
+    target_key   : Optional override for enharmonic spelling preference.
+                   When omitted, auto-computed from the detected original key.
+    original_key : Optional override for the original key of the song.
+                   When omitted, auto-detected from the chord progression.
+    mode         : "above"   — orange transposed chord printed above each original (default).
+                   "replace" — white box over original chord, new chord on top.
     """
-    _validate_params(semitones, target_key)
+    _validate_params(semitones, target_key, original_key)
     if mode not in ("above", "replace"):
         raise HTTPException(
             status_code=422,
@@ -199,9 +235,17 @@ async def overlay(
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
+    original_key, target_key = _resolve_keys(
+        items, semitones, original_key, target_key,
+    )
     chords = [_build_chord_item(item, semitones, target_key) for item in items]
 
-    result = render_overlay(img, chords, mode)
+    result = render_overlay(
+        img, chords, mode,
+        original_key=original_key,
+        target_key=target_key,
+        semitones=semitones,
+    )
 
     elapsed_ms = int((time.perf_counter() - t_start) * 1000)
 

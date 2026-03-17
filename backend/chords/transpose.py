@@ -12,6 +12,11 @@ _ENHARMONIC_IN = {"E#": "F", "B#": "C", "Cb": "B", "Fb": "E"}
 # Keys that prefer flat spelling in output.
 _FLAT_KEYS = {"F", "Bb", "Eb", "Ab", "Db"}
 
+# Standard key names for each chromatic index.
+# Uses flats for enharmonic pairs (Db not C#, Eb not D#, etc.) except F# which
+# is more standard than Gb.  Used by compute_target_key() and key_detect.
+_KEY_NAMES = ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
+
 
 def _note_to_index(note: str) -> int:
     """Return chromatic index 0-11 for a note name."""
@@ -40,6 +45,18 @@ def _key_preference(target_key: Optional[str]) -> str:
         return "sharp"
     # Gb is treated as F# (sharp-preferred); all other flat keys use flat.
     return "flat" if target_key in _FLAT_KEYS else "sharp"
+
+
+def compute_target_key(original_key: str, semitones: int) -> str:
+    """Compute the target key by transposing *original_key* by *semitones*.
+
+    Returns the most standard key name for the resulting chromatic position
+    (e.g. "Db" not "C#", but "F#" not "Gb").
+
+    Raises ValueError if *original_key* is not a recognised note name.
+    """
+    idx = _note_to_index(original_key)
+    return _KEY_NAMES[(idx + semitones) % 12]
 
 
 def transpose_chord(

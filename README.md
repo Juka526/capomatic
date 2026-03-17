@@ -44,6 +44,11 @@ highlighted so you can verify the crop geometry visually.
 PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True uvicorn backend.api.main:app --port 8000
 ```
 
+**Kill the API server:**
+```bash
+lsof -ti :8000 | xargs kill
+```
+
 **Overlay (detect → transpose → render):**
 ```bash
 curl -X POST http://localhost:8000/overlay \
