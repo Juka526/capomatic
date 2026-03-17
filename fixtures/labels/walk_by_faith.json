@@ -1,0 +1,11 @@
+{
+  "image": "믿음으로 나아가네.png",
+  "expected_unique_chords": [
+    "Bbmaj7", "F/A", "Gm7", "Bb/C", "C", "C/Bb",
+    "Am7", "Dm7", "F", "Bb/F", "F/Eb", "Eb", "Csus4", "C/D", "Bb/D", "C/E"
+  ],
+  "hard_targets": [],
+  "expected_total_chords_min": 50,
+  "expected_total_chords_max": 70,
+  "notes": "믿음으로 나아가네 — Original key F worship sheet. 16 unique chords across 8 staff systems. BbM7 written as uppercase M in sheet; normalized to Bbmaj7."
+}

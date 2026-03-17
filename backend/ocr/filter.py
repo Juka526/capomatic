@@ -18,6 +18,13 @@ from backend.chords.parser import parse_chord
 # low-confidence noise never accidentally passes the chord filter.
 CONFIDENCE_THRESHOLD = 0.78
 
+# Lower floor for chord-syntax rescue: detections between this and
+# CONFIDENCE_THRESHOLD are accepted only if they pass the strict chord
+# regex.  The regex is selective enough that random OCR noise virtually
+# never matches, so this rescues real chords (e.g. "Gm6" at 0.70) that
+# fall just below the main threshold.
+_RESCUE_FLOOR = 0.50
+
 # ---------------------------------------------------------------------------
 # Strict regex (pass 1)
 # ---------------------------------------------------------------------------
@@ -67,6 +74,11 @@ _SPLIT_ROOT_RE = re.compile(r"(?<=[^/])([A-G][#b]?)")
 # Matches a leading digit sequence followed by a chord root, e.g. "7Am", "4G/B".
 # The captured group is the chord portion (everything after the digits).
 _LEADING_NUM_RE = re.compile(r"^\d+([A-G].*)$")
+
+# OCR confusion: trailing "b" after a quality/extension → try "6".
+# In music-engraving fonts, "6" and "b" (flat) are visually similar and OCR
+# frequently misreads one as the other.  "Gmb" is not a valid chord but "Gm6" is.
+_TRAILING_B_RE = re.compile(r'^([A-G][#b]?(?:maj|m(?!aj)|dim|aug|sus)?)b$')
 
 
 def _strip_leading_number(text: str) -> str | None:
@@ -163,6 +175,14 @@ def recover_candidates(
                 recovered.append({**item, "text": norm})
                 parse_count += 1
                 continue
+            # OCR confusion: trailing "b" → "6" (e.g. "Gmb" → "Gm6")
+            m_b = _TRAILING_B_RE.match(norm)
+            if m_b:
+                alt = m_b.group(1) + "6"
+                if is_chord_candidate(alt):
+                    recovered.append({**item, "text": alt})
+                    parse_count += 1
+                    continue
 
         # Pre-screen: skip items that clearly cannot be chords.
         if not _LOOSE_RE.match(text):
@@ -209,10 +229,21 @@ def filter_candidates(ocr_items: list[dict]) -> list[dict]:
     """Keep only items whose ``text`` field is a valid chord symbol.
 
     Runs the strict regex first, then attempts recovery on failing items.
+    Items below CONFIDENCE_THRESHOLD but above _RESCUE_FLOOR are accepted
+    if they pass the strict chord regex (chord-syntax rescue).
     Bbox and confidence are preserved (split items share the source bbox).
     """
     candidates = [item for item in ocr_items if item["confidence"] > CONFIDENCE_THRESHOLD]
     strict = [item for item in candidates if is_chord_candidate(item["text"])]
     failed = [item for item in candidates if not is_chord_candidate(item["text"])]
     extra, _, _ = recover_candidates(failed)
-    return strict + extra
+
+    # Chord-syntax rescue: accept lower-confidence items that match the
+    # strict chord regex.  The regex rejects noise so this is safe.
+    rescued = [
+        item for item in ocr_items
+        if _RESCUE_FLOOR < item["confidence"] <= CONFIDENCE_THRESHOLD
+        and is_chord_candidate(item["text"])
+    ]
+
+    return strict + extra + rescued

@@ -12,10 +12,10 @@
     "Cmaj7",
     "G/B",
     "A7sus4",
-    "A7"
+    "A7",
+    "Gm6"
   ],
   "hard_targets": [
-    "Gm6",
     "A/D",
     "G/D",
     "Dsus4"

@@ -26,7 +26,7 @@ _ocr_instances: "dict[str, _PaddleOCRType]" = {}
 # Canvases larger than this are downscaled proportionally with INTER_AREA before
 # inference and their OCR coordinates are scaled back afterward.
 # Lower values reduce predict() time; too low degrades small-text accuracy.
-MAX_STITCHED_PIXELS = 450_000
+MAX_STITCHED_PIXELS = 600_000
 
 # ---------------------------------------------------------------------------
 # Spatial context filter — direction-marker proximity rejection
@@ -47,6 +47,11 @@ _BARE_ROOT_RE = re.compile(r'^[A-G]$')
 # Proximity thresholds for the direction-toxin check.
 _DIRECTION_PROXIMITY_X = 150  # px: horizontal distance to direction token center
 _DIRECTION_PROXIMITY_Y = 30   # px: vertical distance to direction token center
+
+# Volta bracket prefix: matches "1.", "2.", "|3.", etc. at the start of OCR text.
+# These appear when PaddleOCR reads volta bracket endings (1st/2nd/3rd endings)
+# as a single text block, e.g. "2. Bb/D C/E F/A D.S." or "|3.Bb/D".
+_VOLTA_PREFIX_RE = re.compile(r'^\|?\d+\.?\s*')
 
 
 def _is_direction_token(raw_text: str) -> bool:
@@ -80,6 +85,37 @@ def _near_any_direction(
     return False
 
 
+def _extract_volta_chords(raw_text: str, item: dict) -> list[dict]:
+    """Extract chord symbols from volta bracket OCR text.
+
+    PaddleOCR may read volta endings as a single text block, e.g.
+    "2. Bb/D C/E F/A D.S." or "|3.Bb/D".  This function strips the volta
+    numbering, splits by whitespace, normalises each token, and returns
+    valid chord items.  Non-chord tokens (D.S., al, Coda) are discarded.
+
+    Returns an empty list if the text does not look like a volta block.
+    """
+    stripped = _VOLTA_PREFIX_RE.sub("", raw_text).strip()
+    if not stripped:
+        return []
+
+    tokens = stripped.split()
+    results: list[dict] = []
+    for token in tokens:
+        # Skip direction markers (D.S., al, Coda, Fine, etc.)
+        if "." in token or _is_direction_token(token):
+            continue
+        normalized = normalize_chord_text(token)
+        if not normalized:
+            continue
+        results.append({
+            "text":       normalized,
+            "confidence": item["confidence"],
+            "bbox":       item["bbox"],
+        })
+    return results
+
+
 def _apply_direction_filter(raw_items: list[dict]) -> list[dict]:
     """Convert raw OCR items to chord dicts, rejecting direction-contaminated detections.
 
@@ -105,6 +141,12 @@ def _apply_direction_filter(raw_items: list[dict]) -> list[dict]:
     chords: list[dict] = []
     for item in raw_items:
         raw_text = item["raw_text"]
+
+        # Volta bracket extraction: try to recover chords from text like
+        # "2. Bb/D C/E F/A D.S." before the period filter discards it.
+        if "." in raw_text and _VOLTA_PREFIX_RE.match(raw_text):
+            chords.extend(_extract_volta_chords(raw_text, item))
+            continue
 
         # Period in the raw text → definitely a direction marker, not a chord.
         if "." in raw_text:

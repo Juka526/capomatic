@@ -223,6 +223,14 @@ def _render_above(img: Image.Image, chords: list[dict]) -> Image.Image:
 # ---------------------------------------------------------------------------
 
 def _render_replace(img: Image.Image, chords: list[dict]) -> Image.Image:
+    W, H = img.size
+
+    # Uniform font size — median bbox height across all chords.
+    all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)
+    median_h  = all_heights[len(all_heights) // 2]
+    font_size = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
+    font      = _load_font(font_size)
+
     # Pass 1 — draw semi-transparent white boxes via RGBA compositing
     img_rgba = img.convert("RGBA")
     overlay  = Image.new("RGBA", img_rgba.size, (0, 0, 0, 0))
@@ -237,15 +245,14 @@ def _render_replace(img: Image.Image, chords: list[dict]) -> Image.Image:
 
     composited = Image.alpha_composite(img_rgba, overlay).convert("RGB")
 
-    # Pass 2 — draw transposed text on top of the white boxes
-    # Use a uniform median font size across all chords (same as above mode).
+    # Pass 2 — greedy left-to-right placement per row to avoid overlap,
+    # keeping the uniform font size so no chord looks different from others.
     draw = ImageDraw.Draw(composited)
-    all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)
-    median_h  = all_heights[len(all_heights) // 2]
-    font_size = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
-    font      = _load_font(font_size)
-    for chord in chords:
-        x1, y1, x2, y2 = chord["bbox"]
-        draw.text((x1, y1), chord["transposed"], fill=_DARK_BLUE, font=font)
+    rows = _cluster_by_row(chords)
+    for row in rows:
+        for chord, label_x in _place_row_labels(row, font, W):
+            y1 = chord["bbox"][1]
+            draw.text((label_x, y1), chord["transposed"],
+                      fill=_DARK_BLUE, font=font)
 
     return composited
