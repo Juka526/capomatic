@@ -28,6 +28,7 @@ from backend.ocr.paddle_ocr import run_ocr_paddle
 logger = logging.getLogger(__name__)
 from backend.ocr.filter import (
     CONFIDENCE_THRESHOLD,
+    _RESCUE_FLOOR,
     is_chord_candidate,
     recover_candidates,
 )
@@ -104,6 +105,12 @@ def detect_chords_hybrid(
     strict    = [i for i in confident if is_chord_candidate(i["text"])]
     failed    = [i for i in confident if not is_chord_candidate(i["text"])]
     recovered, parse_count, split_count = recover_candidates(failed)
+    # Chord-syntax rescue for lower-confidence items
+    rescued = [
+        i for i in raw_items
+        if _RESCUE_FLOOR < i["confidence"] <= CONFIDENCE_THRESHOLD
+        and is_chord_candidate(i["text"])
+    ]
 
     # ------------------------------------------------------------------
     # 3. Quality gate (kept for diagnostics; no longer gates Claude)
@@ -115,7 +122,7 @@ def detect_chords_hybrid(
     # ------------------------------------------------------------------
     if ai_result is not None and ai_result.rows:
         # Always-on merge: Claude text is authoritative, Paddle bboxes reused
-        paddle_rows = cluster_paddle_items_by_row(strict + recovered)
+        paddle_rows = cluster_paddle_items_by_row(strict + recovered + rescued)
         final_items = merge_rows(paddle_rows, ai_result.rows)
         ai_used = True
         merge_stats: dict | None = {
@@ -125,8 +132,7 @@ def detect_chords_hybrid(
         }
     else:
         # Legacy path: Claude unavailable (mock, timeout, API error)
-        # Exact pre-refineOCR behaviour preserved for backward compatibility
-        final_items = strict + recovered
+        final_items = strict + recovered + rescued
         ai_used = False
         merge_stats = None
 

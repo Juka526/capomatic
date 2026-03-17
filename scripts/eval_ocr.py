@@ -25,7 +25,7 @@ def build_runner(engine: str):
         get_ocr()  # initialise singleton before timed evaluation begins
         print("Engine ready.\n", flush=True)
 
-        from backend.ocr.filter import recover_candidates, is_chord_candidate, CONFIDENCE_THRESHOLD  # noqa: PLC0415
+        from backend.ocr.filter import recover_candidates, is_chord_candidate, CONFIDENCE_THRESHOLD, _RESCUE_FLOOR  # noqa: PLC0415
 
         _meta: dict = {}      # side-channel: crop mode + region info
         _recovery: dict = {}  # side-channel: parse/split recovery counts
@@ -40,7 +40,13 @@ def build_runner(engine: str):
             extra, pc, sc = recover_candidates(failed)
             _recovery["parse"] = pc
             _recovery["split"] = sc
-            return strict + extra
+            # Chord-syntax rescue for lower-confidence items
+            rescued = [
+                i for i in items
+                if _RESCUE_FLOOR < i["confidence"] <= CONFIDENCE_THRESHOLD
+                and is_chord_candidate(i["text"])
+            ]
+            return strict + extra + rescued
 
         run_ocr.last_meta     = _meta      # type: ignore[attr-defined]
         run_ocr.last_recovery = _recovery  # type: ignore[attr-defined]

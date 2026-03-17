@@ -129,10 +129,11 @@ def detect_staff_systems(img) -> list[tuple[int, int]]:
         line_ys = sorted(set(line_ys))
 
         # --- Cluster consecutive y-values into staff groups ---
-        # Gap threshold: 15px or ~0.9% of image height, whichever is larger.
-        # 15px (raised from 12) avoids splitting a staff whose lines are
-        # unevenly spaced by up to ~13px (common in lower-res scans).
-        gap_threshold = max(15, int(H * 0.009))
+        # Gap threshold: 20px or ~1.2% of image height, whichever is larger.
+        # 20px (raised from 15) avoids splitting a staff when the morphological
+        # open misses a middle line, creating an up-to-17px gap between detected
+        # segments.  The smallest inter-system gap is ~126px, so 20px is safe.
+        gap_threshold = max(20, int(H * 0.012))
         clusters: list[list[int]] = []
         current: list[int] = [line_ys[0]]
 
@@ -243,10 +244,11 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
         staff_h = bottom - top
         line_spacing = max(6, staff_h / 4)  # 5 lines → 4 gaps
 
-        # Allow up to 3 × line_spacing above the staff; floor at 40 px for
-        # small staves.  This matches the 2–4 × unit_size range from OMR
-        # literature while being conservative enough to avoid notes below.
-        max_above = max(40, min(80, int(line_spacing * 3.0)))
+        # Allow up to 3 × line_spacing above the staff; floor at 55 px for
+        # small staves.  Raised from 40 to capture volta bracket chords
+        # (1st/2nd/3rd endings) whose bracket line sits ~15 px above the
+        # chord text.  Still bounded by prev_bottom so no system overlap.
+        max_above = max(55, min(80, int(line_spacing * 3.0)))
         pad_below = max(4,  min(8,  int(line_spacing * 0.30)))
 
         # Inter-system boundary: the band must not extend above the previous
