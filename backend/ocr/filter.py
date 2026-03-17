@@ -198,6 +198,17 @@ def recover_candidates(
             parse_count += 1
             continue
 
+        # OCR confusion: trailing "b" → "6" (e.g. "Gmb" → "Gm6").
+        # Applied here for items that arrive without leading numbers
+        # (e.g. after multi-token space-splitting of "17 Gmb").
+        m_b = _TRAILING_B_RE.match(norm)
+        if m_b:
+            alt = m_b.group(1) + "6"
+            if is_chord_candidate(alt):
+                recovered.append({**item, "text": alt})
+                parse_count += 1
+                continue
+
         # Secondary check: parse_chord as a less strict gate, still guarded by
         # is_chord_candidate to prevent false positives.
         try:

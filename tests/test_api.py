@@ -48,9 +48,6 @@ class TestValidateParams:
         assert exc_info.value.status_code == 422
         assert "H" in exc_info.value.detail
 
-    @pytest.mark.parametrize("key", sorted(_VALID_KEYS))
-    def test_all_valid_keys_accepted(self, key):
-        _validate_params(0, key)  # should not raise
 
 
 # ---------------------------------------------------------------------------

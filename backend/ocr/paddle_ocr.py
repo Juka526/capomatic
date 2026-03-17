@@ -116,6 +116,58 @@ def _extract_volta_chords(raw_text: str, item: dict) -> list[dict]:
     return results
 
 
+def _split_multi_token(raw_text: str, item: dict) -> list[dict]:
+    """Split space-separated multi-chord OCR text into individual chord items.
+
+    PaddleOCR sometimes reads adjacent chords as a single text block,
+    e.g. "A D/E E7" or "D/E E/D".  This function splits on whitespace,
+    normalises each token, and returns valid chord items with proportionally
+    divided bounding boxes.
+
+    Returns an empty list if fewer than 2 tokens normalise to valid chords.
+    """
+    tokens = raw_text.split()
+    if len(tokens) < 2:
+        return []
+
+    normalised: list[str] = []
+    for token in tokens:
+        if _is_direction_token(token):
+            continue
+        norm = normalize_chord_text(token)
+        if norm:
+            normalised.append(norm)
+
+    if len(normalised) < 2:
+        return []
+
+    # Proportionally divide the bbox horizontally by token character count.
+    bbox = item["bbox"]
+    results: list[dict] = []
+    if bbox is not None:
+        x1, y1, x2, y2 = bbox
+        total_len = sum(len(t) for t in normalised)
+        cur_x = x1
+        for i, norm in enumerate(normalised):
+            ratio = len(norm) / total_len if total_len > 0 else 1 / len(normalised)
+            seg_w = int((x2 - x1) * ratio)
+            seg_x2 = cur_x + seg_w if i < len(normalised) - 1 else x2
+            results.append({
+                "text":       norm,
+                "confidence": item["confidence"],
+                "bbox":       [cur_x, y1, seg_x2, y2],
+            })
+            cur_x = seg_x2
+    else:
+        for norm in normalised:
+            results.append({
+                "text":       norm,
+                "confidence": item["confidence"],
+                "bbox":       None,
+            })
+    return results
+
+
 def _apply_direction_filter(raw_items: list[dict]) -> list[dict]:
     """Convert raw OCR items to chord dicts, rejecting direction-contaminated detections.
 
@@ -151,6 +203,19 @@ def _apply_direction_filter(raw_items: list[dict]) -> list[dict]:
         # Period in the raw text → definitely a direction marker, not a chord.
         if "." in raw_text:
             continue
+
+        # Multi-token splitting: "A D/E E7" or "D/E E/D" read as one block.
+        if " " in raw_text:
+            split_items = _split_multi_token(raw_text, item)
+            if split_items:
+                # Apply direction-proximity check to each split item.
+                for si in split_items:
+                    if _is_bare_root(si["text"]) and _near_any_direction(
+                        si["bbox"], direction_bboxes
+                    ):
+                        continue
+                    chords.append(si)
+                continue
 
         normalized = normalize_chord_text(raw_text)
 
