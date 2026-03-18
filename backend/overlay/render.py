@@ -24,7 +24,7 @@ _FONT_PATH = pathlib.Path(__file__).parent / "fonts" / "BravuraText.otf"
 
 # Font size = bbox_height * this scale.
 _FONT_SCALE    = 0.85
-_MIN_FONT_SIZE = 14   # never render below this — keeps labels legible
+_MIN_FONT_SIZE = 20   # never render below this — keeps labels legible
 
 # Ratio for the smaller suffix font (sus, dim, aug).
 _SMALL_FONT_RATIO = 0.70
@@ -108,6 +108,7 @@ def _chord_display_width(
     if suffix:
         w += _text_width(small_font, suffix)
     return w
+
 
 
 def _draw_chord_text(
@@ -195,6 +196,47 @@ def _place_row_labels(
     return result
 
 
+def _all_rows_fit(
+    rows: list[list[dict]],
+    font: ImageFont.ImageFont,
+    small_font: ImageFont.ImageFont,
+    img_width: int,
+    h_gap: int = 6,
+) -> bool:
+    """Return True if all chords fit at their original x without shifting."""
+    for row in rows:
+        sorted_row = sorted(row, key=lambda c: c["bbox"][0])
+        prev_right = -h_gap
+        for chord in sorted_row:
+            tw = int(_chord_display_width(chord["transposed"], font, small_font))
+            effective_w = tw + 2 * _BOX_PAD
+            natural_x = chord["bbox"][0]
+            if natural_x < prev_right + h_gap:
+                return False
+            prev_right = natural_x + effective_w
+    return True
+
+
+def _find_fit_font_size(
+    rows: list[list[dict]],
+    initial_size: int,
+    img_width: int,
+) -> int:
+    """Find the largest font size where no chord needs rightward shifting.
+
+    Starts at *initial_size* and decreases by 1 px per iteration until all
+    chords fit at their original bbox x-positions without overlap, or
+    ``_MIN_FONT_SIZE`` is reached.  At ``_MIN_FONT_SIZE`` the greedy shift
+    in ``_place_row_labels`` handles any remaining collisions.
+    """
+    for size in range(initial_size, _MIN_FONT_SIZE - 1, -1):
+        font = _load_font(size)
+        small_font = _load_font(int(size * _SMALL_FONT_RATIO))
+        if _all_rows_fit(rows, font, small_font, img_width):
+            return size
+    return _MIN_FONT_SIZE
+
+
 # ---------------------------------------------------------------------------
 # Info header (replace mode only)
 # ---------------------------------------------------------------------------
@@ -216,7 +258,7 @@ def _draw_info_header(
     if not original_key and not target_key and semitones == 0:
         return
 
-    header_font = _load_font(max(_MIN_FONT_SIZE, int(font_size * 0.65)))
+    header_font = _load_font(27)
 
     lines: list[str] = []
     if original_key and target_key:
@@ -224,7 +266,7 @@ def _draw_info_header(
             lines.append(f"Key: {original_key}")
         else:
             sign = f"+{semitones}" if semitones > 0 else str(semitones)
-            lines.append(f"{original_key} \u2192 {target_key} ({sign})")
+            lines.append(f"{original_key} -> {target_key} ({sign})")
     elif target_key:
         lines.append(f"Key: {target_key}")
     elif original_key:
@@ -235,6 +277,7 @@ def _draw_info_header(
         sign = f"+{semitones}" if semitones > 0 else str(semitones)
         lines.append(f"Semitones: {sign}")
 
+    lines.append("")  # blank line gap between key info and capo
     capo = (-semitones) % 12
     lines.append(f"Capo: {capo}" if capo else "No capo")
 
@@ -348,12 +391,13 @@ def _render_above(img: Image.Image, chords: list[dict]) -> Image.Image:
     if not rows:
         return img
 
-    # Global uniform font sizes.
+    # Global uniform font sizes — shrink if chords would overlap.
     all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)
-    median_h   = all_heights[len(all_heights) // 2]
-    font_size  = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
-    font       = _load_font(font_size)
-    small_font = _load_font(int(font_size * _SMALL_FONT_RATIO))
+    median_h    = all_heights[len(all_heights) // 2]
+    initial_size = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
+    font_size   = _find_fit_font_size(rows, initial_size, W)
+    font        = _load_font(font_size)
+    small_font  = _load_font(int(font_size * _SMALL_FONT_RATIO))
 
     # Pass 1 — check vertical space per row; record expansions needed.
     expansions: list[tuple[int, int]] = []
@@ -406,20 +450,21 @@ def _render_replace(
 ) -> Image.Image:
     """Render transposed chords over original positions with white boxes."""
     W, H = img.size
+    rows = _cluster_by_row(chords)
 
-    # Global uniform font sizes.
+    # Global uniform font sizes — shrink if chords would overlap.
     all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)
-    median_h   = all_heights[len(all_heights) // 2]
-    font_size  = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
-    font       = _load_font(font_size)
-    small_font = _load_font(int(font_size * _SMALL_FONT_RATIO))
+    median_h    = all_heights[len(all_heights) // 2]
+    initial_size = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
+    font_size   = _find_fit_font_size(rows, initial_size, W)
+    font        = _load_font(font_size)
+    small_font  = _load_font(int(font_size * _SMALL_FONT_RATIO))
 
     # ------------------------------------------------------------------
     # Pass 1 — compute placements (greedy overlap avoidance per row).
     # Collect (chord, label_x, row_y1) for each chord.
     # ------------------------------------------------------------------
     placements: list[tuple[dict, int, int]] = []
-    rows = _cluster_by_row(chords)
     for row in rows:
         row_y1 = min(c["bbox"][1] for c in row)
         for chord, label_x in _place_row_labels(row, font, small_font, W):
@@ -435,14 +480,18 @@ def _render_replace(
 
     for chord, label_x, row_y1 in placements:
         x1, y1, x2, y2 = chord["bbox"]
-        text_w = int(_chord_display_width(
-            chord["transposed"], font, small_font))
+        bh = y2 - y1
 
-        # Box covers both original bbox and the (possibly shifted) label.
-        box_x1 = min(x1, label_x) - _BOX_PAD
-        box_y1 = min(y1, row_y1) - _BOX_PAD
-        box_x2 = max(x2, label_x + text_w) + _BOX_PAD
-        box_y2 = y2 + _BOX_PAD
+        # Contract OCR bbox inward to approximate actual glyph area.
+        # PaddleOCR adds ~2–4px margin per side; shrink proportionally
+        # so the white box erases only the chord text, not surrounding
+        # musical notation (stems, dots, articulation marks).
+        shrink_y = max(1, int(bh * 0.15))
+        shrink_x = max(1, int(bh * 0.10))
+        box_x1 = x1 + shrink_x
+        box_y1 = y1 + shrink_y
+        box_x2 = x2 - shrink_x
+        box_y2 = y2 - shrink_y
 
         ov_draw.rectangle([box_x1, box_y1, box_x2, box_y2], fill=_WHITE_RGBA)
 
@@ -454,8 +503,8 @@ def _render_replace(
     draw = ImageDraw.Draw(composited)
     for chord, label_x, row_y1 in placements:
         _, y1, _, y2 = chord["bbox"]
-        box_h = (y2 + _BOX_PAD) - (min(y1, row_y1) - _BOX_PAD)
-        text_y = (min(y1, row_y1) - _BOX_PAD) + (box_h - font_size) // 2
+        box_h = y2 - y1
+        text_y = y1 + (box_h - font_size) // 2
         _draw_chord_text(draw, label_x, text_y, chord["transposed"],
                          font, small_font, _DARK_BLUE)
 

@@ -16,6 +16,7 @@ from PIL import Image
 
 from backend.ocr.preprocess import select_ocr_regions, stitch_regions
 from backend.chords.normalize import normalize_chord_text
+from backend.ocr.filter import is_chord_candidate
 
 if TYPE_CHECKING:
     from paddleocr import PaddleOCR as _PaddleOCRType
@@ -135,7 +136,7 @@ def _split_multi_token(raw_text: str, item: dict) -> list[dict]:
         if _is_direction_token(token):
             continue
         norm = normalize_chord_text(token)
-        if norm:
+        if norm and is_chord_candidate(norm):
             normalised.append(norm)
 
     if len(normalised) < 2:
