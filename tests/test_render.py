@@ -170,10 +170,10 @@ class TestRenderReplaceRefinements:
     def test_replace_white_box_opaque(self):
         # Colored background; after overlay the bbox area should be white.
         img = Image.new("RGB", (400, 300), (100, 100, 100))
-        chords = [_chord("Am", "Am", [50, 100, 90, 120])]
+        chords = [_chord("Am", "Am", [50, 90, 100, 130])]
         result = render_overlay(img, chords, "replace")
         # Sample a pixel inside the bbox — should be white (fully opaque box).
-        px = result.getpixel((60, 110))
+        px = result.getpixel((70, 110))
         assert px == (255, 255, 255), f"Expected white, got {px}"
 
     def test_row_y_alignment_no_crash(self):
@@ -194,4 +194,16 @@ class TestRenderReplaceRefinements:
             img, chords, "replace",
             original_key="F", target_key="F", semitones=0,
         )
+        assert isinstance(result, Image.Image)
+
+    def test_dense_row_reduces_font(self):
+        """Chords packed tightly should render without crashing."""
+        img = _white_img(w=200, h=100)
+        chords = [
+            _chord("Am", "Bm", [10, 40, 40, 60]),
+            _chord("C",  "D",  [45, 40, 70, 60]),
+            _chord("G",  "A",  [75, 40, 100, 60]),
+            _chord("F",  "G",  [105, 40, 130, 60]),
+        ]
+        result = render_overlay(img, chords, "replace")
         assert isinstance(result, Image.Image)
