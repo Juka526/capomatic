@@ -22,7 +22,7 @@ import base64
 import json
 import os
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from backend.chords.normalize import normalize_chord_text
 from backend.ocr.filter import is_chord_candidate

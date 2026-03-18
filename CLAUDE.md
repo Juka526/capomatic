@@ -1,112 +1,88 @@
-Python Coding Standards
+# CLAUDE.md
 
-This project uses **Python** with a strong emphasis on readability, correctness, and testability. Follow these rules for all AI-assisted changes.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-***
+## What This Project Does
 
-## 1. Style & Structure (PEP 8)
+transchord takes a church worship chord sheet image, detects chord symbols via OCR, transposes them by a given number of semitones, and renders the transposed chords back onto the image.
 
-- Follow PEP 8 for layout and naming (4-space indentation, 79–100 char lines, consistent spacing).[1][2][3][4]
-- Use **snake_case** for functions and variables, `PascalCase` for classes, and UPPER_SNAKE_CASE for constants.[1]
-- Organize code into small, focused modules instead of “god files” like `utils.py` when possible.[1]
-- Prefer pure, side-effect-free functions; keep most functions under ~30–40 lines.
+## Commands
 
-***
+```bash
+# Run all tests
+python -m pytest
 
-## 2. Project Layout
+# Run a single test file
+python -m pytest tests/test_render.py -v
 
-- Keep a clear structure (example):
+# Run a specific test
+python -m pytest tests/test_render.py::TestRenderOverlay::test_above_mode_returns_image
 
-  - `src/` or `app/`: application code  
-  - `tests/`: all tests, mirroring the `src/` layout as much as possible.[5][6]
-  - `config/` or `settings/`: configuration and environment handling  
-  - `scripts/`: one-off tools and maintenance scripts  
+# Debug OCR on a single image (writes tmp/debug_regions.png)
+PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True python scripts/ocr_debug.py "fixtures/images/<filename>"
 
-- Each module should start with a short comment or docstring describing its purpose and responsibilities.
+# Evaluate OCR accuracy against all fixtures
+PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True python scripts/eval_ocr.py --engine paddle
 
-***
+# Start API server
+PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True uvicorn backend.api.main:app --port 8000
 
-## 3. Naming & API Design
+# Test overlay via API
+curl -X POST http://localhost:8000/overlay \
+  -F "image=@fixtures/images/친구야.jpeg" \
+  -F "semitones=-1" \
+  -F "mode=replace" \
+  -o tmp/overlay_output.png
+```
 
-- Prefer explicit, descriptive names: `load_user_profile`, `calculate_discount`, `fetch_orders_for_user`.  
-- Function signatures should use keyword arguments for most optional parameters.  
-- Return consistent, well-defined types (avoid returning `None` sometimes and a dict other times from the same function).
+Note: `PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True` is required for any command that loads PaddleOCR models.
 
-***
+## Architecture
 
-## 4. Error Handling
+The pipeline flows: **Image -> Preprocess -> OCR -> Filter -> Key Detect -> Transpose -> Overlay Render**.
 
-- Use exceptions instead of error codes.  
-- Raise errors at the lowest reasonable level; catch them at service or boundary layers.[7]
-- Prefer specific exceptions over `Exception` (e.g., `ValueError`, `KeyError`, custom domain exceptions).[8][9][7]
-- Keep `try` blocks small and focused; only wrap the lines that can actually fail.[8]
-- Do not silently swallow exceptions. If you intentionally ignore one, add a short comment explaining why.[9]
+### backend/ocr/ — Detection pipeline
 
-***
+- `preprocess.py`: Staff-aware band cropping. Detects staff systems via morphological analysis, crops chord bands above each staff, stitches into a single strip for OCR.
+- `paddle_ocr.py`: PaddleOCR runner. Key functions: `run_ocr_paddle()` (main entry), `_apply_direction_filter()` (removes D.S./D.C. tokens), `_split_multi_token()` (handles space-separated multi-chord OCR text).
+- `filter.py`: Two-pass chord validation. Pass 1: strict regex (`_CHORD_RE`). Pass 2: recovery — normalize, split concatenated chords, strip leading numbers, trailing "b"->"6" OCR confusion fix. Also `_RESCUE_FLOOR` for low-confidence chord-syntax rescue.
+- `hybrid_detect.py`: Orchestrator. Runs PaddleOCR (and optionally Claude Vision in parallel), filters, quality-gates, merges. Default: PaddleOCR-only (`ai_provider="mock"`).
+- `ai_fallback.py`: Claude Vision provider (dormant by default, requires `ANTHROPIC_API_KEY`).
+- `merge.py`: Aligns Claude rows to PaddleOCR rows by position when AI is active.
+- `quality_gate.py`: Diagnostic scoring of OCR quality (informational, does not gate processing).
 
-## 5. Tests & Verification (pytest)
+### backend/chords/ — Parsing and transposition
 
-- Use **pytest** with a `tests/` directory that mirrors the source tree.[6][5]
-- Each bug fix or new feature must include at least one test.  
-- Follow these rules when generating tests:
+- `parser.py`: `parse_chord("Am7/G")` -> `Chord(root="A", quality="m", extensions="7", bass="G")`.
+- `transpose.py`: `transpose_chord()` with enharmonic spelling via `target_key`. `compute_target_key()` for key name transposition. Standard key names in `_KEY_NAMES`.
+- `key_detect.py`: `infer_key()` — Krumhansl-inspired diatonic scoring. Weights: I=4, ii=2, iii=1, IV=3, V=3, vi=2, vii=1. Returns relative major (Am -> "C").
+- `normalize.py`: Case normalization for OCR text (e.g., "am7" -> "Am7").
 
-  - Use the Arrange–Act–Assert structure inside tests.[6]
-  - Write small, independent tests that each assert one behavior.[10][5][6]
-  - Use fixtures for repeated setup; use parameterization for the same logic with different inputs.[5][10][6]
+### backend/overlay/ — Rendering
 
-- When asked to “verify” changes:
+- `render.py`: Two modes — `"above"` (orange text above original) and `"replace"` (white box over original, dark blue text on top). Key behaviors:
+  - Font size auto-reduces via `_find_fit_font_size()` when chords would overlap, down to `_MIN_FONT_SIZE`.
+  - White boxes contract inward from OCR bbox (15% vertical, 10% horizontal shrink) to avoid erasing surrounding notation.
+  - Chords shortened for display: "maj"->"M", sus/dim/aug split to smaller suffix font.
+  - Info header shows key, semitone shift, and capo position.
 
-  1. Generate or update tests.  
-  2. Assume tests are run.  
-  3. If tests conceptually fail, revise the code and explain what changed and why.
+### backend/api/ — FastAPI endpoints
 
-***
+- `main.py`: `/detect` (JSON), `/overlay` (PNG), `/health`. Auto-resolves `original_key` and `target_key` from detected chords when not provided. 20MB upload limit.
 
-## 6. Documentation & Comments
+## Key Data Structure
 
-- Every public function, class, and module must have a short docstring describing:
+The chord item dict flows through the entire pipeline:
+```python
+{"text": "Am7", "confidence": 0.95, "bbox": [x1, y1, x2, y2]}
+```
+After transposition, `"transposed"` is added. `bbox` is `None` for AI-only detections.
 
-  - What it does  
-  - Key arguments and return value  
-  - Important edge cases or assumptions  
+## Coding Conventions
 
-- Comments should explain the **why**, not restate the code.  
-- When changing behavior, update any relevant docstrings and high-level docs (README, API docs, etc.).
-
-***
-
-## 7. Refactoring Rules
-
-- When touching existing code, prefer improving it instead of just appending more logic.  
-- Eliminate duplication by extracting helper functions or classes.  
-- Break up long functions and deeply nested conditionals into smaller, composable pieces.  
-- Keep imports clean and minimal; remove unused imports as you go.
-
-***
-
-## 8. AI Workflow Expectations
-
-When writing or modifying Python code:
-
-1. **Start in Plan Mode**  
-   - Ask for or infer: file layout, relevant modules, data flows, dependencies, and edge cases.  
-   - Propose a step-by-step plan before editing files.
-
-2. **Use Skills / Reusable Patterns**  
-   - If similar logic, patterns, or explanations appear more than once, generalize them into reusable helpers or skills for future sessions.
-
-3. **Build a Verification Loop**  
-   - After generating code, generate or update tests.  
-   - Re-check logic for edge cases (empty inputs, `None`, large sizes, invalid types, external failures).  
-   - Document what changed and what was learned so it can be fed back into skills or docs.
-
-***
-
-## 9. Definition of Done (Python)
-
-A change is considered complete only when:
-
-- Code follows this style guide and PEP 8 conventions.[3][4][1]
-- All relevant tests (existing and newly added) pass conceptually.[5][6]
-- Edge cases and error paths have been considered and handled appropriately.[7][9][8]
-- Public interfaces are documented and any breaking changes are clearly communicated.  
+- Python 3.12, PEP 8, snake_case functions, UPPER_SNAKE_CASE constants.
+- pytest with Arrange-Act-Assert. Use `@pytest.mark.parametrize` to consolidate similar tests.
+- Private helpers prefixed with `_`. Public API functions have docstrings.
+- Prefer editing existing files over creating new ones.
+- Keep `try` blocks small; raise specific exceptions (`ValueError`, `KeyError`).
+- Comments explain "why", not "what".

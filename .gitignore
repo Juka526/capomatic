@@ -1,1 +1,12 @@
 .env
+__pycache__/
+*.pyc
+.idea/
+.DS_Store
+tmp/
+tmp/
+__pycache__/
+.pytest_cache/
+*.pyc
+node_modules/
+.next/
