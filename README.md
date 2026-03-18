@@ -77,8 +77,6 @@ curl -X POST http://localhost:8000/detect \
 python -m pytest
 ```
 
----
-
 ## Staff-aware chord-band cropping (Section 3.1)
 
 The paddle engine uses **staff-aware band cropping** by default instead of a

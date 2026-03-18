@@ -15,7 +15,6 @@ Renders transposed chord symbols onto a PIL image using one of two modes:
 from __future__ import annotations
 
 import pathlib
-import re
 
 from PIL import Image, ImageDraw, ImageFont
 

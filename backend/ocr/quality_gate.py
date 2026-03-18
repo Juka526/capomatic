@@ -18,7 +18,7 @@ MAX_PARSE_FAIL_RATIO  — fraction of unique candidate strings that do not parse
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from backend.chords.parser import parse_chord
 
