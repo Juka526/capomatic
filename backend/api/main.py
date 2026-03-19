@@ -3,8 +3,9 @@
 Endpoints
 ---------
 GET  /health          — liveness probe
-POST /detect          — detect chords in an uploaded sheet image and transpose them
-POST /overlay         — detect, transpose, render overlay image, return PNG
+POST /detect          — detect chords in an uploaded sheet image, return JSON + detection_id
+POST /render          — transpose + render both overlay modes from cached detection
+POST /overlay         — legacy: detect, transpose, render overlay image, return PNG
 
 Usage
 -----
@@ -13,15 +14,20 @@ Usage
 """
 from __future__ import annotations
 
+import base64
+import concurrent.futures
 import io
 import logging
 import os
 import tempfile
 import time
+import uuid
+from collections import OrderedDict
 from contextlib import asynccontextmanager
 from typing import Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from PIL import Image
 
@@ -43,6 +49,30 @@ _VALID_KEYS = frozenset({
     "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B",
 })
 
+# ---------------------------------------------------------------------------
+# Detection cache — stores OCR results + original image for /render reuse.
+# ---------------------------------------------------------------------------
+_MAX_CACHE = 20
+_detection_cache: OrderedDict[str, dict] = OrderedDict()
+
+
+def _cache_put(detection_id: str, data: dict) -> None:
+    _detection_cache[detection_id] = data
+    _detection_cache.move_to_end(detection_id)
+    while len(_detection_cache) > _MAX_CACHE:
+        _detection_cache.popitem(last=False)
+
+
+def _cache_get(detection_id: str) -> dict | None:
+    if detection_id in _detection_cache:
+        _detection_cache.move_to_end(detection_id)
+        return _detection_cache[detection_id]
+    return None
+
+
+# ---------------------------------------------------------------------------
+# App setup
+# ---------------------------------------------------------------------------
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -54,6 +84,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="transchord", version="0.1.0", lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 def _validate_params(
     semitones: int,
@@ -127,6 +168,26 @@ async def _read_upload(image: UploadFile) -> bytes:
     return data
 
 
+def _render_to_base64(img: Image.Image, chords: list[dict], mode: str,
+                      original_key: str | None, target_key: str | None,
+                      semitones: int) -> str:
+    """Render overlay and return as a base64-encoded PNG data URI."""
+    result = render_overlay(
+        img, chords, mode,
+        original_key=original_key,
+        target_key=target_key,
+        semitones=semitones,
+    )
+    buf = io.BytesIO()
+    result.save(buf, format="PNG")
+    b64 = base64.b64encode(buf.getvalue()).decode()
+    return f"data:image/png;base64,{b64}"
+
+
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -135,22 +196,24 @@ def health() -> dict:
 @app.post("/detect")
 async def detect(
     image: UploadFile = File(...),
-    semitones: int = Form(0),
-    target_key: Optional[str] = Form(None),
     original_key: Optional[str] = Form(None),
 ) -> dict:
-    """Detect chord symbols in *image*, transpose by *semitones*, return JSON.
+    """Detect chord symbols in *image* and return raw results with a detection_id.
+
+    The detection results and original image are cached server-side so that
+    subsequent ``/render`` calls can transpose and render without re-running OCR.
 
     Parameters
     ----------
     image        : JPEG or PNG sheet music image.
-    semitones    : Semitone shift applied to every detected chord (-11 to +11).
-    target_key   : Optional override for enharmonic spelling preference.
-                   When omitted, auto-computed from the detected original key.
     original_key : Optional override for the original key of the song.
                    When omitted, auto-detected from the chord progression.
     """
-    _validate_params(semitones, target_key, original_key)
+    if original_key is not None and original_key not in _VALID_KEYS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"original_key must be one of {sorted(_VALID_KEYS)}, got {original_key!r}",
+        )
 
     data = await _read_upload(image)
     suffix = os.path.splitext(image.filename or "upload.png")[1] or ".png"
@@ -162,16 +225,32 @@ async def detect(
             tmp_path = tmp.name
 
         items, raw_meta = detect_chords_hybrid(tmp_path)
+        img = Image.open(tmp_path).convert("RGB")
     finally:
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
-    original_key, target_key = _resolve_keys(
-        items, semitones, original_key, target_key,
-    )
-    chords = [_build_chord_item(item, semitones, target_key) for item in items]
+    if original_key is None:
+        original_key = infer_key(items)
 
-    # Return a small, JSON-safe subset of the pipeline metadata.
+    # Cache detection results + image for /render.
+    detection_id = uuid.uuid4().hex
+    _cache_put(detection_id, {
+        "items": items,
+        "img": img,
+        "original_key": original_key,
+    })
+
+    # Build chord list (no transposition — raw detection only).
+    chords = []
+    for item in items:
+        raw_bbox = item.get("bbox")
+        chords.append({
+            "text":       item["text"],
+            "confidence": float(item["confidence"]),
+            "bbox":       [int(v) for v in raw_bbox] if raw_bbox is not None else None,
+        })
+
     gate = raw_meta.get("gate") or {}
     meta = {
         "crop_mode":   raw_meta.get("crop_mode"),
@@ -182,12 +261,73 @@ async def detect(
     }
 
     return {
-        "chords":      chords,
-        "count":       len(chords),
-        "semitones":   semitones,
+        "detection_id": detection_id,
+        "chords":       chords,
+        "count":        len(chords),
         "original_key": original_key,
-        "target_key":  target_key,
-        "meta":        meta,
+        "meta":         meta,
+    }
+
+
+@app.post("/render")
+async def render(
+    detection_id: str = Form(...),
+    semitones: int = Form(0),
+) -> dict:
+    """Transpose and render both overlay modes from a cached detection.
+
+    Parameters
+    ----------
+    detection_id : ID returned by ``/detect``.
+    semitones    : Semitone shift applied to every detected chord (-11 to 0).
+    """
+    if not (-11 <= semitones <= 11):
+        raise HTTPException(
+            status_code=422,
+            detail=f"semitones must be between -11 and 11, got {semitones}",
+        )
+
+    cached = _cache_get(detection_id)
+    if cached is None:
+        raise HTTPException(
+            status_code=404,
+            detail="detection_id not found — it may have expired. Please re-upload.",
+        )
+
+    items = cached["items"]
+    img = cached["img"]
+    original_key = cached["original_key"]
+
+    target_key = (
+        compute_target_key(original_key, semitones) if original_key else None
+    )
+
+    chords = [_build_chord_item(item, semitones, target_key) for item in items]
+
+    t_start = time.perf_counter()
+
+    # Render both modes in parallel.
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        fut_replace = pool.submit(
+            _render_to_base64, img, chords, "replace",
+            original_key, target_key, semitones,
+        )
+        fut_above = pool.submit(
+            _render_to_base64, img, chords, "above",
+            original_key, target_key, semitones,
+        )
+        replace_b64 = fut_replace.result()
+        above_b64 = fut_above.result()
+
+    elapsed_ms = int((time.perf_counter() - t_start) * 1000)
+
+    return {
+        "replace_image": replace_b64,
+        "above_image":   above_b64,
+        "original_key":  original_key,
+        "target_key":    target_key,
+        "semitones":     semitones,
+        "render_ms":     elapsed_ms,
     }
 
 
@@ -199,18 +339,15 @@ async def overlay(
     original_key: Optional[str] = Form(None),
     mode: str = Form("above"),
 ) -> StreamingResponse:
-    """Detect chords, transpose, render overlay, return PNG image.
+    """Legacy endpoint: detect, transpose, render overlay, return PNG image.
 
     Parameters
     ----------
     image        : JPEG or PNG sheet music image.
     semitones    : Semitone shift applied to every detected chord (-11 to +11).
     target_key   : Optional override for enharmonic spelling preference.
-                   When omitted, auto-computed from the detected original key.
     original_key : Optional override for the original key of the song.
-                   When omitted, auto-detected from the chord progression.
-    mode         : "above"   — orange transposed chord printed above each original (default).
-                   "replace" — white box over original chord, new chord on top.
+    mode         : "above" or "replace".
     """
     _validate_params(semitones, target_key, original_key)
     if mode not in ("above", "replace"):
