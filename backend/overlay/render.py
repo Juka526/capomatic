@@ -29,7 +29,7 @@ _MIN_FONT_SIZE = 20   # never render below this — keeps labels legible
 _SMALL_FONT_RATIO = 0.70
 
 # Vertical gap (px) between the bottom of a label and the top of its chord box.
-_GAP = 4
+_GAP = 2
 
 # Padding around white boxes in replace mode.
 _BOX_PAD = 4
@@ -339,7 +339,12 @@ def render_overlay(
     ]
 
     if mode == "above":
-        return _render_above(img.copy(), eligible)
+        return _render_above(
+            img.copy(), eligible,
+            original_key=original_key,
+            target_key=target_key,
+            semitones=semitones,
+        )
     else:
         return _render_replace(
             img.copy(), eligible,
@@ -383,7 +388,14 @@ def _insert_whitespace(
     return new_img
 
 
-def _render_above(img: Image.Image, chords: list[dict]) -> Image.Image:
+def _render_above(
+    img: Image.Image,
+    chords: list[dict],
+    *,
+    original_key: str | None = None,
+    target_key: str | None = None,
+    semitones: int = 0,
+) -> Image.Image:
     """Render transposed chords above the original chord positions."""
     W, H = img.size
     rows = _cluster_by_row(chords)
@@ -398,17 +410,23 @@ def _render_above(img: Image.Image, chords: list[dict]) -> Image.Image:
     font        = _load_font(font_size)
     small_font  = _load_font(int(font_size * _SMALL_FONT_RATIO))
 
-    # Pass 1 — check vertical space per row; record expansions needed.
+    # Pass 1 — adaptively insert whitespace above each chord row.
+    # Check whether the label region already has content (lyrics, notation).
+    # If occupied, insert fresh whitespace at min_y1; otherwise reuse the space.
+    import numpy as np
+    img_arr = np.array(img.convert("L"))  # grayscale for pixel check
+    dark_threshold = 200  # pixels darker than this count as "content"
+    content_ratio_threshold = 0.02  # >2% dark pixels = occupied
     expansions: list[tuple[int, int]] = []
-    prev_max_y2 = 0
+    needed = int((font_size + _GAP) * 0.7)
     for row in rows:
         min_y1 = min(c["bbox"][1] for c in row)
-        max_y2 = max(c["bbox"][3] for c in row)
-        space_orig = min_y1 - prev_max_y2
-        needed     = font_size + _GAP * 2
-        if needed > space_orig:
-            expansions.append((prev_max_y2, needed - space_orig))
-        prev_max_y2 = max_y2
+        label_top = max(0, min_y1 - font_size - _GAP)
+        region = img_arr[label_top:min_y1, :]
+        if region.size > 0:
+            dark_ratio = np.mean(region < dark_threshold)
+            if dark_ratio > content_ratio_threshold:
+                expansions.append((min_y1, needed))
 
     # Pass 2 — expand the image where needed.
     if expansions:
@@ -431,6 +449,13 @@ def _render_above(img: Image.Image, chords: list[dict]) -> Image.Image:
         for chord, label_x in _place_row_labels(row, font, small_font, W):
             _draw_chord_text(draw, label_x, label_y, chord["transposed"],
                              font, small_font, _ORANGE)
+
+    _draw_info_header(
+        draw, img, font_size,
+        original_key=original_key,
+        target_key=target_key,
+        semitones=semitones,
+    )
 
     return img
 

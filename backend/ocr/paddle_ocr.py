@@ -350,7 +350,7 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
 
     if mode == "staff_bands" and len(regions) > 1:
         # --------------------------------------------------------------
-        # Stage 2 — stitch all bands into one canvas
+        # Stage 2 — stitch band crops into one canvas
         # --------------------------------------------------------------
         t0 = time.perf_counter()
         stitched, stitch_map = stitch_regions(regions)
@@ -418,9 +418,9 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
                     "confidence": float(confidence),
                     "bbox": [
                         int(min(xs)) + x_offset,
-                        int(min(ys)) + y_offset,
+                        int(min(ys) + y_offset),
                         int(max(xs)) + x_offset,
-                        int(max(ys)) + y_offset,
+                        int(max(ys) + y_offset),
                     ],
                 })
 

@@ -23,7 +23,7 @@ CONFIDENCE_THRESHOLD = 0.78
 # regex.  The regex is selective enough that random OCR noise virtually
 # never matches, so this rescues real chords (e.g. "Gm6" at 0.70) that
 # fall just below the main threshold.
-_RESCUE_FLOOR = 0.50
+_RESCUE_FLOOR = 0.40
 
 # ---------------------------------------------------------------------------
 # Strict regex (pass 1)
@@ -89,6 +89,23 @@ def _strip_leading_number(text: str) -> str | None:
     """
     m = _LEADING_NUM_RE.match(text)
     return m.group(1) if m else None
+
+
+def _try_slash_chord(text: str) -> str | None:
+    """Try interpreting *text* as a slash chord with a missing "/".
+
+    OCR sometimes misses the "/" in slash chords like "G/B" → "GB".
+    If the text is exactly two adjacent root notes (with optional sharp/flat),
+    try inserting "/" and check if the result is a valid chord.
+
+    Returns the slash chord string if valid, else None.
+    """
+    m = re.match(r'^([A-G][#b]?)([A-G][#b]?)$', text)
+    if m:
+        slash = f"{m.group(1)}/{m.group(2)}"
+        if is_chord_candidate(slash):
+            return slash
+    return None
 
 
 def _split_concatenated(text: str) -> list[str]:
@@ -220,6 +237,16 @@ def recover_candidates(
                 recovered.append({**item, "text": norm})
                 parse_count += 1
                 continue
+
+        # --- slash chord recovery ---
+        # Try interpreting adjacent root notes as a slash chord with missing "/".
+        # Must be checked BEFORE split recovery so "GB" → "G/B" (one chord)
+        # rather than "G" + "B" (two separate chords).
+        slash = _try_slash_chord(text)
+        if slash:
+            recovered.append({**item, "text": slash})
+            parse_count += 1
+            continue
 
         # --- split recovery ---
         parts = _split_concatenated(text)
