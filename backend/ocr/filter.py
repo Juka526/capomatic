@@ -109,23 +109,34 @@ def _try_slash_chord(text: str) -> str | None:
 
 
 def _split_concatenated(text: str) -> list[str]:
-    """Try to split *text* into two valid chord strings.
+    """Recursively split *text* into valid chord strings (handles 2+ chords).
 
-    Returns [chord1, chord2] if a valid split is found, else [].
+    If the left part is a valid chord but the right part isn't, recursively
+    attempts to split the remainder so that 3+ concatenated chords are handled.
+
+    Returns a list of chord strings if a valid split is found, else [].
 
     Examples
     --------
-    "Em7G/A"  → ["Em7", "G/A"]   (split at pos 3; /A is bass, not a root)
-    "D/F#"    → []                (F preceded by / → not a split point)
+    "Em7G/A"           → ["Em7", "G/A"]
+    "F#7sus4F#7/A#Bm7" → ["F#7sus4", "F#7/A#", "Bm7"]
+    "D/F#"             → []  (F preceded by / → not a split point)
     """
     for m in _SPLIT_ROOT_RE.finditer(text):
         pos = m.start()
         if pos == 0:
-            continue  # the first root is not a split point
+            continue
         c1 = normalize_chord_text(text[:pos])
-        c2 = normalize_chord_text(text[pos:])
-        if is_chord_candidate(c1) and is_chord_candidate(c2):
-            return [c1, c2]
+        if not is_chord_candidate(c1):
+            continue
+        rest = text[pos:]
+        rest_norm = normalize_chord_text(rest)
+        if is_chord_candidate(rest_norm):
+            return [c1, rest_norm]
+        # Right part not valid — try recursive split.
+        sub = _split_concatenated(rest)
+        if sub:
+            return [c1] + sub
     return []
 
 
@@ -136,22 +147,24 @@ def _split_bbox(
 ) -> list[dict]:
     """Create split items with proportionally divided bboxes.
 
-    When a concatenated detection like "Gsus4C" is split into ["Gsus4", "C"],
-    the original bbox is divided horizontally by character-length ratio so each
-    chord gets its own approximate bounding box.  If bbox is None, both items
-    share bbox=None.
+    Divides the original bbox horizontally by character-length ratio so each
+    chord gets its own approximate bounding box.  Supports any number of parts.
+    If bbox is None, all items share bbox=None.
     """
-    if bbox is None or len(parts) != 2:
+    if bbox is None:
         return [{**item, "text": part} for part in parts]
 
     x1, y1, x2, y2 = bbox
     total_len = sum(len(p) for p in parts)
-    ratio = len(parts[0]) / total_len if total_len > 0 else 0.5
-    x_split = x1 + int((x2 - x1) * ratio)
-    return [
-        {**item, "text": parts[0], "bbox": [x1, y1, x_split, y2]},
-        {**item, "text": parts[1], "bbox": [x_split, y1, x2, y2]},
-    ]
+    results: list[dict] = []
+    cur_x = x1
+    for i, part in enumerate(parts):
+        ratio = len(part) / total_len if total_len > 0 else 1 / len(parts)
+        seg_w = int((x2 - x1) * ratio)
+        seg_x2 = cur_x + seg_w if i < len(parts) - 1 else x2
+        results.append({**item, "text": part, "bbox": [cur_x, y1, seg_x2, y2]})
+        cur_x = seg_x2
+    return results
 
 
 def recover_candidates(

@@ -166,74 +166,72 @@ def _cluster_by_row(chords: list[dict]) -> list[list[dict]]:
     return rows
 
 
-def _place_row_labels(
+def _find_row_font_sizes(
+    rows: list[list[dict]],
+    initial_size: int,
+    img_width: int,
+    h_gap: int = 6,
+) -> list[int]:
+    """Find optimal font size for each row independently.
+
+    Each row shrinks only as much as needed to fit all chords at their
+    original x-positions without overlap.
+    """
+    sizes: list[int] = []
+    for row in rows:
+        sorted_row = sorted(row, key=lambda c: c["bbox"][0])
+        found = _MIN_FONT_SIZE
+        for size in range(initial_size, _MIN_FONT_SIZE - 1, -1):
+            font = _load_font(size)
+            small_font = _load_font(int(size * _SMALL_FONT_RATIO))
+            fits = True
+            prev_right = -h_gap
+            for chord in sorted_row:
+                tw = int(_chord_display_width(chord["transposed"], font, small_font))
+                effective_w = tw + 2 * _BOX_PAD
+                anchor_x = max(chord["bbox"][0], chord["bbox"][2] - effective_w)
+                if anchor_x < prev_right + h_gap:
+                    fits = False
+                    break
+                prev_right = anchor_x + effective_w
+            if fits:
+                found = size
+                break
+        sizes.append(found)
+    return sizes
+
+
+def _place_row_labels_anchored(
     row: list[dict],
     font: ImageFont.ImageFont,
     small_font: ImageFont.ImageFont,
     img_width: int,
     h_gap: int = 6,
 ) -> list[tuple[dict, int]]:
-    """Return [(chord, label_x), ...] shifted right to avoid horizontal overlap.
+    """Place chord labels anchored to their original x-positions.
 
-    Each label starts at chord["bbox"][0] but is nudged right if it would
-    overlap the previous label.  The rightmost label is clamped to the image
-    width so nothing overflows off-screen.
-
-    The effective width includes ``_BOX_PAD`` on each side so white boxes in
-    replace mode never merge into a single blob.
+    Only adjusts when even ``_MIN_FONT_SIZE`` can't prevent overlap —
+    in that case, overlap is split equally between colliding chords.
     """
     sorted_row = sorted(row, key=lambda c: c["bbox"][0])
-    result: list[tuple[dict, int]] = []
-    prev_right = -h_gap
+    placements: list[list] = []
     for chord in sorted_row:
         tw = int(_chord_display_width(chord["transposed"], font, small_font))
-        effective_w = tw + 2 * _BOX_PAD   # account for white box padding
-        x = max(chord["bbox"][0], prev_right + h_gap)
-        x = min(x, max(0, img_width - tw))   # clamp to image edge
-        result.append((chord, x))
-        prev_right = x + effective_w
-    return result
-
-
-def _all_rows_fit(
-    rows: list[list[dict]],
-    font: ImageFont.ImageFont,
-    small_font: ImageFont.ImageFont,
-    img_width: int,
-    h_gap: int = 6,
-) -> bool:
-    """Return True if all chords fit at their original x without shifting."""
-    for row in rows:
-        sorted_row = sorted(row, key=lambda c: c["bbox"][0])
-        prev_right = -h_gap
-        for chord in sorted_row:
-            tw = int(_chord_display_width(chord["transposed"], font, small_font))
-            effective_w = tw + 2 * _BOX_PAD
-            natural_x = chord["bbox"][0]
-            if natural_x < prev_right + h_gap:
-                return False
-            prev_right = natural_x + effective_w
-    return True
-
-
-def _find_fit_font_size(
-    rows: list[list[dict]],
-    initial_size: int,
-    img_width: int,
-) -> int:
-    """Find the largest font size where no chord needs rightward shifting.
-
-    Starts at *initial_size* and decreases by 1 px per iteration until all
-    chords fit at their original bbox x-positions without overlap, or
-    ``_MIN_FONT_SIZE`` is reached.  At ``_MIN_FONT_SIZE`` the greedy shift
-    in ``_place_row_labels`` handles any remaining collisions.
-    """
-    for size in range(initial_size, _MIN_FONT_SIZE - 1, -1):
-        font = _load_font(size)
-        small_font = _load_font(int(size * _SMALL_FONT_RATIO))
-        if _all_rows_fit(rows, font, small_font, img_width):
-            return size
-    return _MIN_FONT_SIZE
+        x = max(chord["bbox"][0], chord["bbox"][2] - tw)
+        x = min(x, max(0, img_width - tw))
+        placements.append([chord, x, tw + 2 * _BOX_PAD])
+    for i in range(len(placements) - 1):
+        x_i = placements[i][1]
+        ew_i = placements[i][2]
+        x_next = placements[i + 1][1]
+        overlap = (x_i + ew_i + h_gap) - x_next
+        if overlap > 0:
+            shift_left = overlap // 2
+            shift_right = overlap - shift_left
+            placements[i][1] = max(0, x_i - shift_left)
+            ew_next = placements[i + 1][2]
+            placements[i + 1][1] = min(img_width - ew_next, x_next + shift_right)
+    return [(p[0], p[1]) for p in placements]
 
 
 # ---------------------------------------------------------------------------
@@ -402,26 +400,23 @@ def _render_above(
     if not rows:
         return img
 
-    # Global uniform font sizes — shrink if chords would overlap.
+    # Per-row font sizes — each row shrinks independently.
     all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)
     median_h    = all_heights[len(all_heights) // 2]
     initial_size = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
-    font_size   = _find_fit_font_size(rows, initial_size, W)
-    font        = _load_font(font_size)
-    small_font  = _load_font(int(font_size * _SMALL_FONT_RATIO))
+    row_font_sizes = _find_row_font_sizes(rows, initial_size, W)
 
     # Pass 1 — adaptively insert whitespace above each chord row.
-    # Check whether the label region already has content (lyrics, notation).
-    # If occupied, insert fresh whitespace at min_y1; otherwise reuse the space.
     import numpy as np
-    img_arr = np.array(img.convert("L"))  # grayscale for pixel check
-    dark_threshold = 200  # pixels darker than this count as "content"
-    content_ratio_threshold = 0.02  # >2% dark pixels = occupied
+    img_arr = np.array(img.convert("L"))
+    dark_threshold = 200
+    content_ratio_threshold = 0.02
     expansions: list[tuple[int, int]] = []
-    needed = int((font_size + _GAP) * 0.7)
-    for row in rows:
+    for row_idx, row in enumerate(rows):
+        row_fs = row_font_sizes[row_idx]
+        needed = int((row_fs + _GAP) * 0.7)
         min_y1 = min(c["bbox"][1] for c in row)
-        label_top = max(0, min_y1 - font_size - _GAP)
+        label_top = max(0, min_y1 - row_fs - _GAP)
         region = img_arr[label_top:min_y1, :]
         if region.size > 0:
             dark_ratio = np.mean(region < dark_threshold)
@@ -438,20 +433,24 @@ def _render_above(
     def _y_offset_for(orig_y1: int) -> int:
         return sum(extra for y, extra in sorted_expansions if y <= orig_y1)
 
-    # Pass 4 — draw labels with greedy placement and row y-alignment.
+    # Pass 4 — draw labels with anchored placement and per-chord y.
     draw = ImageDraw.Draw(img)
-    for row in rows:
+    for row_idx, row in enumerate(rows):
+        font_size = row_font_sizes[row_idx]
+        font = _load_font(font_size)
+        small_font = _load_font(int(font_size * _SMALL_FONT_RATIO))
+
         row_y1 = min(c["bbox"][1] for c in row)
         offset = _y_offset_for(row_y1)
-        shifted_y1 = row_y1 + offset
-        label_y = shifted_y1 - font_size - _GAP
 
-        for chord, label_x in _place_row_labels(row, font, small_font, W):
+        for chord, label_x in _place_row_labels_anchored(row, font, small_font, W):
+            chord_y1 = chord["bbox"][1]
+            label_y = chord_y1 + offset - font_size - _GAP
             _draw_chord_text(draw, label_x, label_y, chord["transposed"],
                              font, small_font, _ORANGE)
 
     _draw_info_header(
-        draw, img, font_size,
+        draw, img, max(row_font_sizes),
         original_key=original_key,
         target_key=target_key,
         semitones=semitones,
@@ -476,47 +475,40 @@ def _render_replace(
     W, H = img.size
     rows = _cluster_by_row(chords)
 
-    # Global uniform font sizes — shrink if chords would overlap.
+    # Per-row font sizes — each row shrinks independently.
     all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)
     median_h    = all_heights[len(all_heights) // 2]
     initial_size = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
-    font_size   = _find_fit_font_size(rows, initial_size, W)
-    font        = _load_font(font_size)
-    small_font  = _load_font(int(font_size * _SMALL_FONT_RATIO))
+    row_font_sizes = _find_row_font_sizes(rows, initial_size, W)
 
     # ------------------------------------------------------------------
-    # Pass 1 — compute placements (greedy overlap avoidance per row).
-    # Collect (chord, label_x, row_y1) for each chord.
+    # Pass 1 — compute placements with anchored positioning per row.
+    # Collect (chord, label_x, font_size_for_row) for each chord.
     # ------------------------------------------------------------------
     placements: list[tuple[dict, int, int]] = []
-    for row in rows:
-        row_y1 = min(c["bbox"][1] for c in row)
-        for chord, label_x in _place_row_labels(row, font, small_font, W):
-            placements.append((chord, label_x, row_y1))
+    for row_idx, row in enumerate(rows):
+        fs = row_font_sizes[row_idx]
+        font = _load_font(fs)
+        small_font = _load_font(int(fs * _SMALL_FONT_RATIO))
+        for chord, label_x in _place_row_labels_anchored(row, font, small_font, W):
+            placements.append((chord, label_x, fs))
 
     # ------------------------------------------------------------------
     # Pass 2 — draw fully opaque white boxes via RGBA compositing.
-    # Each box covers the original bbox AND the resolved label area.
     # ------------------------------------------------------------------
     img_rgba = img.convert("RGBA")
     overlay  = Image.new("RGBA", img_rgba.size, (0, 0, 0, 0))
     ov_draw  = ImageDraw.Draw(overlay)
 
-    for chord, label_x, row_y1 in placements:
+    for chord, label_x, _ in placements:
         x1, y1, x2, y2 = chord["bbox"]
         bh = y2 - y1
-
-        # Contract OCR bbox inward to approximate actual glyph area.
-        # PaddleOCR adds ~2–4px margin per side; shrink proportionally
-        # so the white box erases only the chord text, not surrounding
-        # musical notation (stems, dots, articulation marks).
         shrink_y = max(1, int(bh * 0.15))
         shrink_x = max(1, int(bh * 0.10))
         box_x1 = x1 + shrink_x
         box_y1 = y1 + shrink_y
         box_x2 = x2 - shrink_x
         box_y2 = y2 - shrink_y
-
         ov_draw.rectangle([box_x1, box_y1, box_x2, box_y2], fill=_WHITE_RGBA)
 
     composited = Image.alpha_composite(img_rgba, overlay).convert("RGB")
@@ -525,10 +517,12 @@ def _render_replace(
     # Pass 3 — draw text at resolved positions, vertically centered.
     # ------------------------------------------------------------------
     draw = ImageDraw.Draw(composited)
-    for chord, label_x, row_y1 in placements:
+    for chord, label_x, fs in placements:
+        font = _load_font(fs)
+        small_font = _load_font(int(fs * _SMALL_FONT_RATIO))
         _, y1, _, y2 = chord["bbox"]
         box_h = y2 - y1
-        text_y = y1 + (box_h - font_size) // 2
+        text_y = y1 + (box_h - fs) // 2
         _draw_chord_text(draw, label_x, text_y, chord["transposed"],
                          font, small_font, _DARK_BLUE)
 
@@ -536,7 +530,7 @@ def _render_replace(
     # Pass 4 — info header (key, capo).
     # ------------------------------------------------------------------
     _draw_info_header(
-        draw, composited, font_size,
+        draw, composited, max(row_font_sizes),
         original_key=original_key,
         target_key=target_key,
         semitones=semitones,
