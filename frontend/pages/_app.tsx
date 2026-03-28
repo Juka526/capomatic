@@ -1,6 +1,14 @@
 import type { AppProps } from "next/app";
+import { AuthProvider } from "@/components/AuthProvider";
+import { LangProvider } from "@/components/LangProvider";
 import "@/styles/globals.css";
 
 export default function App({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />;
+  return (
+    <LangProvider>
+      <AuthProvider>
+        <Component {...pageProps} />
+      </AuthProvider>
+    </LangProvider>
+  );
 }
