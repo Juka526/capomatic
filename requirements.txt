@@ -15,3 +15,11 @@ anthropic             # pip install anthropic; set ANTHROPIC_API_KEY env var to 
 fastapi
 uvicorn[standard]
 python-multipart      # required for UploadFile form parsing
+
+# Section 6 (Auth & database)
+sqlalchemy[asyncio]==2.0.23
+asyncpg==0.29.0
+alembic==1.13.1
+python-jose[cryptography]==3.3.0
+auth0-python==4.7.1
+aiofiles==23.2.1
