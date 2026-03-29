@@ -214,6 +214,6 @@ export const translations = {
     loadingDashboard: 'Loading dashboard…',
     failedLoad: 'Failed to load admin data',
   },
-} as const;
+};
 
 export type T = typeof translations['en'];
