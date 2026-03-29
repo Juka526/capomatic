@@ -8,7 +8,7 @@ import { useLang, LangToggle } from "@/components/LangProvider";
 import { getAccessToken } from "@/lib/auth0";
 import { GuitarFretboard } from "@/components/GuitarFretboard";
 
-const API_URL = "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
 const ESTIMATED_DETECT_MS = 13000;
 const KEY_NAMES = ["C","Db","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
