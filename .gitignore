@@ -10,4 +10,5 @@ __pycache__/
 *.pyc
 node_modules/
 .next/
-storage/
+/storage/
+!backend/storage/

@@ -70,24 +70,3 @@ class Job(Base):
     )
 
 
-class Cache(Base):
-    __tablename__ = "cache"
-
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,
-    )
-    cache_key: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
-    image_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    semitones: Mapped[int] = mapped_column(Integer, nullable=False)
-    mode: Mapped[str] = mapped_column(String(20), nullable=False)
-    original_key: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
-    target_key: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
-    chords: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    output_path: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    hit_count: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=_utcnow,
-    )
-    expires_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True,
-    )
