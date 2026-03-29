@@ -39,7 +39,7 @@ from backend.chords.key_detect import infer_key
 from backend.overlay.render import render_overlay
 from backend.auth.auth0 import get_current_user, require_admin
 from backend.db.database import get_db
-from backend.db.models import User, Job, Cache
+from backend.db.models import User, Job
 from sqlalchemy import func, select as sa_select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.db.jobs import (
@@ -47,7 +47,6 @@ from backend.db.jobs import (
     get_user_jobs, soft_delete_job,
 )
 from backend.storage.manager import get_storage_manager
-from backend.cache.manager import get_cache_manager
 
 logger = logging.getLogger(__name__)
 
@@ -237,6 +236,8 @@ async def detect(
 
     data = await _read_upload(image)
     suffix = os.path.splitext(image.filename or "upload.png")[1] or ".png"
+    storage = get_storage_manager()
+    image_hash = storage.compute_hash(data)
 
     tmp_path: str | None = None
     try:
@@ -259,6 +260,7 @@ async def detect(
         "items": items,
         "img": img,
         "original_key": original_key,
+        "image_hash": image_hash,
     })
 
     # Build chord list (no transposition — raw detection only).
@@ -317,10 +319,29 @@ async def render(
     items = cached["items"]
     img = cached["img"]
     original_key = cached["original_key"]
+    image_hash = cached.get("image_hash")
 
     target_key = (
         compute_target_key(original_key, semitones) if original_key else None
     )
+
+    # Filesystem cache: check if both modes already rendered.
+    storage = get_storage_manager()
+    replace_path = storage.check_cache(image_hash, semitones, "replace") if image_hash else None
+    above_path = storage.check_cache(image_hash, semitones, "above") if image_hash else None
+
+    if replace_path and above_path:
+        replace_bytes = await storage.get_output(replace_path)
+        above_bytes = await storage.get_output(above_path)
+        return {
+            "replace_image": f"data:image/png;base64,{base64.b64encode(replace_bytes).decode()}",
+            "above_image":   f"data:image/png;base64,{base64.b64encode(above_bytes).decode()}",
+            "original_key":  original_key,
+            "target_key":    target_key,
+            "semitones":     semitones,
+            "render_ms":     0,
+            "cached":        True,
+        }
 
     chords = [_build_chord_item(item, semitones, target_key) for item in items]
 
@@ -341,6 +362,17 @@ async def render(
 
     elapsed_ms = int((time.perf_counter() - t_start) * 1000)
 
+    # Save rendered outputs to filesystem for future cache hits.
+    if image_hash:
+        try:
+            # Strip "data:image/png;base64," prefix before decoding
+            replace_raw = replace_b64.split(",", 1)[1] if "," in replace_b64 else replace_b64
+            above_raw = above_b64.split(",", 1)[1] if "," in above_b64 else above_b64
+            await storage.save_output(image_hash, semitones, "replace", base64.b64decode(replace_raw))
+            await storage.save_output(image_hash, semitones, "above", base64.b64decode(above_raw))
+        except Exception as exc:
+            logger.warning("Failed to save render cache: %s", exc)
+
     return {
         "replace_image": replace_b64,
         "above_image":   above_b64,
@@ -348,6 +380,7 @@ async def render(
         "target_key":    target_key,
         "semitones":     semitones,
         "render_ms":     elapsed_ms,
+        "cached":        False,
     }
 
 
@@ -462,21 +495,38 @@ async def api_overlay(
 
     data = await _read_upload(image)
     storage = get_storage_manager()
-    cache_mgr = get_cache_manager()
 
     image_hash = storage.compute_hash(data)
 
-    # Check cache first
-    cached = await cache_mgr.check_cache(db, image_hash, semitones, mode)
-    if cached and cached.get("output_path"):
-        output_bytes = await storage.get_output(cached["output_path"])
+    # Filesystem cache check
+    cached_path = storage.check_cache(image_hash, semitones, mode)
+    if cached_path:
+        output_bytes = await storage.get_output(cached_path)
+        job = await create_job(
+            db, user.id,
+            song_name=song_name,
+            original_key=original_key,
+            semitones=semitones,
+            mode=mode,
+            image_hash=image_hash,
+        )
+        await update_job_completed(
+            db, job.id,
+            output_path=cached_path,
+            original_key=original_key,
+            target_key=None,
+            chords=None,
+            detected_chords_count=0,
+            processing_time_ms=0,
+            from_cache=True,
+        )
         return StreamingResponse(
             io.BytesIO(output_bytes),
             media_type="image/png",
-            headers={"X-Cache": "HIT"},
+            headers={"X-Cache": "HIT", "X-Job-Id": str(job.id)},
         )
 
-    # Create job
+    # Cache miss — full processing
     job = await create_job(
         db, user.id,
         song_name=song_name,
@@ -515,11 +565,10 @@ async def api_overlay(
         result.save(buf, format="PNG")
         output_bytes = buf.getvalue()
 
-        # Persist input + output
-        input_path = await storage.save_input(image_hash, data)
+        # Persist input + output (output file = filesystem cache)
+        await storage.save_input(image_hash, data)
         output_path = await storage.save_output(image_hash, semitones, mode, output_bytes)
 
-        # Update job as completed
         chords_json = [
             {"text": c["text"], "transposed": c.get("transposed"), "bbox": c.get("bbox")}
             for c in chords
@@ -533,18 +582,6 @@ async def api_overlay(
             detected_chords_count=len(chords),
             processing_time_ms=processing_time_ms,
             from_cache=False,
-        )
-
-        # Cache the result
-        await cache_mgr.save_to_cache(
-            db,
-            image_hash=image_hash,
-            semitones=semitones,
-            mode=mode,
-            original_key=original_key,
-            target_key=target_key,
-            chords=chords_json,
-            output_path=output_path,
         )
 
         buf.seek(0)
@@ -655,7 +692,6 @@ async def admin_stats(
     """Overall statistics (admin only)."""
     total_users = await db.scalar(sa_select(func.count(User.id))) or 0
     total_jobs = await db.scalar(sa_select(func.count(Job.id))) or 0
-    total_cached = await db.scalar(sa_select(func.count(Cache.id))) or 0
 
     cached_jobs = await db.scalar(
         sa_select(func.count(Job.id)).where(Job.from_cache == True)  # noqa: E712
@@ -663,13 +699,16 @@ async def admin_stats(
     cache_hit_rate = round((cached_jobs / total_jobs) * 100, 1) if total_jobs else 0.0
 
     avg_time = await db.scalar(
-        sa_select(func.avg(Job.processing_time_ms)).where(Job.status == "completed")
+        sa_select(func.avg(Job.processing_time_ms)).where(
+            Job.status == "completed",
+            Job.from_cache == False,  # noqa: E712
+        )
     )
 
     return {
         "total_users": total_users,
         "total_jobs": total_jobs,
-        "total_cached": total_cached,
+        "total_cached": cached_jobs,
         "cache_hit_rate": cache_hit_rate,
         "avg_processing_time": round(avg_time) if avg_time else 0,
     }
