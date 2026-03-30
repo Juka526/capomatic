@@ -12,5 +12,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 EXPOSE 8080
-CMD ["/bin/sh", "-c", "uvicorn backend.api.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+ENTRYPOINT ["/app/start.sh"]
