@@ -402,7 +402,7 @@ def _render_above(
 
     # Per-row font sizes — each row shrinks independently.
     all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)
-    median_h    = all_heights[len(all_heights) // 2]
+    median_h    = all_heights[len(all_heights) // 2] if all_heights else _MIN_FONT_SIZE
     initial_size = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
     row_font_sizes = _find_row_font_sizes(rows, initial_size, W)
 
@@ -411,6 +411,7 @@ def _render_above(
     img_arr = np.array(img.convert("L"))
     dark_threshold = 200
     content_ratio_threshold = 0.02
+
     expansions: list[tuple[int, int]] = []
     for row_idx, row in enumerate(rows):
         row_fs = row_font_sizes[row_idx]
@@ -474,10 +475,12 @@ def _render_replace(
     """Render transposed chords over original positions with white boxes."""
     W, H = img.size
     rows = _cluster_by_row(chords)
+    if not rows:
+        return img
 
     # Per-row font sizes — each row shrinks independently.
     all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)
-    median_h    = all_heights[len(all_heights) // 2]
+    median_h    = all_heights[len(all_heights) // 2] if all_heights else _MIN_FONT_SIZE
     initial_size = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
     row_font_sizes = _find_row_font_sizes(rows, initial_size, W)
 
@@ -486,6 +489,7 @@ def _render_replace(
     # Collect (chord, label_x, font_size_for_row) for each chord.
     # ------------------------------------------------------------------
     placements: list[tuple[dict, int, int]] = []
+
     for row_idx, row in enumerate(rows):
         fs = row_font_sizes[row_idx]
         font = _load_font(fs)
