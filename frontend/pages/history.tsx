@@ -65,7 +65,7 @@ function HistoryContent() {
     <>
       <Head><title>{t.historyTitle} - TransChord</title></Head>
 
-      <div style={{ minHeight: '100vh', backgroundColor: '#F5EDD8', fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif" }}>
+      <div style={{ minHeight: '100vh', backgroundColor: '#F5EDD8', fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: 'hidden' }}>
 
         <nav className="history-nav">
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -82,7 +82,7 @@ function HistoryContent() {
               </span>
             </Link>
             <span style={{ color: 'rgba(0,0,0,0.15)' }}>|</span>
-            <h1 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#1a1a2e' }}>{t.historyTitle}</h1>
+            <h1 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#1a1a2e', whiteSpace: 'nowrap' }}>{t.historyTitle}</h1>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <LangToggle />
@@ -190,6 +190,7 @@ function HistoryContent() {
           background: rgba(245, 237, 216, 0.95);
           backdrop-filter: blur(12px);
           border-bottom: 1px solid rgba(0,0,0,0.07);
+          overflow: hidden;
         }
         @media (min-width: 640px) {
           .history-nav { padding: 0 24px; }
@@ -198,8 +199,14 @@ function HistoryContent() {
         .history-username {
           display: none;
         }
-        @media (min-width: 480px) {
-          .history-username { display: inline; }
+        @media (min-width: 640px) {
+          .history-username {
+            display: inline;
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
         }
 
         .history-main {
