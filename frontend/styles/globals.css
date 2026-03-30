@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Set overscroll/rubber-band background to match app color */
+html, body {
+  background-color: #F5EDD8;
+}
+
 /* Fretboard section — responsive padding */
 .fretboard-section {
   width: 100%;

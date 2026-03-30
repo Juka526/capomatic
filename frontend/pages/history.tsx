@@ -67,14 +67,7 @@ function HistoryContent() {
 
       <div style={{ minHeight: '100vh', backgroundColor: '#F5EDD8', fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif" }}>
 
-        <nav style={{
-          position: 'sticky', top: 0, zIndex: 100,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 24px', height: 52,
-          background: 'rgba(245, 237, 216, 0.95)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0,0,0,0.07)',
-        }}>
+        <nav className="history-nav">
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
               <svg viewBox="0 0 36 36" width="24" height="24">
@@ -93,11 +86,11 @@ function HistoryContent() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <LangToggle />
-            <span style={{ fontSize: '0.8rem', color: '#888', fontWeight: 500 }}>{user?.name || user?.email}</span>
+            <span className="history-username" style={{ fontSize: '0.8rem', color: '#888', fontWeight: 500 }}>{user?.name || user?.email}</span>
           </div>
         </nav>
 
-        <main style={{ maxWidth: 960, margin: '0 auto', padding: '32px 20px' }}>
+        <main className="history-main">
 
           {loading && (
             <div style={{ textAlign: 'center', padding: '64px 0' }}>
@@ -142,7 +135,7 @@ function HistoryContent() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {jobs.map(job => (
-                    <div key={job.id} style={{ background: 'white', borderRadius: 14, padding: '16px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.04)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                    <div key={job.id} className="history-job-card">
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#1a1a2e' }}>
                           {job.song_name || t.untitled}
@@ -163,7 +156,7 @@ function HistoryContent() {
                           {new Date(job.created_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      <div className="history-job-actions">
                         {job.status === 'completed' && (
                           <button onClick={() => handleDownload(job)} style={{ background: 'linear-gradient(135deg, #e05d00, #c84b00)', color: 'white', border: 'none', borderRadius: 9, padding: '8px 16px', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(224,93,0,0.22)' }}>
                             {t.download}
@@ -187,7 +180,53 @@ function HistoryContent() {
         </main>
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .history-nav {
+          position: sticky; top: 0; z-index: 100;
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0 16px; height: 52px;
+          background: rgba(245, 237, 216, 0.95);
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(0,0,0,0.07);
+        }
+        @media (min-width: 640px) {
+          .history-nav { padding: 0 24px; }
+        }
+
+        .history-username {
+          display: none;
+        }
+        @media (min-width: 480px) {
+          .history-username { display: inline; }
+        }
+
+        .history-main {
+          max-width: 960px; margin: 0 auto; padding: 20px 14px;
+        }
+        @media (min-width: 640px) {
+          .history-main { padding: 32px 20px; }
+        }
+
+        .history-job-card {
+          background: white; border-radius: 14px; padding: 14px 16px;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+          border: 1px solid rgba(0,0,0,0.04);
+          display: flex; flex-direction: column; gap: 10px;
+        }
+        @media (min-width: 540px) {
+          .history-job-card {
+            flex-direction: row; align-items: flex-start;
+            justify-content: space-between; gap: 16px;
+            padding: 16px 20px;
+          }
+        }
+
+        .history-job-actions {
+          display: flex; align-items: center; gap: 8px;
+        }
+      `}</style>
     </>
   );
 }
