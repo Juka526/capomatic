@@ -1,7 +1,7 @@
 # Section 2
 pytest
 
-# Section 3
+# Section 3 OCR & image processing
 paddleocr>=3.0.1
 paddlepaddle==3.2.2      # 3.3.0+ has PIR/oneDNN regression on x86 Intel (Railway)
 opencv-python-headless
