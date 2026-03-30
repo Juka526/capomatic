@@ -474,6 +474,8 @@ def _render_replace(
     """Render transposed chords over original positions with white boxes."""
     W, H = img.size
     rows = _cluster_by_row(chords)
+    if not rows:
+        return img
 
     # Per-row font sizes — each row shrinks independently.
     all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)

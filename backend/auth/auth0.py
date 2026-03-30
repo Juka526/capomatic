@@ -18,8 +18,8 @@ from backend.db.models import User
 
 logger = logging.getLogger(__name__)
 
-AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN", "")
-AUTH0_AUDIENCE = os.environ.get("AUTH0_AUDIENCE", "")
+AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN", "").strip()
+AUTH0_AUDIENCE = os.environ.get("AUTH0_AUDIENCE", "").strip()
 ALGORITHMS = ["RS256"]
 
 _bearer = HTTPBearer(auto_error=False)
