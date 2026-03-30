@@ -11,7 +11,6 @@ TransChord automatically detects chords in uploaded sheet music images and trans
 ## Features
 
 - **AI-Powered Detection** - PaddleOCR chord recognition from sheet images
-- **Smart Caching** - Filesystem-based cache, <1ms repeated lookups
 - **Visual Fretboard** - Interactive capo position selector (0-7 frets)
 - **Job History** - Track all your transpositions
 - **User Management** - Auth0 authentication with admin roles
@@ -35,14 +34,14 @@ TransChord automatically detects chords in uploaded sheet music images and trans
 +----------------------------------------------------------+
 |          Backend (FastAPI on Railway/Render)              |
 |  +----------+  +----------+  +---------------------+    |
-|  |   Auth   |  |  Storage |  |  Filesystem Cache    |    |
-|  | - JWT    |  | - Local  |  |  - <1ms check        |    |
-|  | - Roles  |  | - (S3)   |  |  - Auto-create       |    |
+|  |   Auth   |  |  Storage |  |  OCR Pipeline        |    |
+|  | - JWT    |  | - Local  |  |  - PaddleOCR         |    |
+|  | - Roles  |  | - (S3)   |  |  - Staff-aware crop  |    |
 |  +----------+  +----------+  +---------------------+    |
 |  +----------+  +----------+  +---------------------+    |
-|  |   Jobs   |  |   Admin  |  |  OCR Pipeline        |    |
-|  | - CRUD   |  | - Stats  |  |  - PaddleOCR         |    |
-|  | - Track  |  | - Popular|  |  - Staff-aware crop   |    |
+|  |   Jobs   |  |   Admin  |  |  File Storage        |    |
+|  | - CRUD   |  | - Stats  |  |  - Input/output save |    |
+|  | - Track  |  | - Popular|  |  - History downloads |    |
 |  +----------+  +----------+  +---------------------+    |
 +----------------------------+-----------------------------+
                              |
@@ -63,7 +62,7 @@ TransChord automatically detects chords in uploaded sheet music images and trans
 | Database | PostgreSQL (asyncpg)                          |
 | Auth     | Auth0 (SPA + JWT verification)                |
 | OCR      | PaddleOCR 3.x (staff-aware band cropping)     |
-| Cache    | Filesystem (deterministic output paths)       |
+| Storage  | Local filesystem (input/output file persistence)|
 | Deploy   | Vercel (frontend) + Railway/Render (backend)  |
 
 ## Quick Start
@@ -84,8 +83,8 @@ cd transchord
 # Backend
 pip install -r requirements.txt
 
-# If paddlepaddle fails on Apple Silicon:
-pip install paddlepaddle -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
+# If paddlepaddle fails on Apple Silicon (ARM):
+pip install paddlepaddle==3.2.2 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
 
 # Frontend
 cd frontend && npm install && cd ..
@@ -193,19 +192,6 @@ curl -X POST http://localhost:8000/overlay \
   -o output.png
 ```
 
-## Caching
-
-TransChord uses **filesystem-based caching**. Output PNGs are saved at deterministic paths:
-
-```
-storage/outputs/{hash[:2]}/{hash}_{semitones}_{mode}.png
-```
-
-- First request: full OCR + render (~3-5s)
-- Repeat request (same image + capo): file exists check (<1ms)
-- No database overhead, no TTL management
-- Cache invalidation: delete `storage/outputs/`
-
 ## Testing
 
 ```bash
@@ -248,13 +234,11 @@ PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True python scripts/ocr_debug.py "fixtures
    DATABASE_URL=<railway-postgres-url>
    AUTH0_DOMAIN=your-domain.auth0.com
    AUTH0_AUDIENCE=https://transchord-api
+   CORS_ORIGINS=https://your-frontend.vercel.app
    USE_S3=false
    LOCAL_STORAGE_DIR=./storage
    ```
-5. Set start command:
-   ```
-   uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT
-   ```
+5. The repo includes a `Dockerfile` — Railway auto-detects it, no start command needed
 
 ### Auth0 Setup
 
@@ -276,7 +260,7 @@ transchord/
 │   ├── db/             SQLAlchemy models, database setup, job CRUD
 │   ├── ocr/            PaddleOCR runner, filter, hybrid detection
 │   ├── overlay/        Render transposed chords onto sheet image
-│   └── storage/        File persistence + filesystem cache
+│   └── storage/        File persistence (input/output saves)
 ├── frontend/
 │   ├── components/     React components (fretboard, auth, lang)
 │   ├── lib/            Auth0 client, i18n, API helpers
@@ -293,8 +277,9 @@ transchord/
 ## Troubleshooting
 
 - **NumPy 2.x `ImportError`**: PaddleOCR requires NumPy <2. Fix: `pip install "numpy<2"`
-- **Apple Silicon**: Use the ARM-native PaddlePaddle wheel from the official index URL
-- **First run slow**: PaddleOCR downloads ~80MB models to `~/.paddleocr/` on first use
+- **Apple Silicon**: Use `pip install paddlepaddle==3.2.2 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/`
+- **PaddlePaddle 3.3.0+ on Intel CPU**: Crashes with oneDNN PIR error — use 3.2.2 (pinned in requirements.txt)
+- **First run slow**: PaddleOCR downloads ~80MB models on first use
 - **Port 8000 in use**: `lsof -ti :8000 | xargs kill`
 - **`PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK`**: Required for any command that loads PaddleOCR models
 
