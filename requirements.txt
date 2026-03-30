@@ -1,4 +1,4 @@
-# Section 2
+# Section 2 (testing)
 pytest
 
 # Section 3 OCR & image processing
