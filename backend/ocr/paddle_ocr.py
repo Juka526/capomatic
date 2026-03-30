@@ -272,6 +272,7 @@ def get_ocr(det_variant: "str | None" = None) -> "_PaddleOCRType":
             use_doc_orientation_classify=False,
             use_doc_unwarping=False,
             use_textline_orientation=False,
+            enable_mkldnn=False,  # disable oneDNN — crashes on x86 Intel (Railway) with 3.3.0+
         )
         if det_variant == "mobile":
             kwargs["text_detection_model_name"] = "PP-OCRv5_mobile_det"
