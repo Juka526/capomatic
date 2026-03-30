@@ -5,6 +5,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc libpq-dev libgl1 libglib2.0-0 && \
     rm -rf /var/lib/apt/lists/*
 
+# Disable oneDNN — crashes on Railway's x86 Intel CPUs
+ENV FLAGS_use_mkldnn=false
+ENV PADDLE_USE_ONEDNN=0
+
 WORKDIR /app
 
 COPY requirements.txt .
