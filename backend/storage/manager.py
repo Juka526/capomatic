@@ -40,15 +40,6 @@ class StorageManager:
         filename = f"{image_hash}_{semitones}_{mode}.png"
         return os.path.join(self._base, "outputs", image_hash[:2], filename)
 
-    def check_cache(self, image_hash: str, semitones: int, mode: str) -> str | None:
-        """Return output path if a cached file exists, None otherwise."""
-        path = self.get_output_path(image_hash, semitones, mode)
-        if os.path.exists(path):
-            logger.info("Cache HIT: %s", path)
-            return path
-        logger.info("Cache MISS: %s", path)
-        return None
-
     async def save_output(
         self,
         image_hash: str,

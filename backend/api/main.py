@@ -320,29 +320,10 @@ async def render(
     items = cached["items"]
     img = cached["img"]
     original_key = cached["original_key"]
-    image_hash = cached.get("image_hash")
 
     target_key = (
         compute_target_key(original_key, semitones) if original_key else None
     )
-
-    # Filesystem cache: check if both modes already rendered.
-    storage = get_storage_manager()
-    replace_path = storage.check_cache(image_hash, semitones, "replace") if image_hash else None
-    above_path = storage.check_cache(image_hash, semitones, "above") if image_hash else None
-
-    if replace_path and above_path:
-        replace_bytes = await storage.get_output(replace_path)
-        above_bytes = await storage.get_output(above_path)
-        return {
-            "replace_image": f"data:image/png;base64,{base64.b64encode(replace_bytes).decode()}",
-            "above_image":   f"data:image/png;base64,{base64.b64encode(above_bytes).decode()}",
-            "original_key":  original_key,
-            "target_key":    target_key,
-            "semitones":     semitones,
-            "render_ms":     0,
-            "cached":        True,
-        }
 
     chords = [_build_chord_item(item, semitones, target_key) for item in items]
 
@@ -363,17 +344,6 @@ async def render(
 
     elapsed_ms = int((time.perf_counter() - t_start) * 1000)
 
-    # Save rendered outputs to filesystem for future cache hits.
-    if image_hash:
-        try:
-            # Strip "data:image/png;base64," prefix before decoding
-            replace_raw = replace_b64.split(",", 1)[1] if "," in replace_b64 else replace_b64
-            above_raw = above_b64.split(",", 1)[1] if "," in above_b64 else above_b64
-            await storage.save_output(image_hash, semitones, "replace", base64.b64decode(replace_raw))
-            await storage.save_output(image_hash, semitones, "above", base64.b64decode(above_raw))
-        except Exception as exc:
-            logger.warning("Failed to save render cache: %s", exc)
-
     return {
         "replace_image": replace_b64,
         "above_image":   above_b64,
@@ -381,7 +351,6 @@ async def render(
         "target_key":    target_key,
         "semitones":     semitones,
         "render_ms":     elapsed_ms,
-        "cached":        False,
     }
 
 
@@ -499,35 +468,6 @@ async def api_overlay(
 
     image_hash = storage.compute_hash(data)
 
-    # Filesystem cache check
-    cached_path = storage.check_cache(image_hash, semitones, mode)
-    if cached_path:
-        output_bytes = await storage.get_output(cached_path)
-        job = await create_job(
-            db, user.id,
-            song_name=song_name,
-            original_key=original_key,
-            semitones=semitones,
-            mode=mode,
-            image_hash=image_hash,
-        )
-        await update_job_completed(
-            db, job.id,
-            output_path=cached_path,
-            original_key=original_key,
-            target_key=None,
-            chords=None,
-            detected_chords_count=0,
-            processing_time_ms=0,
-            from_cache=True,
-        )
-        return StreamingResponse(
-            io.BytesIO(output_bytes),
-            media_type="image/png",
-            headers={"X-Cache": "HIT", "X-Job-Id": str(job.id)},
-        )
-
-    # Cache miss — full processing
     job = await create_job(
         db, user.id,
         song_name=song_name,
