@@ -180,6 +180,7 @@ export default function Home() {
     <>
       <Head>
         <title>Capomatic</title>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <meta name="description" content="Transpose chord sheets instantly" />
       </Head>
 

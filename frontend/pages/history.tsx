@@ -63,7 +63,7 @@ function HistoryContent() {
 
   return (
     <>
-      <Head><title>{t.historyTitle} - Capomatic</title></Head>
+      <Head><title>{t.historyTitle} - Capomatic</title><link rel="icon" href="/favicon.svg" type="image/svg+xml" /></Head>
 
       <div style={{ minHeight: '100vh', backgroundColor: '#F5EDD8', fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: 'hidden' }}>
 
