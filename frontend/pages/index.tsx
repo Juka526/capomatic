@@ -360,8 +360,13 @@ export default function Home() {
         {/* Capo selector — single section, responsive grid */}
         <div style={{ maxWidth: 560, margin: "16px auto 0", padding: "0 20px" }}>
           <div style={{ background: "rgba(255,255,255,0.55)", borderRadius: 16, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
-            <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#a09070", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
-              {t.capoPosition}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#a09070", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                {t.capoPosition}
+              </div>
+              {(!detectionId || detecting) && (
+                <span style={{ fontSize: "0.68rem", color: "#c0b090", fontStyle: "italic" }}>{t.uploadFirst}</span>
+              )}
             </div>
             <div className="capo-grid">
               {[0, 1, 2, 3, 4, 5, 6, 7].map(f => {
@@ -390,11 +395,6 @@ export default function Home() {
             </div>
           </div>
 
-          {(!detectionId || detecting) && (
-            <p style={{ textAlign: "center", fontSize: "0.72rem", color: "#c0b090", fontStyle: "italic", marginTop: 10 }}>
-              {t.uploadFirst}
-            </p>
-          )}
         </div>
 
         {/* Generate button — below capo selector, when capo is selected */}

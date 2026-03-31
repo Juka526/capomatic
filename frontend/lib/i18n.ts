@@ -116,7 +116,7 @@ export const translations = {
     logout: 'Logout',
 
     // Hero
-    subtitle: 'Chord Sheet Transposer · Guitar Capo Tool',
+    subtitle: 'Experience the magic with Capomatic✨🪄',
 
     // Upload
     uploadSheet: 'Upload Sheet',
@@ -136,7 +136,7 @@ export const translations = {
     capoPosition: 'Capo Position',
 
     // Options
-    generateSheet: (fret: number) => `Generate Capo ${fret} Sheet`,
+    generateSheet: (fret: number) => `Generate`,
     rendering: 'Rendering…',
 
     // Result
