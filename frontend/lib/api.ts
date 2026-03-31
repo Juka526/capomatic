@@ -1,5 +1,5 @@
 /**
- * API client for TransChord backend.
+ * API client for Capomatic backend.
  * Handles all HTTP requests with authentication.
  */
 import { getAccessToken } from './auth0';

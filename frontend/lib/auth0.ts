@@ -1,5 +1,5 @@
 /**
- * Auth0 client configuration for TransChord.
+ * Auth0 client configuration for Capomatic.
  * Handles authentication, token management, and user info.
  */
 import { Auth0Client } from '@auth0/auth0-spa-js';
@@ -19,7 +19,7 @@ export const auth0Client = new Auth0Client({
   clientId: process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID,
   authorizationParams: {
     redirect_uri: typeof window !== 'undefined' ? window.location.origin : '',
-    audience: 'https://transchord-api',
+    audience: 'https://capomatic-api',
     scope: 'openid profile email',
   },
   cacheLocation: 'localstorage',

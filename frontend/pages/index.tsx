@@ -179,7 +179,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>TransChord</title>
+        <title>Capomatic</title>
         <meta name="description" content="Transpose chord sheets instantly" />
       </Head>
 
@@ -214,7 +214,7 @@ export default function Home() {
               <rect x="21" y="10" width="3" height="16" rx="1.5" fill="white" opacity="0.9" />
             </svg>
             <span style={{ fontWeight: 800, fontSize: "0.96rem", color: "#3a4847", letterSpacing: "-0.01em", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-              Trans<span style={{ color: "#e05d00" }}>Chord</span>
+              Capo<span style={{ color: "#e05d00" }}>matic</span>
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -229,7 +229,7 @@ export default function Home() {
           {/* Panel header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 52, borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
             <span style={{ fontWeight: 800, fontSize: "0.96rem", color: "#1a1a2e", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-              Trans<span style={{ color: "#e05d00" }}>Chord</span>
+              Capo<span style={{ color: "#e05d00" }}>matic</span>
             </span>
             <button onClick={() => setMenuOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" strokeWidth="2" strokeLinecap="round">
@@ -260,7 +260,7 @@ export default function Home() {
         {/* Hero */}
         <div style={{ textAlign: "center", padding: "44px 24px 0" }}>
           <h1 style={{ margin: "0 0 6px", fontSize: "clamp(2rem, 5vw, 2.8rem)", fontWeight: 900, fontStyle: "italic", fontFamily: "Georgia, serif", letterSpacing: "-0.02em", color: "#1a1a2e" }}>
-            Trans<span style={{ color: "#e05d00" }}>Chord</span>
+            Capo<span style={{ color: "#e05d00" }}>matic</span>
           </h1>
           <p style={{ margin: 0, fontSize: "0.84rem", color: "#aaa", fontWeight: 500, letterSpacing: "0.03em" }}>
             {t.subtitle}
@@ -469,7 +469,7 @@ export default function Home() {
         {/* Footer */}
         <footer style={{ borderTop: "1px solid rgba(0,0,0,0.06)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
           <span style={{ fontSize: "0.75rem", color: "#c0b090", fontWeight: 700, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
-            Trans<span style={{ color: "#e05d00" }}>Chord</span>
+            Capo<span style={{ color: "#e05d00" }}>matic</span>
           </span>
           <span style={{ fontSize: "0.7rem", color: "#ccc", fontWeight: 500 }}>{t.footerTagline}</span>
         </footer>

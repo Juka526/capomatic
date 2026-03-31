@@ -1,4 +1,4 @@
-"""transchord FastAPI application.
+"""Capomatic FastAPI application.
 
 Endpoints
 ---------
@@ -101,7 +101,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="transchord", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Capomatic", version="0.1.0", lifespan=lifespan)
 
 _cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:3000")
 app.add_middleware(

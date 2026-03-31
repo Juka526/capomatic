@@ -1,6 +1,6 @@
 # Production Deployment Checklist
 
-Pre-deployment checklist for TransChord. Work through each section before going live.
+Pre-deployment checklist for Capomatic. Work through each section before going live.
 
 ---
 
@@ -50,7 +50,7 @@ Pre-deployment checklist for TransChord. Work through each section before going 
 - [ ] `PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True`
 - [ ] `DATABASE_URL=postgresql+asyncpg://...`
 - [ ] `AUTH0_DOMAIN=your-domain.auth0.com`
-- [ ] `AUTH0_AUDIENCE=https://transchord-api`
+- [ ] `AUTH0_AUDIENCE=https://capomatic-api`
 - [ ] `USE_S3=false`
 - [ ] `LOCAL_STORAGE_DIR=./storage`
 - [ ] Start command: `uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT`

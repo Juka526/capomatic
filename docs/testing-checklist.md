@@ -1,4 +1,4 @@
-# TransChord Testing Checklist
+# Capomatic Testing Checklist
 
 Manual verification checklist for the auth/jobs/admin features.
 

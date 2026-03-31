@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Project Does
 
-transchord takes a church worship chord sheet image, detects chord symbols via OCR, transposes them by a given number of semitones, and renders the transposed chords back onto the image.
+capomatic takes a church worship chord sheet image, detects chord symbols via OCR, transposes them by a given number of semitones, and renders the transposed chords back onto the image.
 
 ## Commands
 

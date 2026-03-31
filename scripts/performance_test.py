@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Performance benchmarks for TransChord API.
+"""Performance benchmarks for Capomatic API.
 
 Usage:
     export TEST_TOKEN="eyJ..."
@@ -117,7 +117,7 @@ def main() -> None:
 
     with httpx.Client(base_url=API_URL, timeout=30.0) as client:
         print("=" * 60)
-        print("TransChord Performance Benchmarks")
+        print("Capomatic Performance Benchmarks")
         print("=" * 60)
 
         # Auth

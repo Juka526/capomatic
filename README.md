@@ -1,8 +1,8 @@
-# TransChord
+# Capomatic
 
 **Worship team chord transposition tool powered by AI**
 
-TransChord automatically detects chords in uploaded sheet music images and transposes them to any key. Built for worship teams who need quick, accurate chord sheet transposition.
+Capomatic automatically detects chords in uploaded sheet music images and transposes them to any key. Built for worship teams who need quick, accurate chord sheet transposition.
 
 ![Python](https://img.shields.io/badge/python-3.12+-blue.svg)
 ![Next.js](https://img.shields.io/badge/next.js-14-black.svg)
@@ -77,8 +77,8 @@ TransChord automatically detects chords in uploaded sheet music images and trans
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-username/transchord.git
-cd transchord
+git clone https://github.com/your-username/capomatic.git
+cd capomatic
 
 # Backend
 pip install -r requirements.txt
@@ -93,7 +93,7 @@ cd frontend && npm install && cd ..
 ### 2. Set up PostgreSQL
 
 ```bash
-createdb transchord
+createdb capomatic
 
 # Tables are auto-created on first server start via SQLAlchemy
 ```
@@ -114,9 +114,9 @@ cp .env.local.example .env.local
 **Backend `.env`:**
 ```env
 PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/transchord
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/capomatic
 AUTH0_DOMAIN=your-domain.auth0.com
-AUTH0_AUDIENCE=https://transchord-api
+AUTH0_AUDIENCE=https://capomatic-api
 USE_S3=false
 LOCAL_STORAGE_DIR=./storage
 ```
@@ -233,7 +233,7 @@ PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True python scripts/ocr_debug.py "fixtures
    PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
    DATABASE_URL=<railway-postgres-url>
    AUTH0_DOMAIN=your-domain.auth0.com
-   AUTH0_AUDIENCE=https://transchord-api
+   AUTH0_AUDIENCE=https://capomatic-api
    CORS_ORIGINS=https://your-frontend.vercel.app
    USE_S3=false
    LOCAL_STORAGE_DIR=./storage
@@ -246,13 +246,13 @@ PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True python scripts/ocr_debug.py "fixtures
 2. Set Allowed Callback URLs: `https://your-vercel-domain.vercel.app`
 3. Set Allowed Logout URLs: same as above
 4. Set Allowed Web Origins: same as above
-5. Create an **API** with identifier `https://transchord-api`
+5. Create an **API** with identifier `https://capomatic-api`
 6. Note your Domain and Client ID for env vars
 
 ## Project Structure
 
 ```
-transchord/
+capomatic/
 ├── backend/
 │   ├── api/            FastAPI server (endpoints + middleware)
 │   ├── auth/           Auth0 JWT verification + role management

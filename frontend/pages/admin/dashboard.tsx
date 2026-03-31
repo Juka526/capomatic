@@ -98,7 +98,7 @@ function DashboardContent() {
 
   return (
     <>
-      <Head><title>{t.adminDashboard} - TransChord</title></Head>
+      <Head><title>{t.adminDashboard} - Capomatic</title></Head>
 
       <div style={{ minHeight: '100vh', backgroundColor: '#F5EDD8', fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif" }}>
 
@@ -120,11 +120,12 @@ function DashboardContent() {
                 <rect x="21" y="10" width="3" height="16" rx="1.5" fill="white" opacity="0.9" />
               </svg>
               <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1a1a2e', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
-                Trans<span style={{ color: '#e05d00' }}>Chord</span>
+                Capo<span style={{ color: '#e05d00' }}>matic</span>
               </span>
             </Link>
-            <span style={{ color: 'rgba(0,0,0,0.15)' }}>|</span>
-            <h1 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#1a1a2e' }}>{t.adminDashboard}</h1>
+            <span className="admin-title-sep" style={{ color: 'rgba(0,0,0,0.15)' }}>|</span>
+            <h1 className="admin-title" style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#1a1a2e' }}>{t.adminDashboard}</h1>
+            <style>{`@media (max-width: 540px) { .admin-title, .admin-title-sep { display: none; } }`}</style>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <LangToggle />

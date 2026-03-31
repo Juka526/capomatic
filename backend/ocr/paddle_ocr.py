@@ -245,7 +245,7 @@ def get_ocr(det_variant: "str | None" = None) -> "_PaddleOCRType":
     ----------
     det_variant : "server" | "mobile" | None
         Which detector to use. When None the value is read from the env var
-        TRANSCHORD_OCR_DET_MODEL (default "server"). Separate cached instances
+        CHORDTAYLOR_OCR_DET_MODEL (default "server"). Separate cached instances
         are kept per variant so switching does not reuse the wrong model.
 
     Tuning notes
@@ -256,14 +256,14 @@ def get_ocr(det_variant: "str | None" = None) -> "_PaddleOCRType":
       flat and upright so these add time with no benefit.
     * use_textline_orientation=False — skips per-line rotation model for speed.
     * Set PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True to skip connectivity check.
-    * TRANSCHORD_OCR_DET_MODEL=server|mobile selects the detection model variant.
+    * CHORDTAYLOR_OCR_DET_MODEL=server|mobile selects the detection model variant.
     """
     global _ocr_instances
     if det_variant is None:
-        det_variant = os.environ.get("TRANSCHORD_OCR_DET_MODEL", "server").lower()
+        det_variant = os.environ.get("CHORDTAYLOR_OCR_DET_MODEL", "server").lower()
     if det_variant not in ("server", "mobile"):
         raise ValueError(
-            f"TRANSCHORD_OCR_DET_MODEL must be 'server' or 'mobile', got {det_variant!r}"
+            f"CHORDTAYLOR_OCR_DET_MODEL must be 'server' or 'mobile', got {det_variant!r}"
         )
     if det_variant not in _ocr_instances:
         from paddleocr import PaddleOCR  # noqa: PLC0415
@@ -312,10 +312,10 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
     """
     t_start = time.perf_counter()
 
-    det_variant = os.environ.get("TRANSCHORD_OCR_DET_MODEL", "server").lower()
+    det_variant = os.environ.get("CHORDTAYLOR_OCR_DET_MODEL", "server").lower()
     if det_variant not in ("server", "mobile"):
         raise ValueError(
-            f"TRANSCHORD_OCR_DET_MODEL must be 'server' or 'mobile', got {det_variant!r}"
+            f"CHORDTAYLOR_OCR_DET_MODEL must be 'server' or 'mobile', got {det_variant!r}"
         )
 
     # ------------------------------------------------------------------

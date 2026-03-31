@@ -1,4 +1,4 @@
-"""Chord overlay rendering for transchord.
+"""Chord overlay rendering for Capomatic.
 
 Renders transposed chord symbols onto a PIL image using one of two modes:
 

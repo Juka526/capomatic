@@ -37,7 +37,7 @@ function HistoryContent() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${job.song_name || 'transchord'}_${job.semitones}.png`;
+      a.download = `${job.song_name || 'capomatic'}_${job.semitones}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -63,7 +63,7 @@ function HistoryContent() {
 
   return (
     <>
-      <Head><title>{t.historyTitle} - TransChord</title></Head>
+      <Head><title>{t.historyTitle} - Capomatic</title></Head>
 
       <div style={{ minHeight: '100vh', backgroundColor: '#F5EDD8', fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: 'hidden' }}>
 
@@ -78,7 +78,7 @@ function HistoryContent() {
                 <rect x="21" y="10" width="3" height="16" rx="1.5" fill="white" opacity="0.9" />
               </svg>
               <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1a1a2e', fontFamily: 'Georgia, serif', fontStyle: 'italic', whiteSpace: 'nowrap' }}>
-                Trans<span style={{ color: '#e05d00' }}>Chord</span>
+                Capo<span style={{ color: '#e05d00' }}>matic</span>
               </span>
             </Link>
             <span style={{ color: 'rgba(0,0,0,0.15)', flexShrink: 0 }}>|</span>

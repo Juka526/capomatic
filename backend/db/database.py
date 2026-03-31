@@ -11,7 +11,7 @@ load_dotenv()  # load .env from project root
 
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
-    "postgresql+asyncpg://juahnkim@localhost:5432/transchord",
+    "postgresql+asyncpg://juahnkim@localhost:5432/capomatic",
 )
 
 # Railway/Render provide postgres:// URLs; SQLAlchemy asyncpg needs postgresql+asyncpg://
