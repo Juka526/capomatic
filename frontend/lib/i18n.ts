@@ -29,7 +29,7 @@ export const translations = {
     capoPosition: '카포 위치',
 
     // Options
-    generateSheet: (fret: number) => `카포 ${fret} 악보 생성`,
+    generateSheet: (fret: number) => `악보 생성`,
     rendering: '렌더링 중…',
 
     // Result
