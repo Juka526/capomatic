@@ -95,31 +95,51 @@ def detect_staff_systems(img) -> list[tuple[int, int]]:
         _, binary = cv2.threshold(gray, 0, 255,
                                   cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
-        # --- Morphological open: keep only long horizontal strokes ---
-        # Kernel width covers at least 20% of page width to ignore noteheads/clefs
-        # while still detecting lines in lower-resolution or JPEG-compressed scans
-        # where staff lines may have gaps (raised from 0.25 → 0.20 for that reason).
+        # --- Pass 1: row-projection — rows where ≥70% of pixels are dark ---
+        # Staff lines span the full page width; even when notes break continuity
+        # the total dark-pixel count per row stays high.  This is immune to the
+        # morphological-open failure mode where dense notation fragments lines
+        # into sub-threshold runs.
+        # Consecutive hot rows (thick lines or 2-px aliasing) are collapsed to
+        # a single peak (the row with the highest dark-pixel count) so that
+        # each staff line contributes exactly one Y value to the candidate list.
+        dark_threshold = int(W * 0.70)
+        row_sums = (binary > 0).sum(axis=1)   # shape (H,)
+        hot_rows: list[int] = [int(y) for y in range(H) if row_sums[y] >= dark_threshold]
+
+        # Collapse runs of consecutive hot rows → single peak per run.
+        proj_ys: list[int] = []
+        if hot_rows:
+            run: list[int] = [hot_rows[0]]
+            for y in hot_rows[1:]:
+                if y == run[-1] + 1:
+                    run.append(y)
+                else:
+                    proj_ys.append(max(run, key=lambda r: row_sums[r]))
+                    run = [y]
+            proj_ys.append(max(run, key=lambda r: row_sums[r]))
+
+        # --- Pass 2: morphological open — catches sparse/faint staves that
+        # row-projection misses because overall pixel count is lower than 50%.
         kw = max(30, int(W * 0.20))
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kw, 1))
         h_lines = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
 
-        # --- Find connected components of the horizontal-line image ---
         num_labels, _, stats, _ = cv2.connectedComponentsWithStats(
             h_lines, connectivity=8
         )
-
-        # stats columns: LEFT, TOP, WIDTH, HEIGHT, AREA
         min_w = int(W * 0.20)
         max_h = 8
-        line_ys: list[int] = []
-
-        for i in range(1, num_labels):          # skip background (label 0)
+        morph_ys: list[int] = []
+        for i in range(1, num_labels):
             comp_w = stats[i, cv2.CC_STAT_WIDTH]
             comp_h = stats[i, cv2.CC_STAT_HEIGHT]
             comp_top = stats[i, cv2.CC_STAT_TOP]
             if comp_w >= min_w and comp_h <= max_h:
-                y_center = comp_top + comp_h // 2
-                line_ys.append(y_center)
+                morph_ys.append(comp_top + comp_h // 2)
+
+        # Merge both candidate sets; dedup below handles overlap.
+        line_ys: list[int] = proj_ys + morph_ys
 
         if not line_ys:
             return []
@@ -129,11 +149,12 @@ def detect_staff_systems(img) -> list[tuple[int, int]]:
         line_ys = sorted(set(line_ys))
 
         # --- Cluster consecutive y-values into staff groups ---
-        # Gap threshold: 20px or ~1.2% of image height, whichever is larger.
-        # 20px (raised from 15) avoids splitting a staff when the morphological
-        # open misses a middle line, creating an up-to-17px gap between detected
-        # segments.  The smallest inter-system gap is ~126px, so 20px is safe.
-        gap_threshold = max(20, int(H * 0.012))
+        # Gap threshold: 28px or ~1.5% of image height, whichever is larger.
+        # Raised from 20 → 28 to bridge wider staff-line spacing (~22px) that
+        # occurs in denser staves where the row-projection peaks land further
+        # apart than in sparse staves.  Smallest inter-system gap is ~126px,
+        # so 28px is safe.
+        gap_threshold = max(28, int(H * 0.015))
         clusters: list[list[int]] = []
         current: list[int] = [line_ys[0]]
 
@@ -145,12 +166,14 @@ def detect_staff_systems(img) -> list[tuple[int, int]]:
                 current = [y]
         clusters.append(current)
 
-        # --- Keep clusters that look like a staff (2–6 lines) ---
-        # Minimum lowered to 2: JPEG-compressed scans can lose most staff lines
-        # to the morphological open, leaving only 2 clearly detectable segments.
+        # --- Keep clusters that look like a staff (2–12 lines) ---
+        # Upper limit raised from 6 → 12: combining row-projection and
+        # morphological-open candidates can yield up to ~10 entries per staff
+        # (5 lines × up to 2 detection sources each, with slight Y offsets).
+        # Minimum stays at 2 for JPEG-compressed scans with few detectable lines.
         systems: list[tuple[int, int]] = []
         for cluster in clusters:
-            if 2 <= len(cluster) <= 6:
+            if 2 <= len(cluster) <= 12:
                 systems.append((cluster[0], cluster[-1]))
 
         return systems
