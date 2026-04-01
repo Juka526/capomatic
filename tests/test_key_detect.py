@@ -82,3 +82,24 @@ class TestInferKeyEdgeCases:
         """Items without a 'text' key are silently skipped."""
         chords = [{"confidence": 0.9, "bbox": [0, 0, 50, 20]}]
         assert infer_key(chords) is None
+
+
+# ---------------------------------------------------------------------------
+# Chord quality expansion (new KK algorithm)
+# ---------------------------------------------------------------------------
+
+class TestInferKeyQualityExpansion:
+    def test_minor_progression_returns_relative_major(self):
+        """Am-F-C-G (I-VI-III-VII in Am) should resolve to C major."""
+        chords = _items(["Am", "F", "C", "G", "Am", "F", "C", "G"])
+        assert infer_key(chords) == "C"
+
+    def test_dominant_seventh_signals_key(self):
+        """G7 strongly implies C major (V7→I relationship)."""
+        chords = _items(["C", "G7", "F", "C", "G7", "C"])
+        assert infer_key(chords) == "C"
+
+    def test_minor_key_chord_quality(self):
+        """Dm-Am-Bb-C (i-v-VI-VII in Dm) — relative major is F."""
+        chords = _items(["Dm", "Am", "Bb", "C", "Dm", "Am", "Bb", "C"])
+        assert infer_key(chords) == "F"
