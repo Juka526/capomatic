@@ -1,65 +1,40 @@
 /**
- * User job history page.
- * Shows all processed chord sheets with download/delete actions.
+ * User history page — reads from localStorage (tc-history key).
  */
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { useLang, LangToggle } from '@/components/LangProvider';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { getMyJobs, downloadJobResult, deleteJob, Job } from '@/lib/api';
 import Link from 'next/link';
 import Head from 'next/head';
+
+interface HistoryEntry {
+  id: string;
+  song_name: string | null;
+  original_key: string | null;
+  target_key: string | null;
+  semitones: number;
+  timestamp: string;
+}
 
 function HistoryContent() {
   const { user } = useAuth();
   const { t } = useLang();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [entries, setEntries] = useState<HistoryEntry[]>([]);
 
-  useEffect(() => { loadJobs(); }, []);
-
-  async function loadJobs() {
+  useEffect(() => {
     try {
-      setLoading(true);
-      setError(null);
-      setJobs(await getMyJobs());
-    } catch (err: any) {
-      setError(err.message || t.failedLoad);
-    } finally {
-      setLoading(false);
+      const stored = JSON.parse(localStorage.getItem('tc-history') || '[]');
+      setEntries(stored);
+    } catch {
+      setEntries([]);
     }
-  }
+  }, []);
 
-  async function handleDownload(job: Job) {
-    try {
-      const blob = await downloadJobResult(job.id);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${job.song_name || 'capomatic'}_${job.semitones}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err: any) {
-      alert(t.downloadFailed(err.message));
-    }
+  function handleDelete(id: string) {
+    const updated = entries.filter(e => e.id !== id);
+    setEntries(updated);
+    localStorage.setItem('tc-history', JSON.stringify(updated));
   }
-
-  async function handleDelete(job: Job) {
-    if (!confirm(t.deleteConfirm(job.song_name || t.untitled))) return;
-    try {
-      await deleteJob(job.id);
-      setJobs(jobs.filter(j => j.id !== job.id));
-    } catch (err: any) {
-      alert(t.deleteFailed(err.message));
-    }
-  }
-
-  const totalJobs = jobs.length;
-  const completedJobs = jobs.filter(j => j.status === 'completed').length;
-  const failedJobs = jobs.filter(j => j.status === 'failed').length;
 
   return (
     <>
@@ -91,98 +66,50 @@ function HistoryContent() {
         </nav>
 
         <main className="history-main">
-
-          {loading && (
-            <div style={{ textAlign: 'center', padding: '64px 0' }}>
-              <div style={{ width: 40, height: 40, border: '3px solid rgba(0,0,0,0.08)', borderTop: '3px solid #e05d00', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
-              <p style={{ marginTop: 16, color: '#aaa', fontSize: '0.85rem' }}>{t.loading}</p>
+          {entries.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '64px 20px', background: 'rgba(255,255,255,0.55)', borderRadius: 16, border: '2px dashed rgba(0,0,0,0.08)' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🎵</div>
+              <p style={{ color: '#aaa', marginBottom: 20, fontSize: '0.9rem' }}>{t.noJobs}</p>
+              <Link href="/" style={{ display: 'inline-block', background: 'linear-gradient(135deg, #e05d00, #c84b00)', color: 'white', textDecoration: 'none', borderRadius: 50, padding: '11px 26px', fontWeight: 700, fontSize: '0.85rem', boxShadow: '0 4px 14px rgba(224,93,0,0.28)' }}>
+                {t.processFirst}
+              </Link>
             </div>
-          )}
-
-          {error && !loading && (
-            <div style={{ textAlign: 'center', padding: '64px 0' }}>
-              <p style={{ color: '#d4183d', marginBottom: 16, fontSize: '0.9rem' }}>{error}</p>
-              <button onClick={loadJobs} style={{ background: 'linear-gradient(135deg, #e05d00, #c84b00)', color: 'white', border: 'none', borderRadius: 10, padding: '10px 24px', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' }}>
-                {t.retry}
-              </button>
-            </div>
-          )}
-
-          {!loading && !error && (
-            <>
-              {/* Stats */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 28 }}>
-                {[
-                  { label: t.totalJobs, value: totalJobs, color: '#1a1a2e' },
-                  { label: t.completed, value: completedJobs, color: '#28c45e' },
-                  { label: t.failed, value: failedJobs, color: '#d4183d' },
-                ].map(({ label, value, color }) => (
-                  <div key={label} style={{ background: 'rgba(255,255,255,0.6)', borderRadius: 14, padding: '20px 20px', border: '1px solid rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
-                    <p style={{ margin: 0, fontSize: '0.72rem', color: '#aaa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</p>
-                    <p style={{ margin: '6px 0 0', fontSize: '2rem', fontWeight: 800, color }}>{value}</p>
-                  </div>
-                ))}
-              </div>
-
-              {jobs.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '64px 20px', background: 'rgba(255,255,255,0.55)', borderRadius: 16, border: '2px dashed rgba(0,0,0,0.08)' }}>
-                  <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🎵</div>
-                  <p style={{ color: '#aaa', marginBottom: 20, fontSize: '0.9rem' }}>{t.noJobs}</p>
-                  <Link href="/" style={{ display: 'inline-block', background: 'linear-gradient(135deg, #e05d00, #c84b00)', color: 'white', textDecoration: 'none', borderRadius: 50, padding: '11px 26px', fontWeight: 700, fontSize: '0.85rem', boxShadow: '0 4px 14px rgba(224,93,0,0.28)' }}>
-                    {t.processFirst}
-                  </Link>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {jobs.map(job => (
-                    <div key={job.id} className="history-job-card">
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#1a1a2e' }}>
-                          {job.song_name || t.untitled}
-                        </h3>
-                        <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: '#888' }}>
-                          {job.original_key && job.target_key && (
-                            <span style={{ fontWeight: 700, color: '#1a1a2e' }}>{job.original_key} → {job.target_key}</span>
-                          )}
-                          <span>({t.semitones(job.semitones)})</span>
-                          <span style={{ color: 'rgba(0,0,0,0.15)' }}>·</span>
-                          <span>{job.mode}</span>
-                          <span style={{ color: 'rgba(0,0,0,0.15)' }}>·</span>
-                          <span style={{ fontWeight: 700, color: job.status === 'completed' ? '#28c45e' : job.status === 'failed' ? '#d4183d' : '#e05d00' }}>
-                            {job.status === 'completed' ? t.completed : job.status === 'failed' ? t.failed : job.status}
-                          </span>
-                        </div>
-                        <div style={{ marginTop: 4, fontSize: '0.7rem', color: '#ccc' }}>
-                          {new Date(job.created_at).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                      </div>
-                      <div className="history-job-actions">
-                        {job.status === 'completed' && (
-                          <button onClick={() => handleDownload(job)} style={{ background: 'linear-gradient(135deg, #e05d00, #c84b00)', color: 'white', border: 'none', borderRadius: 9, padding: '8px 16px', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(224,93,0,0.22)' }}>
-                            {t.download}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDelete(job)}
-                          style={{ background: 'none', border: 'none', color: '#d4183d', padding: '8px 10px', borderRadius: 9, cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600 }}
-                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,24,61,0.06)')}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                        >
-                          {t.delete}
-                        </button>
-                      </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {entries.map(entry => (
+                <div key={entry.id} className="history-job-card">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#1a1a2e' }}>
+                      {entry.song_name || t.untitled}
+                    </h3>
+                    <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: '#888' }}>
+                      {entry.original_key && entry.target_key && (
+                        <span style={{ fontWeight: 700, color: '#1a1a2e' }}>{entry.original_key} → {entry.target_key}</span>
+                      )}
+                      <span>({t.semitones(entry.semitones)})</span>
                     </div>
-                  ))}
+                    <div style={{ marginTop: 4, fontSize: '0.7rem', color: '#ccc' }}>
+                      {new Date(entry.timestamp).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <div className="history-job-actions">
+                    <button
+                      onClick={() => handleDelete(entry.id)}
+                      style={{ background: 'none', border: 'none', color: '#d4183d', padding: '8px 10px', borderRadius: 9, cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600 }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,24,61,0.06)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                    >
+                      {t.delete}
+                    </button>
+                  </div>
                 </div>
-              )}
-            </>
+              ))}
+            </div>
           )}
         </main>
       </div>
 
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-
         .history-nav {
           position: sticky; top: 0; z-index: 100;
           display: flex; align-items: center; justify-content: space-between;
@@ -239,9 +166,5 @@ function HistoryContent() {
 }
 
 export default function HistoryPage() {
-  return (
-    <ProtectedRoute>
-      <HistoryContent />
-    </ProtectedRoute>
-  );
+  return <HistoryContent />;
 }
