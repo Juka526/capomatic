@@ -5,7 +5,6 @@ import Link from "next/link";
 import LoginButton from "@/components/LoginButton";
 import { useAuth } from "@/components/AuthProvider";
 import { useLang, LangToggle } from "@/components/LangProvider";
-import { getAccessToken } from "@/lib/auth0";
 import { GuitarFretboard } from "@/components/GuitarFretboard";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -20,7 +19,7 @@ function computeTargetKey(originalKey: string, semitones: number): string {
 }
 
 export default function Home() {
-  const { isAuthenticated, user } = useAuth();
+  const { user } = useAuth();
   const { t } = useLang();
 
   const [file, setFile] = useState<File | null>(null);
@@ -122,10 +121,7 @@ export default function Home() {
       setReplaceResult(data.replace_image);
       setAboveResult(data.above_image);
       setActiveTab("replace");
-      if (isAuthenticated && file) {
-        saveJobInBackground(file, semitones, "replace");
-        saveJobInBackground(file, semitones, "above");
-      }
+      saveToLocalHistory(file?.name, originalKey, data.target_key, semitones);
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.failedConnect);
@@ -134,16 +130,19 @@ export default function Home() {
     }
   };
 
-  const saveJobInBackground = async (f: File, semi: number, mode: string) => {
+  const saveToLocalHistory = (fileName: string | undefined, origKey: string | null, tgtKey: string | null, semi: number) => {
     try {
-      const token = await getAccessToken();
-      if (!token) return;
-      const form = new FormData();
-      form.append("image", f);
-      form.append("semitones", semi.toString());
-      form.append("mode", mode);
-      form.append("song_name", f.name.replace(/\.[^.]+$/, ""));
-      await fetch(`${API_URL}/api/overlay`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form });
+      const existing = JSON.parse(localStorage.getItem("tc-history") || "[]");
+      const entry = {
+        id: Math.random().toString(36).slice(2),
+        song_name: fileName ? fileName.replace(/\.[^.]+$/, "") : null,
+        original_key: origKey,
+        target_key: tgtKey,
+        semitones: semi,
+        timestamp: new Date().toISOString(),
+      };
+      const updated = [entry, ...existing].slice(0, 50);
+      localStorage.setItem("tc-history", JSON.stringify(updated));
     } catch {}
   };
 

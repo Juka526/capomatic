@@ -23,24 +23,6 @@ async function fetchAdminData(url: string) {
   return await response.json();
 }
 
-export interface AdminStats {
-  total_users: number;
-  total_jobs: number;
-  total_cached: number;
-  cache_hit_rate: number;
-  avg_processing_time: number;
-}
-
-export interface PopularSong {
-  song_name: string;
-  original_key: string | null;
-  target_key: string | null;
-  semitones: number;
-  request_count: number;
-  unique_users: number;
-  last_requested: string;
-}
-
 export interface AdminUser {
   id: string;
   email: string;
@@ -48,15 +30,6 @@ export interface AdminUser {
   role: string;
   created_at: string;
   last_login: string | null;
-}
-
-export async function getAdminStats(): Promise<AdminStats> {
-  return fetchAdminData('/api/admin/stats');
-}
-
-export async function getPopularSongs(limit = 20): Promise<PopularSong[]> {
-  const data = await fetchAdminData(`/api/admin/popular?limit=${limit}`);
-  return data.songs || [];
 }
 
 export async function getAllUsers(): Promise<AdminUser[]> {
