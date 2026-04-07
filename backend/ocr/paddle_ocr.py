@@ -276,7 +276,7 @@ def get_ocr(det_variant: "str | None" = None) -> "_PaddleOCRType":
     """
     global _ocr_instances
     if det_variant is None:
-        det_variant = os.environ.get("CHORDTAYLOR_OCR_DET_MODEL", "mobile").lower()
+        det_variant = os.environ.get("CHORDTAYLOR_OCR_DET_MODEL", "server").lower()
     if det_variant not in ("server", "mobile"):
         raise ValueError(
             f"CHORDTAYLOR_OCR_DET_MODEL must be 'server' or 'mobile', got {det_variant!r}"
@@ -338,7 +338,7 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
     """
     t_start = time.perf_counter()
 
-    det_variant = os.environ.get("CHORDTAYLOR_OCR_DET_MODEL", "mobile").lower()
+    det_variant = os.environ.get("CHORDTAYLOR_OCR_DET_MODEL", "server").lower()
     if det_variant not in ("server", "mobile"):
         raise ValueError(
             f"CHORDTAYLOR_OCR_DET_MODEL must be 'server' or 'mobile', got {det_variant!r}"
