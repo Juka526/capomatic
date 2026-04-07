@@ -1,0 +1,15 @@
+{
+  "image": "온 맘 다해.png",
+  "expected_unique_chords": [
+    "F", "F/A", "C/Bb", "D7/A", "Gm7", "C7sus4", "C7", "Am7", "Dm7", "C", "Bb", "Bbmaj7", "Bb6", "A7sus4", "A7", "Dm", "Dm/C", "G9/B", "G7/B", "F/C", "Bb/C"
+  ],
+  "hard_targets": [
+    "G9/B",
+    "D7/A",
+    "Bb6",
+    "A7sus4"
+  ],
+  "expected_total_chords_min": 35,
+  "expected_total_chords_max": 50,
+  "notes": "F Major 키의 워십 곡입니다. 텐션 코드(G9)와 세분화된 분수 코드들이 많이 포함되어 있어 정밀한 OCR 튜닝이 요구됩니다."
+}

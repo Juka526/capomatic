@@ -1,0 +1,13 @@
+{
+  "image": "만왕의 왕 내주께서.png",
+  "expected_unique_chords": [
+    "G", "G/B", "C", "Am", "D7", "Em", "D", "C/D", "D7/F#"
+  ],
+  "hard_targets": [
+    "D7/F#",
+    "C/D"
+  ],
+  "expected_total_chords_min": 15,
+  "expected_total_chords_max": 25,
+  "notes": "정니니 편곡 버전의 G Major 찬송가 악보입니다. 4/4 박자로 구성되어 있으며 분수 코드(Slash Chord)의 정확한 인식이 필요합니다."
+}

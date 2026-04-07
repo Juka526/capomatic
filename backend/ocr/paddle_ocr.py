@@ -27,7 +27,19 @@ _ocr_instances: "dict[str, _PaddleOCRType]" = {}
 # Canvases larger than this are downscaled proportionally with INTER_AREA before
 # inference and their OCR coordinates are scaled back afterward.
 # Lower values reduce predict() time; too low degrades small-text accuracy.
-MAX_STITCHED_PIXELS = 600_000
+# Override via PADDLE_MAX_STITCHED_PIXELS env var (default 600k).
+# Lowering to 400k saves ~1.4s per image but causes misses on small glyphs like
+# A/C# and G#dim at the resulting resize scale (≈0.87×). Set lower only when
+# using the mobile detection model (PP-OCRv5_mobile_det) or speed > accuracy.
+MAX_STITCHED_PIXELS = int(os.environ.get("PADDLE_MAX_STITCHED_PIXELS", "600000"))
+
+# Detection threshold parameters — configurable for A/B accuracy vs. recall tuning.
+# Lower det_db_thresh / det_db_box_thresh → higher recall, more false positives
+# (filter.py handles the extra noise via two-pass chord validation).
+# Higher det_db_unclip_ratio → larger text boxes, helps catch tight/small chords.
+_DET_DB_THRESH      = float(os.environ.get("PADDLE_DET_DB_THRESH",       "0.25"))
+_DET_DB_BOX_THRESH  = float(os.environ.get("PADDLE_DET_DB_BOX_THRESH",   "0.45"))
+_DET_DB_UNCLIP_RATIO = float(os.environ.get("PADDLE_DET_DB_UNCLIP_RATIO", "1.8"))
 
 # ---------------------------------------------------------------------------
 # Spatial context filter — direction-marker proximity rejection
@@ -257,6 +269,10 @@ def get_ocr(det_variant: "str | None" = None) -> "_PaddleOCRType":
     * use_textline_orientation=False — skips per-line rotation model for speed.
     * Set PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True to skip connectivity check.
     * CHORDTAYLOR_OCR_DET_MODEL=server|mobile selects the detection model variant.
+    * PADDLE_DET_DB_THRESH (default 0.25): lower → higher recall, more noise.
+    * PADDLE_DET_DB_BOX_THRESH (default 0.45): box confidence cutoff.
+    * PADDLE_DET_DB_UNCLIP_RATIO (default 1.8): box expansion ratio for small glyphs.
+    * PADDLE_MAX_STITCHED_PIXELS (default 400000): canvas pixel cap before downscale.
     """
     global _ocr_instances
     if det_variant is None:
@@ -274,6 +290,16 @@ def get_ocr(det_variant: "str | None" = None) -> "_PaddleOCRType":
             use_textline_orientation=False,
             enable_mkldnn=False,  # disable oneDNN — crashes on x86 Intel (Railway) with 3.3.0+
         )
+        # Only apply det params when explicitly overridden — PP-OCRv5 server model
+        # is sensitive to these values and regressions occur with non-default settings.
+        # PP-OCRv5 defaults: thresh=0.3, box_thresh=0.5, unclip_ratio=1.5.
+        for env_var, kwarg_name in [
+            ("PADDLE_DET_DB_THRESH",       "det_db_thresh"),
+            ("PADDLE_DET_DB_BOX_THRESH",   "det_db_box_thresh"),
+            ("PADDLE_DET_DB_UNCLIP_RATIO", "det_db_unclip_ratio"),
+        ]:
+            if env_var in os.environ:
+                kwargs[kwarg_name] = float(os.environ[env_var])
         if det_variant == "mobile":
             kwargs["text_detection_model_name"] = "PP-OCRv5_mobile_det"
         _ocr_instances[det_variant] = PaddleOCR(**kwargs)

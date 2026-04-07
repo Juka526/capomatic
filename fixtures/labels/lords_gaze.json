@@ -1,0 +1,11 @@
+{
+  "image": "주님의 시선.png",
+  "expected_unique_chords": [
+    "Bb", "C", "Am", "Dm", "F"
+  ],
+  "hard_targets": [
+  ],
+  "expected_total_chords_min": 35,
+  "expected_total_chords_max": 55,
+  "notes": "예람워십의 F Major 키 곡입니다. 코드 구성은 단순하지만 반복되는 구간이 많으며, 악보 상단의 송폼(Intro-V-C...) 정보가 포함되어 있습니다."
+}
