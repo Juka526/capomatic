@@ -1,0 +1,14 @@
+{
+  "image": "주님을 예배하는 것.png",
+  "expected_unique_chords": [
+    "Bbmaj7", "C/Bb", "Am7", "Dm7", "Gm7", "Csus4", "C", "F", "Bb", "Bb/C", "Eb/F", "F/G", "G/B", "F/A", "Bbm/F"
+  ],
+  "hard_targets": [
+    "Bbmaj7(G/B)",
+    "Eb/F",
+    "Bbm/F"
+  ],
+  "expected_total_chords_min": 40,
+  "expected_total_chords_max": 60,
+  "notes": "F Major 키의 경배와 찬양 악보입니다. BbM7으로 표기된 부분은 Bbmaj7으로 정규화하였으며, 괄호 안에 병기된 코드 인식에 유의해야 합니다."
+}

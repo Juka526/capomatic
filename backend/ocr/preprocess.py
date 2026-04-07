@@ -1,12 +1,42 @@
 from __future__ import annotations
 
 import logging
+import os
 
 import cv2
 import numpy as np
 from PIL import Image
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Band image enhancement
+# ---------------------------------------------------------------------------
+
+def _enhance_band_crop(crop: np.ndarray) -> np.ndarray:
+    """Apply CLAHE + unsharp mask to a band crop for improved OCR contrast.
+
+    Converts to grayscale, applies Contrast Limited Adaptive Histogram
+    Equalization (CLAHE) for local contrast normalisation, then sharpens
+    chord text strokes with an unsharp mask.  The result is converted back
+    to RGB so PaddleOCR receives the expected 3-channel input.
+
+    Only called when PADDLE_ENHANCE_BANDS=1 is set. This is most useful for
+    photographed or low-contrast sheets. Clean digital PNGs should NOT use
+    this — CLAHE introduces artificial contrast gradients that hurt detection
+    on already-clean images.
+    """
+    gray = cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    enhanced = clahe.apply(gray)
+    # Unsharp mask: result = original + 1.5 * (original − blurred)
+    blurred = cv2.GaussianBlur(enhanced, (0, 0), sigmaX=1.0)
+    sharpened = cv2.addWeighted(enhanced, 2.5, blurred, -1.5, 0)
+    return cv2.cvtColor(sharpened, cv2.COLOR_GRAY2RGB)
+
+
+_ENHANCE_BANDS = os.environ.get("PADDLE_ENHANCE_BANDS", "0") == "1"
+
 
 # ---------------------------------------------------------------------------
 # Left-margin crop constants
@@ -287,7 +317,8 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
 
         full_crop = arr[band_top:band_bottom, :, :]
         x0 = find_chord_x_start(full_crop)
-        crop = arr[band_top:band_bottom, x0:, :]
+        raw_crop = arr[band_top:band_bottom, x0:, :]
+        crop = _enhance_band_crop(raw_crop) if _ENHANCE_BANDS else raw_crop
         bands.append({
             "crop":         crop,
             "x0":           x0,
@@ -316,8 +347,9 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
             new_end = max(prev_end, band["y0"] + band["h"])
             full_merged = arr[new_y0:new_end, :, :]
             x0 = find_chord_x_start(full_merged)
+            merged_raw = arr[new_y0:new_end, x0:, :]
             merged[-1] = {
-                "crop":         arr[new_y0:new_end, x0:, :],
+                "crop":         _enhance_band_crop(merged_raw) if _ENHANCE_BANDS else merged_raw,
                 "x0":           x0,
                 "y0":           new_y0,
                 "w":            W - x0,

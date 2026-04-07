@@ -1,0 +1,14 @@
+{
+  "image": "사랑하기 때문에.png",
+  "expected_unique_chords": [
+    "A", "C#m", "F#m", "Bm", "E7", "Amaj7", "Bm7", "Dmaj7", "F#7", "Asus4", "C#m/G#", "Gdim", "D"
+  ],
+  "hard_targets": [
+    "Gdim",
+    "C#m/G#",
+    "F#7"
+  ],
+  "expected_total_chords_min": 45,
+  "expected_total_chords_max": 60,
+  "notes": "유재하의 A Major 키 가요 악보입니다. Amaj7, Dmaj7 등 메이저 세븐 표기법 정규화가 필요하며, 디미니쉬(Gdim) 코드가 특징적입니다."
+}

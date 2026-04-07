@@ -1,0 +1,13 @@
+{
+  "image": "내가 소망하는.jpeg",
+  "expected_unique_chords": [
+    "Bb", "Cm7", "Bb/D", "Eb", "F/Eb", "Gm7", "F", "F/A"
+  ],
+  "hard_targets": [
+    "F/Eb",
+    "Bb/D"
+  ],
+  "expected_total_chords_min": 45,
+  "expected_total_chords_max": 65,
+  "notes": "아이자야씩스티원의 Bb Major 키 곡입니다. 배경에 워터마크가 있어 텍스트와 기호 분리 인식이 중요합니다."
+}
