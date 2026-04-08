@@ -9,6 +9,8 @@ import { GuitarFretboard } from "@/components/GuitarFretboard";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
+
+type ChordItem = { text: string; bbox: number[] | null };
 const ESTIMATED_DETECT_MS = 13000;
 const KEY_NAMES = ["C","Db","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
 
@@ -35,6 +37,13 @@ export default function Home() {
   const [aboveResult, setAboveResult] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"replace" | "above">("replace");
   const [rendering, setRendering] = useState(false);
+
+  const [detectedChords, setDetectedChords] = useState<ChordItem[]>([]);
+  const [editableChords, setEditableChords] = useState<ChordItem[]>([]);
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+  const [addingChord, setAddingChord] = useState(false);
+  const [addInput, setAddInput] = useState("");
+  const [reRendering, setReRendering] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -82,6 +91,9 @@ export default function Home() {
     setOriginalKey(null);
     setReplaceResult(null);
     setAboveResult(null);
+    setDetectedChords([]);
+    setEditableChords([]);
+    setEditingIdx(null);
     try {
       const formData = new FormData();
       formData.append("image", f);
@@ -91,6 +103,9 @@ export default function Home() {
       setDetectProgress(100);
       setDetectionId(data.detection_id);
       setOriginalKey(data.original_key);
+      const chords: ChordItem[] = (data.chords || []).map((c: any) => ({ text: c.text, bbox: c.bbox }));
+      setDetectedChords(chords);
+      setEditableChords(chords);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.failedConnect);
     } finally {
@@ -146,6 +161,27 @@ export default function Home() {
     } catch {}
   };
 
+  const handleReRender = async () => {
+    if (!detectionId) return;
+    setReRendering(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("detection_id", detectionId);
+      formData.append("semitones", semitones.toString());
+      formData.append("chords_override", JSON.stringify(editableChords));
+      const res = await fetch(`${API_URL}/render`, { method: "POST", body: formData });
+      if (!res.ok) throw new Error((await res.text()) || `Server error (${res.status})`);
+      const data = await res.json();
+      setReplaceResult(data.replace_image);
+      setAboveResult(data.above_image);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.failedConnect);
+    } finally {
+      setReRendering(false);
+    }
+  };
+
   const handleDownload = () => {
     const activeResult = activeTab === "replace" ? replaceResult : aboveResult;
     if (!activeResult) return;
@@ -163,6 +199,10 @@ export default function Home() {
     setAboveResult(null);
     setError(null);
     setSelection(0);
+    setDetectedChords([]);
+    setEditableChords([]);
+    setEditingIdx(null);
+    setAddingChord(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -461,6 +501,111 @@ export default function Home() {
                 <Download size={15} />
                 {t.downloadPng}
               </button>
+
+              {/* Chord editor */}
+              {editableChords.length > 0 && (
+                <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(0,0,0,0.07)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                    <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#a09070", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                      Detected Chords
+                    </span>
+                    {JSON.stringify(editableChords) !== JSON.stringify(detectedChords) && (
+                      <button
+                        onClick={() => { setEditableChords(detectedChords); setEditingIdx(null); setAddingChord(false); }}
+                        style={{ background: "none", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 20, padding: "3px 12px", fontSize: "0.7rem", fontWeight: 700, color: "#888", cursor: "pointer" }}
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                    {editableChords.map((chord, i) => (
+                      editingIdx === i ? (
+                        <input
+                          key={i}
+                          autoFocus
+                          defaultValue={chord.text}
+                          onBlur={e => {
+                            const v = e.target.value.trim();
+                            if (v) setEditableChords(prev => prev.map((c, j) => j === i ? { ...c, text: v } : c));
+                            setEditingIdx(null);
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                            if (e.key === "Escape") setEditingIdx(null);
+                          }}
+                          style={{ width: 72, padding: "4px 8px", borderRadius: 20, border: "1.5px solid #e05d00", fontSize: "0.8rem", fontWeight: 700, outline: "none", textAlign: "center" }}
+                        />
+                      ) : (
+                        <span
+                          key={i}
+                          onClick={() => setEditingIdx(i)}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 3, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 20, padding: "4px 6px 4px 10px", fontSize: "0.8rem", fontWeight: 700, color: "#1a1a2e", cursor: "pointer", userSelect: "none" }}
+                        >
+                          {chord.text}
+                          <button
+                            onClick={e => { e.stopPropagation(); setEditableChords(prev => prev.filter((_, j) => j !== i)); if (editingIdx === i) setEditingIdx(null); }}
+                            style={{ background: "none", border: "none", cursor: "pointer", padding: "0 2px", color: "#bbb", fontSize: "0.7rem", lineHeight: 1 }}
+                          >✕</button>
+                        </span>
+                      )
+                    ))}
+
+                    {addingChord ? (
+                      <input
+                        autoFocus
+                        value={addInput}
+                        onChange={e => setAddInput(e.target.value)}
+                        placeholder="e.g. Am7"
+                        onBlur={() => { setAddingChord(false); setAddInput(""); }}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") {
+                            const v = addInput.trim();
+                            if (v) setEditableChords(prev => [...prev, { text: v, bbox: null }]);
+                            setAddingChord(false);
+                            setAddInput("");
+                          }
+                          if (e.key === "Escape") { setAddingChord(false); setAddInput(""); }
+                        }}
+                        style={{ width: 84, padding: "4px 10px", borderRadius: 20, border: "1.5px solid #e05d00", fontSize: "0.8rem", fontWeight: 700, outline: "none" }}
+                      />
+                    ) : (
+                      <button
+                        onClick={() => setAddingChord(true)}
+                        style={{ background: "none", border: "1.5px dashed rgba(0,0,0,0.18)", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700, color: "#aaa", cursor: "pointer" }}
+                      >
+                        + Add
+                      </button>
+                    )}
+                  </div>
+
+                  {editableChords.some(c => c.bbox === null) && (
+                    <p style={{ margin: "8px 0 0", fontSize: "0.7rem", color: "#e05d00", fontWeight: 600 }}>
+                      ⚠ Added chords won't be positioned on the image.
+                    </p>
+                  )}
+
+                  {JSON.stringify(editableChords) !== JSON.stringify(detectedChords) && (
+                    <button
+                      onClick={handleReRender}
+                      disabled={reRendering}
+                      style={{
+                        marginTop: 12, width: "100%", padding: "11px 0", borderRadius: 10, border: "none",
+                        background: reRendering ? "linear-gradient(135deg,#aaa,#999)" : "linear-gradient(135deg,#3a4847,#2a3837)",
+                        color: "white", fontSize: "0.85rem", fontWeight: 700,
+                        cursor: reRendering ? "not-allowed" : "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      {reRendering
+                        ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> Re-rendering…</>
+                        : "↺ Re-render with edits"}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
