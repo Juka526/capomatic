@@ -281,14 +281,21 @@ async def detect(
 async def render(
     detection_id: str = Form(...),
     semitones: int = Form(0),
+    chords_override: Optional[str] = Form(None),
 ) -> dict:
     """Transpose and render both overlay modes from a cached detection.
 
     Parameters
     ----------
-    detection_id : ID returned by ``/detect``.
-    semitones    : Semitone shift applied to every detected chord (-11 to 0).
+    detection_id    : ID returned by ``/detect``.
+    semitones       : Semitone shift applied to every detected chord (-11 to 0).
+    chords_override : Optional JSON array of manually edited chords
+                      ``[{"text": "Am", "bbox": [x1,y1,x2,y2]}, ...]``.
+                      When provided, replaces the cached OCR items.
+                      Chords with ``bbox: null`` are transposed but not rendered.
     """
+    import json as _json
+
     if not (-11 <= semitones <= 11):
         raise HTTPException(
             status_code=422,
@@ -302,7 +309,19 @@ async def render(
             detail="detection_id not found — it may have expired. Please re-upload.",
         )
 
-    items = cached["items"]
+    if chords_override is not None:
+        try:
+            raw = _json.loads(chords_override)
+            items = [
+                {"text": r["text"], "confidence": 1.0, "bbox": r.get("bbox")}
+                for r in raw
+                if isinstance(r.get("text"), str) and r["text"].strip()
+            ]
+        except (ValueError, KeyError, TypeError):
+            raise HTTPException(status_code=422, detail="chords_override must be a valid JSON array")
+    else:
+        items = cached["items"]
+
     img = cached["img"]
     original_key = cached["original_key"]
 
