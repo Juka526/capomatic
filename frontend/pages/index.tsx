@@ -44,6 +44,9 @@ export default function Home() {
   const [addingChord, setAddingChord] = useState(false);
   const [addInput, setAddInput] = useState("");
   const [reRendering, setReRendering] = useState(false);
+  const [addModeActive, setAddModeActive] = useState(false);
+  const [pendingPosition, setPendingPosition] = useState<{x: number, y: number} | null>(null);
+  const [pendingChordText, setPendingChordText] = useState("");
 
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -94,6 +97,9 @@ export default function Home() {
     setDetectedChords([]);
     setEditableChords([]);
     setEditingIdx(null);
+    setAddModeActive(false);
+    setPendingPosition(null);
+    setPendingChordText("");
     try {
       const formData = new FormData();
       formData.append("image", f);
@@ -182,6 +188,29 @@ export default function Home() {
     }
   };
 
+  const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!addModeActive) return;
+    const img = e.currentTarget;
+    const rect = img.getBoundingClientRect();
+    const scaleX = img.naturalWidth / rect.width;
+    const scaleY = img.naturalHeight / rect.height;
+    const x = Math.round((e.clientX - rect.left) * scaleX);
+    const y = Math.round((e.clientY - rect.top) * scaleY);
+    setPendingPosition({ x, y });
+    setAddModeActive(false);
+  };
+
+  const confirmPositionedChord = () => {
+    if (!pendingPosition || !pendingChordText.trim()) return;
+    const { x, y } = pendingPosition;
+    setEditableChords(prev => [...prev, {
+      text: pendingChordText.trim(),
+      bbox: [x, y, x + 80, y + 35],
+    }]);
+    setPendingPosition(null);
+    setPendingChordText("");
+  };
+
   const handleDownload = () => {
     const activeResult = activeTab === "replace" ? replaceResult : aboveResult;
     if (!activeResult) return;
@@ -203,6 +232,9 @@ export default function Home() {
     setEditableChords([]);
     setEditingIdx(null);
     setAddingChord(false);
+    setAddModeActive(false);
+    setPendingPosition(null);
+    setPendingChordText("");
     if (fileInputRef.current) fileInputRef.current.value = "";
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -484,9 +516,65 @@ export default function Home() {
                 ))}
               </div>
               {/* Sheet image */}
-              <div style={{ borderRadius: 12, overflow: "hidden", background: "white" }}>
-                {activeResult && <img src={activeResult} alt={`Transposed chord sheet (${activeTab} mode)`} style={{ width: "100%", display: "block" }} />}
+              <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "white" }}>
+                {activeResult && (
+                  <img
+                    src={activeResult}
+                    alt={`Transposed chord sheet (${activeTab} mode)`}
+                    style={{ width: "100%", display: "block", cursor: addModeActive ? "crosshair" : "default" }}
+                    onClick={handleImageClick}
+                  />
+                )}
+                {addModeActive && (
+                  <div style={{
+                    position: "absolute", top: 0, left: 0, right: 0,
+                    padding: "10px 16px",
+                    background: "rgba(0,0,0,0.65)",
+                    color: "white", fontSize: "0.8rem", fontWeight: 600,
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                  }}>
+                    <span>Click on the image to place the chord</span>
+                    <button
+                      onClick={() => setAddModeActive(false)}
+                      style={{ background: "none", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 6, padding: "2px 10px", color: "white", cursor: "pointer", fontSize: "0.75rem" }}
+                    >Cancel</button>
+                  </div>
+                )}
               </div>
+
+              {/* Chord position modal */}
+              {pendingPosition && (
+                <div style={{
+                  position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+                  background: "white", borderRadius: 12, padding: "20px 24px",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.25)", zIndex: 1000, minWidth: 260,
+                }}>
+                  <p style={{ margin: "0 0 12px", fontSize: "0.85rem", fontWeight: 700, color: "#1a1a2e" }}>Add chord at position</p>
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="e.g. Dm7"
+                    value={pendingChordText}
+                    onChange={e => setPendingChordText(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") confirmPositionedChord();
+                      if (e.key === "Escape") { setPendingPosition(null); setPendingChordText(""); }
+                    }}
+                    style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1.5px solid #e05d00", fontSize: "0.9rem", fontWeight: 700, outline: "none", boxSizing: "border-box" }}
+                  />
+                  <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "flex-end" }}>
+                    <button
+                      onClick={() => { setPendingPosition(null); setPendingChordText(""); }}
+                      style={{ background: "none", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 8, padding: "7px 16px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", color: "#666" }}
+                    >Cancel</button>
+                    <button
+                      onClick={confirmPositionedChord}
+                      disabled={!pendingChordText.trim()}
+                      style={{ background: "linear-gradient(135deg,#e05d00,#c84b00)", border: "none", borderRadius: 8, padding: "7px 16px", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", color: "white", opacity: pendingChordText.trim() ? 1 : 0.5 }}
+                    >Add</button>
+                  </div>
+                </div>
+              )}
               {/* Download */}
               <button
                 onClick={handleDownload}
@@ -576,6 +664,14 @@ export default function Home() {
                         style={{ background: "none", border: "1.5px dashed rgba(0,0,0,0.18)", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700, color: "#aaa", cursor: "pointer" }}
                       >
                         + Add
+                      </button>
+                    )}
+                    {!addingChord && (
+                      <button
+                        onClick={() => setAddModeActive(true)}
+                        style={{ background: "none", border: "1.5px dashed rgba(224,93,0,0.4)", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700, color: "#e05d00", cursor: "pointer" }}
+                      >
+                        + Add at position
                       </button>
                     )}
                   </div>
