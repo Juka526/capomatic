@@ -20,6 +20,39 @@ function computeTargetKey(originalKey: string, semitones: number): string {
   return KEY_NAMES[((idx + semitones) % 12 + 12) % 12];
 }
 
+type Row = { y1: number; y2: number; yCenter: number };
+
+function detectRows(chords: ChordItem[]): Row[] {
+  const valid = chords.filter(c => c.bbox !== null) as { text: string; bbox: number[] }[];
+  if (valid.length === 0) return [];
+  const sorted = [...valid].sort((a, b) =>
+    (a.bbox[1] + a.bbox[3]) / 2 - (b.bbox[1] + b.bbox[3]) / 2
+  );
+  const groups: { y1: number; y2: number; ycs: number[] }[] = [];
+  for (const c of sorted) {
+    const yc = (c.bbox[1] + c.bbox[3]) / 2;
+    const last = groups[groups.length - 1];
+    if (last && yc - last.ycs[last.ycs.length - 1] < 50) {
+      last.y1 = Math.min(last.y1, c.bbox[1]);
+      last.y2 = Math.max(last.y2, c.bbox[3]);
+      last.ycs.push(yc);
+    } else {
+      groups.push({ y1: c.bbox[1], y2: c.bbox[3], ycs: [yc] });
+    }
+  }
+  return groups.map(g => ({
+    y1: g.y1, y2: g.y2,
+    yCenter: g.ycs.reduce((a, b) => a + b, 0) / g.ycs.length,
+  }));
+}
+
+function nearestRow(rows: Row[], y: number): Row | null {
+  if (rows.length === 0) return null;
+  return rows.reduce((best, r) =>
+    Math.abs(r.yCenter - y) < Math.abs(best.yCenter - y) ? r : best
+  );
+}
+
 export default function Home() {
   const { user } = useAuth();
   const { t } = useLang();
@@ -45,8 +78,10 @@ export default function Home() {
   const [addInput, setAddInput] = useState("");
   const [reRendering, setReRendering] = useState(false);
   const [addModeActive, setAddModeActive] = useState(false);
-  const [pendingPosition, setPendingPosition] = useState<{x: number, y: number} | null>(null);
+  const [pendingPosition, setPendingPosition] = useState<{x: number, y1: number, y2: number} | null>(null);
   const [pendingChordText, setPendingChordText] = useState("");
+  const [hoverImgPos, setHoverImgPos] = useState<{x: number, y: number} | null>(null);
+  const [imgNaturalSize, setImgNaturalSize] = useState<{w: number, h: number} | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -55,6 +90,7 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   // Close hamburger menu on outside click
   useEffect(() => {
@@ -73,6 +109,21 @@ export default function Home() {
     if (!originalKey || semitones === 0) return originalKey;
     return computeTargetKey(originalKey, semitones);
   }, [originalKey, semitones]);
+
+  const detectedRows = useMemo(() => detectRows(detectedChords), [detectedChords]);
+  const snapRow = useMemo(() =>
+    (addModeActive && hoverImgPos) ? nearestRow(detectedRows, hoverImgPos.y) : null,
+    [addModeActive, hoverImgPos, detectedRows]
+  );
+
+  // Passive touchmove listener to allow preventDefault (suppresses scroll in add mode)
+  useEffect(() => {
+    const el = imgRef.current;
+    if (!el) return;
+    const handler = (e: TouchEvent) => { if (addModeActive) e.preventDefault(); };
+    el.addEventListener("touchmove", handler, { passive: false });
+    return () => el.removeEventListener("touchmove", handler);
+  }, [addModeActive]);
 
   useEffect(() => {
     if (!detecting) return;
@@ -100,6 +151,8 @@ export default function Home() {
     setAddModeActive(false);
     setPendingPosition(null);
     setPendingChordText("");
+    setHoverImgPos(null);
+    setImgNaturalSize(null);
     try {
       const formData = new FormData();
       formData.append("image", f);
@@ -189,23 +242,52 @@ export default function Home() {
   };
 
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
-    if (!addModeActive) return;
-    const img = e.currentTarget;
-    const rect = img.getBoundingClientRect();
-    const scaleX = img.naturalWidth / rect.width;
-    const scaleY = img.naturalHeight / rect.height;
-    const x = Math.round((e.clientX - rect.left) * scaleX);
-    const y = Math.round((e.clientY - rect.top) * scaleY);
-    setPendingPosition({ x, y });
+    if (!addModeActive || !imgNaturalSize) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.round((e.clientX - rect.left) * (imgNaturalSize.w / rect.width));
+    const y = Math.round((e.clientY - rect.top) * (imgNaturalSize.h / rect.height));
+    const row = nearestRow(detectedRows, y);
+    setPendingPosition({ x, y1: row?.y1 ?? y, y2: row?.y2 ?? (y + 35) });
     setAddModeActive(false);
+    setHoverImgPos(null);
+  };
+
+  const handleImageMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!addModeActive || !imgNaturalSize) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    setHoverImgPos({
+      x: Math.round((e.clientX - rect.left) * (imgNaturalSize.w / rect.width)),
+      y: Math.round((e.clientY - rect.top)  * (imgNaturalSize.h / rect.height)),
+    });
+  };
+
+  const handleImageMouseLeave = () => setHoverImgPos(null);
+
+  const handleImageTouchMove = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (!addModeActive || !imgNaturalSize) return;
+    const touch = e.touches[0];
+    const rect = e.currentTarget.getBoundingClientRect();
+    setHoverImgPos({
+      x: Math.round((touch.clientX - rect.left) * (imgNaturalSize.w / rect.width)),
+      y: Math.round((touch.clientY - rect.top)  * (imgNaturalSize.h / rect.height)),
+    });
+  };
+
+  const handleImageTouchEnd = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (!addModeActive || !imgNaturalSize || !hoverImgPos) return;
+    e.preventDefault();
+    const row = nearestRow(detectedRows, hoverImgPos.y);
+    setPendingPosition({ x: hoverImgPos.x, y1: row?.y1 ?? hoverImgPos.y, y2: row?.y2 ?? (hoverImgPos.y + 35) });
+    setAddModeActive(false);
+    setHoverImgPos(null);
   };
 
   const confirmPositionedChord = () => {
     if (!pendingPosition || !pendingChordText.trim()) return;
-    const { x, y } = pendingPosition;
+    const { x, y1, y2 } = pendingPosition;
     setEditableChords(prev => [...prev, {
       text: pendingChordText.trim(),
-      bbox: [x, y, x + 80, y + 35],
+      bbox: [x, y1, x + 80, y2],
     }]);
     setPendingPosition(null);
     setPendingChordText("");
@@ -235,6 +317,8 @@ export default function Home() {
     setAddModeActive(false);
     setPendingPosition(null);
     setPendingChordText("");
+    setHoverImgPos(null);
+    setImgNaturalSize(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -519,11 +603,31 @@ export default function Home() {
               <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "white" }}>
                 {activeResult && (
                   <img
+                    ref={imgRef}
                     src={activeResult}
                     alt={`Transposed chord sheet (${activeTab} mode)`}
                     style={{ width: "100%", display: "block", cursor: addModeActive ? "crosshair" : "default" }}
+                    onLoad={e => setImgNaturalSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
                     onClick={handleImageClick}
+                    onMouseMove={handleImageMouseMove}
+                    onMouseLeave={handleImageMouseLeave}
+                    onTouchMove={handleImageTouchMove}
+                    onTouchEnd={handleImageTouchEnd}
                   />
+                )}
+                {/* Ghost bbox preview — snaps to nearest detected chord row */}
+                {addModeActive && snapRow && hoverImgPos && imgNaturalSize && (
+                  <div style={{
+                    position: "absolute",
+                    left:   `${(hoverImgPos.x / imgNaturalSize.w) * 100}%`,
+                    top:    `${(snapRow.y1    / imgNaturalSize.h) * 100}%`,
+                    width:  `${(80            / imgNaturalSize.w) * 100}%`,
+                    height: `${((snapRow.y2 - snapRow.y1) / imgNaturalSize.h) * 100}%`,
+                    border: "2px dashed #e05d00",
+                    borderRadius: 3,
+                    background: "rgba(224,93,0,0.12)",
+                    pointerEvents: "none",
+                  }} />
                 )}
                 {addModeActive && (
                   <div style={{
