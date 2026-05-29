@@ -31,8 +31,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from PIL import Image
 
+from backend.ocr.gpt_ocr import run_ocr_gpt_vision
 from backend.ocr.hybrid_detect import detect_chords_hybrid
-from backend.ocr.paddle_ocr import get_ocr
 from backend.chords.parser import parse_chord
 from backend.chords.transpose import transpose_chord, compute_target_key
 from backend.chords.key_detect import infer_key
@@ -81,10 +81,6 @@ def _cache_get(detection_id: str) -> dict | None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Pre-load the OCR model so the first /detect request doesn't pay the
-    # ~20s cold-start penalty from lazy model initialisation.
-    get_ocr()
-
     # Create database tables (idempotent) — skip if DB is unavailable.
     try:
         from backend.db.database import init_db
@@ -163,6 +159,7 @@ def _build_chord_item(item: dict, semitones: int, target_key: str | None) -> dic
         "transposed": transposed,
         "confidence": float(item["confidence"]),
         "bbox":       [int(v) for v in raw_bbox] if raw_bbox is not None else None,
+        "style":      item.get("style"),
     }
 
 
@@ -234,7 +231,11 @@ async def detect(
             tmp.write(data)
             tmp_path = tmp.name
 
-        items, raw_meta = detect_chords_hybrid(tmp_path)
+        try:
+            items, raw_meta = run_ocr_gpt_vision(tmp_path)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("GPT OCR failed; falling back to PaddleOCR: %s", exc)
+            items, raw_meta = detect_chords_hybrid(tmp_path)
         img = Image.open(tmp_path).convert("RGB")
     finally:
         if tmp_path and os.path.exists(tmp_path):

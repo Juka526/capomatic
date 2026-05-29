@@ -114,6 +114,7 @@ cp .env.local.example .env.local
 **Backend `.env`:**
 ```env
 PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+OPENAI_API_KEY=your-openai-key
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/capomatic
 AUTH0_DOMAIN=your-domain.auth0.com
 AUTH0_AUDIENCE=https://capomatic-api
@@ -231,6 +232,7 @@ PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True python scripts/ocr_debug.py "fixtures
 4. Set environment variables:
    ```
    PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+   OPENAI_API_KEY=your-openai-key
    DATABASE_URL=<railway-postgres-url>
    AUTH0_DOMAIN=your-domain.auth0.com
    AUTH0_AUDIENCE=https://capomatic-api

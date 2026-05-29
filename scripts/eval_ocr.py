@@ -50,6 +50,20 @@ def build_runner(engine: str):
 
         run_ocr.last_meta     = _meta      # type: ignore[attr-defined]
         run_ocr.last_recovery = _recovery  # type: ignore[attr-defined]
+    elif engine == "gpt":
+        from backend.ocr.gpt_ocr import run_ocr_gpt_vision  # noqa: PLC0415
+
+        print(f"GPT OCR model: {os.environ.get('OPENAI_OCR_MODEL', 'gpt-5.4-mini')}\n", flush=True)
+
+        _meta: dict = {}
+
+        def run_ocr(path: str) -> list[dict]:
+            items, meta = run_ocr_gpt_vision(path)
+            _meta.clear()
+            _meta.update(meta)
+            return items
+
+        run_ocr.last_meta = _meta  # type: ignore[attr-defined]
     elif engine == "hybrid":
         from backend.ocr.paddle_ocr import get_ocr  # noqa: PLC0415
         from backend.ocr.hybrid_detect import detect_chords_hybrid  # noqa: PLC0415
@@ -112,11 +126,19 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="OCR fixture evaluation.")
     parser.add_argument(
         "--engine",
-        choices=["stub", "paddle", "hybrid"],
+        choices=["stub", "paddle", "hybrid", "gpt"],
         default="stub",
         help="OCR engine to use (default: stub)",
     )
+    parser.add_argument(
+        "--max-fixtures",
+        type=int,
+        default=None,
+        help="Evaluate only the first N labeled fixtures.",
+    )
     args = parser.parse_args()
+    if args.max_fixtures is not None and args.max_fixtures < 1:
+        parser.error("--max-fixtures must be at least 1")
 
     run_ocr = build_runner(args.engine)
     print(f"Engine: {args.engine}\n")
@@ -141,7 +163,7 @@ def main() -> None:
     results: list = []
     any_coverage_fail = False
 
-    for label_file in label_files:
+    for label_file in label_files[:args.max_fixtures]:
         label_path = os.path.join(LABELS_DIR, label_file)
         with open(label_path) as f:
             label = json.load(f)
@@ -182,6 +204,12 @@ def main() -> None:
             if m.get("predict_ms") is not None:
                 print(f"Predict time     : {m['predict_ms']:.1f} ms")
                 r["predict_ms"] = m["predict_ms"]
+            if m.get("input_tokens") is not None:
+                print(f"Input tokens     : {m['input_tokens']}")
+                r["input_tokens"] = m["input_tokens"]
+            if m.get("sent_image_width") and m.get("sent_image_height"):
+                print(f"Sent image       : {m['sent_image_width']}×{m['sent_image_height']}"
+                      f"  (max_side={m.get('max_side')})")
             if m.get("stitched_shape"):
                 H, W = m["stitched_shape"]
                 print(f"Stitched shape   : {H}×{W}  ({m['stitched_pixels']:,} px)")
@@ -201,11 +229,12 @@ def main() -> None:
         print("-" * 50)
 
     # Warn about images present on disk that have no label.
-    unlabeled = sorted(f for nfc_f, f in disk_map.items() if nfc_f not in labeled_nfc)
-    for img in unlabeled:
-        print(f"[WARN]  {img} — image present but has no label (skipped)")
-    if unlabeled:
-        print()
+    if args.max_fixtures is None:
+        unlabeled = sorted(f for nfc_f, f in disk_map.items() if nfc_f not in labeled_nfc)
+        for img in unlabeled:
+            print(f"[WARN]  {img} — image present but has no label (skipped)")
+        if unlabeled:
+            print()
 
     if not results and not any_coverage_fail:
         print("No fixtures evaluated. Add images + labels to fixtures/ to run evaluation.")
@@ -227,6 +256,10 @@ def main() -> None:
     if predict_ms_list:
         print(f"Avg predict time   : {sum(predict_ms_list) / len(predict_ms_list):.1f} ms")
         print(f"Median predict time: {statistics.median(predict_ms_list):.1f} ms")
+    input_tokens_list = [r["input_tokens"] for r in results if "input_tokens" in r]
+    if input_tokens_list:
+        print(f"Avg input tokens   : {sum(input_tokens_list) / len(input_tokens_list):.1f}")
+        print(f"Median input tokens: {statistics.median(input_tokens_list):.1f}")
 
     if any_coverage_fail:
         print("\nFAIL: one or more fixtures below 0.70 coverage threshold.")

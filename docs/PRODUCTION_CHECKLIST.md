@@ -48,6 +48,7 @@ Pre-deployment checklist for Capomatic. Work through each section before going l
 ### Backend (Railway/Render)
 
 - [ ] `PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True`
+- [ ] `OPENAI_API_KEY=sk-...`
 - [ ] `DATABASE_URL=postgresql+asyncpg://...`
 - [ ] `AUTH0_DOMAIN=your-domain.auth0.com`
 - [ ] `AUTH0_AUDIENCE=https://capomatic-api`

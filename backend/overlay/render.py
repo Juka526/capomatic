@@ -7,23 +7,38 @@ Renders transposed chord symbols onto a PIL image using one of two modes:
              Labels within a row are shifted right as needed to avoid horizontal
              overlap.  If the row has insufficient space above it, white rows
              are inserted to create room.
-  replace — fully opaque white box covers the original chord; new chord
-             rendered on top in dark blue at the same position.  An info header
-             in the upper-left shows original/target key, semitone shift, and
-             capo position.
+  replace — local paper colour covers the original chord; new chord is
+             rendered in sampled dark ink at the same position.
 """
 from __future__ import annotations
 
+import os
 import pathlib
+import statistics
 
 from PIL import Image, ImageDraw, ImageFont
 
-# Bundled font: BravuraText (Steinberg, SIL OFL) — music-engraving style.
+# Bundled font. If it is missing or invalid, system fonts are tried.
 _FONT_PATH = pathlib.Path(__file__).parent / "fonts" / "BravuraText.otf"
+_FONT_CANDIDATES = [
+    os.environ.get("CHORD_RENDER_FONT", ""),
+    str(_FONT_PATH),
+    "/System/Library/Fonts/Supplemental/Arial.ttf",
+    "/System/Library/Fonts/Helvetica.ttc",
+    "/System/Library/Fonts/HelveticaNeue.ttc",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/usr/local/share/fonts/dejavu/DejaVuSans.ttf",
+    "/opt/anaconda3/lib/python3.12/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans.ttf",
+]
+_BOLD_FONT_CANDIDATES = [
+    os.environ.get("CHORD_RENDER_BOLD_FONT", ""),
+    "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+    "/opt/anaconda3/lib/python3.12/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans-Bold.ttf",
+]
 
 # Font size = bbox_height * this scale.
-_FONT_SCALE    = 0.85
-_MIN_FONT_SIZE = 20   # never render below this — keeps labels legible
+_FONT_SCALE    = 1.05
+_MIN_FONT_SIZE = 10
 
 # Ratio for the smaller suffix font (sus, dim, aug).
 _SMALL_FONT_RATIO = 0.70
@@ -31,14 +46,15 @@ _SMALL_FONT_RATIO = 0.70
 # Vertical gap (px) between the bottom of a label and the top of its chord box.
 _GAP = 2
 
-# Padding around white boxes in replace mode.
+# Padding around replacement boxes.
 _BOX_PAD = 4
 
 # Colours
 _ORANGE     = (255, 140, 0)
 _DARK_BLUE  = (0, 0, 160)
-_WHITE_RGBA = (255, 255, 255, 255)   # fully opaque for replace boxes
+_DEFAULT_INK = (30, 30, 30)
 _HEADER_BG  = (255, 255, 255, 220)   # info header background
+_CLARITY_THRESHOLD = 0.58
 
 # Quality/modifier suffixes rendered in smaller font.
 _SMALL_SUFFIXES = ("sus", "dim", "aug")
@@ -48,18 +64,194 @@ _SMALL_SUFFIXES = ("sus", "dim", "aug")
 # Font loader
 # ---------------------------------------------------------------------------
 
-def _load_font(size: int) -> ImageFont.ImageFont:
-    """Return BravuraText at *size* pt, falling back to the PIL default font."""
+def _load_font(size: int, *, bold: bool = False) -> ImageFont.ImageFont:
+    """Return a readable chord font at *size* pt, falling back to PIL default."""
     size = max(_MIN_FONT_SIZE, size)
-    if _FONT_PATH.exists():
+    candidates = (_BOLD_FONT_CANDIDATES if bold else []) + _FONT_CANDIDATES
+    for candidate in candidates:
+        if not candidate:
+            continue
+        path = pathlib.Path(candidate)
+        if not path.exists():
+            continue
         try:
-            return ImageFont.truetype(str(_FONT_PATH), size)
+            return ImageFont.truetype(str(path), size)
         except Exception:
-            pass
+            continue
     try:
         return ImageFont.load_default(size=size)  # type: ignore[call-arg]
     except TypeError:
         return ImageFont.load_default()
+
+
+def _median_rgb(samples: list[tuple[int, int, int]]) -> tuple[int, int, int]:
+    if not samples:
+        return (255, 255, 255)
+    channels = zip(*samples)
+    return tuple(int(statistics.median(channel)) for channel in channels)  # type: ignore[return-value]
+
+
+def _sample_background(
+    img: Image.Image,
+    bbox: list[int],
+    *,
+    pad: int = 6,
+) -> tuple[int, int, int]:
+    """Estimate local paper colour from the border around *bbox*."""
+    rgb = img.convert("RGB")
+    W, H = rgb.size
+    x1, y1, x2, y2 = bbox
+    rx1 = max(0, x1 - pad)
+    ry1 = max(0, y1 - pad)
+    rx2 = min(W, x2 + pad)
+    ry2 = min(H, y2 + pad)
+    all_samples: list[tuple[int, int, int]] = []
+    samples: list[tuple[int, int, int]] = []
+    for y in range(ry1, ry2):
+        for x in range(rx1, rx2):
+            if x1 <= x <= x2 and y1 <= y <= y2:
+                continue
+            r, g, b = rgb.getpixel((x, y))
+            all_samples.append((r, g, b))
+            if (r + g + b) / 3 >= 170:
+                samples.append((r, g, b))
+    return _median_rgb(samples or all_samples)
+
+
+def _sample_ink(
+    img: Image.Image,
+    bbox: list[int],
+) -> tuple[int, int, int]:
+    """Estimate original chord ink colour from dark pixels inside *bbox*."""
+    rgb = img.convert("RGB")
+    W, H = rgb.size
+    x1, y1, x2, y2 = bbox
+    x1, y1 = max(0, x1), max(0, y1)
+    x2, y2 = min(W, x2), min(H, y2)
+    samples: list[tuple[int, int, int]] = []
+    for y in range(y1, y2):
+        for x in range(x1, x2):
+            r, g, b = rgb.getpixel((x, y))
+            if (r + g + b) / 3 <= 150:
+                samples.append((r, g, b))
+    if not samples:
+        return _DEFAULT_INK
+    return _median_rgb(samples)
+
+
+def _estimate_font_size_from_bbox(
+    img: Image.Image,
+    bbox: list[int],
+    fallback_size: int,
+) -> int:
+    """Estimate original glyph height from dark pixels inside the OCR bbox."""
+    rgb = img.convert("RGB")
+    W, H = rgb.size
+    x1, y1, x2, y2 = bbox
+    x1, y1 = max(0, x1), max(0, y1)
+    x2, y2 = min(W, x2), min(H, y2)
+    dark_ys: list[int] = []
+    for y in range(y1, y2):
+        dark_count = 0
+        for x in range(x1, x2):
+            r, g, b = rgb.getpixel((x, y))
+            if (r + g + b) / 3 <= 170:
+                dark_count += 1
+        if dark_count >= 1:
+            dark_ys.append(y)
+    if not dark_ys:
+        return fallback_size
+    glyph_h = max(dark_ys) - min(dark_ys) + 1
+    return max(_MIN_FONT_SIZE, int(round(glyph_h * 1.15)))
+
+
+def _style_font_size(chord: dict, img: Image.Image, fallback_size: int) -> int:
+    style = chord.get("style") if isinstance(chord.get("style"), dict) else {}
+    raw_size = style.get("font_size")
+    if isinstance(raw_size, (int, float)) and raw_size > 0:
+        return max(_MIN_FONT_SIZE, int(round(raw_size)))
+    return _estimate_font_size_from_bbox(img, chord["bbox"], fallback_size)
+
+
+def _style_bold(chord: dict, protocol: dict | None = None) -> bool:
+    if protocol and protocol.get("use_default_font"):
+        return False
+    style = chord.get("style") if isinstance(chord.get("style"), dict) else {}
+    return style.get("font_weight") == "bold"
+
+
+def _style_ink(chord: dict, img: Image.Image, protocol: dict | None = None) -> tuple[int, int, int]:
+    if protocol and not protocol.get("use_sampled_ink", True):
+        return _DEFAULT_INK
+    style = chord.get("style") if isinstance(chord.get("style"), dict) else {}
+    ink = style.get("ink")
+    if (
+        isinstance(ink, (list, tuple))
+        and len(ink) == 3
+        and all(isinstance(v, (int, float)) for v in ink)
+    ):
+        return tuple(max(0, min(255, int(v))) for v in ink)  # type: ignore[return-value]
+    return _sample_ink(img, chord["bbox"])
+
+
+def _estimate_glyph_clarity(
+    img: Image.Image,
+    bbox: list[int],
+) -> float:
+    """Estimate whether original chord glyphs are crisp enough to mimic."""
+    gray = img.convert("L")
+    W, H = gray.size
+    x1, y1, x2, y2 = bbox
+    x1, y1 = max(0, x1), max(0, y1)
+    x2, y2 = min(W, x2), min(H, y2)
+    if x2 - x1 < 2 or y2 - y1 < 2:
+        return 0.0
+
+    dark = 0
+    mid = 0
+    edge = 0
+    for y in range(y1, y2):
+        for x in range(x1, x2):
+            v = gray.getpixel((x, y))
+            if v < 120:
+                dark += 1
+            elif v < 210:
+                mid += 1
+            if x > x1 and y > y1:
+                dx = abs(v - gray.getpixel((x - 1, y)))
+                dy = abs(v - gray.getpixel((x, y - 1)))
+                if max(dx, dy) > 55:
+                    edge += 1
+
+    area = max(1, (x2 - x1) * (y2 - y1))
+    dark_ratio = dark / area
+    if dark_ratio < 0.02:
+        return 0.0
+    transition_ratio = mid / max(1, dark + mid)
+    edge_ratio = edge / area
+    return max(0.0, min(1.0, edge_ratio * 8.0 + dark_ratio * 2.0 - transition_ratio * 0.45))
+
+
+def _choose_render_protocol(
+    rows: list[list[dict]],
+    img: Image.Image,
+) -> dict:
+    """Choose sheet-level rendering rules for readability and source matching.
+
+    Low-clarity scans use a clean default font and stable ink colour. High
+    clarity pages may use detected style hints and sampled ink.
+    """
+    clarity_scores = [
+        _estimate_glyph_clarity(img, chord["bbox"])
+        for row in rows
+        for chord in row
+    ]
+    clarity = statistics.median(clarity_scores) if clarity_scores else 0.0
+    return {
+        "clarity": clarity,
+        "use_default_font": clarity < _CLARITY_THRESHOLD,
+        "use_sampled_ink": clarity >= _CLARITY_THRESHOLD,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -170,6 +362,7 @@ def _find_row_font_sizes(
     rows: list[list[dict]],
     initial_size: int,
     img_width: int,
+    img: Image.Image | None = None,
     h_gap: int = 6,
 ) -> list[int]:
     """Find optimal font size for each row independently.
@@ -179,9 +372,17 @@ def _find_row_font_sizes(
     """
     sizes: list[int] = []
     for row in rows:
+        row_initial_size = initial_size
+        if img is not None:
+            estimated_sizes = [
+                _style_font_size(chord, img, initial_size)
+                for chord in row
+            ]
+            if estimated_sizes:
+                row_initial_size = max(_MIN_FONT_SIZE, int(statistics.median(estimated_sizes)))
         sorted_row = sorted(row, key=lambda c: c["bbox"][0])
         found = _MIN_FONT_SIZE
-        for size in range(initial_size, _MIN_FONT_SIZE - 1, -1):
+        for size in range(row_initial_size, _MIN_FONT_SIZE - 1, -1):
             font = _load_font(size)
             small_font = _load_font(int(size * _SMALL_FONT_RATIO))
             fits = True
@@ -232,6 +433,96 @@ def _place_row_labels_anchored(
             ew_next = placements[i + 1][2]
             placements[i + 1][1] = min(img_width - ew_next, x_next + shift_right)
     return [(p[0], p[1]) for p in placements]
+
+
+def _font_fits_row(
+    row: list[dict],
+    sizes: dict[int, int],
+    img_width: int,
+    protocol: dict | None = None,
+    h_gap: int = 6,
+) -> bool:
+    prev_right = -h_gap
+    for chord in sorted(row, key=lambda c: c["bbox"][0]):
+        size = sizes[id(chord)]
+        bold = _style_bold(chord, protocol)
+        font = _load_font(size, bold=bold)
+        small_font = _load_font(int(size * _SMALL_FONT_RATIO), bold=bold)
+        tw = int(_chord_display_width(chord["transposed"], font, small_font))
+        effective_w = tw + 2 * _BOX_PAD
+        anchor_x = max(chord["bbox"][0], chord["bbox"][2] - effective_w)
+        if anchor_x < prev_right + h_gap:
+            return False
+        prev_right = anchor_x + effective_w
+        if prev_right > img_width:
+            return False
+    return True
+
+
+def _resolve_fixed_font_sizes(
+    row: list[dict],
+    img: Image.Image,
+    fixed_size: int,
+    img_width: int,
+    protocol: dict | None = None,
+) -> dict[int, int]:
+    """Use one fixed size for readability; shrink only if row space is limited."""
+    sizes = {id(chord): fixed_size for chord in row}
+    while (
+        not _font_fits_row(row, sizes, img_width, protocol)
+        and max(sizes.values()) > _MIN_FONT_SIZE
+    ):
+        for key in list(sizes):
+            sizes[key] = max(_MIN_FONT_SIZE, sizes[key] - 1)
+    return sizes
+
+
+def _estimate_document_font_size(
+    rows: list[list[dict]],
+    img: Image.Image,
+    fallback_size: int,
+) -> int:
+    """Estimate one stable chord font size for the whole rendered sheet."""
+    sizes = [
+        _style_font_size(chord, img, fallback_size)
+        for row in rows
+        for chord in row
+    ]
+    if not sizes:
+        return fallback_size
+    return max(_MIN_FONT_SIZE, int(round(statistics.median(sizes))))
+
+
+def _place_row_labels_fixed(
+    row: list[dict],
+    sizes: dict[int, int],
+    img_width: int,
+    protocol: dict | None = None,
+    h_gap: int = 6,
+) -> list[tuple[dict, int, int]]:
+    """Place labels using fixed per-chord font sizes."""
+    placements: list[list] = []
+    for chord in sorted(row, key=lambda c: c["bbox"][0]):
+        size = sizes[id(chord)]
+        bold = _style_bold(chord, protocol)
+        font = _load_font(size, bold=bold)
+        small_font = _load_font(int(size * _SMALL_FONT_RATIO), bold=bold)
+        tw = int(_chord_display_width(chord["transposed"], font, small_font))
+        x = max(chord["bbox"][0], chord["bbox"][2] - tw)
+        x = min(x, max(0, img_width - tw))
+        placements.append([chord, x, tw + 2 * _BOX_PAD, size])
+    for i in range(len(placements) - 1):
+        x_i = placements[i][1]
+        ew_i = placements[i][2]
+        x_next = placements[i + 1][1]
+        overlap = (x_i + ew_i + h_gap) - x_next
+        if overlap > 0:
+            shift_left = overlap // 2
+            shift_right = overlap - shift_left
+            placements[i][1] = max(0, x_i - shift_left)
+            ew_next = placements[i + 1][2]
+            placements[i + 1][1] = min(img_width - ew_next, x_next + shift_right)
+    return [(p[0], p[1], p[3]) for p in placements]
 
 
 # ---------------------------------------------------------------------------
@@ -400,11 +691,11 @@ def _render_above(
     if not rows:
         return img
 
-    # Per-row font sizes — each row shrinks independently.
+    # Per-row font sizes for above-mode labels.
     all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)
     median_h    = all_heights[len(all_heights) // 2]
     initial_size = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
-    row_font_sizes = _find_row_font_sizes(rows, initial_size, W)
+    row_font_sizes = _find_row_font_sizes(rows, initial_size, W, img)
 
     # Pass 1 — adaptively insert whitespace above each chord row.
     import numpy as np
@@ -437,8 +728,9 @@ def _render_above(
     draw = ImageDraw.Draw(img)
     for row_idx, row in enumerate(rows):
         font_size = row_font_sizes[row_idx]
-        font = _load_font(font_size)
-        small_font = _load_font(int(font_size * _SMALL_FONT_RATIO))
+        row_bold = any(_style_bold(chord) for chord in row)
+        font = _load_font(font_size, bold=row_bold)
+        small_font = _load_font(int(font_size * _SMALL_FONT_RATIO), bold=row_bold)
 
         row_y1 = min(c["bbox"][1] for c in row)
         offset = _y_offset_for(row_y1)
@@ -476,66 +768,63 @@ def _render_replace(
     rows = _cluster_by_row(chords)
     if not rows:
         return img
+    protocol = _choose_render_protocol(rows, img)
 
-    # Per-row font sizes — each row shrinks independently.
+    # Use one stable document-level font size for readability. Rows only shrink
+    # if that fixed size cannot fit the available horizontal space.
     all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)
     median_h    = all_heights[len(all_heights) // 2]
     initial_size = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
-    row_font_sizes = _find_row_font_sizes(rows, initial_size, W)
+    fixed_size = _estimate_document_font_size(rows, img, initial_size)
+    row_size_maps = [
+        _resolve_fixed_font_sizes(row, img, fixed_size, W, protocol)
+        for row in rows
+    ]
 
     # ------------------------------------------------------------------
     # Pass 1 — compute placements with anchored positioning per row.
-    # Collect (chord, label_x, font_size_for_row) for each chord.
+    # Collect (chord, label_x, font_size_for_chord) for each chord.
     # ------------------------------------------------------------------
     placements: list[tuple[dict, int, int]] = []
     for row_idx, row in enumerate(rows):
-        fs = row_font_sizes[row_idx]
-        font = _load_font(fs)
-        small_font = _load_font(int(fs * _SMALL_FONT_RATIO))
-        for chord, label_x in _place_row_labels_anchored(row, font, small_font, W):
-            placements.append((chord, label_x, fs))
+        placements.extend(_place_row_labels_fixed(row, row_size_maps[row_idx], W, protocol))
 
     # ------------------------------------------------------------------
-    # Pass 2 — draw fully opaque white boxes via RGBA compositing.
+    # Pass 2 — cover original chord text with sampled local paper colour.
     # ------------------------------------------------------------------
-    img_rgba = img.convert("RGBA")
-    overlay  = Image.new("RGBA", img_rgba.size, (0, 0, 0, 0))
-    ov_draw  = ImageDraw.Draw(overlay)
-
+    composited = img.copy().convert("RGB")
+    draw_bg = ImageDraw.Draw(composited)
+    ink_by_id: dict[int, tuple[int, int, int]] = {}
     for chord, label_x, _ in placements:
         x1, y1, x2, y2 = chord["bbox"]
         bh = y2 - y1
-        shrink_y = max(1, int(bh * 0.15))
-        shrink_x = max(1, int(bh * 0.10))
-        box_x1 = x1 + shrink_x
-        box_y1 = y1 + shrink_y
-        box_x2 = x2 - shrink_x
-        box_y2 = y2 - shrink_y
-        ov_draw.rectangle([box_x1, box_y1, box_x2, box_y2], fill=_WHITE_RGBA)
-
-    composited = Image.alpha_composite(img_rgba, overlay).convert("RGB")
+        shrink_y = max(0, int(bh * 0.08))
+        shrink_x = max(0, int(bh * 0.05))
+        box_x1 = max(0, x1 + shrink_x)
+        box_y1 = max(0, y1 + shrink_y)
+        box_x2 = min(W, x2 - shrink_x)
+        box_y2 = min(H, y2 - shrink_y)
+        fill = _sample_background(img, [box_x1, box_y1, box_x2, box_y2])
+        ink_by_id[id(chord)] = _style_ink(chord, img, protocol)
+        draw_bg.rectangle([box_x1, box_y1, box_x2, box_y2], fill=fill)
 
     # ------------------------------------------------------------------
     # Pass 3 — draw text at resolved positions, vertically centered.
     # ------------------------------------------------------------------
     draw = ImageDraw.Draw(composited)
     for chord, label_x, fs in placements:
-        font = _load_font(fs)
-        small_font = _load_font(int(fs * _SMALL_FONT_RATIO))
+        bold = _style_bold(chord, protocol)
+        font = _load_font(fs, bold=bold)
+        small_font = _load_font(int(fs * _SMALL_FONT_RATIO), bold=bold)
         _, y1, _, y2 = chord["bbox"]
         box_h = y2 - y1
-        text_y = y1 + (box_h - fs) // 2
+        try:
+            text_bbox = font.getbbox(chord["transposed"])
+            text_h = text_bbox[3] - text_bbox[1]
+            text_y = y1 + (box_h - text_h) // 2 - text_bbox[1]
+        except AttributeError:
+            text_y = y1 + (box_h - fs) // 2
         _draw_chord_text(draw, label_x, text_y, chord["transposed"],
-                         font, small_font, _DARK_BLUE)
-
-    # ------------------------------------------------------------------
-    # Pass 4 — info header (key, capo).
-    # ------------------------------------------------------------------
-    _draw_info_header(
-        draw, composited, max(row_font_sizes),
-        original_key=original_key,
-        target_key=target_key,
-        semitones=semitones,
-    )
+                         font, small_font, ink_by_id.get(id(chord), _DEFAULT_INK))
 
     return composited

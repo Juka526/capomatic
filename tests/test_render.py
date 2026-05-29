@@ -167,14 +167,13 @@ class TestRenderReplaceRefinements:
         )
         assert isinstance(result, Image.Image)
 
-    def test_replace_white_box_opaque(self):
-        # Colored background; after overlay the bbox area should be white.
+    def test_replace_uses_local_background_colour(self):
+        # Colored background should be preserved instead of forcing pure white.
         img = Image.new("RGB", (400, 300), (100, 100, 100))
         chords = [_chord("Am", "Am", [50, 90, 100, 130])]
         result = render_overlay(img, chords, "replace")
-        # Sample a pixel inside the bbox — should be white (fully opaque box).
         px = result.getpixel((70, 110))
-        assert px == (255, 255, 255), f"Expected white, got {px}"
+        assert px == (100, 100, 100), f"Expected local background colour, got {px}"
 
     def test_row_y_alignment_no_crash(self):
         img = _white_img(w=400, h=300)

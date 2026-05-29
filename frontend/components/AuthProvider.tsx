@@ -5,7 +5,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { auth0Client, getAccessToken, getUser, isAuthenticated } from '@/lib/auth0';
+import { getAccessToken, getUser, isAuthenticated, handleRedirectCallback, login as auth0Login, logout as auth0Logout } from '@/lib/auth0';
 
 interface User {
   name?: string;
@@ -39,11 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Handle redirect callback if present
       const query = window.location.search;
       if (query.includes('code=') && query.includes('state=')) {
-        try {
-          await auth0Client.handleRedirectCallback();
-        } catch {
-          // Stale or duplicate callback — ignore
-        }
+        await handleRedirectCallback();
         // Clean up URL
         window.history.replaceState({}, document.title, window.location.pathname);
       }
@@ -83,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function handleLogin() {
     try {
-      await auth0Client.loginWithRedirect();
+      await auth0Login();
     } catch (error) {
       console.error('Login failed:', error);
     }
@@ -91,11 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function handleLogout() {
     try {
-      await auth0Client.logout({
-        logoutParams: {
-          returnTo: window.location.origin,
-        },
-      });
+      await auth0Logout();
       setUser(null);
       setIsAuth(false);
     } catch (error) {
