@@ -1,3 +1,13 @@
+---
+title: TransChord API
+emoji: 🎸
+colorFrom: orange
+colorTo: red
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Capomatic
 
 **Worship team chord transposition tool powered by AI**
