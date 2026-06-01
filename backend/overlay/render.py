@@ -36,8 +36,8 @@ _BOLD_FONT_CANDIDATES = [
     "/opt/anaconda3/lib/python3.12/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans-Bold.ttf",
 ]
 
-# Font size = bbox_height * this scale.
-_FONT_SCALE    = 1.05
+# Font size = median bbox_height * this scale.
+_FONT_SCALE    = 0.85
 _MIN_FONT_SIZE = 10
 
 # Ratio for the smaller suffix font (sus, dim, aug).
@@ -301,6 +301,33 @@ def _chord_display_width(
     return w
 
 
+def _render_font_size(chords: list[dict]) -> int:
+    """Return one stable font size for every chord in this render."""
+    heights = [
+        c["bbox"][3] - c["bbox"][1]
+        for c in chords
+        if c.get("bbox") is not None
+    ]
+    if not heights:
+        return _MIN_FONT_SIZE
+    median_height = statistics.median(heights)
+    return max(_MIN_FONT_SIZE, int(round(median_height * _FONT_SCALE)))
+
+
+def _draw_text_left_top(
+    draw: ImageDraw.Draw,
+    xy: tuple[int, int],
+    text: str,
+    *,
+    fill: tuple,
+    font: ImageFont.ImageFont,
+) -> None:
+    try:
+        draw.text(xy, text, fill=fill, font=font, anchor="lt")
+    except TypeError:
+        draw.text(xy, text, fill=fill, font=font)
+
+
 
 def _draw_chord_text(
     draw: ImageDraw.Draw,
@@ -313,25 +340,21 @@ def _draw_chord_text(
 ) -> float:
     """Draw chord with optional smaller suffix.  Returns total width.
 
-    The main part is drawn at *font* size.  If the chord contains a
-    sus/dim/aug suffix, that part is drawn in *small_font* with baseline
-    alignment.
+    The main part is drawn at *font* size, anchored to the exact left-top
+    position provided by the caller.
     """
     main, suffix = _shorten_chord_display(transposed)
-    draw.text((x, y), main, fill=fill, font=font)
+    _draw_text_left_top(draw, (x, y), main, fill=fill, font=font)
     main_w = _text_width(font, main)
 
     if suffix:
-        # Baseline-align the smaller suffix with the main text.
-        try:
-            main_ascent, _ = font.getmetrics()
-            small_ascent, _ = small_font.getmetrics()
-        except AttributeError:
-            main_ascent = font.size if hasattr(font, "size") else 14
-            small_ascent = small_font.size if hasattr(small_font, "size") else 10
-        y_offset = main_ascent - small_ascent
-        draw.text((x + int(main_w), y + y_offset), suffix,
-                  fill=fill, font=small_font)
+        _draw_text_left_top(
+            draw,
+            (x + int(main_w), y),
+            suffix,
+            fill=fill,
+            font=small_font,
+        )
         return main_w + _text_width(small_font, suffix)
 
     return main_w
@@ -691,11 +714,8 @@ def _render_above(
     if not rows:
         return img
 
-    # Per-row font sizes for above-mode labels.
-    all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)
-    median_h    = all_heights[len(all_heights) // 2]
-    initial_size = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
-    row_font_sizes = _find_row_font_sizes(rows, initial_size, W, img)
+    # One font size is used across all rows in this render.
+    font_size = _render_font_size(chords)
 
     # Pass 1 — adaptively insert whitespace above each chord row.
     import numpy as np
@@ -703,11 +723,10 @@ def _render_above(
     dark_threshold = 200
     content_ratio_threshold = 0.02
     expansions: list[tuple[int, int]] = []
-    for row_idx, row in enumerate(rows):
-        row_fs = row_font_sizes[row_idx]
-        needed = int((row_fs + _GAP) * 0.7)
+    for row in rows:
+        needed = int((font_size + _GAP) * 0.7)
         min_y1 = min(c["bbox"][1] for c in row)
-        label_top = max(0, min_y1 - row_fs - _GAP)
+        label_top = max(0, min_y1 - font_size - _GAP)
         region = img_arr[label_top:min_y1, :]
         if region.size > 0:
             dark_ratio = np.mean(region < dark_threshold)
@@ -726,11 +745,9 @@ def _render_above(
 
     # Pass 4 — draw labels with anchored placement and per-chord y.
     draw = ImageDraw.Draw(img)
-    for row_idx, row in enumerate(rows):
-        font_size = row_font_sizes[row_idx]
-        row_bold = any(_style_bold(chord) for chord in row)
-        font = _load_font(font_size, bold=row_bold)
-        small_font = _load_font(int(font_size * _SMALL_FONT_RATIO), bold=row_bold)
+    font = _load_font(font_size)
+    small_font = _load_font(int(font_size * _SMALL_FONT_RATIO))
+    for row in rows:
 
         row_y1 = min(c["bbox"][1] for c in row)
         offset = _y_offset_for(row_y1)
@@ -742,7 +759,7 @@ def _render_above(
                              font, small_font, _ORANGE)
 
     _draw_info_header(
-        draw, img, max(row_font_sizes),
+        draw, img, font_size,
         original_key=original_key,
         target_key=target_key,
         semitones=semitones,
@@ -765,29 +782,13 @@ def _render_replace(
 ) -> Image.Image:
     """Render transposed chords over original positions with white boxes."""
     W, H = img.size
-    rows = _cluster_by_row(chords)
-    if not rows:
+    if not chords:
         return img
+    rows = _cluster_by_row(chords)
     protocol = _choose_render_protocol(rows, img)
-
-    # Use one stable document-level font size for readability. Rows only shrink
-    # if that fixed size cannot fit the available horizontal space.
-    all_heights = sorted(c["bbox"][3] - c["bbox"][1] for c in chords)
-    median_h    = all_heights[len(all_heights) // 2]
-    initial_size = max(_MIN_FONT_SIZE, int(median_h * _FONT_SCALE))
-    fixed_size = _estimate_document_font_size(rows, img, initial_size)
-    row_size_maps = [
-        _resolve_fixed_font_sizes(row, img, fixed_size, W, protocol)
-        for row in rows
-    ]
-
-    # ------------------------------------------------------------------
-    # Pass 1 — compute placements with anchored positioning per row.
-    # Collect (chord, label_x, font_size_for_chord) for each chord.
-    # ------------------------------------------------------------------
-    placements: list[tuple[dict, int, int]] = []
-    for row_idx, row in enumerate(rows):
-        placements.extend(_place_row_labels_fixed(row, row_size_maps[row_idx], W, protocol))
+    font_size = _render_font_size(chords)
+    font = _load_font(font_size)
+    small_font = _load_font(int(font_size * _SMALL_FONT_RATIO))
 
     # ------------------------------------------------------------------
     # Pass 2 — cover original chord text with sampled local paper colour.
@@ -795,36 +796,23 @@ def _render_replace(
     composited = img.copy().convert("RGB")
     draw_bg = ImageDraw.Draw(composited)
     ink_by_id: dict[int, tuple[int, int, int]] = {}
-    for chord, label_x, _ in placements:
+    for chord in chords:
         x1, y1, x2, y2 = chord["bbox"]
-        bh = y2 - y1
-        shrink_y = max(0, int(bh * 0.08))
-        shrink_x = max(0, int(bh * 0.05))
-        box_x1 = max(0, x1 + shrink_x)
-        box_y1 = max(0, y1 + shrink_y)
-        box_x2 = min(W, x2 - shrink_x)
-        box_y2 = min(H, y2 - shrink_y)
+        box_x1 = max(0, x1)
+        box_y1 = max(0, y1)
+        box_x2 = min(W, x2)
+        box_y2 = min(H, y2)
         fill = _sample_background(img, [box_x1, box_y1, box_x2, box_y2])
         ink_by_id[id(chord)] = _style_ink(chord, img, protocol)
         draw_bg.rectangle([box_x1, box_y1, box_x2, box_y2], fill=fill)
 
     # ------------------------------------------------------------------
-    # Pass 3 — draw text at resolved positions, vertically centered.
+    # Pass 3 — draw text at the exact bbox top-left.
     # ------------------------------------------------------------------
     draw = ImageDraw.Draw(composited)
-    for chord, label_x, fs in placements:
-        bold = _style_bold(chord, protocol)
-        font = _load_font(fs, bold=bold)
-        small_font = _load_font(int(fs * _SMALL_FONT_RATIO), bold=bold)
-        _, y1, _, y2 = chord["bbox"]
-        box_h = y2 - y1
-        try:
-            text_bbox = font.getbbox(chord["transposed"])
-            text_h = text_bbox[3] - text_bbox[1]
-            text_y = y1 + (box_h - text_h) // 2 - text_bbox[1]
-        except AttributeError:
-            text_y = y1 + (box_h - fs) // 2
-        _draw_chord_text(draw, label_x, text_y, chord["transposed"],
+    for chord in chords:
+        x1, y1, _, _ = chord["bbox"]
+        _draw_chord_text(draw, x1, y1, chord["transposed"],
                          font, small_font, ink_by_id.get(id(chord), _DEFAULT_INK))
 
     return composited

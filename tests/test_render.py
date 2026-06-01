@@ -4,6 +4,7 @@ from __future__ import annotations
 import pytest
 from PIL import Image
 
+import backend.overlay.render as render_module
 from backend.overlay.render import (
     _chord_display_width,
     _load_font,
@@ -206,3 +207,51 @@ class TestRenderReplaceRefinements:
         ]
         result = render_overlay(img, chords, "replace")
         assert isinstance(result, Image.Image)
+
+    def test_replace_anchors_text_to_bbox_top_left(self, monkeypatch):
+        calls = []
+
+        def fake_draw(draw, x, y, transposed, font, small_font, fill):
+            calls.append((x, y, transposed))
+            return 0
+
+        monkeypatch.setattr(render_module, "_draw_chord_text", fake_draw)
+
+        img = _white_img(w=300, h=200)
+        chords = [
+            _chord("Am", "Bm", [10, 40, 60, 65]),
+            _chord("C", "D", [120, 90, 170, 115]),
+        ]
+        render_module.render_overlay(img, chords, "replace")
+
+        assert calls == [
+            (10, 40, "Bm"),
+            (120, 90, "D"),
+        ]
+
+    def test_replace_uses_one_median_bbox_font_size(self, monkeypatch):
+        calls = []
+
+        class FakeFont:
+            def __init__(self, size):
+                self.size = size
+
+        def fake_load_font(size, *, bold=False):
+            return FakeFont(size)
+
+        def fake_draw(draw, x, y, transposed, font, small_font, fill):
+            calls.append(font.size)
+            return 0
+
+        monkeypatch.setattr(render_module, "_load_font", fake_load_font)
+        monkeypatch.setattr(render_module, "_draw_chord_text", fake_draw)
+
+        img = _white_img(w=400, h=250)
+        chords = [
+            _chord("Am", "Bm", [10, 40, 60, 50]),    # height 10
+            _chord("C", "D", [120, 90, 170, 120]),   # height 30
+            _chord("G", "A", [220, 140, 270, 190]),  # height 50
+        ]
+        render_module.render_overlay(img, chords, "replace")
+
+        assert calls == [26, 26, 26]
