@@ -64,6 +64,23 @@ def build_runner(engine: str):
             return items
 
         run_ocr.last_meta = _meta  # type: ignore[attr-defined]
+    elif engine == "paddle-gpt":
+        from backend.ocr.paddle_ocr import get_ocr  # noqa: PLC0415
+        from backend.ocr.paddle_gpt_hybrid import run_ocr_paddle_gpt_hybrid  # noqa: PLC0415
+
+        print("Warming up PaddleOCR engine (first-run model load)...", flush=True)
+        get_ocr()
+        print(f"GPT OCR model: {os.environ.get('OPENAI_OCR_MODEL', 'gpt-5.4-mini')}\n", flush=True)
+
+        _meta: dict = {}
+
+        def run_ocr(path: str) -> list[dict]:
+            items, meta = run_ocr_paddle_gpt_hybrid(path)
+            _meta.clear()
+            _meta.update(meta)
+            return items
+
+        run_ocr.last_meta = _meta  # type: ignore[attr-defined]
     elif engine == "hybrid":
         from backend.ocr.paddle_ocr import get_ocr  # noqa: PLC0415
         from backend.ocr.hybrid_detect import detect_chords_hybrid  # noqa: PLC0415
@@ -126,7 +143,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="OCR fixture evaluation.")
     parser.add_argument(
         "--engine",
-        choices=["stub", "paddle", "hybrid", "gpt"],
+        choices=["stub", "paddle", "hybrid", "gpt", "paddle-gpt"],
         default="stub",
         help="OCR engine to use (default: stub)",
     )

@@ -16,6 +16,8 @@ import os
 import pathlib
 import statistics
 
+import cv2
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 # Bundled font. If it is missing or invalid, system fonts are tried.
@@ -54,6 +56,7 @@ _ORANGE     = (255, 140, 0)
 _DARK_BLUE  = (0, 0, 160)
 _DEFAULT_INK = (30, 30, 30)
 _HEADER_BG  = (255, 255, 255, 220)   # info header background
+_REPLACE_LABEL_BG = (255, 255, 255)
 _CLARITY_THRESHOLD = 0.58
 
 # Quality/modifier suffixes rendered in smaller font.
@@ -100,7 +103,13 @@ def _sample_background(
     """Estimate local paper colour from the border around *bbox*."""
     rgb = img.convert("RGB")
     W, H = rgb.size
-    x1, y1, x2, y2 = bbox
+    x1, y1, x2, y2 = _expanded_bbox(
+        bbox,
+        W,
+        H,
+        x_ratio=0.18,
+        y_ratio=0.12,
+    )
     rx1 = max(0, x1 - pad)
     ry1 = max(0, y1 - pad)
     rx2 = min(W, x2 + pad)
@@ -285,7 +294,10 @@ def _text_width(font: ImageFont.ImageFont, text: str) -> float:
     try:
         return font.getlength(text)
     except AttributeError:
-        return font.getsize(text)[0]  # type: ignore[attr-defined]
+        try:
+            return font.getsize(text)[0]  # type: ignore[attr-defined]
+        except AttributeError:
+            return len(text) * getattr(font, "size", _MIN_FONT_SIZE) * 0.6
 
 
 def _chord_display_width(
@@ -322,10 +334,17 @@ def _draw_text_left_top(
     fill: tuple,
     font: ImageFont.ImageFont,
 ) -> None:
+    x, y = xy
     try:
-        draw.text(xy, text, fill=fill, font=font, anchor="lt")
+        ink_bbox = font.getbbox(text, anchor="lt")
+        x -= int(ink_bbox[0])
+        y -= int(ink_bbox[1])
+    except Exception:
+        pass
+    try:
+        draw.text((x, y), text, fill=fill, font=font, anchor="lt")
     except TypeError:
-        draw.text(xy, text, fill=fill, font=font)
+        draw.text((x, y), text, fill=fill, font=font)
 
 
 
@@ -360,6 +379,158 @@ def _draw_chord_text(
     return main_w
 
 
+def _draw_replace_label_background(
+    draw: ImageDraw.Draw,
+    chord: dict,
+    x: int,
+    y: int,
+    transposed: str,
+    font: ImageFont.ImageFont,
+    small_font: ImageFont.ImageFont,
+    img_width: int,
+) -> None:
+    """Draw a clean rectangular backing for replace-mode chord text."""
+    text_w = int(round(_chord_display_width(transposed, font, small_font)))
+    font_size = max(
+        _MIN_FONT_SIZE,
+        int(getattr(font, "size", _MIN_FONT_SIZE)),
+    )
+    bbox = chord["bbox"]
+    pad_x = 4
+    pad_y = 3
+    x1 = min(x, bbox[0])
+    y1 = min(y, bbox[1])
+    x2 = max(x + text_w, bbox[2])
+    y2 = max(y + font_size, bbox[3])
+    draw.rectangle(
+        [
+            max(0, x1 - pad_x),
+            max(0, y1 - pad_y),
+            min(img_width, x2 + pad_x),
+            y2 + pad_y,
+        ],
+        fill=_REPLACE_LABEL_BG,
+    )
+
+
+def _expanded_bbox(
+    bbox: list[int],
+    width: int,
+    height: int,
+    *,
+    x_ratio: float = 0.25,
+    y_ratio: float = 0.35,
+) -> list[int]:
+    x1, y1, x2, y2 = bbox
+    box_w = max(1, x2 - x1)
+    box_h = max(1, y2 - y1)
+    pad_x = max(2, int(round(box_w * x_ratio)))
+    pad_y = max(2, int(round(box_h * y_ratio)))
+    return [
+        max(0, x1 - pad_x),
+        max(0, y1 - pad_y),
+        min(width, x2 + pad_x),
+        min(height, y2 + pad_y),
+    ]
+
+
+def _glyph_mask_pixels(
+    img: Image.Image,
+    bbox: list[int],
+    *,
+    dark_threshold: int = 185,
+) -> set[tuple[int, int]]:
+    """Return dark non-staff pixels around *bbox* for chord replacement."""
+    gray = img.convert("L")
+    W, H = gray.size
+    x1, y1, x2, y2 = _expanded_bbox(bbox, W, H)
+    crop_w = x2 - x1
+    crop_h = y2 - y1
+    if crop_w < 2 or crop_h < 2:
+        return set()
+
+    rows: dict[int, list[int]] = {}
+    for y in range(y1, y2):
+        xs = [x for x in range(x1, x2) if gray.getpixel((x, y)) <= dark_threshold]
+        if xs:
+            rows[y] = xs
+
+    if not rows:
+        return set()
+
+    staff_like_rows = set()
+    for y, xs in rows.items():
+        page_dark_count = sum(
+            1 for x in range(W)
+            if gray.getpixel((x, y)) <= dark_threshold
+        )
+        if len(xs) / crop_w >= 0.65 and page_dark_count / max(1, W) >= 0.25:
+            staff_like_rows.add(y)
+
+    pixels: set[tuple[int, int]] = set()
+    for y, xs in rows.items():
+        if y in staff_like_rows:
+            continue
+        for x in xs:
+            pixels.add((x, y))
+
+    if len(pixels) < max(3, int(crop_w * crop_h * 0.003)):
+        return set()
+    return pixels
+
+
+def _erase_glyph_pixels(
+    img: Image.Image,
+    source_img: Image.Image,
+    bbox: list[int],
+    fill: tuple[int, int, int],
+) -> None:
+    """Erase original chord glyph pixels while preserving surrounding content."""
+    W, H = img.size
+    px = img.load()
+    pixels = _glyph_mask_pixels(source_img, bbox)
+    if not pixels:
+        return
+
+    # Inpainting removes the old chord while preserving uneven paper, scans, and
+    # watermark gradients better than filling the mask with one sampled colour.
+    mask = np.zeros((H, W), dtype=np.uint8)
+    x1, y1, x2, y2 = bbox
+    x1 = max(0, min(W, x1))
+    y1 = max(0, min(H, y1))
+    x2 = max(x1, min(W, x2))
+    y2 = max(y1, min(H, y2))
+    if x2 > x1 and y2 > y1:
+        gray = source_img.convert("L")
+        box_w = max(1, x2 - x1)
+        for yy in range(y1, y2):
+            dark_count = sum(
+                1 for xx in range(x1, x2)
+                if gray.getpixel((xx, yy)) <= 185
+            )
+            page_dark_count = sum(
+                1 for xx in range(W)
+                if gray.getpixel((xx, yy)) <= 185
+            )
+            if dark_count / box_w >= 0.65 and page_dark_count / max(1, W) >= 0.25:
+                continue
+            mask[yy, x1:x2] = 255
+
+    for x, y in pixels:
+        for yy in range(max(0, y - 1), min(H, y + 2)):
+            for xx in range(max(0, x - 1), min(W, x + 2)):
+                mask[yy, xx] = 255
+
+    if int(mask.sum()) > 0:
+        arr = np.array(img.convert("RGB"))
+        restored = cv2.inpaint(arr, mask, 3, cv2.INPAINT_TELEA)
+        img.paste(Image.fromarray(restored))
+        return
+
+    for x, y in pixels:
+        px[x, y] = fill
+
+
 # ---------------------------------------------------------------------------
 # Row clustering and greedy placement
 # ---------------------------------------------------------------------------
@@ -379,6 +550,22 @@ def _cluster_by_row(chords: list[dict]) -> list[list[dict]]:
         else:
             rows.append([c])
     return rows
+
+
+def _row_aligned_top(row: list[dict]) -> int:
+    """Return one stable text top for every chord in a row.
+
+    OCR boxes in the same printed row can have slightly different heights or y
+    positions.  Aligning from the median bottom minus median height keeps the
+    rendered chord bottoms visually level without mutating stored OCR bboxes.
+    """
+    if not row:
+        return 0
+    bottoms = [c["bbox"][3] for c in row]
+    heights = [c["bbox"][3] - c["bbox"][1] for c in row]
+    row_bottom = statistics.median(bottoms)
+    row_height = statistics.median(heights)
+    return int(round(row_bottom - row_height))
 
 
 def _find_row_font_sizes(
@@ -548,6 +735,70 @@ def _place_row_labels_fixed(
     return [(p[0], p[1], p[3]) for p in placements]
 
 
+def _replace_row_fits(
+    row: list[dict],
+    size: int,
+    img_width: int,
+    h_gap: int = 4,
+) -> bool:
+    font = _load_font(size)
+    small_font = _load_font(int(size * _SMALL_FONT_RATIO))
+    total_w = 0
+    for chord in row:
+        total_w += int(_chord_display_width(chord["transposed"], font, small_font))
+    total_w += h_gap * max(0, len(row) - 1)
+    left = min(c["bbox"][0] for c in row)
+    right_limit = img_width - left
+    return total_w <= right_limit
+
+
+def _resolve_replace_row_font_size(
+    row: list[dict],
+    fixed_size: int,
+    img_width: int,
+) -> int:
+    """Keep the document font size unless a dense row cannot fit."""
+    size = fixed_size
+    while size > _MIN_FONT_SIZE and not _replace_row_fits(row, size, img_width):
+        size -= 1
+    return max(_MIN_FONT_SIZE, size)
+
+
+def _place_replace_row_labels(
+    row: list[dict],
+    font: ImageFont.ImageFont,
+    small_font: ImageFont.ImageFont,
+    img_width: int,
+    h_gap: int = 4,
+) -> list[tuple[dict, int]]:
+    """Place replace-mode labels left-to-right without horizontal overlap."""
+    placements: list[list] = []
+    for chord in sorted(row, key=lambda c: c["bbox"][0]):
+        tw = int(_chord_display_width(chord["transposed"], font, small_font))
+        x = max(0, min(chord["bbox"][0], img_width - tw))
+        placements.append([chord, x, tw])
+
+    prev_right = -h_gap
+    for p in placements:
+        p[1] = max(p[1], prev_right + h_gap)
+        prev_right = p[1] + p[2]
+
+    overflow = prev_right - img_width
+    if overflow > 0 and placements:
+        for p in placements:
+            p[1] = max(0, p[1] - overflow)
+
+        # One final forward pass handles cases where the left shift created a
+        # new collision at the row start.
+        prev_right = -h_gap
+        for p in placements:
+            p[1] = max(p[1], prev_right + h_gap)
+            p[1] = min(p[1], max(0, img_width - p[2]))
+            prev_right = p[1] + p[2]
+
+    return [(p[0], int(p[1])) for p in placements]
+
+
 # ---------------------------------------------------------------------------
 # Info header (replace mode only)
 # ---------------------------------------------------------------------------
@@ -561,11 +812,7 @@ def _draw_info_header(
     target_key: str | None,
     semitones: int,
 ) -> None:
-    """Draw key/capo info in the upper-left corner.
-
-    Shows whenever *semitones* is non-zero or a key is provided.  When only
-    semitones is given, a compact "Semitones: +N / Capo: M" header is drawn.
-    """
+    """Draw key info, and capo info only for down-transpose/capo renders."""
     if not original_key and not target_key and semitones == 0:
         return
 
@@ -588,9 +835,11 @@ def _draw_info_header(
         sign = f"+{semitones}" if semitones > 0 else str(semitones)
         lines.append(f"Semitones: {sign}")
 
-    lines.append("")  # blank line gap between key info and capo
-    capo = (-semitones) % 12
-    lines.append(f"Capo: {capo}" if capo else "No capo")
+    if semitones < 0:
+        lines.append("")  # blank line gap between key info and capo
+        capo = (-semitones) % 12
+        if capo:
+            lines.append(f"Capo: {capo}")
 
     # Measure text block size.
     line_h = int(font_size * 0.65) + 4
@@ -743,18 +992,17 @@ def _render_above(
     def _y_offset_for(orig_y1: int) -> int:
         return sum(extra for y, extra in sorted_expansions if y <= orig_y1)
 
-    # Pass 4 — draw labels with anchored placement and per-chord y.
+    # Pass 4 — draw labels with one vertical anchor per row.
     draw = ImageDraw.Draw(img)
     font = _load_font(font_size)
     small_font = _load_font(int(font_size * _SMALL_FONT_RATIO))
     for row in rows:
 
-        row_y1 = min(c["bbox"][1] for c in row)
+        row_y1 = _row_aligned_top(row)
         offset = _y_offset_for(row_y1)
+        label_y = row_y1 + offset - font_size - _GAP
 
         for chord, label_x in _place_row_labels_anchored(row, font, small_font, W):
-            chord_y1 = chord["bbox"][1]
-            label_y = chord_y1 + offset - font_size - _GAP
             _draw_chord_text(draw, label_x, label_y, chord["transposed"],
                              font, small_font, _ORANGE)
 
@@ -787,14 +1035,11 @@ def _render_replace(
     rows = _cluster_by_row(chords)
     protocol = _choose_render_protocol(rows, img)
     font_size = _render_font_size(chords)
-    font = _load_font(font_size)
-    small_font = _load_font(int(font_size * _SMALL_FONT_RATIO))
 
     # ------------------------------------------------------------------
-    # Pass 2 — cover original chord text with sampled local paper colour.
+    # Pass 2 — cover original chord glyphs with sampled local paper colour.
     # ------------------------------------------------------------------
     composited = img.copy().convert("RGB")
-    draw_bg = ImageDraw.Draw(composited)
     ink_by_id: dict[int, tuple[int, int, int]] = {}
     for chord in chords:
         x1, y1, x2, y2 = chord["bbox"]
@@ -803,16 +1048,42 @@ def _render_replace(
         box_x2 = min(W, x2)
         box_y2 = min(H, y2)
         fill = _sample_background(img, [box_x1, box_y1, box_x2, box_y2])
-        ink_by_id[id(chord)] = _style_ink(chord, img, protocol)
-        draw_bg.rectangle([box_x1, box_y1, box_x2, box_y2], fill=fill)
+        ink_by_id[id(chord)] = _DARK_BLUE
+        _erase_glyph_pixels(
+            composited,
+            img,
+            [box_x1, box_y1, box_x2, box_y2],
+            fill,
+        )
 
     # ------------------------------------------------------------------
-    # Pass 3 — draw text at the exact bbox top-left.
+    # Pass 3 — draw text at one row-level y unless dense rows need x adjustment.
     # ------------------------------------------------------------------
     draw = ImageDraw.Draw(composited)
-    for chord in chords:
-        x1, y1, _, _ = chord["bbox"]
-        _draw_chord_text(draw, x1, y1, chord["transposed"],
-                         font, small_font, ink_by_id.get(id(chord), _DEFAULT_INK))
+    for row in rows:
+        row_size = _resolve_replace_row_font_size(row, font_size, W)
+        font = _load_font(row_size)
+        small_font = _load_font(int(row_size * _SMALL_FONT_RATIO))
+        row_y = _row_aligned_top(row)
+        for chord, x in _place_replace_row_labels(row, font, small_font, W):
+            _draw_replace_label_background(
+                draw,
+                chord,
+                x,
+                row_y,
+                chord["transposed"],
+                font,
+                small_font,
+                W,
+            )
+            _draw_chord_text(draw, x, row_y, chord["transposed"],
+                             font, small_font, ink_by_id.get(id(chord), _DEFAULT_INK))
+
+    _draw_info_header(
+        draw, composited, font_size,
+        original_key=original_key,
+        target_key=target_key,
+        semitones=semitones,
+    )
 
     return composited

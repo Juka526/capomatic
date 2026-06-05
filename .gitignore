@@ -16,4 +16,5 @@ node_modules/
 !backend/storage/
 fixtures/images/
 output.png
+outputs/
 tmp/

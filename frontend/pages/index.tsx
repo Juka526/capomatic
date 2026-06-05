@@ -58,7 +58,12 @@ export default function Home() {
   const { t } = useLang();
 
   const [file, setFile] = useState<File | null>(null);
-  const [selection, setSelection] = useState<number>(0); // 0 to 7
+  const [selection, setSelection] = useState<number>(0); // capo/down transpose, 0 to 7
+  const [transposeUp, setTransposeUp] = useState<number>(0); // positive semitone transpose, 0 to 7
+  const [useGptHybrid, setUseGptHybrid] = useState(false);
+  const [hybridRefining, setHybridRefining] = useState(false);
+  const [hybridApplied, setHybridApplied] = useState(false);
+  const [hybridStatus, setHybridStatus] = useState<string | null>(null);
 
   const [detectionId, setDetectionId] = useState<string | null>(null);
   const [originalKey, setOriginalKey] = useState<string | null>(null);
@@ -103,7 +108,7 @@ export default function Home() {
   }, [menuOpen]);
 
   const capoFret = selection > 0 ? selection : null;
-  const semitones = -selection;
+  const semitones = transposeUp > 0 ? transposeUp : -selection;
 
   const targetKey = useMemo(() => {
     if (!originalKey || semitones === 0) return originalKey;
@@ -142,6 +147,8 @@ export default function Home() {
     setDetectElapsed(0);
     setError(null);
     setDetectionId(null);
+    setHybridApplied(false);
+    setHybridStatus(null);
     setOriginalKey(null);
     setReplaceResult(null);
     setAboveResult(null);
@@ -156,6 +163,7 @@ export default function Home() {
     try {
       const formData = new FormData();
       formData.append("image", f);
+      formData.append("ocr_engine", useGptHybrid ? "paddle-gpt" : "paddle");
       const res = await fetch(`${API_URL}/detect`, { method: "POST", body: formData });
       if (!res.ok) throw new Error((await res.text()) || `Server error (${res.status})`);
       const data = await res.json();
@@ -165,12 +173,13 @@ export default function Home() {
       const chords: ChordItem[] = (data.chords || []).map((c: any) => ({ text: c.text, bbox: c.bbox }));
       setDetectedChords(chords);
       setEditableChords(chords);
+      setHybridApplied(data.meta?.ocr_engine === "paddle-gpt-hybrid");
     } catch (err) {
       setError(err instanceof Error ? err.message : t.failedConnect);
     } finally {
       setDetecting(false);
     }
-  }, [t]);
+  }, [t, useGptHybrid]);
 
   const handleFile = useCallback((f: File) => {
     if (!f.type.match(/^image\/(png|jpeg)$/)) { setError(t.onlyPngJpg); return; }
@@ -178,17 +187,21 @@ export default function Home() {
     setFile(f);
     setError(null);
     setSelection(0);
+    setTransposeUp(0);
     runDetection(f);
   }, [runDetection, t]);
 
-  const handleConvert = async () => {
-    if (!detectionId || selection === 0) return;
+  const performRender = async (chordsOverride?: ChordItem[]) => {
+    if (!detectionId) return;
     setRendering(true);
     setError(null);
     try {
       const formData = new FormData();
       formData.append("detection_id", detectionId);
       formData.append("semitones", semitones.toString());
+      if (chordsOverride) {
+        formData.append("chords_override", JSON.stringify(chordsOverride));
+      }
       const res = await fetch(`${API_URL}/render`, { method: "POST", body: formData });
       if (!res.ok) throw new Error((await res.text()) || `Server error (${res.status})`);
       const data = await res.json();
@@ -202,6 +215,11 @@ export default function Home() {
     } finally {
       setRendering(false);
     }
+  };
+
+  const handleConvert = async () => {
+    if (!detectionId || semitones === 0) return;
+    await performRender();
   };
 
   const saveToLocalHistory = (fileName: string | undefined, origKey: string | null, tgtKey: string | null, semi: number) => {
@@ -238,6 +256,61 @@ export default function Home() {
       setError(err instanceof Error ? err.message : t.failedConnect);
     } finally {
       setReRendering(false);
+    }
+  };
+
+  const handleGptHybridRefine = async () => {
+    if (!detectionId || hybridRefining) return;
+    const shouldRenderAfterRefine = Boolean((replaceResult || aboveResult) && semitones !== 0);
+    setHybridRefining(true);
+    setError(null);
+    setHybridStatus(null);
+    try {
+      const formData = new FormData();
+      formData.append("detection_id", detectionId);
+      const res = await fetch(`${API_URL}/detect/refine`, { method: "POST", body: formData });
+      if (!res.ok) {
+        let message = `Server error (${res.status})`;
+        try {
+          const errData = await res.json();
+          message = errData.detail || message;
+        } catch {
+          message = (await res.text()) || message;
+        }
+        throw new Error(message);
+      }
+      const data = await res.json();
+      const meta = data.meta || {};
+      if (!meta.gpt_used) {
+        throw new Error(meta.gpt_error || t.gptHybridUnavailable);
+      }
+      const chords: ChordItem[] = (data.chords || []).map((c: any) => ({ text: c.text, bbox: c.bbox }));
+      setDetectedChords(chords);
+      setEditableChords(chords);
+      setHybridApplied(true);
+      const added = Number(meta.gpt_gap_candidates_accepted ?? meta.gpt_gap_count ?? 0);
+      const corrected = Number(meta.gpt_text_replaced ?? 0);
+      setHybridStatus(
+        added > 0 || corrected > 0
+          ? t.gptHybridChanged(added, corrected)
+          : t.gptHybridNoChange
+      );
+      setEditingIdx(null);
+      setAddingChord(false);
+      setAddModeActive(false);
+      setPendingPosition(null);
+      setPendingChordText("");
+      setHoverImgPos(null);
+      if (shouldRenderAfterRefine) {
+        await performRender(chords);
+      } else {
+        setReplaceResult(null);
+        setAboveResult(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.failedConnect);
+    } finally {
+      setHybridRefining(false);
     }
   };
 
@@ -305,11 +378,15 @@ export default function Home() {
   const clearFile = () => {
     setFile(null);
     setDetectionId(null);
+    setHybridRefining(false);
+    setHybridApplied(false);
+    setHybridStatus(null);
     setOriginalKey(null);
     setReplaceResult(null);
     setAboveResult(null);
     setError(null);
     setSelection(0);
+    setTransposeUp(0);
     setDetectedChords([]);
     setEditableChords([]);
     setEditingIdx(null);
@@ -325,6 +402,14 @@ export default function Home() {
 
   const handleSelect = (value: number) => {
     setSelection(value);
+    if (value > 0) setTransposeUp(0);
+    setReplaceResult(null);
+    setAboveResult(null);
+  };
+
+  const handleTransposeUpSelect = (value: number) => {
+    setTransposeUp(value);
+    if (value > 0) setSelection(0);
     setReplaceResult(null);
     setAboveResult(null);
   };
@@ -443,6 +528,22 @@ export default function Home() {
               <Upload size={20} color="white" strokeWidth={2} />
               {t.uploadYourScore}
             </button>
+            <label style={{
+              display: "flex", alignItems: "flex-start", gap: 9,
+              maxWidth: 320, cursor: "pointer", userSelect: "none",
+              color: "#4f4a43", fontSize: "0.78rem", lineHeight: 1.35,
+            }}>
+              <input
+                type="checkbox"
+                checked={useGptHybrid}
+                onChange={e => setUseGptHybrid(e.target.checked)}
+                style={{ marginTop: 2, accentColor: "#0b4ea2" }}
+              />
+              <span>
+                <span style={{ display: "block", fontWeight: 800 }}>{t.gptHybridLabel}</span>
+                <span style={{ display: "block", color: "#8a8174", fontSize: "0.72rem", marginTop: 2 }}>{t.gptHybridDesc}</span>
+              </span>
+            </label>
             {error && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#d4183d", fontSize: "0.78rem", fontWeight: 600 }}>
                 <AlertCircle size={13} />
@@ -475,27 +576,63 @@ export default function Home() {
                 <span style={{ fontWeight: 700, color: "#1a1a2e", background: "rgba(26,26,46,0.07)", padding: "2px 10px", borderRadius: 20 }}>
                   {originalKey}
                 </span>
-                {selection > 0 && targetKey && (
+                {semitones !== 0 && targetKey && (
                   <>
                     <span style={{ color: "#ccc" }}>→</span>
                     <span style={{ fontWeight: 700, color: "#e05d00", background: "rgba(224,93,0,0.08)", padding: "2px 10px", borderRadius: 20 }}>
                       {targetKey}
                     </span>
-                    <span style={{ fontSize: "0.72rem", color: "#aaa", fontWeight: 600 }}>
-                      {t.capo} {selection}
-                    </span>
+                    {semitones < 0 ? (
+                      <span style={{ fontSize: "0.72rem", color: "#aaa", fontWeight: 600 }}>
+                        {t.capo} {selection}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: "0.72rem", color: "#aaa", fontWeight: 600 }}>
+                        {t.transposeUpInfo(semitones)}
+                      </span>
+                    )}
                   </>
                 )}
               </div>
             )}
 
             {!detecting && (
-              <button
-                onClick={clearFile}
-                style={{ background: "none", border: "1.5px solid rgba(0,0,0,0.15)", borderRadius: 20, padding: "5px 14px", fontSize: "0.75rem", fontWeight: 700, color: "#888", cursor: "pointer", letterSpacing: "0.04em" }}
-              >
-                {t.changeSheet}
-              </button>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 8 }}>
+                {detectionId && (
+                  <button
+                    onClick={handleGptHybridRefine}
+                    disabled={hybridRefining || rendering}
+                    style={{
+                      border: "1.5px solid rgba(11,78,162,0.24)",
+                      borderRadius: 20,
+                      padding: "6px 14px",
+                      fontSize: "0.75rem",
+                      fontWeight: 800,
+                      color: hybridApplied ? "#0b6b3a" : "#0b4ea2",
+                      background: hybridApplied ? "rgba(11,107,58,0.08)" : "rgba(11,78,162,0.08)",
+                      cursor: hybridRefining || rendering ? "not-allowed" : "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    {hybridRefining ? (
+                      <><Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} />{t.gptHybridRefining}</>
+                    ) : hybridApplied ? t.gptHybridApplied : t.gptHybridButton}
+                  </button>
+                )}
+                <button
+                  onClick={clearFile}
+                  style={{ background: "none", border: "1.5px solid rgba(0,0,0,0.15)", borderRadius: 20, padding: "5px 14px", fontSize: "0.75rem", fontWeight: 700, color: "#888", cursor: "pointer", letterSpacing: "0.04em" }}
+                >
+                  {t.changeSheet}
+                </button>
+                {hybridStatus && (
+                  <span style={{ flexBasis: "100%", textAlign: "center", color: "#0b6b3a", fontSize: "0.72rem", fontWeight: 700 }}>
+                    {hybridStatus}
+                  </span>
+                )}
+              </div>
             )}
 
             {error && (
@@ -552,8 +689,47 @@ export default function Home() {
 
         </div>
 
-        {/* Generate button — below capo selector, when capo is selected */}
-        {detectionId && !detecting && selection > 0 && (
+        {/* Transpose-up selector — positive semitone shifts without capo info */}
+        <div style={{ maxWidth: 560, margin: "12px auto 0", padding: "0 20px" }}>
+          <div style={{ background: "rgba(255,255,255,0.45)", borderRadius: 16, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.7)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#a09070", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                {t.transposeUp}
+              </div>
+              {(!detectionId || detecting) && (
+                <span style={{ fontSize: "0.68rem", color: "#c0b090", fontStyle: "italic" }}>{t.uploadFirst}</span>
+              )}
+            </div>
+            <div className="capo-grid">
+              {[0, 1, 2, 3, 4, 5, 6, 7].map(step => {
+                const active = transposeUp === step;
+                return (
+                  <button
+                    key={step}
+                    onClick={() => handleTransposeUpSelect(step)}
+                    disabled={!detectionId || detecting}
+                    style={{
+                      padding: "10px 4px", borderRadius: 10,
+                      border: active ? "2px solid #0b4ea2" : "1.5px solid rgba(0,0,0,0.1)",
+                      background: active ? "linear-gradient(135deg, #0b4ea2, #093b7a)" : "rgba(255,255,255,0.6)",
+                      color: active ? "white" : "#555",
+                      fontWeight: 800, textAlign: "center" as const,
+                      cursor: detectionId && !detecting ? "pointer" : "not-allowed",
+                      opacity: detectionId && !detecting ? 1 : 0.4,
+                      boxShadow: active ? "0 3px 10px rgba(11,78,162,0.25)" : "0 1px 3px rgba(0,0,0,0.06)",
+                      transition: "all 0.18s",
+                    }}
+                  >
+                    <div style={{ fontSize: "0.95rem" }}>{step === 0 ? t.open : t.transposeUpShort(step)}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Generate button — below transpose selectors, when a shift is selected */}
+        {detectionId && !detecting && semitones !== 0 && (
           <div style={{ maxWidth: 400, margin: "20px auto 0", padding: "0 20px" }}>
             <button
               onClick={handleConvert}
@@ -570,7 +746,7 @@ export default function Home() {
             >
               {rendering ? (
                 <><Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />{t.rendering}</>
-              ) : t.generateSheet(selection)}
+              ) : t.generateSheet(semitones)}
             </button>
           </div>
         )}

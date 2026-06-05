@@ -27,9 +27,12 @@ export const translations = {
     fret: '프렛',
     open: '오픈',
     capoPosition: '카포 위치',
+    transposeUp: '키 올리기',
+    transposeUpShort: (n: number) => `+${n}`,
+    transposeUpInfo: (n: number) => `+${n} 반음`,
 
     // Options
-    generateSheet: (fret: number) => `악보 생성`,
+    generateSheet: (_semitones: number) => `악보 생성`,
     rendering: '렌더링 중…',
 
     // Result
@@ -47,6 +50,14 @@ export const translations = {
     uploadYourScore: '악보를 업로드하세요',
     uploadCta: '악보 이미지 업로드하기',
     uploadHint: 'PNG · JPG 지원 · 최대 8MB',
+    gptHybridLabel: 'AI 하이브리드 OCR 사용',
+    gptHybridDesc: '더 느리고 비용이 들 수 있지만 코드 텍스트 검증을 추가합니다',
+    gptHybridButton: 'AI로 개선',
+    gptHybridRefining: 'AI 개선 중…',
+    gptHybridApplied: 'AI 개선 완료',
+    gptHybridUnavailable: '백엔드에 AI가 설정되어 있지 않습니다.',
+    gptHybridNoChange: 'AI가 확인했지만 새 변경 사항은 없습니다.',
+    gptHybridChanged: (added: number, corrected: number) => `누락 ${added}개 추가 · 코드 ${corrected}개 수정`,
 
     // Guide
     guide: '사용법',
@@ -134,9 +145,12 @@ export const translations = {
     fret: 'Fret',
     open: 'Open',
     capoPosition: 'Capo Position',
+    transposeUp: 'Transpose Up',
+    transposeUpShort: (n: number) => `+${n}`,
+    transposeUpInfo: (n: number) => `+${n} semitones`,
 
     // Options
-    generateSheet: (fret: number) => `Generate`,
+    generateSheet: (_semitones: number) => `Generate`,
     rendering: 'Rendering…',
 
     // Result
@@ -154,6 +168,14 @@ export const translations = {
     uploadYourScore: 'Upload Your Music Score',
     uploadCta: 'Upload Chord Sheet',
     uploadHint: 'PNG · JPG supported · max 8MB',
+    gptHybridLabel: 'Use AI hybrid OCR',
+    gptHybridDesc: 'Slower and may cost more, but adds chord text verification',
+    gptHybridButton: 'Improve with AI',
+    gptHybridRefining: 'Improving…',
+    gptHybridApplied: 'AI improved',
+    gptHybridUnavailable: 'AI is not configured on the backend.',
+    gptHybridNoChange: 'AI checked the sheet; no new changes found.',
+    gptHybridChanged: (added: number, corrected: number) => `Added ${added} missing · corrected ${corrected} chords`,
 
     // Guide
     guide: 'How to Use',

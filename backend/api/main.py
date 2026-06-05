@@ -31,7 +31,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from PIL import Image
 
-from backend.ocr.gpt_ocr import run_ocr_gpt_vision
+from backend.ocr.paddle_gpt_hybrid import (
+    refine_paddle_items_with_gpt,
+    run_ocr_paddle_gpt_hybrid,
+)
 from backend.ocr.hybrid_detect import detect_chords_hybrid
 from backend.chords.parser import parse_chord
 from backend.chords.transpose import transpose_chord, compute_target_key
@@ -163,6 +166,15 @@ def _build_chord_item(item: dict, semitones: int, target_key: str | None) -> dic
     }
 
 
+def _build_detect_chord(item: dict) -> dict:
+    raw_bbox = item.get("bbox")
+    return {
+        "text":       item["text"],
+        "confidence": float(item["confidence"]),
+        "bbox":       [int(v) for v in raw_bbox] if raw_bbox is not None else None,
+    }
+
+
 async def _read_upload(image: UploadFile) -> bytes:
     """Read and validate uploaded image bytes; raise HTTPException if too large."""
     data = await image.read()
@@ -204,6 +216,7 @@ def health() -> dict:
 async def detect(
     image: UploadFile = File(...),
     original_key: Optional[str] = Form(None),
+    ocr_engine: str = Form("paddle"),
 ) -> dict:
     """Detect chord symbols in *image* and return raw results with a detection_id.
 
@@ -221,6 +234,11 @@ async def detect(
             status_code=422,
             detail=f"original_key must be one of {sorted(_VALID_KEYS)}, got {original_key!r}",
         )
+    if ocr_engine not in {"paddle", "paddle-gpt"}:
+        raise HTTPException(
+            status_code=422,
+            detail="ocr_engine must be one of: paddle, paddle-gpt",
+        )
 
     data = await _read_upload(image)
     suffix = os.path.splitext(image.filename or "upload.png")[1] or ".png"
@@ -231,11 +249,14 @@ async def detect(
             tmp.write(data)
             tmp_path = tmp.name
 
-        try:
-            items, raw_meta = run_ocr_gpt_vision(tmp_path)
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("GPT OCR failed; falling back to PaddleOCR: %s", exc)
-            items, raw_meta = detect_chords_hybrid(tmp_path)
+        if ocr_engine == "paddle-gpt":
+            try:
+                items, raw_meta = run_ocr_paddle_gpt_hybrid(tmp_path)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Hybrid Paddle+GPT OCR failed; falling back to PaddleOCR: %s", exc)
+                items, raw_meta = detect_chords_hybrid(tmp_path, use_ai_fallback=False)
+        else:
+            items, raw_meta = detect_chords_hybrid(tmp_path, use_ai_fallback=False)
         img = Image.open(tmp_path).convert("RGB")
     finally:
         if tmp_path and os.path.exists(tmp_path):
@@ -249,19 +270,14 @@ async def detect(
         "items": items,
         "img": img,
         "original_key": original_key,
+        "meta": raw_meta,
     })
 
-    chords = []
-    for item in items:
-        raw_bbox = item.get("bbox")
-        chords.append({
-            "text":       item["text"],
-            "confidence": float(item["confidence"]),
-            "bbox":       [int(v) for v in raw_bbox] if raw_bbox is not None else None,
-        })
+    chords = [_build_detect_chord(item) for item in items]
 
     gate = raw_meta.get("gate") or {}
     meta = {
+        "ocr_engine":  raw_meta.get("ocr_engine", ocr_engine),
         "crop_mode":   raw_meta.get("crop_mode"),
         "num_regions": raw_meta.get("num_regions"),
         "predict_ms":  raw_meta.get("predict_ms"),
@@ -275,6 +291,64 @@ async def detect(
         "count":        len(chords),
         "original_key": original_key,
         "meta":         meta,
+    }
+
+
+@app.post("/detect/refine")
+async def refine_detection(
+    detection_id: str = Form(...),
+) -> dict:
+    """Refine cached Paddle detections with GPT without re-running PaddleOCR."""
+    if not os.environ.get("OPENAI_API_KEY"):
+        raise HTTPException(
+            status_code=503,
+            detail="GPT hybrid refinement is not configured: OPENAI_API_KEY is not set.",
+        )
+
+    cached = _cache_get(detection_id)
+    if cached is None:
+        raise HTTPException(
+            status_code=404,
+            detail="detection_id not found — it may have expired. Please re-upload.",
+        )
+
+    items = cached["items"]
+    img = cached["img"]
+    try:
+        refined_items, raw_meta = refine_paddle_items_with_gpt(
+            img,
+            items,
+            base_meta=cached.get("meta"),
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Cached GPT refinement failed: %s", exc)
+        raise HTTPException(status_code=502, detail=f"GPT refinement failed: {exc}") from exc
+
+    cached["items"] = refined_items
+    cached["meta"] = raw_meta
+    if cached.get("original_key") is None:
+        cached["original_key"] = infer_key(refined_items)
+
+    chords = [_build_detect_chord(item) for item in refined_items]
+    return {
+        "detection_id": detection_id,
+        "chords":       chords,
+        "count":        len(chords),
+        "original_key": cached.get("original_key"),
+        "meta": {
+            "ocr_engine": raw_meta.get("ocr_engine", "paddle-gpt-hybrid"),
+            "gpt_used": raw_meta.get("gpt_used", False),
+            "gpt_error": raw_meta.get("gpt_error"),
+            "gpt_text_replaced": raw_meta.get("gpt_text_replaced", 0),
+            "gpt_gap_count": raw_meta.get("gpt_gap_count", 0),
+            "dedupe_dropped": raw_meta.get("dedupe_dropped", 0),
+            "gap_candidate_count": raw_meta.get("gap_candidate_count", 0),
+            "gpt_gap_candidates_accepted": raw_meta.get("gpt_gap_candidates_accepted", 0),
+            "input_tokens": raw_meta.get("input_tokens"),
+            "output_tokens": raw_meta.get("output_tokens"),
+            "total_ms": raw_meta.get("total_ms"),
+            "reused_paddle_detection": raw_meta.get("reused_paddle_detection", True),
+        },
     }
 
 

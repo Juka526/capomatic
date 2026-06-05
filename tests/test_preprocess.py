@@ -4,7 +4,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from backend.ocr.preprocess import build_chord_bands, find_chord_x_start
+from backend.ocr.preprocess import build_chord_bands, detect_staff_systems, find_chord_x_start
 
 
 def _white(h: int, w: int) -> np.ndarray:
@@ -134,3 +134,29 @@ class TestBuildChordBands:
         systems = [(200, 200), (300, 350)]
         bands = build_chord_bands(img, systems)
         assert all(b["staff_top"] != 200 for b in bands)
+
+
+class TestDetectStaffSystems:
+    def test_recovers_fragmented_staff_in_large_gap(self):
+        img = _white(360, 500)
+        for top in (60, 140, 220, 300):
+            for y in (top, top + 7, top + 14, top + 21, top + 28):
+                img[y, 20:480] = 0
+        # Break the middle staff so the strict projection path misses it.
+        for y in (140, 147, 154, 161, 168):
+            img[y, 120:380] = 255
+
+        systems = detect_staff_systems(img)
+
+        assert len(systems) == 4
+        assert any(abs(top - 140) <= 3 for top, _ in systems)
+
+    def test_fixture_moment_life_detects_all_staff_systems(self):
+        from PIL import Image
+
+        img = Image.open("fixtures/images/순간이-삶이-되어.png").convert("RGB")
+
+        systems = detect_staff_systems(img)
+
+        assert len(systems) == 7
+        assert any(600 <= top <= 630 for top, _ in systems)

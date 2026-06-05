@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import pytest
-from PIL import Image
+from PIL import Image, ImageDraw
 
 import backend.overlay.render as render_module
 from backend.overlay.render import (
@@ -168,13 +168,14 @@ class TestRenderReplaceRefinements:
         )
         assert isinstance(result, Image.Image)
 
-    def test_replace_uses_local_background_colour(self):
-        # Colored background should be preserved instead of forcing pure white.
+    def test_replace_uses_white_label_background(self, monkeypatch):
+        # Replace labels should sit on a clean white rectangle for readability.
+        monkeypatch.setattr(render_module, "_draw_chord_text", lambda *args, **kwargs: 0)
         img = Image.new("RGB", (400, 300), (100, 100, 100))
         chords = [_chord("Am", "Am", [50, 90, 100, 130])]
         result = render_overlay(img, chords, "replace")
         px = result.getpixel((70, 110))
-        assert px == (100, 100, 100), f"Expected local background colour, got {px}"
+        assert px == (255, 255, 255), f"Expected white label background, got {px}"
 
     def test_row_y_alignment_no_crash(self):
         img = _white_img(w=400, h=300)
@@ -229,6 +230,89 @@ class TestRenderReplaceRefinements:
             (120, 90, "D"),
         ]
 
+    def test_replace_aligns_same_row_to_one_y(self, monkeypatch):
+        calls = []
+
+        def fake_draw(draw, x, y, transposed, font, small_font, fill):
+            calls.append((x, y, transposed))
+            return 0
+
+        monkeypatch.setattr(render_module, "_draw_chord_text", fake_draw)
+
+        img = _white_img(w=300, h=200)
+        chords = [
+            _chord("Am", "Bm", [10, 40, 60, 65]),
+            _chord("C", "D", [90, 44, 140, 69]),
+            _chord("G", "A", [180, 36, 230, 61]),
+        ]
+        render_module.render_overlay(img, chords, "replace")
+
+        assert [call[1] for call in calls] == [40, 40, 40]
+
+    def test_replace_draws_white_rectangular_label_background(self):
+        original_draw = render_module._draw_chord_text
+        render_module._draw_chord_text = lambda *args, **kwargs: 0
+        img = Image.new("RGB", (180, 120), (180, 180, 180))
+        chords = [_chord("Am", "Bm", [40, 50, 80, 72])]
+
+        try:
+            result = render_module.render_overlay(img, chords, "replace")
+        finally:
+            render_module._draw_chord_text = original_draw
+
+        assert result.getpixel((42, 50)) == (255, 255, 255)
+
+    def test_above_aligns_same_row_to_one_y(self, monkeypatch):
+        calls = []
+
+        def fake_draw(draw, x, y, transposed, font, small_font, fill):
+            calls.append((x, y, transposed))
+            return 0
+
+        monkeypatch.setattr(render_module, "_draw_chord_text", fake_draw)
+
+        img = _white_img(w=300, h=200)
+        chords = [
+            _chord("Am", "Bm", [10, 60, 60, 80]),
+            _chord("C", "D", [90, 66, 140, 86]),
+            _chord("G", "A", [180, 54, 230, 74]),
+        ]
+        render_module.render_overlay(img, chords, "above")
+
+        assert [call[1] for call in calls] == [41, 41, 41]
+
+    def test_replace_shifts_dense_row_to_avoid_overlap(self, monkeypatch):
+        calls = []
+
+        class FakeFont:
+            def __init__(self, size):
+                self.size = size
+
+        def fake_load_font(size, *, bold=False):
+            return FakeFont(size)
+
+        def fake_width(transposed, font, small_font):
+            return 30
+
+        def fake_draw(draw, x, y, transposed, font, small_font, fill):
+            calls.append((x, y, transposed, font.size))
+            return 30
+
+        monkeypatch.setattr(render_module, "_load_font", fake_load_font)
+        monkeypatch.setattr(render_module, "_chord_display_width", fake_width)
+        monkeypatch.setattr(render_module, "_draw_chord_text", fake_draw)
+
+        img = _white_img(w=180, h=120)
+        chords = [
+            _chord("Am", "Bm", [10, 40, 30, 60]),
+            _chord("C", "D", [25, 40, 45, 60]),
+            _chord("G", "A", [40, 40, 60, 60]),
+        ]
+        render_module.render_overlay(img, chords, "replace")
+
+        xs = [call[0] for call in calls]
+        assert xs == [10, 44, 78]
+
     def test_replace_uses_one_median_bbox_font_size(self, monkeypatch):
         calls = []
 
@@ -255,3 +339,31 @@ class TestRenderReplaceRefinements:
         render_module.render_overlay(img, chords, "replace")
 
         assert calls == [26, 26, 26]
+
+    def test_glyph_mask_pixels_include_chord_but_skip_staff_line(self):
+        img = _white_img(w=160, h=90)
+        draw = ImageDraw.Draw(img)
+        draw.rectangle([52, 20, 70, 32], fill=(0, 0, 0))
+        draw.line((0, 55, 159, 55), fill=(0, 0, 0))
+
+        pixels = render_module._glyph_mask_pixels(img, [40, 10, 110, 65])
+
+        assert (60, 25) in pixels
+        assert (60, 55) not in pixels
+
+    def test_erase_glyph_pixels_preserves_staff_line(self):
+        img = _white_img(w=160, h=90)
+        draw = ImageDraw.Draw(img)
+        draw.rectangle([52, 20, 70, 32], fill=(0, 0, 0))
+        draw.line((0, 55, 159, 55), fill=(0, 0, 0))
+
+        result = img.copy()
+        render_module._erase_glyph_pixels(
+            result,
+            img,
+            [40, 10, 110, 65],
+            (255, 255, 255),
+        )
+
+        assert result.getpixel((60, 25)) == (255, 255, 255)
+        assert result.getpixel((60, 55)) == (0, 0, 0)

@@ -21,7 +21,7 @@ from backend.ocr.filter import is_chord_candidate
 if TYPE_CHECKING:
     from paddleocr import PaddleOCR as _PaddleOCRType
 
-_ocr_instances: "dict[str, _PaddleOCRType]" = {}
+_ocr_instances: "dict[tuple[str, float | None, float | None, float | None], _PaddleOCRType]" = {}
 
 # Maximum total pixel count of the stitched canvas fed to predict().
 # Canvases larger than this are downscaled proportionally with INTER_AREA before
@@ -247,7 +247,13 @@ def _apply_direction_filter(raw_items: list[dict]) -> list[dict]:
     return chords
 
 
-def get_ocr(det_variant: "str | None" = None) -> "_PaddleOCRType":
+def get_ocr(
+    det_variant: "str | None" = None,
+    *,
+    det_db_thresh: float | None = None,
+    det_db_box_thresh: float | None = None,
+    det_db_unclip_ratio: float | None = None,
+) -> "_PaddleOCRType":
     """Return a cached PaddleOCR engine for *det_variant*, initialising on first call.
 
     PaddleOCR is imported lazily so the module can be imported without
@@ -281,7 +287,8 @@ def get_ocr(det_variant: "str | None" = None) -> "_PaddleOCRType":
         raise ValueError(
             f"CHORDTAYLOR_OCR_DET_MODEL must be 'server' or 'mobile', got {det_variant!r}"
         )
-    if det_variant not in _ocr_instances:
+    cache_key = (det_variant, det_db_thresh, det_db_box_thresh, det_db_unclip_ratio)
+    if cache_key not in _ocr_instances:
         from paddleocr import PaddleOCR  # noqa: PLC0415
         kwargs: dict = dict(
             lang="en",
@@ -290,23 +297,38 @@ def get_ocr(det_variant: "str | None" = None) -> "_PaddleOCRType":
             use_textline_orientation=False,
             enable_mkldnn=False,  # disable oneDNN — crashes on x86 Intel (Railway) with 3.3.0+
         )
-        # Only apply det params when explicitly overridden — PP-OCRv5 server model
-        # is sensitive to these values and regressions occur with non-default settings.
-        # PP-OCRv5 defaults: thresh=0.3, box_thresh=0.5, unclip_ratio=1.5.
+        explicit_params = {
+            "det_db_thresh": det_db_thresh,
+            "det_db_box_thresh": det_db_box_thresh,
+            "det_db_unclip_ratio": det_db_unclip_ratio,
+        }
+        for kwarg_name, value in explicit_params.items():
+            if value is not None:
+                kwargs[kwarg_name] = float(value)
+
+        # Only apply env det params when explicitly overridden — PP-OCRv5 server
+        # model is sensitive to these values and regressions occur with
+        # non-default settings. Explicit function params win over env vars.
         for env_var, kwarg_name in [
             ("PADDLE_DET_DB_THRESH",       "det_db_thresh"),
             ("PADDLE_DET_DB_BOX_THRESH",   "det_db_box_thresh"),
             ("PADDLE_DET_DB_UNCLIP_RATIO", "det_db_unclip_ratio"),
         ]:
-            if env_var in os.environ:
+            if explicit_params[kwarg_name] is None and env_var in os.environ:
                 kwargs[kwarg_name] = float(os.environ[env_var])
         if det_variant == "mobile":
             kwargs["text_detection_model_name"] = "PP-OCRv5_mobile_det"
-        _ocr_instances[det_variant] = PaddleOCR(**kwargs)
-    return _ocr_instances[det_variant]
+        _ocr_instances[cache_key] = PaddleOCR(**kwargs)
+    return _ocr_instances[cache_key]
 
 
-def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
+def run_ocr_paddle(
+    image_path: str,
+    *,
+    det_db_thresh: float | None = None,
+    det_db_box_thresh: float | None = None,
+    det_db_unclip_ratio: float | None = None,
+) -> tuple[list[dict], dict]:
     """Run PaddleOCR on chord-band regions of *image_path*.
 
     Uses staff-aware band cropping (Section 3.1) when staff lines can be
@@ -352,7 +374,12 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
     regions, mode = select_ocr_regions(img)
     preprocess_ms = (time.perf_counter() - t0) * 1000
 
-    ocr = get_ocr(det_variant)
+    ocr = get_ocr(
+        det_variant,
+        det_db_thresh=det_db_thresh,
+        det_db_box_thresh=det_db_box_thresh,
+        det_db_unclip_ratio=det_db_unclip_ratio,
+    )
     items: list[dict] = []
 
     region_meta = [
@@ -523,6 +550,9 @@ def run_ocr_paddle(image_path: str) -> tuple[list[dict], dict]:
         "resize_scale":    round(resize_scale, 4) if resize_applied else None,
         "resized_shape":   resized_shape,
         "det_model_variant": det_variant,
+        "det_db_thresh": det_db_thresh,
+        "det_db_box_thresh": det_db_box_thresh,
+        "det_db_unclip_ratio": det_db_unclip_ratio,
     })
 
     return items, meta

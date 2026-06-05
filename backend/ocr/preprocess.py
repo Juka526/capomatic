@@ -94,6 +94,71 @@ def crop_top_region(img, ratio: float = 0.40):
 # Section 3.1: Staff-aware chord band cropping
 # ---------------------------------------------------------------------------
 
+def _staff_fragment_score(binary: np.ndarray, y_top: int, y_bottom: int) -> int:
+    """Return count of staff-like dark rows in a candidate vertical window."""
+    H, W = binary.shape
+    y1 = max(0, y_top)
+    y2 = min(H, y_bottom)
+    if y2 <= y1:
+        return 0
+    row_sums = (binary[y1:y2] > 0).sum(axis=1)
+    # Fragmented systems under watermarks may not span the full page, but staff
+    # line rows still carry clearly more horizontal ink than lyrics/noise.
+    min_dark = max(80, int(W * 0.06))
+    return int((row_sums >= min_dark).sum())
+
+
+def _recover_missing_staff_systems(
+    binary: np.ndarray,
+    systems: list[tuple[int, int]],
+) -> list[tuple[int, int]]:
+    """Insert likely staff systems skipped inside unusually large vertical gaps."""
+    if len(systems) < 3:
+        return systems
+
+    systems = sorted(systems)
+    top_gaps = [systems[i + 1][0] - systems[i][0] for i in range(len(systems) - 1)]
+    staff_heights = [bottom - top for top, bottom in systems if bottom > top]
+    if not top_gaps or not staff_heights:
+        return systems
+
+    normal_gap = int(np.median(top_gaps))
+    staff_h = max(12, int(np.median(staff_heights)))
+    if normal_gap <= 0:
+        return systems
+
+    recovered: list[tuple[int, int]] = []
+    for idx, system in enumerate(systems[:-1]):
+        recovered.append(system)
+        cur_top = system[0]
+        next_top = systems[idx + 1][0]
+        gap = next_top - cur_top
+        if gap <= int(normal_gap * 1.55):
+            continue
+
+        candidate_top = cur_top + normal_gap
+        while next_top - candidate_top > int(normal_gap * 0.65):
+            window_top = candidate_top - max(10, staff_h // 2)
+            window_bottom = candidate_top + staff_h + max(10, staff_h // 2)
+            score = _staff_fragment_score(binary, window_top, window_bottom)
+            if score >= 5:
+                recovered.append((candidate_top, candidate_top + staff_h))
+            candidate_top += normal_gap
+    recovered.append(systems[-1])
+
+    recovered = sorted(set(recovered))
+    deduped: list[tuple[int, int]] = []
+    for system in recovered:
+        if deduped and abs(system[0] - deduped[-1][0]) < max(10, staff_h // 2):
+            prev = deduped[-1]
+            deduped[-1] = (
+                min(prev[0], system[0]),
+                max(prev[1], system[1]),
+            )
+        else:
+            deduped.append(system)
+    return deduped
+
 def detect_staff_systems(img) -> list[tuple[int, int]]:
     """Detect staff systems in *img* and return their Y extents.
 
@@ -206,6 +271,7 @@ def detect_staff_systems(img) -> list[tuple[int, int]]:
             if 2 <= len(cluster) <= 12:
                 systems.append((cluster[0], cluster[-1]))
 
+        systems = _recover_missing_staff_systems(binary, systems)
         return systems
 
     except Exception:

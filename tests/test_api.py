@@ -169,6 +169,29 @@ class TestDetectEndpoint:
         assert len(cached["items"]) == 1
         _detection_cache.clear()
 
+    @patch("backend.api.main.run_ocr_paddle_gpt_hybrid")
+    def test_detect_uses_paddle_gpt_when_requested(self, mock_detect):
+        mock_detect.return_value = (
+            [{"text": "G", "confidence": 1.0, "bbox": [0, 0, 10, 10]}],
+            {"ocr_engine": "paddle-gpt-hybrid", "predict_ms": 5},
+        )
+        resp = client.post(
+            "/detect",
+            files={"image": ("test.png", _png_bytes(), "image/png")},
+            data={"ocr_engine": "paddle-gpt"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["meta"]["ocr_engine"] == "paddle-gpt-hybrid"
+        mock_detect.assert_called_once()
+
+    def test_detect_rejects_invalid_ocr_engine(self):
+        resp = client.post(
+            "/detect",
+            files={"image": ("test.png", _png_bytes(), "image/png")},
+            data={"ocr_engine": "gpt"},
+        )
+        assert resp.status_code == 422
+
     def test_detect_rejects_invalid_original_key(self):
         resp = client.post(
             "/detect",
@@ -184,6 +207,73 @@ class TestDetectEndpoint:
             files={"image": ("big.png", big_data, "image/png")},
         )
         assert resp.status_code == 413
+
+
+# ---------------------------------------------------------------------------
+# /detect/refine
+# ---------------------------------------------------------------------------
+
+class TestRefineDetectionEndpoint:
+    def setup_method(self):
+        _detection_cache.clear()
+
+    @patch("backend.api.main.refine_paddle_items_with_gpt")
+    @patch("backend.api.main.detect_chords_hybrid")
+    def test_refine_reuses_cached_detection_and_updates_cache(self, mock_detect, mock_refine, monkeypatch):
+        monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+        mock_detect.return_value = (
+            [{"text": "D/F", "confidence": 0.82, "bbox": [10, 20, 50, 40]}],
+            {"predict_ms": 5},
+        )
+        mock_refine.return_value = (
+            [{"text": "D/F#", "confidence": 0.95, "bbox": [10, 20, 50, 40]}],
+            {
+                "ocr_engine": "paddle-gpt-hybrid",
+                "gpt_used": True,
+                "gpt_text_replaced": 1,
+                "reused_paddle_detection": True,
+            },
+        )
+
+        detect_resp = client.post(
+            "/detect",
+            files={"image": ("test.png", _png_bytes(), "image/png")},
+        )
+        detection_id = detect_resp.json()["detection_id"]
+        refine_resp = client.post("/detect/refine", data={"detection_id": detection_id})
+
+        assert refine_resp.status_code == 200
+        data = refine_resp.json()
+        assert data["detection_id"] == detection_id
+        assert data["chords"][0]["text"] == "D/F#"
+        assert data["meta"]["reused_paddle_detection"] is True
+        assert _cache_get(detection_id)["items"][0]["text"] == "D/F#"
+        mock_detect.assert_called_once()
+        mock_refine.assert_called_once()
+
+    def test_refine_rejects_missing_detection_id(self, monkeypatch):
+        monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+        resp = client.post("/detect/refine", data={"detection_id": "missing"})
+
+        assert resp.status_code == 404
+
+    @patch("backend.api.main.detect_chords_hybrid")
+    def test_refine_rejects_missing_openai_api_key(self, mock_detect, monkeypatch):
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        mock_detect.return_value = (
+            [{"text": "C", "confidence": 1.0, "bbox": [0, 0, 10, 10]}],
+            {"predict_ms": 5},
+        )
+        detect_resp = client.post(
+            "/detect",
+            files={"image": ("test.png", _png_bytes(), "image/png")},
+        )
+        detection_id = detect_resp.json()["detection_id"]
+
+        resp = client.post("/detect/refine", data={"detection_id": detection_id})
+
+        assert resp.status_code == 503
+        assert "OPENAI_API_KEY" in resp.json()["detail"]
 
 
 # ---------------------------------------------------------------------------
