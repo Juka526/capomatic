@@ -9,7 +9,11 @@ export const translations = {
     logout: '로그아웃',
 
     // Hero
-    subtitle: '코드 악보 변환기 · 기타 카포 도구',
+    subtitle: '코드 악보를 몇 초 만에 원하는 키로 바꾸세요',
+    heroHeadline: '어떤 코드 악보든 바로 전조하세요',
+    heroSubcopy: '스크린샷이나 코드 차트를 업로드하고, 카포 또는 키 이동을 선택한 뒤 깔끔한 PNG로 다운로드하세요.',
+    heroTrust: 'PNG · JPG 지원 · 가입 없이 먼저 사용 가능',
+    heroPrimaryCta: '코드 악보 업로드',
 
     // Upload
     uploadSheet: '악보 업로드',
@@ -50,6 +54,15 @@ export const translations = {
     uploadYourScore: '악보를 업로드하세요',
     uploadCta: '악보 이미지 업로드하기',
     uploadHint: 'PNG · JPG 지원 · 최대 8MB',
+    workflowStepUpload: '업로드',
+    workflowStepTranspose: '전조',
+    workflowStepDownload: '다운로드',
+    workflowCaption: '악보 한 장이면 충분합니다. 먼저 결과를 확인하세요.',
+    savePromptTitle: '이 결과를 저장하시겠어요?',
+    savePromptDescAnon: '로그인하면 작업 내역에 저장하고 다음에 다시 받을 수 있습니다.',
+    savePromptDescAuthed: '작업 내역에서 이 악보와 이전 변환 결과를 다시 확인할 수 있습니다.',
+    savePromptLogin: '무료로 저장',
+    savePromptHistory: '내 작업 보기',
     gptHybridLabel: 'AI 하이브리드 OCR 사용',
     gptHybridDesc: '더 느리고 비용이 들 수 있지만 코드 텍스트 검증을 추가합니다',
     gptHybridButton: 'AI로 개선',
@@ -127,7 +140,11 @@ export const translations = {
     logout: 'Logout',
 
     // Hero
-    subtitle: 'Experience the magic with Capomatic✨🪄',
+    subtitle: 'Transpose chord sheets into the key you need in seconds',
+    heroHeadline: 'Transpose any chord sheet in seconds',
+    heroSubcopy: 'Upload a screenshot or chart. Choose capo or key shift. Download a clean transposed sheet.',
+    heroTrust: 'PNG · JPG supported · no signup required to try',
+    heroPrimaryCta: 'Upload chord sheet',
 
     // Upload
     uploadSheet: 'Upload Sheet',
@@ -168,6 +185,15 @@ export const translations = {
     uploadYourScore: 'Upload Your Music Score',
     uploadCta: 'Upload Chord Sheet',
     uploadHint: 'PNG · JPG supported · max 8MB',
+    workflowStepUpload: 'Upload',
+    workflowStepTranspose: 'Transpose',
+    workflowStepDownload: 'Download',
+    workflowCaption: 'One sheet is enough. See the result before signing up.',
+    savePromptTitle: 'Save this result?',
+    savePromptDescAnon: 'Create a free account to keep this sheet in your history and download it again later.',
+    savePromptDescAuthed: 'Your rendered sheets are available from My Jobs whenever you need them.',
+    savePromptLogin: 'Save for free',
+    savePromptHistory: 'View My Jobs',
     gptHybridLabel: 'Use AI hybrid OCR',
     gptHybridDesc: 'Slower and may cost more, but adds chord text verification',
     gptHybridButton: 'Improve with AI',

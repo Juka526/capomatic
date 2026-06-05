@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { Upload, Download, Loader2, AlertCircle } from "lucide-react";
+import { Upload, Download, Loader2, AlertCircle, ArrowRight, CheckCircle2 } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
 import LoginButton from "@/components/LoginButton";
@@ -54,7 +54,7 @@ function nearestRow(rows: Row[], y: number): Row | null {
 }
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, login } = useAuth();
   const { t } = useLang();
 
   const [file, setFile] = useState<File | null>(null);
@@ -498,40 +498,54 @@ export default function Home() {
           </nav>
         </div>
 
-        {/* Hero */}
-        <div style={{ textAlign: "center", padding: "44px 24px 0" }}>
-          <h1 style={{ margin: "0 0 6px", fontSize: "clamp(2rem, 5vw, 2.8rem)", fontWeight: 900, fontStyle: "italic", fontFamily: "Georgia, serif", letterSpacing: "-0.02em", color: "#1a1a2e" }}>
-            Capo<span style={{ color: "#e05d00" }}>matic</span>
-          </h1>
-          <p style={{ margin: 0, fontSize: "0.84rem", color: "#aaa", fontWeight: 500, letterSpacing: "0.03em" }}>
-            {t.subtitle}
-          </p>
-        </div>
-
-        {/* Upload zone — only shown before a file is selected */}
+        {/* Upload-first hero */}
         {!file && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 0 20px", gap: 10 }}>
+          <section style={{
+            maxWidth: 900,
+            margin: "0 auto",
+            padding: "54px 20px 26px",
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr)",
+            justifyItems: "center",
+            textAlign: "center",
+          }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 16, padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(0,0,0,0.06)", color: "#7d6a57", fontSize: "0.72rem", fontWeight: 800 }}>
+              <CheckCircle2 size={14} color="#1a9e50" />
+              {t.workflowCaption}
+            </div>
+            <h1 style={{ maxWidth: 720, margin: "0 0 12px", fontSize: "clamp(2.45rem, 7vw, 4.35rem)", lineHeight: 0.98, fontWeight: 900, color: "#171923", letterSpacing: 0 }}>
+              {t.heroHeadline}
+            </h1>
+            <p style={{ maxWidth: 610, margin: "0 auto 24px", fontSize: "clamp(1rem, 2.2vw, 1.16rem)", lineHeight: 1.55, color: "#5f5a52", fontWeight: 600 }}>
+              {t.heroSubcopy}
+            </p>
             <button
               onClick={() => fileInputRef.current?.click()}
               style={{
-                display: "flex", alignItems: "center", gap: 12,
-                background: "linear-gradient(135deg, #8A6958 0%, #7a5c4c 100%)",
+                display: "inline-flex", alignItems: "center", gap: 10,
+                background: "linear-gradient(135deg, #e05d00, #c84b00)",
                 border: "none", cursor: "pointer",
-                borderRadius: 14, padding: "14px 32px",
-                color: "white", fontSize: "0.9rem", fontWeight: 700,
-                boxShadow: "0 4px 16px rgba(138,105,88,0.35)",
-                transition: "all 0.25s ease",
+                borderRadius: 12, padding: "15px 24px",
+                color: "white", fontSize: "0.98rem", fontWeight: 900,
+                boxShadow: "0 10px 28px rgba(224,93,0,0.28)",
+                transition: "transform 0.18s ease, box-shadow 0.18s ease",
               }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.03)"; e.currentTarget.style.background = "linear-gradient(135deg, #7a5c4c 0%, #6b4f40 100%)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = "linear-gradient(135deg, #8A6958 0%, #7a5c4c 100%)"; }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 14px 34px rgba(224,93,0,0.34)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 10px 28px rgba(224,93,0,0.28)"; }}
             >
-              <Upload size={20} color="white" strokeWidth={2} />
-              {t.uploadYourScore}
+              <Upload size={20} color="white" strokeWidth={2.4} />
+              {t.heroPrimaryCta}
+              <ArrowRight size={18} color="white" strokeWidth={2.4} />
             </button>
+            <p style={{ margin: "10px 0 18px", fontSize: "0.78rem", color: "#8b8174", fontWeight: 700 }}>
+              {t.heroTrust}
+            </p>
             <label style={{
               display: "flex", alignItems: "flex-start", gap: 9,
-              maxWidth: 320, cursor: "pointer", userSelect: "none",
+              maxWidth: 360, cursor: "pointer", userSelect: "none",
               color: "#4f4a43", fontSize: "0.78rem", lineHeight: 1.35,
+              padding: "10px 12px", borderRadius: 12,
+              background: "rgba(255,255,255,0.5)", border: "1px solid rgba(0,0,0,0.05)",
             }}>
               <input
                 type="checkbox"
@@ -544,12 +558,27 @@ export default function Home() {
                 <span style={{ display: "block", color: "#8a8174", fontSize: "0.72rem", marginTop: 2 }}>{t.gptHybridDesc}</span>
               </span>
             </label>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flexWrap: "wrap", marginTop: 18, color: "#7d6a57", fontSize: "0.75rem", fontWeight: 800 }}>
+              <span>{t.workflowStepUpload}</span>
+              <ArrowRight size={13} />
+              <span>{t.workflowStepTranspose}</span>
+              <ArrowRight size={13} />
+              <span>{t.workflowStepDownload}</span>
+            </div>
             {error && (
-              <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#d4183d", fontSize: "0.78rem", fontWeight: 600 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 14, color: "#d4183d", fontSize: "0.78rem", fontWeight: 600 }}>
                 <AlertCircle size={13} />
                 {error}
               </div>
             )}
+          </section>
+        )}
+
+        {file && (
+          <div style={{ textAlign: "center", padding: "30px 24px 0" }}>
+            <h1 style={{ margin: "0 0 6px", fontSize: "clamp(1.8rem, 5vw, 2.5rem)", fontWeight: 900, color: "#1a1a2e", letterSpacing: 0 }}>
+              {t.subtitle}
+            </h1>
           </div>
         )}
 
@@ -869,6 +898,56 @@ export default function Home() {
                 <Download size={15} />
                 {t.downloadPng}
               </button>
+
+              <div style={{
+                marginTop: 12,
+                padding: "13px 14px",
+                borderRadius: 12,
+                background: "rgba(255,255,255,0.72)",
+                border: "1px solid rgba(0,0,0,0.07)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap",
+              }}>
+                <div style={{ minWidth: 220, flex: "1 1 260px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3, color: "#1a1a2e", fontSize: "0.82rem", fontWeight: 900 }}>
+                    <CheckCircle2 size={15} color="#1a9e50" />
+                    {t.savePromptTitle}
+                  </div>
+                  <p style={{ margin: 0, color: "#70685e", fontSize: "0.75rem", lineHeight: 1.4, fontWeight: 600 }}>
+                    {isAuthenticated ? t.savePromptDescAuthed : t.savePromptDescAnon}
+                  </p>
+                </div>
+                {isAuthenticated ? (
+                  <Link
+                    href="/history"
+                    style={{
+                      display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+                      borderRadius: 10, padding: "9px 13px",
+                      background: "#1a1a2e", color: "white", textDecoration: "none",
+                      fontSize: "0.76rem", fontWeight: 900,
+                    }}
+                  >
+                    {t.savePromptHistory}
+                    <ArrowRight size={14} />
+                  </Link>
+                ) : (
+                  <button
+                    onClick={login}
+                    style={{
+                      display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+                      borderRadius: 10, padding: "9px 13px",
+                      border: "none", background: "#1a1a2e", color: "white",
+                      cursor: "pointer", fontSize: "0.76rem", fontWeight: 900,
+                    }}
+                  >
+                    {t.savePromptLogin}
+                    <ArrowRight size={14} />
+                  </button>
+                )}
+              </div>
 
               {/* Chord editor */}
               {editableChords.length > 0 && (
