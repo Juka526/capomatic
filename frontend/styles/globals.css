@@ -39,7 +39,7 @@ html, body {
 
 @media (max-width: 640px) {
   .upload-hero {
-    padding: 34px 16px 18px !important;
+    padding: 38px 16px 16px !important;
   }
 
   .upload-hero-badge {
@@ -52,17 +52,10 @@ html, body {
   }
 
   .upload-hero-title {
-    font-size: 2.42rem !important;
-    line-height: 1.02 !important;
+    font-size: 2.36rem !important;
+    line-height: 1.04 !important;
     max-width: 360px !important;
-    margin-bottom: 10px !important;
-  }
-
-  .upload-hero-copy {
-    font-size: 0.96rem !important;
-    line-height: 1.42 !important;
     margin-bottom: 18px !important;
-    max-width: 340px !important;
   }
 
   .primary-upload-cta {
@@ -73,8 +66,9 @@ html, body {
   }
 
   .ai-option {
-    width: min(100%, 340px);
+    width: auto;
     box-sizing: border-box;
+    padding: 8px 12px !important;
   }
 
   .workflow-cues {
@@ -130,14 +124,6 @@ html, body {
     padding: 12px !important;
   }
 
-  .save-result-prompt {
-    align-items: stretch !important;
-  }
-
-  .save-result-action {
-    width: 100%;
-    min-height: 42px;
-  }
 }
 
 @media (max-width: 380px) {

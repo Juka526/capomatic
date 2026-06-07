@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { Upload, Download, Loader2, AlertCircle, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Upload, Download, Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
 import LoginButton from "@/components/LoginButton";
@@ -54,7 +54,7 @@ function nearestRow(rows: Row[], y: number): Row | null {
 }
 
 export default function Home() {
-  const { user, isAuthenticated, login } = useAuth();
+  const { user } = useAuth();
   const { t } = useLang();
 
   const [file, setFile] = useState<File | null>(null);
@@ -501,24 +501,17 @@ export default function Home() {
         {/* Upload-first hero */}
         {!file && (
           <section className="upload-hero" style={{
-            maxWidth: 900,
+            maxWidth: 760,
             margin: "0 auto",
-            padding: "54px 20px 26px",
+            padding: "46px 20px 22px",
             display: "grid",
             gridTemplateColumns: "minmax(0, 1fr)",
             justifyItems: "center",
             textAlign: "center",
           }}>
-            <div className="upload-hero-badge" style={{ display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 16, padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(0,0,0,0.06)", color: "#7d6a57", fontSize: "0.72rem", fontWeight: 800 }}>
-              <CheckCircle2 size={14} color="#1a9e50" />
-              {t.workflowCaption}
-            </div>
-            <h1 className="upload-hero-title" style={{ maxWidth: 720, margin: "0 0 12px", fontSize: "clamp(2.45rem, 7vw, 4.35rem)", lineHeight: 0.98, fontWeight: 900, color: "#171923", letterSpacing: 0 }}>
+            <h1 className="upload-hero-title" style={{ maxWidth: 680, margin: "0 0 20px", fontSize: "clamp(2.45rem, 7vw, 4.1rem)", lineHeight: 1, fontWeight: 900, color: "#171923", letterSpacing: 0 }}>
               {t.heroHeadline}
             </h1>
-            <p className="upload-hero-copy" style={{ maxWidth: 610, margin: "0 auto 24px", fontSize: "clamp(1rem, 2.2vw, 1.16rem)", lineHeight: 1.55, color: "#5f5a52", fontWeight: 600 }}>
-              {t.heroSubcopy}
-            </p>
             <button
               className="primary-upload-cta"
               onClick={() => fileInputRef.current?.click()}
@@ -552,20 +545,12 @@ export default function Home() {
                 type="checkbox"
                 checked={useGptHybrid}
                 onChange={e => setUseGptHybrid(e.target.checked)}
-                style={{ marginTop: 2, accentColor: "#0b4ea2" }}
+                style={{ marginTop: 1, accentColor: "#0b4ea2" }}
               />
               <span>
                 <span style={{ display: "block", fontWeight: 800 }}>{t.gptHybridLabel}</span>
-                <span style={{ display: "block", color: "#8a8174", fontSize: "0.72rem", marginTop: 2 }}>{t.gptHybridDesc}</span>
               </span>
             </label>
-            <div className="workflow-cues" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flexWrap: "wrap", marginTop: 18, color: "#7d6a57", fontSize: "0.75rem", fontWeight: 800 }}>
-              <span>{t.workflowStepUpload}</span>
-              <ArrowRight size={13} />
-              <span>{t.workflowStepTranspose}</span>
-              <ArrowRight size={13} />
-              <span>{t.workflowStepDownload}</span>
-            </div>
             {error && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 14, color: "#d4183d", fontSize: "0.78rem", fontWeight: 600 }}>
                 <AlertCircle size={13} />
@@ -899,58 +884,6 @@ export default function Home() {
                 <Download size={15} />
                 {t.downloadPng}
               </button>
-
-              <div className="save-result-prompt" style={{
-                marginTop: 12,
-                padding: "13px 14px",
-                borderRadius: 12,
-                background: "rgba(255,255,255,0.72)",
-                border: "1px solid rgba(0,0,0,0.07)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 12,
-                flexWrap: "wrap",
-              }}>
-                <div style={{ minWidth: 220, flex: "1 1 260px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3, color: "#1a1a2e", fontSize: "0.82rem", fontWeight: 900 }}>
-                    <CheckCircle2 size={15} color="#1a9e50" />
-                    {t.savePromptTitle}
-                  </div>
-                  <p style={{ margin: 0, color: "#70685e", fontSize: "0.75rem", lineHeight: 1.4, fontWeight: 600 }}>
-                    {isAuthenticated ? t.savePromptDescAuthed : t.savePromptDescAnon}
-                  </p>
-                </div>
-                {isAuthenticated ? (
-                  <Link
-                    className="save-result-action"
-                    href="/history"
-                    style={{
-                      display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
-                      borderRadius: 10, padding: "9px 13px",
-                      background: "#1a1a2e", color: "white", textDecoration: "none",
-                      fontSize: "0.76rem", fontWeight: 900,
-                    }}
-                  >
-                    {t.savePromptHistory}
-                    <ArrowRight size={14} />
-                  </Link>
-                ) : (
-                  <button
-                    className="save-result-action"
-                    onClick={login}
-                    style={{
-                      display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
-                      borderRadius: 10, padding: "9px 13px",
-                      border: "none", background: "#1a1a2e", color: "white",
-                      cursor: "pointer", fontSize: "0.76rem", fontWeight: 900,
-                    }}
-                  >
-                    {t.savePromptLogin}
-                    <ArrowRight size={14} />
-                  </button>
-                )}
-              </div>
 
               {/* Chord editor */}
               {editableChords.length > 0 && (
