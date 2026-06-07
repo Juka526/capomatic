@@ -500,7 +500,7 @@ export default function Home() {
 
         {/* Upload-first hero */}
         {!file && (
-          <section style={{
+          <section className="upload-hero" style={{
             maxWidth: 900,
             margin: "0 auto",
             padding: "54px 20px 26px",
@@ -509,17 +509,18 @@ export default function Home() {
             justifyItems: "center",
             textAlign: "center",
           }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 16, padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(0,0,0,0.06)", color: "#7d6a57", fontSize: "0.72rem", fontWeight: 800 }}>
+            <div className="upload-hero-badge" style={{ display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 16, padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(0,0,0,0.06)", color: "#7d6a57", fontSize: "0.72rem", fontWeight: 800 }}>
               <CheckCircle2 size={14} color="#1a9e50" />
               {t.workflowCaption}
             </div>
-            <h1 style={{ maxWidth: 720, margin: "0 0 12px", fontSize: "clamp(2.45rem, 7vw, 4.35rem)", lineHeight: 0.98, fontWeight: 900, color: "#171923", letterSpacing: 0 }}>
+            <h1 className="upload-hero-title" style={{ maxWidth: 720, margin: "0 0 12px", fontSize: "clamp(2.45rem, 7vw, 4.35rem)", lineHeight: 0.98, fontWeight: 900, color: "#171923", letterSpacing: 0 }}>
               {t.heroHeadline}
             </h1>
-            <p style={{ maxWidth: 610, margin: "0 auto 24px", fontSize: "clamp(1rem, 2.2vw, 1.16rem)", lineHeight: 1.55, color: "#5f5a52", fontWeight: 600 }}>
+            <p className="upload-hero-copy" style={{ maxWidth: 610, margin: "0 auto 24px", fontSize: "clamp(1rem, 2.2vw, 1.16rem)", lineHeight: 1.55, color: "#5f5a52", fontWeight: 600 }}>
               {t.heroSubcopy}
             </p>
             <button
+              className="primary-upload-cta"
               onClick={() => fileInputRef.current?.click()}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 10,
@@ -540,7 +541,7 @@ export default function Home() {
             <p style={{ margin: "10px 0 18px", fontSize: "0.78rem", color: "#8b8174", fontWeight: 700 }}>
               {t.heroTrust}
             </p>
-            <label style={{
+            <label className="ai-option" style={{
               display: "flex", alignItems: "flex-start", gap: 9,
               maxWidth: 360, cursor: "pointer", userSelect: "none",
               color: "#4f4a43", fontSize: "0.78rem", lineHeight: 1.35,
@@ -558,7 +559,7 @@ export default function Home() {
                 <span style={{ display: "block", color: "#8a8174", fontSize: "0.72rem", marginTop: 2 }}>{t.gptHybridDesc}</span>
               </span>
             </label>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flexWrap: "wrap", marginTop: 18, color: "#7d6a57", fontSize: "0.75rem", fontWeight: 800 }}>
+            <div className="workflow-cues" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flexWrap: "wrap", marginTop: 18, color: "#7d6a57", fontSize: "0.75rem", fontWeight: 800 }}>
               <span>{t.workflowStepUpload}</span>
               <ArrowRight size={13} />
               <span>{t.workflowStepTranspose}</span>
@@ -575,8 +576,8 @@ export default function Home() {
         )}
 
         {file && (
-          <div style={{ textAlign: "center", padding: "30px 24px 0" }}>
-            <h1 style={{ margin: "0 0 6px", fontSize: "clamp(1.8rem, 5vw, 2.5rem)", fontWeight: 900, color: "#1a1a2e", letterSpacing: 0 }}>
+          <div className="active-title-wrap" style={{ textAlign: "center", padding: "30px 24px 0" }}>
+            <h1 className="active-title" style={{ margin: "0 0 6px", fontSize: "clamp(1.8rem, 5vw, 2.5rem)", fontWeight: 900, color: "#1a1a2e", letterSpacing: 0 }}>
               {t.subtitle}
             </h1>
           </div>
@@ -584,7 +585,7 @@ export default function Home() {
 
         {/* Active info bar — shown once a file is loaded */}
         {file && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 20px 16px", gap: 10 }}>
+          <div className="active-info-bar" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 20px 16px", gap: 10 }}>
             {detecting && (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, width: 260 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#e05d00", fontSize: "0.8rem", fontWeight: 600 }}>
@@ -679,8 +680,8 @@ export default function Home() {
         </section>
 
         {/* Capo selector — single section, responsive grid */}
-        <div style={{ maxWidth: 560, margin: "16px auto 0", padding: "0 20px" }}>
-          <div style={{ background: "rgba(255,255,255,0.55)", borderRadius: 16, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
+        <div className="transpose-selector" style={{ maxWidth: 560, margin: "16px auto 0", padding: "0 20px" }}>
+          <div className="transpose-panel" style={{ background: "rgba(255,255,255,0.55)", borderRadius: 16, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#a09070", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                 {t.capoPosition}
@@ -719,8 +720,8 @@ export default function Home() {
         </div>
 
         {/* Transpose-up selector — positive semitone shifts without capo info */}
-        <div style={{ maxWidth: 560, margin: "12px auto 0", padding: "0 20px" }}>
-          <div style={{ background: "rgba(255,255,255,0.45)", borderRadius: 16, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.7)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+        <div className="transpose-selector" style={{ maxWidth: 560, margin: "12px auto 0", padding: "0 20px" }}>
+          <div className="transpose-panel" style={{ background: "rgba(255,255,255,0.45)", borderRadius: 16, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.7)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#a09070", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                 {t.transposeUp}
@@ -759,7 +760,7 @@ export default function Home() {
 
         {/* Generate button — below transpose selectors, when a shift is selected */}
         {detectionId && !detecting && semitones !== 0 && (
-          <div style={{ maxWidth: 400, margin: "20px auto 0", padding: "0 20px" }}>
+          <div className="generate-wrap" style={{ maxWidth: 400, margin: "20px auto 0", padding: "0 20px" }}>
             <button
               onClick={handleConvert}
               disabled={rendering}
@@ -782,8 +783,8 @@ export default function Home() {
 
         {/* Result section */}
         {(replaceResult || aboveResult) && (
-          <div ref={resultRef} style={{ maxWidth: 720, margin: "32px auto 48px", padding: "0 20px" }}>
-            <div style={{ background: "rgba(230, 226, 219, 0.5)", borderRadius: 18, padding: "20px 20px 20px", border: "1px solid rgba(0,0,0,0.05)" }}>
+          <div ref={resultRef} className="result-wrap" style={{ maxWidth: 720, margin: "32px auto 48px", padding: "0 20px" }}>
+            <div className="result-card" style={{ background: "rgba(230, 226, 219, 0.5)", borderRadius: 18, padding: "20px 20px 20px", border: "1px solid rgba(0,0,0,0.05)" }}>
               {/* Replace / Above toggle */}
               <div style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(0,0,0,0.04)", borderRadius: 10, padding: 4 }}>
                 {(["replace", "above"] as const).map(tab => (
@@ -899,7 +900,7 @@ export default function Home() {
                 {t.downloadPng}
               </button>
 
-              <div style={{
+              <div className="save-result-prompt" style={{
                 marginTop: 12,
                 padding: "13px 14px",
                 borderRadius: 12,
@@ -922,6 +923,7 @@ export default function Home() {
                 </div>
                 {isAuthenticated ? (
                   <Link
+                    className="save-result-action"
                     href="/history"
                     style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
@@ -935,6 +937,7 @@ export default function Home() {
                   </Link>
                 ) : (
                   <button
+                    className="save-result-action"
                     onClick={login}
                     style={{
                       display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,

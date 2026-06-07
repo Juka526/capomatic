@@ -37,6 +37,119 @@ html, body {
   }
 }
 
+@media (max-width: 640px) {
+  .upload-hero {
+    padding: 34px 16px 18px !important;
+  }
+
+  .upload-hero-badge {
+    max-width: 100%;
+    white-space: normal;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.25;
+    margin-bottom: 12px !important;
+  }
+
+  .upload-hero-title {
+    font-size: 2.42rem !important;
+    line-height: 1.02 !important;
+    max-width: 360px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .upload-hero-copy {
+    font-size: 0.96rem !important;
+    line-height: 1.42 !important;
+    margin-bottom: 18px !important;
+    max-width: 340px !important;
+  }
+
+  .primary-upload-cta {
+    width: min(100%, 340px);
+    justify-content: center;
+    padding: 14px 18px !important;
+    min-height: 52px;
+  }
+
+  .ai-option {
+    width: min(100%, 340px);
+    box-sizing: border-box;
+  }
+
+  .workflow-cues {
+    margin-top: 14px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .active-title-wrap {
+    padding: 22px 18px 0 !important;
+  }
+
+  .active-title {
+    font-size: 1.65rem !important;
+    line-height: 1.12 !important;
+  }
+
+  .active-info-bar {
+    padding: 16px 14px 12px !important;
+  }
+
+  .fretboard-section {
+    padding-top: 14px;
+  }
+
+  .transpose-selector {
+    padding: 0 12px !important;
+  }
+
+  .transpose-panel {
+    border-radius: 12px !important;
+    padding: 12px !important;
+  }
+
+  .capo-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .generate-wrap {
+    max-width: none !important;
+    padding: 0 12px !important;
+    margin-top: 16px !important;
+  }
+
+  .result-wrap {
+    padding: 0 10px !important;
+    margin-top: 24px !important;
+    margin-bottom: 34px !important;
+  }
+
+  .result-card {
+    border-radius: 12px !important;
+    padding: 12px !important;
+  }
+
+  .save-result-prompt {
+    align-items: stretch !important;
+  }
+
+  .save-result-action {
+    width: 100%;
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 380px) {
+  .upload-hero-title {
+    font-size: 2.16rem !important;
+  }
+
+  .primary-upload-cta {
+    font-size: 0.9rem !important;
+  }
+}
+
 /* Hamburger menu backdrop */
 .hamburger-backdrop {
   position: fixed;
