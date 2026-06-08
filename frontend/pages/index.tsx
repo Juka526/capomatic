@@ -58,8 +58,7 @@ export default function Home() {
   const { t } = useLang();
 
   const [file, setFile] = useState<File | null>(null);
-  const [selection, setSelection] = useState<number>(0); // capo/down transpose, 0 to 7
-  const [transposeUp, setTransposeUp] = useState<number>(0); // positive semitone transpose, 0 to 7
+  const [semitoneShift, setSemitoneShift] = useState<number>(0); // -7 to +7
   const [useGptHybrid, setUseGptHybrid] = useState(false);
   const [hybridRefining, setHybridRefining] = useState(false);
   const [hybridApplied, setHybridApplied] = useState(false);
@@ -107,8 +106,8 @@ export default function Home() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [menuOpen]);
 
-  const capoFret = selection > 0 ? selection : null;
-  const semitones = transposeUp > 0 ? transposeUp : -selection;
+  const capoFret = semitoneShift < 0 ? Math.abs(semitoneShift) : null;
+  const semitones = semitoneShift;
 
   const targetKey = useMemo(() => {
     if (!originalKey || semitones === 0) return originalKey;
@@ -186,19 +185,22 @@ export default function Home() {
     if (f.size > MAX_FILE_SIZE) { setError(t.fileTooLarge); return; }
     setFile(f);
     setError(null);
-    setSelection(0);
-    setTransposeUp(0);
+    setSemitoneShift(0);
     runDetection(f);
   }, [runDetection, t]);
 
-  const performRender = async (chordsOverride?: ChordItem[]) => {
+  const performRender = async (
+    chordsOverride?: ChordItem[],
+    semitoneOverride: number = semitones,
+    scrollToResult: boolean = true,
+  ) => {
     if (!detectionId) return;
     setRendering(true);
     setError(null);
     try {
       const formData = new FormData();
       formData.append("detection_id", detectionId);
-      formData.append("semitones", semitones.toString());
+      formData.append("semitones", semitoneOverride.toString());
       if (chordsOverride) {
         formData.append("chords_override", JSON.stringify(chordsOverride));
       }
@@ -208,18 +210,15 @@ export default function Home() {
       setReplaceResult(data.replace_image);
       setAboveResult(data.above_image);
       setActiveTab("replace");
-      saveToLocalHistory(file?.name, originalKey, data.target_key, semitones);
-      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+      saveToLocalHistory(file?.name, originalKey, data.target_key, semitoneOverride);
+      if (scrollToResult) {
+        setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t.failedConnect);
     } finally {
       setRendering(false);
     }
-  };
-
-  const handleConvert = async () => {
-    if (!detectionId || semitones === 0) return;
-    await performRender();
   };
 
   const saveToLocalHistory = (fileName: string | undefined, origKey: string | null, tgtKey: string | null, semi: number) => {
@@ -385,8 +384,7 @@ export default function Home() {
     setReplaceResult(null);
     setAboveResult(null);
     setError(null);
-    setSelection(0);
-    setTransposeUp(0);
+    setSemitoneShift(0);
     setDetectedChords([]);
     setEditableChords([]);
     setEditingIdx(null);
@@ -400,18 +398,20 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSelect = (value: number) => {
-    setSelection(value);
-    if (value > 0) setTransposeUp(0);
-    setReplaceResult(null);
-    setAboveResult(null);
+  const applySemitoneShift = async (value: number) => {
+    const next = Math.max(-7, Math.min(7, value));
+    if (next === semitoneShift || rendering || reRendering || hybridRefining) return;
+    setSemitoneShift(next);
+    if (next !== 0) {
+      await performRender(undefined, next, !(replaceResult || aboveResult));
+    } else {
+      setReplaceResult(null);
+      setAboveResult(null);
+    }
   };
 
-  const handleTransposeUpSelect = (value: number) => {
-    setTransposeUp(value);
-    if (value > 0) setSelection(0);
-    setReplaceResult(null);
-    setAboveResult(null);
+  const handleFretSelect = (fret: number) => {
+    void applySemitoneShift(-fret);
   };
 
   const activeResult = activeTab === "replace" ? replaceResult : aboveResult;
@@ -599,7 +599,7 @@ export default function Home() {
                     </span>
                     {semitones < 0 ? (
                       <span style={{ fontSize: "0.72rem", color: "#aaa", fontWeight: 600 }}>
-                        {t.capo} {selection}
+                        {t.capo} {Math.abs(semitones)}
                       </span>
                     ) : (
                       <span style={{ fontSize: "0.72rem", color: "#aaa", fontWeight: 600 }}>
@@ -661,110 +661,50 @@ export default function Home() {
 
         {/* Fretboard section — full width, no card, responsive padding via CSS */}
         <section className="fretboard-section">
-          <GuitarFretboard capoFret={capoFret} onFretSelect={detectionId && !detecting ? handleSelect : undefined} />
+          <GuitarFretboard capoFret={capoFret} onFretSelect={detectionId && !detecting ? handleFretSelect : undefined} />
         </section>
 
-        {/* Capo selector — single section, responsive grid */}
-        <div className="transpose-selector" style={{ maxWidth: 560, margin: "16px auto 0", padding: "0 20px" }}>
-          <div className="transpose-panel" style={{ background: "rgba(255,255,255,0.55)", borderRadius: 16, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#a09070", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+        {/* Semitone selector */}
+        <div className="transpose-selector" style={{ maxWidth: 360, margin: "16px auto 0", padding: "0 20px" }}>
+          <div className="transpose-panel" style={{ background: "rgba(255,255,255,0.55)", borderRadius: 16, padding: 12, border: "1px solid rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", display: "grid", gridTemplateColumns: "52px 1fr 52px", alignItems: "center", gap: 10 }}>
+            <button
+              onClick={() => applySemitoneShift(semitones - 1)}
+              disabled={!detectionId || detecting || rendering || semitones <= -7}
+              aria-label="Transpose down"
+              style={{
+                height: 44, borderRadius: 12,
+                border: "1.5px solid rgba(0,0,0,0.1)",
+                background: semitones < 0 ? "linear-gradient(135deg, #e05d00, #c84b00)" : "rgba(255,255,255,0.75)",
+                color: semitones < 0 ? "white" : "#3a4847",
+                fontSize: "1.35rem", fontWeight: 900,
+                cursor: detectionId && !detecting && !rendering && semitones > -7 ? "pointer" : "not-allowed",
+                opacity: detectionId && !detecting && semitones > -7 ? 1 : 0.45,
+              }}
+            >-</button>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "0.68rem", fontWeight: 800, color: "#a09070", letterSpacing: "0.08em", textTransform: "uppercase" }}>
                 {t.capoPosition}
               </div>
-              {(!detectionId || detecting) && (
-                <span style={{ fontSize: "0.68rem", color: "#c0b090", fontStyle: "italic" }}>{t.uploadFirst}</span>
-              )}
-            </div>
-            <div className="capo-grid">
-              {[0, 1, 2, 3, 4, 5, 6, 7].map(f => {
-                const active = selection === f;
-                return (
-                  <button
-                    key={f}
-                    onClick={() => handleSelect(f)}
-                    disabled={!detectionId || detecting}
-                    style={{
-                      padding: "10px 4px", borderRadius: 10,
-                      border: active ? "2px solid #e05d00" : "1.5px solid rgba(0,0,0,0.1)",
-                      background: active ? "linear-gradient(135deg, #e05d00, #c84b00)" : "rgba(255,255,255,0.6)",
-                      color: active ? "white" : "#555",
-                      fontWeight: 800, textAlign: "center" as const,
-                      cursor: detectionId && !detecting ? "pointer" : "not-allowed",
-                      opacity: detectionId && !detecting ? 1 : 0.4,
-                      boxShadow: active ? "0 3px 10px rgba(224,93,0,0.3)" : "0 1px 3px rgba(0,0,0,0.06)",
-                      transition: "all 0.18s",
-                    }}
-                  >
-                    <div style={{ fontSize: "0.95rem" }}>{f === 0 ? t.open : f}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-        </div>
-
-        {/* Transpose-up selector — positive semitone shifts without capo info */}
-        <div className="transpose-selector" style={{ maxWidth: 560, margin: "12px auto 0", padding: "0 20px" }}>
-          <div className="transpose-panel" style={{ background: "rgba(255,255,255,0.45)", borderRadius: 16, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.7)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "#a09070", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                {t.transposeUp}
+              <div style={{ marginTop: 3, fontSize: "1.05rem", fontWeight: 900, color: "#1a1a2e" }}>
+                {rendering ? t.rendering : semitones > 0 ? `+${semitones}` : semitones}
               </div>
-              {(!detectionId || detecting) && (
-                <span style={{ fontSize: "0.68rem", color: "#c0b090", fontStyle: "italic" }}>{t.uploadFirst}</span>
-              )}
             </div>
-            <div className="capo-grid">
-              {[0, 1, 2, 3, 4, 5, 6, 7].map(step => {
-                const active = transposeUp === step;
-                return (
-                  <button
-                    key={step}
-                    onClick={() => handleTransposeUpSelect(step)}
-                    disabled={!detectionId || detecting}
-                    style={{
-                      padding: "10px 4px", borderRadius: 10,
-                      border: active ? "2px solid #0b4ea2" : "1.5px solid rgba(0,0,0,0.1)",
-                      background: active ? "linear-gradient(135deg, #0b4ea2, #093b7a)" : "rgba(255,255,255,0.6)",
-                      color: active ? "white" : "#555",
-                      fontWeight: 800, textAlign: "center" as const,
-                      cursor: detectionId && !detecting ? "pointer" : "not-allowed",
-                      opacity: detectionId && !detecting ? 1 : 0.4,
-                      boxShadow: active ? "0 3px 10px rgba(11,78,162,0.25)" : "0 1px 3px rgba(0,0,0,0.06)",
-                      transition: "all 0.18s",
-                    }}
-                  >
-                    <div style={{ fontSize: "0.95rem" }}>{step === 0 ? t.open : t.transposeUpShort(step)}</div>
-                  </button>
-                );
-              })}
-            </div>
+            <button
+              onClick={() => applySemitoneShift(semitones + 1)}
+              disabled={!detectionId || detecting || rendering || semitones >= 7}
+              aria-label="Transpose up"
+              style={{
+                height: 44, borderRadius: 12,
+                border: "1.5px solid rgba(0,0,0,0.1)",
+                background: semitones > 0 ? "linear-gradient(135deg, #0b4ea2, #093b7a)" : "rgba(255,255,255,0.75)",
+                color: semitones > 0 ? "white" : "#3a4847",
+                fontSize: "1.35rem", fontWeight: 900,
+                cursor: detectionId && !detecting && !rendering && semitones < 7 ? "pointer" : "not-allowed",
+                opacity: detectionId && !detecting && semitones < 7 ? 1 : 0.45,
+              }}
+            >+</button>
           </div>
         </div>
-
-        {/* Generate button — below transpose selectors, when a shift is selected */}
-        {detectionId && !detecting && semitones !== 0 && (
-          <div className="generate-wrap" style={{ maxWidth: 400, margin: "20px auto 0", padding: "0 20px" }}>
-            <button
-              onClick={handleConvert}
-              disabled={rendering}
-              style={{
-                width: "100%", padding: "13px 20px", borderRadius: 12, border: "none",
-                background: rendering ? "linear-gradient(135deg, #aaa, #999)" : "linear-gradient(135deg, #e05d00, #c84b00)",
-                color: "white", fontSize: "0.9rem", fontWeight: 700,
-                cursor: rendering ? "not-allowed" : "pointer",
-                boxShadow: rendering ? "none" : "0 4px 16px rgba(224,93,0,0.28)",
-                transition: "all 0.2s",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              }}
-            >
-              {rendering ? (
-                <><Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />{t.rendering}</>
-              ) : t.generateSheet(semitones)}
-            </button>
-          </div>
-        )}
 
         {/* Result section */}
         {(replaceResult || aboveResult) && (

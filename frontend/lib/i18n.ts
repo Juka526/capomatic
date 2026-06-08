@@ -31,12 +31,9 @@ export const translations = {
     fret: '프렛',
     open: '오픈',
     capoPosition: '카포 위치',
-    transposeUp: '키 올리기',
-    transposeUpShort: (n: number) => `+${n}`,
     transposeUpInfo: (n: number) => `+${n} 반음`,
 
     // Options
-    generateSheet: (_semitones: number) => `악보 생성`,
     rendering: '렌더링 중…',
 
     // Result
@@ -157,12 +154,9 @@ export const translations = {
     fret: 'Fret',
     open: 'Open',
     capoPosition: 'Capo Position',
-    transposeUp: 'Transpose Up',
-    transposeUpShort: (n: number) => `+${n}`,
     transposeUpInfo: (n: number) => `+${n} semitones`,
 
     // Options
-    generateSheet: (_semitones: number) => `Generate`,
     rendering: 'Rendering…',
 
     // Result

@@ -7,6 +7,10 @@ html, body {
   background-color: #F5EDD8;
 }
 
+.upload-hero-title {
+  white-space: nowrap;
+}
+
 /* Fretboard section — responsive padding */
 .fretboard-section {
   width: 100%;
@@ -42,20 +46,12 @@ html, body {
     padding: 38px 16px 16px !important;
   }
 
-  .upload-hero-badge {
-    max-width: 100%;
-    white-space: normal;
-    justify-content: center;
-    text-align: center;
-    line-height: 1.25;
-    margin-bottom: 12px !important;
-  }
-
   .upload-hero-title {
-    font-size: 2.36rem !important;
-    line-height: 1.04 !important;
-    max-width: 360px !important;
+    font-size: clamp(1.58rem, 8vw, 2.12rem) !important;
+    line-height: 1.08 !important;
+    max-width: 100% !important;
     margin-bottom: 18px !important;
+    white-space: nowrap;
   }
 
   .primary-upload-cta {
@@ -69,11 +65,6 @@ html, body {
     width: auto;
     box-sizing: border-box;
     padding: 8px 12px !important;
-  }
-
-  .workflow-cues {
-    margin-top: 14px !important;
-    font-size: 0.72rem !important;
   }
 
   .active-title-wrap {
@@ -107,12 +98,6 @@ html, body {
     gap: 7px;
   }
 
-  .generate-wrap {
-    max-width: none !important;
-    padding: 0 12px !important;
-    margin-top: 16px !important;
-  }
-
   .result-wrap {
     padding: 0 10px !important;
     margin-top: 24px !important;
@@ -128,7 +113,7 @@ html, body {
 
 @media (max-width: 380px) {
   .upload-hero-title {
-    font-size: 2.16rem !important;
+    font-size: 1.5rem !important;
   }
 
   .primary-upload-cta {
