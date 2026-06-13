@@ -310,6 +310,36 @@ class TestRenderEndpoint:
         assert data["semitones"] == -3
         assert "render_ms" in data
 
+    @patch("backend.api.main.detect_chords_hybrid")
+    def test_render_replace_mode_returns_only_replace_image(self, mock_detect):
+        mock_detect.return_value = (
+            [{"text": "Am", "confidence": 0.9, "bbox": [10, 20, 50, 40]}],
+            {"crop_mode": "staff_bands", "num_regions": 1,
+             "predict_ms": 10, "gate": {"pass": True}},
+        )
+        detect_resp = client.post(
+            "/detect",
+            files={"image": ("test.png", _png_bytes(), "image/png")},
+        )
+        detection_id = detect_resp.json()["detection_id"]
+
+        resp = client.post(
+            "/render",
+            data={"detection_id": detection_id, "semitones": "-3", "mode": "replace"},
+        )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["replace_image"].startswith("data:image/png;base64,")
+        assert data["above_image"] is None
+
+    def test_render_rejects_bad_mode(self):
+        resp = client.post(
+            "/render",
+            data={"detection_id": "x", "semitones": "-1", "mode": "fast"},
+        )
+        assert resp.status_code == 422
+
     def test_render_rejects_missing_detection_id(self):
         resp = client.post(
             "/render",

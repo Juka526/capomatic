@@ -7,6 +7,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+ENV CHORDTAYLOR_OCR_DET_MODEL=mobile \
+    PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True \
+    PADDLE_MAX_STITCHED_PIXELS=400000 \
+    HYBRID_PADDLE_HIGH_RECALL_GAP_FILL=0 \
+    HYBRID_GPT_CONTACT_MAX_SIDE=1200 \
+    HYBRID_GPT_CROP_BATCH_SIZE=30 \
+    RENDER_USE_INPAINT=0
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 

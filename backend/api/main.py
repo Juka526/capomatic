@@ -356,14 +356,16 @@ async def refine_detection(
 async def render(
     detection_id: str = Form(...),
     semitones: int = Form(0),
+    mode: str = Form("both"),
     chords_override: Optional[str] = Form(None),
 ) -> dict:
-    """Transpose and render both overlay modes from a cached detection.
+    """Transpose and render overlay image(s) from a cached detection.
 
     Parameters
     ----------
     detection_id    : ID returned by ``/detect``.
     semitones       : Semitone shift applied to every detected chord (-11 to 0).
+    mode            : "replace", "above", or "both" (default).
     chords_override : Optional JSON array of manually edited chords
                       ``[{"text": "Am", "bbox": [x1,y1,x2,y2]}, ...]``.
                       When provided, replaces the cached OCR items.
@@ -375,6 +377,11 @@ async def render(
         raise HTTPException(
             status_code=422,
             detail=f"semitones must be between -11 and 11, got {semitones}",
+        )
+    if mode not in {"replace", "above", "both"}:
+        raise HTTPException(
+            status_code=422,
+            detail=f"mode must be one of: replace, above, both; got {mode!r}",
         )
 
     cached = _cache_get(detection_id)
@@ -408,17 +415,30 @@ async def render(
 
     t_start = time.perf_counter()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-        fut_replace = pool.submit(
-            _render_to_base64, img, chords, "replace",
+    replace_b64: str | None = None
+    above_b64: str | None = None
+    if mode == "both":
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            fut_replace = pool.submit(
+                _render_to_base64, img, chords, "replace",
+                original_key, target_key, semitones,
+            )
+            fut_above = pool.submit(
+                _render_to_base64, img, chords, "above",
+                original_key, target_key, semitones,
+            )
+            replace_b64 = fut_replace.result()
+            above_b64 = fut_above.result()
+    elif mode == "replace":
+        replace_b64 = _render_to_base64(
+            img, chords, "replace",
             original_key, target_key, semitones,
         )
-        fut_above = pool.submit(
-            _render_to_base64, img, chords, "above",
+    else:
+        above_b64 = _render_to_base64(
+            img, chords, "above",
             original_key, target_key, semitones,
         )
-        replace_b64 = fut_replace.result()
-        above_b64 = fut_above.result()
 
     elapsed_ms = int((time.perf_counter() - t_start) * 1000)
 

@@ -58,6 +58,7 @@ _DEFAULT_INK = (30, 30, 30)
 _HEADER_BG  = (255, 255, 255, 220)   # info header background
 _REPLACE_LABEL_BG = (255, 255, 255)
 _CLARITY_THRESHOLD = 0.58
+_RENDER_USE_INPAINT = os.environ.get("RENDER_USE_INPAINT", "0") == "1"
 
 # Quality/modifier suffixes rendered in smaller font.
 _SMALL_SUFFIXES = ("sus", "dim", "aug")
@@ -1103,25 +1104,27 @@ def _render_replace(
     protocol = _choose_render_protocol(rows, img)
     font_size = _render_font_size(chords)
 
-    # ------------------------------------------------------------------
-    # Pass 2 — cover original chord glyphs with sampled local paper colour.
-    # ------------------------------------------------------------------
     composited = img.copy().convert("RGB")
     ink_by_id: dict[int, tuple[int, int, int]] = {}
     for chord in chords:
-        x1, y1, x2, y2 = chord["bbox"]
-        box_x1 = max(0, x1)
-        box_y1 = max(0, y1)
-        box_x2 = min(W, x2)
-        box_y2 = min(H, y2)
-        fill = _sample_background(img, [box_x1, box_y1, box_x2, box_y2])
         ink_by_id[id(chord)] = _DARK_BLUE
-        _erase_glyph_pixels(
-            composited,
-            img,
-            [box_x1, box_y1, box_x2, box_y2],
-            fill,
-        )
+
+    if _RENDER_USE_INPAINT:
+        # Optional quality path. Disabled by default on hosted CPU because
+        # OpenCV inpainting every chord dominates replace-mode latency.
+        for chord in chords:
+            x1, y1, x2, y2 = chord["bbox"]
+            box_x1 = max(0, x1)
+            box_y1 = max(0, y1)
+            box_x2 = min(W, x2)
+            box_y2 = min(H, y2)
+            fill = _sample_background(img, [box_x1, box_y1, box_x2, box_y2])
+            _erase_glyph_pixels(
+                composited,
+                img,
+                [box_x1, box_y1, box_x2, box_y2],
+                fill,
+            )
 
     # ------------------------------------------------------------------
     # Pass 3 — draw text at one row-level y unless dense rows need x adjustment.

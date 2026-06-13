@@ -13,9 +13,10 @@ const MAX_FILE_SIZE = 8 * 1024 * 1024;
 const RENDER_CACHE_LIMIT = 5;
 
 type ChordItem = { text: string; bbox: number[] | null };
+type RenderMode = "replace" | "above" | "both";
 type RenderResult = {
-  replace_image: string;
-  above_image: string;
+  replace_image: string | null;
+  above_image: string | null;
   original_key: string | null;
   target_key: string | null;
   semitones: number;
@@ -229,67 +230,118 @@ export default function Home() {
 
   const storeRenderCache = (key: string, data: RenderResult) => {
     const cache = renderCacheRef.current;
+    const previous = cache.get(key);
+    const merged: RenderResult = {
+      replace_image: data.replace_image ?? previous?.replace_image ?? null,
+      above_image: data.above_image ?? previous?.above_image ?? null,
+      original_key: data.original_key ?? previous?.original_key ?? null,
+      target_key: data.target_key ?? previous?.target_key ?? null,
+      semitones: data.semitones,
+    };
     cache.delete(key);
-    cache.set(key, data);
+    cache.set(key, merged);
     while (cache.size > RENDER_CACHE_LIMIT) {
       const oldest = cache.keys().next().value;
       if (!oldest) break;
       cache.delete(oldest);
     }
+    return merged;
+  };
+
+  const renderHasMode = (data: RenderResult, mode: RenderMode) => (
+    mode === "both"
+      ? Boolean(data.replace_image && data.above_image)
+      : mode === "replace"
+        ? Boolean(data.replace_image)
+        : Boolean(data.above_image)
+  );
+
+  const applyRenderResult = (data: RenderResult) => {
+    setReplaceResult(data.replace_image);
+    setAboveResult(data.above_image);
   };
 
   const fetchRenderResult = async (
     semi: number,
+    mode: RenderMode = "both",
     chordsOverride?: ChordItem[],
   ): Promise<RenderResult | null> => {
     const key = renderCacheKey(semi);
     if (!key || !detectionId) return null;
 
     const cached = renderCacheRef.current.get(key);
-    if (cached && !chordsOverride) {
+    if (cached && renderHasMode(cached, mode) && !chordsOverride) {
       renderCacheRef.current.delete(key);
       renderCacheRef.current.set(key, cached);
       return cached;
     }
 
-    const existing = inFlightRenderRef.current.get(key);
+    const requestKey = `${key}:${mode}`;
+    const existing = inFlightRenderRef.current.get(requestKey);
     if (existing && !chordsOverride) return existing;
 
     const request = (async () => {
       const formData = new FormData();
       formData.append("detection_id", detectionId);
       formData.append("semitones", semi.toString());
+      formData.append("mode", mode);
       if (chordsOverride) {
         formData.append("chords_override", JSON.stringify(chordsOverride));
       }
       const res = await fetch(`${API_URL}/render`, { method: "POST", body: formData });
       if (!res.ok) throw new Error((await res.text()) || `Server error (${res.status})`);
       const data = await res.json() as RenderResult;
-      storeRenderCache(key, data);
-      return data;
+      return storeRenderCache(key, data);
     })();
 
-    if (!chordsOverride) inFlightRenderRef.current.set(key, request);
+    if (!chordsOverride) inFlightRenderRef.current.set(requestKey, request);
     try {
       return await request;
     } finally {
-      if (inFlightRenderRef.current.get(key) === request) {
-        inFlightRenderRef.current.delete(key);
+      if (inFlightRenderRef.current.get(requestKey) === request) {
+        inFlightRenderRef.current.delete(requestKey);
       }
     }
   };
 
-  const prefetchRender = (semi: number) => {
+  const prefetchRender = (semi: number, mode: RenderMode = activeTab) => {
     if (!detectionId || semi === 0 || detecting || hybridRefining || reRendering) return;
     const key = renderCacheKey(semi);
-    if (!key || renderCacheRef.current.has(key) || inFlightRenderRef.current.has(key)) return;
-    void fetchRenderResult(semi).catch(() => {});
+    const cached = key ? renderCacheRef.current.get(key) : null;
+    if (
+      !key
+      || (cached && renderHasMode(cached, mode))
+      || inFlightRenderRef.current.has(`${key}:${mode}`)
+    ) return;
+    void fetchRenderResult(semi, mode).catch(() => {});
   };
 
   const prefetchAdjacentRenders = (centerSemi: number) => {
     [centerSemi - 1, centerSemi + 1]
       .filter(semi => semi >= -7 && semi <= 7 && semi !== 0)
-      .forEach(prefetchRender);
+      .forEach(semi => prefetchRender(semi));
+  };
+
+  const fetchBackgroundMode = (semi: number, mode: "replace" | "above", version: number) => {
+    void fetchRenderResult(semi, mode)
+      .then(data => {
+        if (
+          !data
+          || selectedSemitoneRef.current !== semi
+          || editVersionRef.current !== version
+        ) return;
+        if (mode === "replace") setReplaceResult(data.replace_image);
+        if (mode === "above") setAboveResult(data.above_image);
+      })
+      .catch(() => {});
+  };
+
+  const fetchOtherModeInBackground = (
+    semi: number,
+    visibleMode: "replace" | "above",
+    version: number,
+  ) => {
+    fetchBackgroundMode(semi, visibleMode === "replace" ? "above" : "replace", version);
   };
 
   const performRender = async (
@@ -299,20 +351,20 @@ export default function Home() {
   ) => {
     if (!detectionId) return;
     const versionAtStart = editVersionRef.current;
+    const visibleMode = activeTab;
     setRendering(true);
     setRenderUpdating(false);
     setError(null);
     try {
-      const data = await fetchRenderResult(semitoneOverride, chordsOverride);
+      const data = await fetchRenderResult(semitoneOverride, visibleMode, chordsOverride);
       if (!data || versionAtStart !== editVersionRef.current) return;
-      setReplaceResult(data.replace_image);
-      setAboveResult(data.above_image);
+      applyRenderResult(data);
       setShowOriginal(false);
-      setActiveTab("replace");
       saveToLocalHistory(file?.name, originalKey, data.target_key, semitoneOverride);
       if (scrollToResult) {
         setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
       }
+      fetchOtherModeInBackground(semitoneOverride, visibleMode, versionAtStart);
       setTimeout(() => prefetchAdjacentRenders(semitoneOverride), 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.failedConnect);
@@ -344,11 +396,13 @@ export default function Home() {
     setReRendering(true);
     setError(null);
     try {
-      const data = await fetchRenderResult(semitones, editableChords);
+      const visibleMode = activeTab;
+      const versionAtStart = editVersionRef.current;
+      const data = await fetchRenderResult(semitones, visibleMode, editableChords);
       if (!data) return;
-      setReplaceResult(data.replace_image);
-      setAboveResult(data.above_image);
+      applyRenderResult(data);
       setShowOriginal(false);
+      fetchOtherModeInBackground(semitones, visibleMode, versionAtStart);
       setTimeout(() => prefetchAdjacentRenders(semitones), 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.failedConnect);
@@ -515,17 +569,18 @@ export default function Home() {
     if (next !== 0) {
       const key = renderCacheKey(next, versionAtStart);
       const cached = key ? renderCacheRef.current.get(key) : null;
-      if (key && cached) {
+      const visibleMode = activeTab;
+      if (key && cached && renderHasMode(cached, visibleMode)) {
         renderCacheRef.current.delete(key);
         renderCacheRef.current.set(key, cached);
-        setReplaceResult(cached.replace_image);
-        setAboveResult(cached.above_image);
+        applyRenderResult(cached);
         setShowOriginal(false);
         setRenderUpdating(false);
         saveToLocalHistory(file?.name, originalKey, cached.target_key, next);
         if (shouldScrollToResult) {
           setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
         }
+        fetchOtherModeInBackground(next, visibleMode, versionAtStart);
         setTimeout(() => prefetchAdjacentRenders(next), 0);
         return;
       }
@@ -533,19 +588,19 @@ export default function Home() {
       setRenderUpdating(true);
       setError(null);
       try {
-        const data = await fetchRenderResult(next);
+        const data = await fetchRenderResult(next, visibleMode);
         if (
           data
           && selectedSemitoneRef.current === next
           && versionAtStart === editVersionRef.current
         ) {
-          setReplaceResult(data.replace_image);
-          setAboveResult(data.above_image);
+          applyRenderResult(data);
           setShowOriginal(false);
           saveToLocalHistory(file?.name, originalKey, data.target_key, next);
           if (shouldScrollToResult) {
             setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
           }
+          fetchOtherModeInBackground(next, visibleMode, versionAtStart);
           setTimeout(() => prefetchAdjacentRenders(next), 0);
         }
       } catch (err) {
@@ -566,6 +621,39 @@ export default function Home() {
 
   const handleFretSelect = (fret: number) => {
     void applySemitoneShift(-fret);
+  };
+
+  const handleResultTabSelect = (tab: "replace" | "above") => {
+    setActiveTab(tab);
+    setShowOriginal(false);
+    if (!detectionId || semitones === 0) return;
+    const versionAtStart = editVersionRef.current;
+    const key = renderCacheKey(semitones, versionAtStart);
+    const cached = key ? renderCacheRef.current.get(key) : null;
+    if (cached && renderHasMode(cached, tab)) {
+      applyRenderResult(cached);
+      return;
+    }
+    setRenderUpdating(true);
+    void fetchRenderResult(semitones, tab)
+      .then(data => {
+        if (
+          !data
+          || selectedSemitoneRef.current !== semitones
+          || editVersionRef.current !== versionAtStart
+        ) return;
+        applyRenderResult(data);
+      })
+      .catch(err => {
+        if (selectedSemitoneRef.current === semitones) {
+          setError(err instanceof Error ? err.message : t.failedConnect);
+        }
+      })
+      .finally(() => {
+        if (selectedSemitoneRef.current === semitones) {
+          setRenderUpdating(false);
+        }
+      });
   };
 
   const activeResult = activeTab === "replace" ? replaceResult : aboveResult;
@@ -872,7 +960,7 @@ export default function Home() {
                 {(["replace", "above"] as const).map(tab => (
                   <button
                     key={tab}
-                    onClick={() => { setActiveTab(tab); setShowOriginal(false); }}
+                    onClick={() => handleResultTabSelect(tab)}
                     style={{
                       flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
                       borderRadius: 8,
