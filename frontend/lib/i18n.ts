@@ -35,10 +35,13 @@ export const translations = {
 
     // Options
     rendering: '렌더링 중…',
+    updating: '업데이트 중…',
 
     // Result
     replace: '교체',
     above: '위에',
+    viewOriginal: '원본 보기',
+    viewRendered: '결과 보기',
     downloadPng: 'PNG 다운로드',
 
     // Empty state
@@ -55,7 +58,7 @@ export const translations = {
     workflowStepTranspose: '전조',
     workflowStepDownload: '다운로드',
     workflowCaption: '',
-    gptHybridLabel: 'AI OCR',
+    gptHybridLabel: 'AI로 더욱 정확하게',
     gptHybridDesc: '',
     gptHybridButton: 'AI로 개선',
     gptHybridRefining: 'AI 개선 중…',
@@ -158,10 +161,13 @@ export const translations = {
 
     // Options
     rendering: 'Rendering…',
+    updating: 'Updating…',
 
     // Result
     replace: 'Replace',
     above: 'Above',
+    viewOriginal: 'View Original',
+    viewRendered: 'View Rendered',
     downloadPng: 'Download PNG',
 
     // Empty state

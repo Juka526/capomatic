@@ -949,6 +949,64 @@ def _insert_whitespace(
     return new_img
 
 
+def _safe_above_insert_y(
+    img_arr: np.ndarray,
+    row_top: int,
+    font_size: int,
+    *,
+    dark_threshold: int = 200,
+    content_ratio_threshold: float = 0.02,
+) -> int | None:
+    """Find a mostly blank horizontal band above a chord row.
+
+    Above mode may need to add vertical space for labels.  Inserting exactly at
+    the chord row can split lyric or staff content when the area above the row
+    is occupied.  This helper only returns an insertion y when there is a blank
+    band wide enough to cut through safely.
+    """
+    H = img_arr.shape[0]
+    if H == 0 or row_top <= 1:
+        return None
+
+    needed = max(4, int((font_size + _GAP) * 0.7))
+    search_top = max(0, row_top - max(font_size * 3, needed * 2))
+    search_bottom = max(search_top, min(H, row_top))
+    if search_bottom - search_top < needed:
+        return None
+
+    region = img_arr[search_top:search_bottom, :]
+    if region.size == 0:
+        return None
+
+    row_dark_ratio = np.mean(region < dark_threshold, axis=1)
+    blank_rows = row_dark_ratio <= content_ratio_threshold
+
+    best_start: int | None = None
+    best_len = 0
+    start: int | None = None
+    for idx, is_blank in enumerate(blank_rows):
+        if is_blank and start is None:
+            start = idx
+        elif not is_blank and start is not None:
+            run_len = idx - start
+            if run_len >= needed:
+                best_start = start
+                best_len = run_len
+            start = None
+    if start is not None:
+        run_len = len(blank_rows) - start
+        if run_len >= needed:
+            best_start = start
+            best_len = run_len
+
+    if best_start is None:
+        return None
+
+    # Insert near the lower edge of the blank band so the new space appears
+    # close to the chord row without cutting through visible content.
+    return search_top + best_start + best_len
+
+
 def _render_above(
     img: Image.Image,
     chords: list[dict],
@@ -969,18 +1027,20 @@ def _render_above(
     # Pass 1 — adaptively insert whitespace above each chord row.
     import numpy as np
     img_arr = np.array(img.convert("L"))
-    dark_threshold = 200
-    content_ratio_threshold = 0.02
     expansions: list[tuple[int, int]] = []
-    for row in rows:
-        needed = int((font_size + _GAP) * 0.7)
+    row_insert_y: dict[int, int] = {}
+    for row_idx, row in enumerate(rows):
+        needed = font_size + _GAP + 2
         min_y1 = min(c["bbox"][1] for c in row)
         label_top = max(0, min_y1 - font_size - _GAP)
         region = img_arr[label_top:min_y1, :]
         if region.size > 0:
-            dark_ratio = np.mean(region < dark_threshold)
-            if dark_ratio > content_ratio_threshold:
-                expansions.append((min_y1, needed))
+            dark_ratio = np.mean(region < 200)
+            if dark_ratio > 0.02:
+                insert_y = _safe_above_insert_y(img_arr, min_y1, font_size)
+                if insert_y is not None:
+                    expansions.append((insert_y, needed))
+                    row_insert_y[row_idx] = insert_y
 
     # Pass 2 — expand the image where needed.
     if expansions:
@@ -992,15 +1052,22 @@ def _render_above(
     def _y_offset_for(orig_y1: int) -> int:
         return sum(extra for y, extra in sorted_expansions if y <= orig_y1)
 
+    def _y_offset_before(insert_y: int) -> int:
+        return sum(extra for y, extra in sorted_expansions if y < insert_y)
+
     # Pass 4 — draw labels with one vertical anchor per row.
     draw = ImageDraw.Draw(img)
     font = _load_font(font_size)
     small_font = _load_font(int(font_size * _SMALL_FONT_RATIO))
-    for row in rows:
+    for row_idx, row in enumerate(rows):
 
         row_y1 = _row_aligned_top(row)
-        offset = _y_offset_for(row_y1)
-        label_y = row_y1 + offset - font_size - _GAP
+        if row_idx in row_insert_y:
+            insert_y = row_insert_y[row_idx]
+            label_y = insert_y + _y_offset_before(insert_y) + 2
+        else:
+            offset = _y_offset_for(row_y1)
+            label_y = row_y1 + offset - font_size - _GAP
 
         for chord, label_x in _place_row_labels_anchored(row, font, small_font, W):
             _draw_chord_text(draw, label_x, label_y, chord["transposed"],

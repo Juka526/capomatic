@@ -8,7 +8,26 @@ html, body {
 }
 
 .upload-hero-title {
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: balance;
+  text-wrap: balance;
+}
+.upload-hero-title-bilingual {
+  display: grid;
+  gap: 0.18em;
+}
+.upload-hero-title-en,
+.upload-hero-title-ko {
+  display: block;
+}
+.upload-hero-title-en {
+  font-size: 0.52em;
+  line-height: 1.06;
+  color: #5d625f;
+  font-weight: 850;
+}
+.upload-hero-title-ko {
+  line-height: 1.02;
 }
 
 /* Fretboard section — responsive padding */
@@ -47,11 +66,19 @@ html, body {
   }
 
   .upload-hero-title {
-    font-size: clamp(1.58rem, 8vw, 2.12rem) !important;
+    font-size: clamp(1.45rem, 7.2vw, 2.12rem) !important;
     line-height: 1.08 !important;
     max-width: 100% !important;
     margin-bottom: 18px !important;
-    white-space: nowrap;
+    white-space: normal;
+  }
+
+  .upload-hero-title-bilingual {
+    gap: 0.2em;
+  }
+
+  .upload-hero-title-en {
+    font-size: 0.56em;
   }
 
   .primary-upload-cta {
@@ -113,7 +140,7 @@ html, body {
 
 @media (max-width: 380px) {
   .upload-hero-title {
-    font-size: 1.5rem !important;
+    font-size: 1.36rem !important;
   }
 
   .primary-upload-cta {

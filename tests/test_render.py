@@ -153,6 +153,48 @@ class TestRenderOverlay:
         result = render_overlay(img, chords, "above")
         assert isinstance(result, Image.Image)
 
+    def test_above_mode_skips_whitespace_insert_when_no_safe_blank_band(self, monkeypatch):
+        calls = []
+
+        def fake_insert(img, expansions):
+            calls.extend(expansions)
+            return img
+
+        monkeypatch.setattr(render_module, "_insert_whitespace", fake_insert)
+
+        img = _white_img(w=240, h=160)
+        draw = ImageDraw.Draw(img)
+        # Dense lyric/staff-like content above the chord row should not be split.
+        for y in range(32, 72, 4):
+            draw.line((0, y, 239, y), fill=(0, 0, 0), width=1)
+        chords = [_chord("Am", "Bm", [40, 82, 90, 104])]
+
+        render_overlay(img, chords, "above")
+
+        assert calls == []
+
+    def test_above_mode_inserts_whitespace_at_safe_blank_band(self, monkeypatch):
+        calls = []
+
+        def fake_insert(img, expansions):
+            calls.extend(expansions)
+            return img
+
+        monkeypatch.setattr(render_module, "_insert_whitespace", fake_insert)
+
+        img = _white_img(w=240, h=180)
+        draw = ImageDraw.Draw(img)
+        # Content in the label area forces above mode to seek the safe blank
+        # band immediately below it.
+        for y in range(78, 86, 2):
+            draw.line((0, y, 239, y), fill=(0, 0, 0), width=1)
+        chords = [_chord("Am", "Bm", [40, 100, 90, 122])]
+
+        render_overlay(img, chords, "above")
+
+        assert calls
+        assert 86 <= calls[0][0] <= 100
+
 
 # ---------------------------------------------------------------------------
 # render_overlay — key info & white box

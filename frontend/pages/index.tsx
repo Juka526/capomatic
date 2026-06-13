@@ -6,11 +6,20 @@ import LoginButton from "@/components/LoginButton";
 import { useAuth } from "@/components/AuthProvider";
 import { useLang, LangToggle } from "@/components/LangProvider";
 import { GuitarFretboard } from "@/components/GuitarFretboard";
+import { translations } from "@/lib/i18n";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
+const RENDER_CACHE_LIMIT = 5;
 
 type ChordItem = { text: string; bbox: number[] | null };
+type RenderResult = {
+  replace_image: string;
+  above_image: string;
+  original_key: string | null;
+  target_key: string | null;
+  semitones: number;
+};
 const ESTIMATED_DETECT_MS = 13000;
 const KEY_NAMES = ["C","Db","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
 
@@ -55,7 +64,7 @@ function nearestRow(rows: Row[], y: number): Row | null {
 
 export default function Home() {
   const { user } = useAuth();
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   const [file, setFile] = useState<File | null>(null);
   const [semitoneShift, setSemitoneShift] = useState<number>(0); // -7 to +7
@@ -73,7 +82,9 @@ export default function Home() {
   const [replaceResult, setReplaceResult] = useState<string | null>(null);
   const [aboveResult, setAboveResult] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"replace" | "above">("replace");
+  const [showOriginal, setShowOriginal] = useState(false);
   const [rendering, setRendering] = useState(false);
+  const [renderUpdating, setRenderUpdating] = useState(false);
 
   const [detectedChords, setDetectedChords] = useState<ChordItem[]>([]);
   const [editableChords, setEditableChords] = useState<ChordItem[]>([]);
@@ -95,6 +106,18 @@ export default function Home() {
   const resultRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const renderCacheRef = useRef<Map<string, RenderResult>>(new Map());
+  const inFlightRenderRef = useRef<Map<string, Promise<RenderResult>>>(new Map());
+  const selectedSemitoneRef = useRef(0);
+  const editVersionRef = useRef(0);
+
+  const originalImageUrl = useMemo(() => (
+    file ? URL.createObjectURL(file) : null
+  ), [file]);
+
+  useEffect(() => () => {
+    if (originalImageUrl) URL.revokeObjectURL(originalImageUrl);
+  }, [originalImageUrl]);
 
   // Close hamburger menu on outside click
   useEffect(() => {
@@ -142,6 +165,10 @@ export default function Home() {
 
   const runDetection = useCallback(async (f: File) => {
     setDetecting(true);
+    renderCacheRef.current.clear();
+    inFlightRenderRef.current.clear();
+    editVersionRef.current += 1;
+    selectedSemitoneRef.current = 0;
     setDetectProgress(0);
     setDetectElapsed(0);
     setError(null);
@@ -151,6 +178,7 @@ export default function Home() {
     setOriginalKey(null);
     setReplaceResult(null);
     setAboveResult(null);
+    setShowOriginal(false);
     setDetectedChords([]);
     setEditableChords([]);
     setEditingIdx(null);
@@ -186,8 +214,83 @@ export default function Home() {
     setFile(f);
     setError(null);
     setSemitoneShift(0);
+    setRenderUpdating(false);
     runDetection(f);
   }, [runDetection, t]);
+
+  const clearRenderCache = () => {
+    renderCacheRef.current.clear();
+    inFlightRenderRef.current.clear();
+  };
+
+  const renderCacheKey = (semi: number, version = editVersionRef.current) => (
+    detectionId ? `${detectionId}:${version}:${semi}` : null
+  );
+
+  const storeRenderCache = (key: string, data: RenderResult) => {
+    const cache = renderCacheRef.current;
+    cache.delete(key);
+    cache.set(key, data);
+    while (cache.size > RENDER_CACHE_LIMIT) {
+      const oldest = cache.keys().next().value;
+      if (!oldest) break;
+      cache.delete(oldest);
+    }
+  };
+
+  const fetchRenderResult = async (
+    semi: number,
+    chordsOverride?: ChordItem[],
+  ): Promise<RenderResult | null> => {
+    const key = renderCacheKey(semi);
+    if (!key || !detectionId) return null;
+
+    const cached = renderCacheRef.current.get(key);
+    if (cached && !chordsOverride) {
+      renderCacheRef.current.delete(key);
+      renderCacheRef.current.set(key, cached);
+      return cached;
+    }
+
+    const existing = inFlightRenderRef.current.get(key);
+    if (existing && !chordsOverride) return existing;
+
+    const request = (async () => {
+      const formData = new FormData();
+      formData.append("detection_id", detectionId);
+      formData.append("semitones", semi.toString());
+      if (chordsOverride) {
+        formData.append("chords_override", JSON.stringify(chordsOverride));
+      }
+      const res = await fetch(`${API_URL}/render`, { method: "POST", body: formData });
+      if (!res.ok) throw new Error((await res.text()) || `Server error (${res.status})`);
+      const data = await res.json() as RenderResult;
+      storeRenderCache(key, data);
+      return data;
+    })();
+
+    if (!chordsOverride) inFlightRenderRef.current.set(key, request);
+    try {
+      return await request;
+    } finally {
+      if (inFlightRenderRef.current.get(key) === request) {
+        inFlightRenderRef.current.delete(key);
+      }
+    }
+  };
+
+  const prefetchRender = (semi: number) => {
+    if (!detectionId || semi === 0 || detecting || hybridRefining || reRendering) return;
+    const key = renderCacheKey(semi);
+    if (!key || renderCacheRef.current.has(key) || inFlightRenderRef.current.has(key)) return;
+    void fetchRenderResult(semi).catch(() => {});
+  };
+
+  const prefetchAdjacentRenders = (centerSemi: number) => {
+    [centerSemi - 1, centerSemi + 1]
+      .filter(semi => semi >= -7 && semi <= 7 && semi !== 0)
+      .forEach(prefetchRender);
+  };
 
   const performRender = async (
     chordsOverride?: ChordItem[],
@@ -195,25 +298,22 @@ export default function Home() {
     scrollToResult: boolean = true,
   ) => {
     if (!detectionId) return;
+    const versionAtStart = editVersionRef.current;
     setRendering(true);
+    setRenderUpdating(false);
     setError(null);
     try {
-      const formData = new FormData();
-      formData.append("detection_id", detectionId);
-      formData.append("semitones", semitoneOverride.toString());
-      if (chordsOverride) {
-        formData.append("chords_override", JSON.stringify(chordsOverride));
-      }
-      const res = await fetch(`${API_URL}/render`, { method: "POST", body: formData });
-      if (!res.ok) throw new Error((await res.text()) || `Server error (${res.status})`);
-      const data = await res.json();
+      const data = await fetchRenderResult(semitoneOverride, chordsOverride);
+      if (!data || versionAtStart !== editVersionRef.current) return;
       setReplaceResult(data.replace_image);
       setAboveResult(data.above_image);
+      setShowOriginal(false);
       setActiveTab("replace");
       saveToLocalHistory(file?.name, originalKey, data.target_key, semitoneOverride);
       if (scrollToResult) {
         setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
       }
+      setTimeout(() => prefetchAdjacentRenders(semitoneOverride), 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.failedConnect);
     } finally {
@@ -239,18 +339,17 @@ export default function Home() {
 
   const handleReRender = async () => {
     if (!detectionId) return;
+    editVersionRef.current += 1;
+    clearRenderCache();
     setReRendering(true);
     setError(null);
     try {
-      const formData = new FormData();
-      formData.append("detection_id", detectionId);
-      formData.append("semitones", semitones.toString());
-      formData.append("chords_override", JSON.stringify(editableChords));
-      const res = await fetch(`${API_URL}/render`, { method: "POST", body: formData });
-      if (!res.ok) throw new Error((await res.text()) || `Server error (${res.status})`);
-      const data = await res.json();
+      const data = await fetchRenderResult(semitones, editableChords);
+      if (!data) return;
       setReplaceResult(data.replace_image);
       setAboveResult(data.above_image);
+      setShowOriginal(false);
+      setTimeout(() => prefetchAdjacentRenders(semitones), 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.failedConnect);
     } finally {
@@ -284,6 +383,8 @@ export default function Home() {
         throw new Error(meta.gpt_error || t.gptHybridUnavailable);
       }
       const chords: ChordItem[] = (data.chords || []).map((c: any) => ({ text: c.text, bbox: c.bbox }));
+      editVersionRef.current += 1;
+      clearRenderCache();
       setDetectedChords(chords);
       setEditableChords(chords);
       setHybridApplied(true);
@@ -314,7 +415,7 @@ export default function Home() {
   };
 
   const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
-    if (!addModeActive || !imgNaturalSize) return;
+    if (showOriginal || !addModeActive || !imgNaturalSize) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = Math.round((e.clientX - rect.left) * (imgNaturalSize.w / rect.width));
     const y = Math.round((e.clientY - rect.top) * (imgNaturalSize.h / rect.height));
@@ -325,7 +426,7 @@ export default function Home() {
   };
 
   const handleImageMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
-    if (!addModeActive || !imgNaturalSize) return;
+    if (showOriginal || !addModeActive || !imgNaturalSize) return;
     const rect = e.currentTarget.getBoundingClientRect();
     setHoverImgPos({
       x: Math.round((e.clientX - rect.left) * (imgNaturalSize.w / rect.width)),
@@ -336,7 +437,7 @@ export default function Home() {
   const handleImageMouseLeave = () => setHoverImgPos(null);
 
   const handleImageTouchMove = (e: React.TouchEvent<HTMLImageElement>) => {
-    if (!addModeActive || !imgNaturalSize) return;
+    if (showOriginal || !addModeActive || !imgNaturalSize) return;
     const touch = e.touches[0];
     const rect = e.currentTarget.getBoundingClientRect();
     setHoverImgPos({
@@ -346,7 +447,7 @@ export default function Home() {
   };
 
   const handleImageTouchEnd = (e: React.TouchEvent<HTMLImageElement>) => {
-    if (!addModeActive || !imgNaturalSize || !hoverImgPos) return;
+    if (showOriginal || !addModeActive || !imgNaturalSize || !hoverImgPos) return;
     e.preventDefault();
     const row = nearestRow(detectedRows, hoverImgPos.y);
     setPendingPosition({ x: hoverImgPos.x, y1: row?.y1 ?? hoverImgPos.y, y2: row?.y2 ?? (hoverImgPos.y + 35) });
@@ -367,6 +468,7 @@ export default function Home() {
 
   const handleDownload = () => {
     const activeResult = activeTab === "replace" ? replaceResult : aboveResult;
+    if (showOriginal) return;
     if (!activeResult) return;
     const a = document.createElement("a");
     a.href = activeResult;
@@ -375,6 +477,9 @@ export default function Home() {
   };
 
   const clearFile = () => {
+    clearRenderCache();
+    editVersionRef.current += 1;
+    selectedSemitoneRef.current = 0;
     setFile(null);
     setDetectionId(null);
     setHybridRefining(false);
@@ -383,8 +488,10 @@ export default function Home() {
     setOriginalKey(null);
     setReplaceResult(null);
     setAboveResult(null);
+    setShowOriginal(false);
     setError(null);
     setSemitoneShift(0);
+    setRenderUpdating(false);
     setDetectedChords([]);
     setEditableChords([]);
     setEditingIdx(null);
@@ -400,11 +507,58 @@ export default function Home() {
 
   const applySemitoneShift = async (value: number) => {
     const next = Math.max(-7, Math.min(7, value));
-    if (next === semitoneShift || rendering || reRendering || hybridRefining) return;
+    if (next === semitoneShift || reRendering || hybridRefining || detecting) return;
+    const versionAtStart = editVersionRef.current;
+    const shouldScrollToResult = !(replaceResult || aboveResult);
+    selectedSemitoneRef.current = next;
     setSemitoneShift(next);
     if (next !== 0) {
-      await performRender(undefined, next, !(replaceResult || aboveResult));
+      const key = renderCacheKey(next, versionAtStart);
+      const cached = key ? renderCacheRef.current.get(key) : null;
+      if (key && cached) {
+        renderCacheRef.current.delete(key);
+        renderCacheRef.current.set(key, cached);
+        setReplaceResult(cached.replace_image);
+        setAboveResult(cached.above_image);
+        setShowOriginal(false);
+        setRenderUpdating(false);
+        saveToLocalHistory(file?.name, originalKey, cached.target_key, next);
+        if (shouldScrollToResult) {
+          setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        }
+        setTimeout(() => prefetchAdjacentRenders(next), 0);
+        return;
+      }
+
+      setRenderUpdating(true);
+      setError(null);
+      try {
+        const data = await fetchRenderResult(next);
+        if (
+          data
+          && selectedSemitoneRef.current === next
+          && versionAtStart === editVersionRef.current
+        ) {
+          setReplaceResult(data.replace_image);
+          setAboveResult(data.above_image);
+          setShowOriginal(false);
+          saveToLocalHistory(file?.name, originalKey, data.target_key, next);
+          if (shouldScrollToResult) {
+            setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+          }
+          setTimeout(() => prefetchAdjacentRenders(next), 0);
+        }
+      } catch (err) {
+        if (selectedSemitoneRef.current === next) {
+          setError(err instanceof Error ? err.message : t.failedConnect);
+        }
+      } finally {
+        if (selectedSemitoneRef.current === next) {
+          setRenderUpdating(false);
+        }
+      }
     } else {
+      setRenderUpdating(false);
       setReplaceResult(null);
       setAboveResult(null);
     }
@@ -415,6 +569,7 @@ export default function Home() {
   };
 
   const activeResult = activeTab === "replace" ? replaceResult : aboveResult;
+  const previewSrc = showOriginal ? originalImageUrl : activeResult;
 
   return (
     <>
@@ -509,8 +664,13 @@ export default function Home() {
             justifyItems: "center",
             textAlign: "center",
           }}>
-            <h1 className="upload-hero-title" style={{ maxWidth: 680, margin: "0 0 20px", fontSize: "clamp(2.45rem, 7vw, 4.1rem)", lineHeight: 1, fontWeight: 900, color: "#171923", letterSpacing: 0 }}>
-              {t.heroHeadline}
+            <h1 className={lang === "ko" ? "upload-hero-title upload-hero-title-bilingual" : "upload-hero-title"} style={{ maxWidth: 680, margin: "0 0 20px", fontSize: "clamp(2.45rem, 7vw, 4.1rem)", lineHeight: 1, fontWeight: 900, color: "#171923", letterSpacing: 0 }}>
+              {lang === "ko" ? (
+                <>
+                  <span className="upload-hero-title-en">전조, 이제 30초면 끝</span>
+                  <span className="upload-hero-title-ko">악보 사진을 올려보세요</span>
+                </>
+              ) : t.heroHeadline}
             </h1>
             <button
               className="primary-upload-cta"
@@ -531,12 +691,9 @@ export default function Home() {
               {t.heroPrimaryCta}
               <ArrowRight size={18} color="white" strokeWidth={2.4} />
             </button>
-            <p style={{ margin: "10px 0 18px", fontSize: "0.78rem", color: "#8b8174", fontWeight: 700 }}>
-              {t.heroTrust}
-            </p>
             <label className="ai-option" style={{
               display: "flex", alignItems: "flex-start", gap: 9,
-              maxWidth: 360, cursor: "pointer", userSelect: "none",
+              maxWidth: 360, marginTop: 18, cursor: "pointer", userSelect: "none",
               color: "#4f4a43", fontSize: "0.78rem", lineHeight: 1.35,
               padding: "10px 12px", borderRadius: 12,
               background: "rgba(255,255,255,0.5)", border: "1px solid rgba(0,0,0,0.05)",
@@ -669,7 +826,7 @@ export default function Home() {
           <div className="transpose-panel" style={{ background: "rgba(255,255,255,0.55)", borderRadius: 16, padding: 12, border: "1px solid rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", display: "grid", gridTemplateColumns: "52px 1fr 52px", alignItems: "center", gap: 10 }}>
             <button
               onClick={() => applySemitoneShift(semitones - 1)}
-              disabled={!detectionId || detecting || rendering || semitones <= -7}
+              disabled={!detectionId || detecting || reRendering || hybridRefining || semitones <= -7}
               aria-label="Transpose down"
               style={{
                 height: 44, borderRadius: 12,
@@ -677,8 +834,8 @@ export default function Home() {
                 background: semitones < 0 ? "linear-gradient(135deg, #e05d00, #c84b00)" : "rgba(255,255,255,0.75)",
                 color: semitones < 0 ? "white" : "#3a4847",
                 fontSize: "1.35rem", fontWeight: 900,
-                cursor: detectionId && !detecting && !rendering && semitones > -7 ? "pointer" : "not-allowed",
-                opacity: detectionId && !detecting && semitones > -7 ? 1 : 0.45,
+                cursor: detectionId && !detecting && !reRendering && !hybridRefining && semitones > -7 ? "pointer" : "not-allowed",
+                opacity: detectionId && !detecting && !reRendering && !hybridRefining && semitones > -7 ? 1 : 0.45,
               }}
             >-</button>
             <div style={{ textAlign: "center" }}>
@@ -686,12 +843,12 @@ export default function Home() {
                 {t.capoPosition}
               </div>
               <div style={{ marginTop: 3, fontSize: "1.05rem", fontWeight: 900, color: "#1a1a2e" }}>
-                {rendering ? t.rendering : semitones > 0 ? `+${semitones}` : semitones}
+                {rendering ? t.rendering : renderUpdating ? t.updating : semitones > 0 ? `+${semitones}` : semitones}
               </div>
             </div>
             <button
               onClick={() => applySemitoneShift(semitones + 1)}
-              disabled={!detectionId || detecting || rendering || semitones >= 7}
+              disabled={!detectionId || detecting || reRendering || hybridRefining || semitones >= 7}
               aria-label="Transpose up"
               style={{
                 height: 44, borderRadius: 12,
@@ -699,8 +856,8 @@ export default function Home() {
                 background: semitones > 0 ? "linear-gradient(135deg, #0b4ea2, #093b7a)" : "rgba(255,255,255,0.75)",
                 color: semitones > 0 ? "white" : "#3a4847",
                 fontSize: "1.35rem", fontWeight: 900,
-                cursor: detectionId && !detecting && !rendering && semitones < 7 ? "pointer" : "not-allowed",
-                opacity: detectionId && !detecting && semitones < 7 ? 1 : 0.45,
+                cursor: detectionId && !detecting && !reRendering && !hybridRefining && semitones < 7 ? "pointer" : "not-allowed",
+                opacity: detectionId && !detecting && !reRendering && !hybridRefining && semitones < 7 ? 1 : 0.45,
               }}
             >+</button>
           </div>
@@ -715,7 +872,7 @@ export default function Home() {
                 {(["replace", "above"] as const).map(tab => (
                   <button
                     key={tab}
-                    onClick={() => setActiveTab(tab)}
+                    onClick={() => { setActiveTab(tab); setShowOriginal(false); }}
                     style={{
                       flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
                       borderRadius: 8,
@@ -730,14 +887,27 @@ export default function Home() {
                   </button>
                 ))}
               </div>
+              <button
+                onClick={() => setShowOriginal(v => !v)}
+                disabled={!originalImageUrl}
+                style={{
+                  width: "100%", marginBottom: 12, padding: "9px 0", borderRadius: 10,
+                  border: "1.5px solid rgba(0,0,0,0.12)",
+                  background: showOriginal ? "#1a1a2e" : "rgba(255,255,255,0.72)",
+                  color: showOriginal ? "white" : "#3a4847",
+                  fontSize: "0.78rem", fontWeight: 900, cursor: originalImageUrl ? "pointer" : "not-allowed",
+                }}
+              >
+                {showOriginal ? t.viewRendered : t.viewOriginal}
+              </button>
               {/* Sheet image */}
               <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "white" }}>
-                {activeResult && (
+                {previewSrc && (
                   <img
                     ref={imgRef}
-                    src={activeResult}
-                    alt={`Transposed chord sheet (${activeTab} mode)`}
-                    style={{ width: "100%", display: "block", cursor: addModeActive ? "crosshair" : "default" }}
+                    src={previewSrc}
+                    alt={showOriginal ? "Original chord sheet" : `Transposed chord sheet (${activeTab} mode)`}
+                    style={{ width: "100%", display: "block", cursor: addModeActive && !showOriginal ? "crosshair" : "default" }}
                     onLoad={e => setImgNaturalSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
                     onClick={handleImageClick}
                     onMouseMove={handleImageMouseMove}
@@ -747,7 +917,7 @@ export default function Home() {
                   />
                 )}
                 {/* Ghost bbox preview — snaps to nearest detected chord row */}
-                {addModeActive && snapRow && hoverImgPos && imgNaturalSize && (
+                {!showOriginal && addModeActive && snapRow && hoverImgPos && imgNaturalSize && (
                   <div style={{
                     position: "absolute",
                     left:   `${(hoverImgPos.x / imgNaturalSize.w) * 100}%`,
@@ -760,7 +930,7 @@ export default function Home() {
                     pointerEvents: "none",
                   }} />
                 )}
-                {addModeActive && (
+                {!showOriginal && addModeActive && (
                   <div style={{
                     position: "absolute", top: 0, left: 0, right: 0,
                     padding: "10px 16px",
@@ -813,12 +983,13 @@ export default function Home() {
               {/* Download */}
               <button
                 onClick={handleDownload}
+                disabled={showOriginal}
                 style={{
                   width: "100%", marginTop: 16, padding: "12px 0", borderRadius: 10, border: "none",
-                  background: "linear-gradient(135deg, #1a9e50, #158040)",
-                  color: "white", fontSize: "0.85rem", fontWeight: 700, cursor: "pointer",
+                  background: showOriginal ? "linear-gradient(135deg, #aaa, #999)" : "linear-gradient(135deg, #1a9e50, #158040)",
+                  color: "white", fontSize: "0.85rem", fontWeight: 700, cursor: showOriginal ? "not-allowed" : "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-                  boxShadow: "0 3px 12px rgba(21,128,64,0.25)", transition: "all 0.18s",
+                  boxShadow: showOriginal ? "none" : "0 3px 12px rgba(21,128,64,0.25)", transition: "all 0.18s",
                 }}
               >
                 <Download size={15} />
@@ -826,7 +997,7 @@ export default function Home() {
               </button>
 
               {/* Chord editor */}
-              {editableChords.length > 0 && (
+              {!showOriginal && editableChords.length > 0 && (
                 <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(0,0,0,0.07)" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                     <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#a09070", letterSpacing: "0.1em", textTransform: "uppercase" }}>
