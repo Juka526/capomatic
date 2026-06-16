@@ -212,6 +212,11 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+@app.get("/")
+def root() -> dict:
+    return {"status": "ok", "service": "capomatic"}
+
+
 @app.post("/detect")
 async def detect(
     image: UploadFile = File(...),

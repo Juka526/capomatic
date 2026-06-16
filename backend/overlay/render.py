@@ -15,6 +15,7 @@ from __future__ import annotations
 import os
 import pathlib
 import statistics
+from functools import lru_cache
 
 import cv2
 import numpy as np
@@ -68,6 +69,7 @@ _SMALL_SUFFIXES = ("sus", "dim", "aug")
 # Font loader
 # ---------------------------------------------------------------------------
 
+@lru_cache(maxsize=64)
 def _load_font(size: int, *, bold: bool = False) -> ImageFont.ImageFont:
     """Return a readable chord font at *size* pt, falling back to PIL default."""
     size = max(_MIN_FONT_SIZE, size)
@@ -268,6 +270,7 @@ def _choose_render_protocol(
 # Display text helpers
 # ---------------------------------------------------------------------------
 
+@lru_cache(maxsize=512)
 def _shorten_chord_display(transposed: str) -> tuple[str, str]:
     """Shorten chord display text and split off suffix for smaller rendering.
 

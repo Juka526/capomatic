@@ -32,6 +32,11 @@ _ocr_instances: "dict[tuple[str, float | None, float | None, float | None], _Pad
 # A/C# and G#dim at the resulting resize scale (≈0.87×). Set lower only when
 # using the mobile detection model (PP-OCRv5_mobile_det) or speed > accuracy.
 MAX_STITCHED_PIXELS = int(os.environ.get("PADDLE_MAX_STITCHED_PIXELS", "600000"))
+# Oversized stitched canvases are routed to one OCR call per staff band.  This
+# avoids resolution loss on high-DPI full-page sheets where a single stitched
+# canvas would otherwise be resized so aggressively that chord symbols vanish.
+STITCH_MAX_SAFE_PIXELS = int(os.environ.get("PADDLE_STITCH_MAX_SAFE_PIXELS", "900000"))
+MIN_STITCH_RESIZE_SCALE = float(os.environ.get("PADDLE_MIN_STITCH_RESIZE_SCALE", "0.85"))
 
 # Detection threshold parameters — configurable for A/B accuracy vs. recall tuning.
 # Lower det_db_thresh / det_db_box_thresh → higher recall, more false positives
@@ -278,7 +283,9 @@ def get_ocr(
     * PADDLE_DET_DB_THRESH (default 0.25): lower → higher recall, more noise.
     * PADDLE_DET_DB_BOX_THRESH (default 0.45): box confidence cutoff.
     * PADDLE_DET_DB_UNCLIP_RATIO (default 1.8): box expansion ratio for small glyphs.
-    * PADDLE_MAX_STITCHED_PIXELS (default 400000): canvas pixel cap before downscale.
+    * PADDLE_MAX_STITCHED_PIXELS (default 600000): canvas pixel cap before downscale.
+    * PADDLE_STITCH_MAX_SAFE_PIXELS (default 900000): above this, run per-band OCR.
+    * PADDLE_MIN_STITCH_RESIZE_SCALE (default 0.85): below this, run per-band OCR.
     """
     global _ocr_instances
     if det_variant is None:
@@ -402,7 +409,27 @@ def run_ocr_paddle(
     resize_scale    = 1.0
     resized_shape   = None
 
-    if mode == "staff_bands" and len(regions) > 1:
+    stitched_candidate_shape = None
+    stitched_candidate_pixels = 0
+    stitched_resize_scale = 1.0
+    use_stitched = mode == "staff_bands" and len(regions) > 1
+    stitch_skip_reason: str | None = None
+
+    if use_stitched:
+        max_w = max(r["crop"].shape[1] for r in regions)
+        total_h = sum(r["crop"].shape[0] for r in regions) + 10 * (len(regions) - 1)
+        stitched_candidate_shape = [total_h, max_w]
+        stitched_candidate_pixels = total_h * max_w
+        if stitched_candidate_pixels > MAX_STITCHED_PIXELS:
+            stitched_resize_scale = math.sqrt(MAX_STITCHED_PIXELS / stitched_candidate_pixels)
+        if stitched_candidate_pixels > STITCH_MAX_SAFE_PIXELS:
+            use_stitched = False
+            stitch_skip_reason = "too_many_pixels"
+        elif stitched_resize_scale < MIN_STITCH_RESIZE_SCALE:
+            use_stitched = False
+            stitch_skip_reason = "resize_scale_too_small"
+
+    if use_stitched:
         # --------------------------------------------------------------
         # Stage 2 — stitch band crops into one canvas
         # --------------------------------------------------------------
@@ -487,6 +514,7 @@ def run_ocr_paddle(
             "stitched":      True,
             "predict_calls": 1,
             "regions":       region_meta,
+            "stitch_decision": "stitched",
         }
 
     else:
@@ -533,6 +561,8 @@ def run_ocr_paddle(
             "stitched":      False,
             "predict_calls": len(regions),
             "regions":       region_meta,
+            "stitch_decision": "per_region",
+            "stitch_skip_reason": stitch_skip_reason,
         }
 
     # ------------------------------------------------------------------
@@ -553,6 +583,11 @@ def run_ocr_paddle(
         "det_db_thresh": det_db_thresh,
         "det_db_box_thresh": det_db_box_thresh,
         "det_db_unclip_ratio": det_db_unclip_ratio,
+        "stitched_candidate_shape": stitched_candidate_shape,
+        "stitched_candidate_pixels": stitched_candidate_pixels,
+        "stitched_resize_scale": round(stitched_resize_scale, 4),
+        "stitch_max_safe_pixels": STITCH_MAX_SAFE_PIXELS,
+        "min_stitch_resize_scale": MIN_STITCH_RESIZE_SCALE,
     })
 
     return items, meta

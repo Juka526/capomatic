@@ -289,7 +289,6 @@ def test_component_gap_candidates_find_dark_glyph_group():
 def test_refine_adds_high_recall_gpt_gap_without_full_image_gap(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     monkeypatch.setattr(hybrid, "ENABLE_FULL_IMAGE_GAP_FILL", False)
-    monkeypatch.setattr(hybrid, "ENABLE_HIGH_RECALL_GAP_FILL", True)
     monkeypatch.setattr(hybrid, "_gpt_recognize_crops", lambda image, items, **kwargs: (
         {idx: {"text": item["text"], "confidence": 0.95} for idx, item in enumerate(items, start=1)},
         {"usage": {"prompt_tokens": 100, "completion_tokens": 20}},
@@ -314,7 +313,6 @@ def test_refine_adds_high_recall_gpt_gap_without_full_image_gap(monkeypatch):
 def test_refine_runs_gap_fill_when_initial_gpt_text_confirmation_fails(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     monkeypatch.setattr(hybrid, "ENABLE_FULL_IMAGE_GAP_FILL", False)
-    monkeypatch.setattr(hybrid, "ENABLE_HIGH_RECALL_GAP_FILL", True)
     monkeypatch.setattr(
         hybrid,
         "_gpt_recognize_crops_batched",

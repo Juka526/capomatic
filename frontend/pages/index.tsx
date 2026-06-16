@@ -21,7 +21,7 @@ type RenderResult = {
   target_key: string | null;
   semitones: number;
 };
-const ESTIMATED_DETECT_MS = 13000;
+const ESTIMATED_DETECT_MS = 60000;
 const KEY_NAMES = ["C","Db","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
 
 function computeTargetKey(originalKey: string, semitones: number): string {
@@ -159,7 +159,7 @@ export default function Home() {
     const id = setInterval(() => {
       const dt = Date.now() - start;
       setDetectElapsed(dt);
-      setDetectProgress(Math.min(95, (1 - Math.exp(-3 * dt / ESTIMATED_DETECT_MS)) * 100));
+      setDetectProgress(Math.min(100, (dt / ESTIMATED_DETECT_MS) * 100));
     }, 200);
     return () => clearInterval(id);
   }, [detecting]);

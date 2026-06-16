@@ -363,11 +363,12 @@ def build_chord_bands(img, systems: list[tuple[int, int]]) -> list[dict]:
         staff_h = bottom - top
         line_spacing = max(6, staff_h / 4)  # 5 lines → 4 gaps
 
-        # Allow up to 3 × line_spacing above the staff; floor at 55 px for
-        # small staves.  Raised from 40 to capture volta bracket chords
-        # (1st/2nd/3rd endings) whose bracket line sits ~15 px above the
-        # chord text.  Still bounded by prev_bottom so no system overlap.
-        max_above = max(55, min(80, int(line_spacing * 3.0)))
+        # Chord symbols can sit well above the staff on high-DPI full-page
+        # scans.  Keep a staff-relative window with a larger floor so clean
+        # 300-DPI sheets do not crop chord text before OCR sees it.  The
+        # previous staff boundary below still prevents cross-system overlap.
+        max_above_floor = 100 if W >= 1800 else 80
+        max_above = max(max_above_floor, min(170, int(line_spacing * 5.0)))
         pad_below = max(4,  min(8,  int(line_spacing * 0.30)))
 
         # Inter-system boundary: the band must not extend above the previous

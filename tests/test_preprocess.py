@@ -73,7 +73,7 @@ class TestBuildChordBands:
     """Tests for build_chord_bands inter-system boundary geometry.
 
     Image: 600 H × 400 W, all white.  Systems are (top, bottom) tuples.
-    For staff_h=50: line_spacing=12.5, max_above=max(55,min(80,37))=55,
+    For staff_h=50: line_spacing=12.5, max_above=max(80,min(170,62))=80,
     pad_below=max(4,min(8,3))=4.
     """
 
@@ -82,12 +82,12 @@ class TestBuildChordBands:
 
     def test_single_system_band_top_respects_max_above(self):
         # First system: prev_bottom=0, band_top = max(0, top - max_above).
-        # top=200, max_above=55 → band_top=145.
+        # top=200, max_above=80 → band_top=120.
         img = self._img()
         systems = [(200, 250)]
         bands = build_chord_bands(img, systems)
         assert len(bands) == 1
-        assert bands[0]["y0"] == 145           # top - max_above
+        assert bands[0]["y0"] == 120           # top - max_above
         assert bands[0]["staff_top"] == 200
 
     def test_first_system_at_top_does_not_go_negative(self):
@@ -101,19 +101,19 @@ class TestBuildChordBands:
     def test_second_system_band_top_uses_prev_bottom(self):
         # System 1: top=200, bottom=250.
         # System 2: top=350, bottom=400.
-        #   max_above=55 → top - max_above = 295.
-        #   prev_bottom=250 → band_top = max(250, 295) = 295.
+        #   max_above=80 → top - max_above = 270.
+        #   prev_bottom=250 → band_top = max(250, 270) = 270.
         img = self._img()
         systems = [(200, 250), (350, 400)]
         bands = build_chord_bands(img, systems)
         assert len(bands) == 2
-        assert bands[1]["y0"] == 295           # limited by top - max_above (295 > 250)
+        assert bands[1]["y0"] == 270           # limited by top - max_above (270 > 250)
 
     def test_tight_staves_band_top_clamped_to_prev_bottom(self):
         # System 1: top=200, bottom=250.
         # System 2: top=260, bottom=310 (only 10 px gap).
-        #   max_above=40 → top - max_above = 220.
-        #   prev_bottom=250 → band_top = max(250, 220) = 250.
+        #   max_above=80 → top - max_above = 180.
+        #   prev_bottom=250 → band_top = max(250, 180) = 250.
         img = self._img()
         systems = [(200, 250), (260, 310)]
         bands = build_chord_bands(img, systems)
@@ -134,6 +134,17 @@ class TestBuildChordBands:
         systems = [(200, 200), (300, 350)]
         bands = build_chord_bands(img, systems)
         assert all(b["staff_top"] != 200 for b in bands)
+
+    def test_wide_high_dpi_layout_keeps_tall_chord_band(self):
+        img = self._img(h=3505, w=2478)
+        systems = [
+            (471, 555), (877, 961), (1283, 1367), (1689, 1773),
+            (2096, 2180), (2502, 2586), (2908, 2992),
+        ]
+        bands = build_chord_bands(img, systems)
+
+        assert len(bands) == 7
+        assert min(b["staff_top"] - b["y0"] for b in bands) >= 100
 
 
 class TestDetectStaffSystems:

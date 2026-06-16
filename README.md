@@ -157,6 +157,7 @@ Open http://localhost:3000
 
 | Method | Path       | Description                             |
 |--------|------------|-----------------------------------------|
+| GET    | `/`        | Root liveness probe                     |
 | GET    | `/health`  | Liveness probe                          |
 | POST   | `/detect`  | Detect chords in image, return JSON     |
 | POST   | `/render`  | Transpose + render from cached detection|
@@ -294,6 +295,10 @@ capomatic/
 - **First run slow**: PaddleOCR downloads ~80MB models on first use
 - **Port 8000 in use**: `lsof -ti :8000 | xargs kill`
 - **`PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK`**: Required for any command that loads PaddleOCR models
+- **Clean full-page sheets miss many chords**: keep deployment OCR settings accuracy-safe:
+  `PADDLE_MAX_STITCHED_PIXELS=900000`, `PADDLE_STITCH_MAX_SAFE_PIXELS=900000`,
+  and `PADDLE_MIN_STITCH_RESIZE_SCALE=0.85`. Oversized stitched OCR canvases
+  automatically fall back to per-staff-band OCR to avoid downscaling chord text.
 
 ## License
 

@@ -63,6 +63,14 @@ class TestShortenChordDisplay:
 # ---------------------------------------------------------------------------
 
 class TestChordDisplayWidth:
+    def test_load_font_reuses_cached_font_object(self):
+        _load_font.cache_clear()
+        first = _load_font(18)
+        second = _load_font(18)
+
+        assert first is second
+        assert _load_font.cache_info().hits >= 1
+
     def test_positive_width(self):
         font = _load_font(18)
         small = _load_font(13)
