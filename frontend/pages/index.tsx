@@ -664,7 +664,7 @@ export default function Home() {
       <Head>
         <title>Capomatic</title>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <meta name="description" content="Transpose chord sheets instantly" />
+        <meta name="description" content="Transpose chord sheets easily" />
       </Head>
 
       <div style={{ minHeight: "100vh", backgroundColor: "#F5EDD8", fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: "hidden" }}>
@@ -755,7 +755,7 @@ export default function Home() {
             <h1 className={lang === "ko" ? "upload-hero-title upload-hero-title-bilingual" : "upload-hero-title"} style={{ maxWidth: 680, margin: "0 0 20px", fontSize: "clamp(2.45rem, 7vw, 4.1rem)", lineHeight: 1, fontWeight: 900, color: "#171923", letterSpacing: 0 }}>
               {lang === "ko" ? (
                 <>
-                  <span className="upload-hero-title-en">전조, 이제 30초면 끝</span>
+                  <span className="upload-hero-title-en">전조, 이제 쉽게 끝</span>
                   <span className="upload-hero-title-ko">악보 사진을 올려보세요</span>
                 </>
               ) : t.heroHeadline}

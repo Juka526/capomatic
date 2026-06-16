@@ -136,7 +136,7 @@ export const translations = {
 
     // Hero
     subtitle: 'Choose a key shift',
-    heroHeadline: 'Transpose chord sheets instantly',
+    heroHeadline: 'Transpose chord sheets easily',
     heroSubcopy: '',
     heroTrust: 'PNG · JPG · no signup',
     heroPrimaryCta: 'Upload sheet',
