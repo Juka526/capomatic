@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@auth0/auth0-spa-js": "^2.18.0",
+    "@vercel/analytics": "^2.0.1",
     "lucide-react": "^0.468.0",
     "next": "^14.2.0",
     "react": "^18.3.0",
