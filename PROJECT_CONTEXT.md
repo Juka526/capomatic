@@ -24,8 +24,9 @@ Product rules:
 - Database/Auth0: not configured in the current public-only deployment
 - OpenAI: optional refinement secret is present; the public cost-control boundary is unresolved
 
-GitHub `main` is the canonical source. After the one-time 2026-08-28 reconciliation, Vercel and
-HF deploy the same reviewed release history through their independent build systems.
+GitHub `main` is the canonical source and Vercel deploys it directly. HF uses a runtime-only
+snapshot because GitHub history contains binary test fixtures that do not belong in the Space;
+each HF deployment commit records its source GitHub SHA.
 See `docs/PRODUCTION_CHECKLIST.md` for the audited state and release gates.
 
 ## Request and state flow

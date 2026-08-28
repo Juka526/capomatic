@@ -15,7 +15,7 @@ pinned: false
 Capomatic automatically detects chords in uploaded sheet music images and transposes them to any key. Built for worship teams who need quick, accurate chord sheet transposition.
 
 ![Python](https://img.shields.io/badge/python-3.12+-blue.svg)
-![Next.js](https://img.shields.io/badge/next.js-14-black.svg)
+![Next.js](https://img.shields.io/badge/next.js-16-black.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 ## Features

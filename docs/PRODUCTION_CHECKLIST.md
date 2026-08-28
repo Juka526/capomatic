@@ -31,7 +31,7 @@ Intentionally disabled in the current public-only deployment:
 
 Remediation outcome:
 
-- [x] GitHub `main`, the Vercel source release, and HF `main` use the reviewed canonical history.
+- [x] GitHub `main` drives Vercel, and HF `main` is a clean runtime snapshot whose commit message records the reviewed GitHub SHA.
 - [x] The optional-database fix is deployed; an unconfigured database no longer triggers a localhost connection attempt.
 
 Remaining operational decisions:
@@ -108,25 +108,28 @@ storage still needs a separate reviewed reclamation decision.
 
 ## 5. Release synchronization
 
-GitHub `main` is the canonical source. Vercel deploys it through Git integration; HF uses the
-repository configured locally as the `hf` remote. The HF history was reconciled once on
-2026-08-28. Do not repeat that force operation during normal releases. If divergence is suspected:
+GitHub `main` is the canonical source and Vercel deploys it through Git integration. HF receives
+a runtime-only snapshot because binary test fixtures in GitHub history are excluded from the
+Docker runtime and rejected by the Hub's normal Git path. Every HF deployment commit must record
+its source GitHub SHA.
+
+The previous HF history is recoverable at tag `pre-github-sync-2026-08-28`. Do not repeat the
+one-time force operation during normal releases. Publish a normal HF release from a clean export:
 
 ```bash
-git fetch origin main
-git fetch hf main
-git log --left-right --graph --oneline origin/main...hf/main
+release_dir="$(mktemp -d)"
+git archive HEAD .dockerignore .env.example Dockerfile README.md requirements.txt backend \
+  | tar -x -C "$release_dir"
+hf upload juka526/capomatic "$release_dir" . --type space --revision main --delete "*" \
+  --commit-message "Deploy GitHub $(git rev-parse HEAD)"
 ```
 
-Authenticate Git access with `hf auth login --add-to-git-credential` if needed. Do not make
-force-pushing part of the normal release procedure.
-
-After reconciliation, the normal release is `git push origin main` followed by `git push hf main`.
-Confirm or create the Vercel deployment for the exact Git SHA. For every release, record:
+Authenticate with `hf auth login` if needed. Confirm or create the Vercel deployment for the exact
+Git SHA. For every release, record:
 
 - [ ] GitHub `main` SHA
 - [ ] Vercel production source SHA
-- [ ] HF Space runtime SHA, or its explicit source-SHA mapping while histories differ
+- [ ] HF Space runtime SHA and its source GitHub SHA from the deployment commit message
 - [ ] Previous known-good deployment IDs and the non-secret environment-variable snapshot
 
 Do not diagnose a code regression until all three point to the intended source tree.
@@ -135,7 +138,7 @@ Do not diagnose a code regression until all three point to the intended source t
 
 1. **Code:** create a forward revert with `git revert <bad-release-sha>`; do not push an ancestor or force-push.
 2. **Frontend:** push the revert, then confirm Vercel deployed that SHA or redeploy the recorded known-good deployment.
-3. **Backend:** push the same revert commit to `hf main` after the repositories are reconciled.
+3. **Backend:** publish a new HF runtime snapshot from the forward-revert GitHub commit.
 4. **Configuration:** restore the recorded non-secret values and secret keys from the external secret store, then restart HF.
 5. **Verify:** repeat `/health`, POST preflight, upload/detect, and render smoke tests.
 6. **Database:** restore a backup only if the optional database mode was enabled and a migration caused the incident.
