@@ -114,18 +114,23 @@ Docker runtime and rejected by the Hub's normal Git path. Every HF deployment co
 its source GitHub SHA.
 
 The previous HF history is recoverable at tag `pre-github-sync-2026-08-28`. Do not repeat the
-one-time force operation during normal releases. Publish a normal HF release from a clean export:
+one-time force operation during normal releases. When runtime files change, publish from the
+canonical repository root through a fresh clone of the clean HF history:
 
 ```bash
 release_dir="$(mktemp -d)"
+git clone --depth 1 https://huggingface.co/spaces/juka526/capomatic "$release_dir/space"
+git -C "$release_dir/space" rm -r --ignore-unmatch -- \
+  .dockerignore .env.example Dockerfile README.md requirements.txt backend
 git archive HEAD .dockerignore .env.example Dockerfile README.md requirements.txt backend \
-  | tar -x -C "$release_dir"
-hf upload juka526/capomatic "$release_dir" . --type space --revision main --delete "*" \
-  --commit-message "Deploy GitHub $(git rev-parse HEAD)"
+  | tar -x -C "$release_dir/space"
+git -C "$release_dir/space" add -A
+git -C "$release_dir/space" commit -m "Deploy GitHub $(git rev-parse HEAD)"
+git -C "$release_dir/space" push origin main
 ```
 
-Authenticate with `hf auth login` if needed. Confirm or create the Vercel deployment for the exact
-Git SHA. For every release, record:
+Authenticate with `hf auth login --add-to-git-credential` if needed. Confirm or create the Vercel
+deployment for the exact Git SHA. For every release, record:
 
 - [ ] GitHub `main` SHA
 - [ ] Vercel production source SHA
