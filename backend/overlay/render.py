@@ -21,21 +21,21 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-# Bundled font. If it is missing or invalid, system fonts are tried.
-_FONT_PATH = pathlib.Path(__file__).parent / "fonts" / "BravuraText.otf"
+# Configured and system fonts, with Pillow's installed DejaVu font as fallback.
 _FONT_CANDIDATES = [
     os.environ.get("CHORD_RENDER_FONT", ""),
-    str(_FONT_PATH),
     "/System/Library/Fonts/Supplemental/Arial.ttf",
     "/System/Library/Fonts/Helvetica.ttc",
     "/System/Library/Fonts/HelveticaNeue.ttc",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     "/usr/local/share/fonts/dejavu/DejaVuSans.ttf",
+    "/usr/local/lib/python3.12/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans.ttf",
     "/opt/anaconda3/lib/python3.12/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans.ttf",
 ]
 _BOLD_FONT_CANDIDATES = [
     os.environ.get("CHORD_RENDER_BOLD_FONT", ""),
     "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+    "/usr/local/lib/python3.12/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans-Bold.ttf",
     "/opt/anaconda3/lib/python3.12/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans-Bold.ttf",
 ]
 

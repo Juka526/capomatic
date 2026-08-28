@@ -273,7 +273,6 @@ def get_ocr(
 
     Tuning notes
     ------------
-    * lang="en"  — English character set covers all chord symbols.
     * use_doc_orientation_classify=False / use_doc_unwarping=False — skips the
       document-level orientation and unwarping models; chord sheets are always
       flat and upright so these add time with no benefit.
@@ -298,7 +297,6 @@ def get_ocr(
     if cache_key not in _ocr_instances:
         from paddleocr import PaddleOCR  # noqa: PLC0415
         kwargs: dict = dict(
-            lang="en",
             use_doc_orientation_classify=False,
             use_doc_unwarping=False,
             use_textline_orientation=False,
