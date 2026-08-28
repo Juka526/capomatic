@@ -1,12 +1,15 @@
 """Unit tests for backend.api.main — endpoint validation and helpers."""
 from __future__ import annotations
 
+import asyncio
 import io
 from unittest.mock import patch
 
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
+from backend.db import database
 from backend.api.main import (
     MAX_UPLOAD_BYTES,
     _VALID_KEYS,
@@ -28,6 +31,14 @@ def _png_bytes(size: int = 100) -> bytes:
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     return buf.getvalue()
+
+
+def test_unconfigured_database_returns_503():
+    with patch.object(database, "async_session", None):
+        dependency = database.get_db()
+        with pytest.raises(HTTPException) as exc_info:
+            asyncio.run(dependency.__anext__())
+    assert exc_info.value.status_code == 503
 
 
 # ---------------------------------------------------------------------------

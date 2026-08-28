@@ -1,277 +1,78 @@
-CLAUDE.md — Transchord Project Instructions
-Project
-
-Transchord is a web-based chord transposition tool for guitarists, starting with Korean church worship team sheet music.
-
-Users upload a sheet image, the system detects chord symbols above the staff, transposes them by target key or capo logic, and returns an image with transposed chord overlays.
-
-MVP rule
-
-Do not transpose staff notes
-
-Only change the printed chord symbols above the staff
-
-Target users
-
-Korean church worship team guitarists
-
-Acoustic / strumming players
-
-Users working with Korean worship sheet formats
-
-This is a personal editing/transposition tool, not a score-selling platform.
-
-Product principles
-
-Detect first, transpose second
-
-OCR / AI only detects chords
-
-Transposition must remain deterministic in code
-
-Local OCR first, AI fallback second
-
-Paddle OCR is the primary path
-
-AI fallback is a backup for hard pages
-
-Optimize for the target domain first
-
-Korean worship sheets are the current domain
-
-Domain-focused tuning is acceptable
-
-Avoid overfitting to only one publisher/style
-
-Measure before changing
-
-Any OCR change must be evaluated with metrics:
-
-coverage
-
-OCR time
-
-predict time
-
-stitched image size
-
-fallback rate
-
-Current architecture
-Chord logic
-
-Deterministic and already implemented:
-
-normalize chord text
-
-parse chord strings
-
-transpose chords
-
-handle slash chords, sus/add/dim/aug, maj/min, enharmonic policy
-
-OCR pipeline
-
-Current flow:
-
-detect staff systems
-
-crop chord bands above staff systems
-
-stitch bands
-
-run Paddle OCR
-
-strict filter
-
-recovery pass
-
-quality gate
-
-optional AI fallback
-
-Hybrid engine
-
-Paddle OCR remains primary
-
-Quality gate decides if OCR result is reliable
-
-AI fallback returns row-wise chord text only
-
-AI does not transpose
-
-AI does not provide production-ready overlay coordinates yet
-
-Current implementation status
-Stable / implemented
-
-chord normalization / parser / transpose engine
-
-staff-aware chord-band cropping
-
-stitched OCR input
-
-OCR normalization and recovery
-
-hybrid quality gate + AI fallback structure
-
-labeled eval fixtures
-
-tests for parser, transpose, gate, fallback parsing
-
-Current bottleneck
-
-Main latency bottleneck is Paddle detector inference
-
-server_det is accurate but slow
-
-mobile_det was tested and rejected as default:
-
-much faster
-
-but unacceptable coverage drop on dense chord sheets
-
-Current default should remain:
-
-server detector
-
-mobile recognizer
-
-Current product scope
-In scope
-
-PNG / JPG input
-
-chord detection above staff
-
-target key transposition
-
-capo-based transposition
-
-two overlay modes later:
-
-orange chord beside original
-
-semi-transparent white box + new chord
-
-async job-based flow later
-
-Korean worship sheet focus
-
-Out of scope for now
-
-PDF support
-
-full note/staff transposition
-
-strong skew/photo correction
-
-exact AI bbox overlay
-
-generic score support for every sheet style
-
-UI polish before backend reliability
-
-Important chord rules
-
-Support slash chords, sus4, add9, maj7, dim, aug, 6/7/9/11/13
-
-Use compact normalized style:
-
-Esus4, A7sus4, etc.
-
-Follow target-key-friendly enharmonic output
-
-Avoid impractical spellings like E#, Cb, Fb, B#
-
-Dataset / evaluation rules
-
-Use labeled fixtures for every OCR change
-
-Track:
-
-coverage
-
-OCR time
-
-predict time
-
-stitched shape / pixel count
-
-gate pass/fail
-
-fallback usage
-
-Add more non-gifted Korean worship sheets over time
-
-Do not tune only against one style
-
-Current engineering priorities
-Priority 1
-
-Reduce OCR latency without breaking coverage.
-When experimenting:
-
-prefer small, isolated changes
-
-compare before/after on the fixture set
-
-keep debug metadata visible
-
-Priority 2
-
-Validate on more unseen Korean worship sheets.
-
-Priority 3
-
-Bridge final detected chords into transposition-ready structured output and overlay pipeline.
-
-Change guidelines for Claude Code
-
-When editing this repo:
-
-keep changes minimal and local
-
-do not refactor unrelated modules
-
-preserve deterministic chord parsing/transposition
-
-preserve eval/debug visibility
-
-keep server detector as default unless new evidence proves otherwise
-
-always report:
-
-files changed
-
-metrics before/after
-
-test result
-
-whether coverage changed
-
-Immediate non-goals
-
-Do not spend time on:
-
-PDF
-
-perfect AI coordinates
-
-staff note transposition
-
-replacing deterministic transpose with AI
-
-broad generalization outside Korean worship sheets too early
-
-Near-term success definition
-
-Good progress means:
-
-keep coverage near current level
-
-reduce detector latency meaningfully
-
-preserve hybrid fallback architecture
-
-move toward a usable image overlay result
+# Capomatic Project Context
+
+## Product
+
+Capomatic is a chord-sheet image transposition tool for Korean worship-team guitarists.
+It detects printed chord symbols, transposes them deterministically, and renders replacement
+or above-chord overlays. It does not transpose staff notation or sell/distribute scores.
+
+Product rules:
+
+- Detect first, transpose second.
+- OCR/AI may detect or refine chord text; Python code owns transposition.
+- Support slash chords and common extensions such as sus, add, maj/min, dim, aug, 6/7/9/11/13.
+- Prefer practical target-key spellings over theoretical names such as E#, Cb, Fb, or B#.
+- Optimize for Korean worship sheets without tuning to one publisher.
+
+## Current production
+
+- Frontend: Next.js on Vercel at `https://capomatic.vercel.app`
+- Backend: FastAPI/PaddleOCR Docker Space at `https://juka526-capomatic.hf.space`
+- Space: `juka526/capomatic`, Docker SDK, port `7860`, one `cpu-basic` replica
+- Required HF variable: `CORS_ORIGINS=https://capomatic.vercel.app`
+- Browser API target: `NEXT_PUBLIC_API_URL=https://juka526-capomatic.hf.space`
+- Database/Auth0: not configured in the current public-only deployment
+- OpenAI: optional refinement secret is present; the public cost-control boundary is unresolved
+
+GitHub `main` is the canonical source. After the one-time 2026-08-28 reconciliation, Vercel and
+HF deploy the same reviewed release history through their independent build systems.
+See `docs/PRODUCTION_CHECKLIST.md` for the audited state and release gates.
+
+## Request and state flow
+
+1. `POST /detect` runs PaddleOCR and returns chords plus a `detection_id`.
+2. The backend keeps up to 20 detections in a process-local LRU cache.
+3. `POST /detect/refine` optionally refines a cached detection with OpenAI.
+4. `POST /render` deterministically transposes and returns Replace/Above images as base64 JSON.
+5. The frontend stores user history in browser `localStorage`.
+
+Detection IDs disappear on restart and are not safe across multiple replicas. Keep one replica
+until this state moves to a shared store or requests gain session affinity.
+
+## OCR configuration
+
+- PaddleOCR remains the primary detector.
+- Code defaults to the server detector for local runs.
+- The production Dockerfile selects the mobile detector for HF CPU latency.
+- The Dockerfile pins the production canvas safeguards:
+  `PADDLE_MAX_STITCHED_PIXELS=900000`,
+  `PADDLE_STITCH_MAX_SAFE_PIXELS=900000`, and
+  `PADDLE_MIN_STITCH_RESIZE_SCALE=0.85`.
+- Oversized stitched canvases fall back to per-staff-band OCR to preserve small chord text.
+
+Evaluate OCR changes against labeled fixtures and report coverage, OCR/predict time, stitched
+pixel count, quality-gate result, and fallback usage.
+
+## Optional auth/admin
+
+Auth0 JWT verification and a PostgreSQL-backed user/admin list exist in code but are not enabled
+in production. Public OCR works without `DATABASE_URL`. Enabling auth/admin requires
+`DATABASE_URL`, `AUTH0_DOMAIN`, and `AUTH0_AUDIENCE` together, plus an explicit admin-role,
+migration, backup, and restore procedure.
+
+## Current priorities
+
+1. Keep reviewed releases synchronized across GitHub, Vercel, and HF, then decide whether
+   historical HF storage should be reclaimed.
+2. Put an authentication, rate-limit, or budget boundary around paid public GPT refinement,
+   or disable its production secret.
+3. Continue reducing OCR latency only when fixture coverage remains acceptable.
+4. Validate OCR changes on unseen Korean worship sheets.
+
+## Change rules
+
+- Keep changes minimal and local.
+- Preserve deterministic parsing/transposition and OCR debug metadata.
+- Do not add PDF or staff-note transposition without an explicit scope change.
+- Run backend tests and the frontend production build before release.
+- Never commit environment files, tokens, local virtual environments, or generated build output.

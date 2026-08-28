@@ -302,7 +302,7 @@ def get_ocr(
             use_doc_orientation_classify=False,
             use_doc_unwarping=False,
             use_textline_orientation=False,
-            enable_mkldnn=False,  # disable oneDNN — crashes on x86 Intel (Railway) with 3.3.0+
+            enable_mkldnn=False,  # disable oneDNN — crashes on x86 Linux with 3.3.0+
         )
         explicit_params = {
             "det_db_thresh": det_db_thresh,

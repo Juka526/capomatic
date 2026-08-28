@@ -1,80 +1,59 @@
 # Capomatic Testing Checklist
 
-Manual verification checklist for the auth/jobs/admin features.
-
 ## Prerequisites
 
-- [ ] PostgreSQL running (`brew services start postgresql@16`)
-- [ ] Backend running (`uvicorn backend.api.main:app --port 8000`)
-- [ ] Frontend running (`cd frontend && npm run dev`)
-- [ ] Auth0 configured and `.env` / `.env.local` populated
-- [ ] At least one test image in `fixtures/images/`
+- [ ] Backend running: `uvicorn backend.api.main:app --port 8000`
+- [ ] Frontend running: `cd frontend && npm run dev`
+- [ ] At least one PNG or JPEG test image
 
----
+PostgreSQL, Auth0, and `TEST_TOKEN` are required only for the optional auth/admin checks.
 
-## 1. Authentication
+## 1. Public pipeline
 
-- [ ] **Login**: Click "Log In" → redirected to Auth0 → login → redirected back
-- [ ] **User profile**: After login, name/avatar appears in header
-- [ ] **Logout**: Click "Log Out" → redirected to home, login button reappears
-- [ ] **Token persistence**: Refresh page → still logged in (localStorage cache)
-- [ ] **Protected route**: Navigate to `/history` while logged out → redirected to login
+- [ ] `GET /health` returns `{"status":"ok"}`.
+- [ ] Uploading PNG/JPEG starts detection and shows progress.
+- [ ] The detected key and chord boxes appear.
+- [ ] Changing capo position updates the target key.
+- [ ] Replace and Above rendering both work.
+- [ ] AI refinement works when `OPENAI_API_KEY` is configured.
+- [ ] Download saves the active rendered image.
+- [ ] Invalid or oversized uploads show an error.
 
-## 2. Core Pipeline (Public — No Auth Required)
+## 2. Browser state
 
-- [ ] **Upload**: Drag or click to upload PNG/JPG → detection starts
-- [ ] **Detection progress**: Progress bar shows during detection
-- [ ] **Key detection**: Detected key badge appears after detection
-- [ ] **Transpose slider**: Move capo slider → key display updates
-- [ ] **Convert**: Click Convert → both Replace and Above modes rendered
-- [ ] **Tab toggle**: Switch between Replace/Above tabs → image swaps
-- [ ] **Download**: Download button saves the active tab's image
-- [ ] **Clear**: X button resets the upload area
-- [ ] **Error handling**: Upload invalid file → error message shown
+- [ ] A completed transposition appears in `/history`.
+- [ ] History remains after refreshing the same browser.
+- [ ] Deleting a history item removes it from `localStorage`.
+- [ ] Korean/English switching works.
 
-## 3. Job History (Authenticated)
+## 3. Optional auth/admin
 
-- [ ] **Auto-save**: After converting, jobs appear in `/history`
-- [ ] **Job details**: Each job shows song name, keys, semitones, mode, timestamp
-- [ ] **Processing info**: `detected_chords_count`, `processing_time_ms` shown
-- [ ] **Delete job**: Delete button removes job from list
-- [ ] **Empty state**: New user sees "No jobs yet" message
-- [ ] **Pagination**: History loads correctly with many jobs
+- [ ] Login redirects through Auth0 and returns to the app.
+- [ ] `GET /api/auth/me` returns the current database-backed user.
+- [ ] Non-admin users cannot open `/admin/dashboard`.
+- [ ] `GET /api/admin/users` returns users for an admin token.
+- [ ] Logout clears the Auth0 session.
 
-## 4. Admin Dashboard
+## 4. Security and configuration
 
-- [ ] **Access control**: Non-admin users see "Access Denied" on `/admin/dashboard`
-- [ ] **Admin link**: Admin users see "Admin" link in header
-- [ ] **Overview tab**: Shows stat cards (users, jobs, cached, hit rate, avg time)
-- [ ] **Popular songs tab**: Shows ranked table with key info and request counts
-- [ ] **Users tab**: Shows all users with roles and dates
-- [ ] **Tab switching**: Tabs switch content correctly
+- [ ] `/api/auth/me` rejects unauthenticated requests.
+- [ ] `/api/admin/users` rejects non-admin requests.
+- [ ] Production CORS allows only `https://capomatic.vercel.app`.
+- [ ] Public routes still work when `DATABASE_URL` is absent.
+- [ ] Database-backed routes return 503 when the database is not configured.
 
-## 5. Caching
-
-- [ ] **Cache miss**: First request processes normally (X-Cache: MISS)
-- [ ] **Cache hit**: Same image + semitones + mode → instant response (X-Cache: HIT)
-- [ ] **Different params**: Changing semitones or mode → cache miss → reprocess
-
-## 6. Security
-
-- [ ] **Auth endpoints reject unauthenticated**: `/api/auth/me` → 401
-- [ ] **Admin endpoints reject non-admin**: `/api/admin/stats` → 403
-- [ ] **Ownership check**: Cannot access/delete other users' jobs → 404
-- [ ] **Public endpoints still work**: `/health`, `/detect`, `/render`, `/overlay` unchanged
-
----
-
-## Running Automated Tests
+## Automated checks
 
 ```bash
-# Unit tests (no auth required)
-python -m pytest tests/ -v --ignore=tests/integration
+# Unit tests; live integration tests skip without TEST_TOKEN.
+python -m pytest
 
-# Integration tests (requires TEST_TOKEN)
-export TEST_TOKEN="eyJ..."
-python -m pytest tests/integration/ -v
+# Frontend type and production build checks.
+cd frontend
+npx tsc --noEmit
+npm run build
 
-# Performance benchmarks
-python scripts/performance_test.py
+# Optional live auth/admin integration checks.
+TEST_API_URL=http://localhost:8000 TEST_TOKEN="eyJ..." \
+  python -m pytest tests/integration -v
 ```

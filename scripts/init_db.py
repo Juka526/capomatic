@@ -15,7 +15,8 @@ from backend.db.database import init_db
 
 async def main() -> None:
     print("Creating database tables...")
-    await init_db()
+    if not await init_db():
+        sys.exit("DATABASE_URL is not configured.")
     print("Done.")
 
 

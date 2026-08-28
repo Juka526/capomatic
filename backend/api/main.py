@@ -84,11 +84,13 @@ def _cache_get(detection_id: str) -> dict | None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create database tables (idempotent) — skip if DB is unavailable.
+    # Create database tables when optional database features are configured.
     try:
         from backend.db.database import init_db
-        await init_db()
-        logger.info("Database initialized.")
+        if await init_db():
+            logger.info("Database initialized.")
+        else:
+            logger.info("DATABASE_URL not configured; auth/admin features disabled.")
     except Exception as exc:
         logger.warning("Database not available, auth features disabled: %s", exc)
 
@@ -369,7 +371,7 @@ async def render(
     Parameters
     ----------
     detection_id    : ID returned by ``/detect``.
-    semitones       : Semitone shift applied to every detected chord (-11 to 0).
+    semitones       : Semitone shift applied to every detected chord (-11 to 11).
     mode            : "replace", "above", or "both" (default).
     chords_override : Optional JSON array of manually edited chords
                       ``[{"text": "Am", "bbox": [x1,y1,x2,y2]}, ...]``.

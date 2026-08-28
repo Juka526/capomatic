@@ -121,10 +121,10 @@ class TestRenderOverlay:
 
     def test_does_not_modify_original(self):
         img = _white_img()
-        original_data = list(img.getdata())
+        original_data = img.tobytes()
         chords = [_chord("Am", "Bm", [50, 100, 100, 120])]
         render_overlay(img, chords, "replace")
-        assert list(img.getdata()) == original_data
+        assert img.tobytes() == original_data
 
     def test_multiple_rows_above(self):
         img = _white_img(w=400, h=600)
