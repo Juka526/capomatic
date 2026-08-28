@@ -1,4 +1,5 @@
 import argparse
+import atexit
 import json
 import os
 import statistics
@@ -12,7 +13,12 @@ IMAGES_DIR = os.path.join(os.path.dirname(__file__), "..", "fixtures", "images")
 LABELS_DIR = os.path.join(os.path.dirname(__file__), "..", "fixtures", "labels")
 
 COVERAGE_THRESHOLD = 0.70
-MAX_AVG_TIME_S = 15.0  # CPU-only inference (Apple Silicon M-series): ~8-10 s/image
+MAX_AVG_TIME_S = 20.0  # local dependency screen; deployed HF timing is the release gate
+MIN_FULL_SUITE_COVERAGE = 0.9806  # Paddle 3.2.2 + PaddleOCR 3.7.0 production baseline
+MIN_FULL_SUITE_PRECISION = 0.8890
+MAX_API_AVG_TIME_S = 80.0         # 60 s target + 20 s tolerance
+MAX_API_STDDEV_TIME_S = 20.0
+MIN_API_FIXTURES = 3
 
 
 def build_runner(engine: str):
@@ -108,6 +114,45 @@ def build_runner(engine: str):
     return run_ocr
 
 
+def build_api_runner(api_url: str, engine: str, timeout_s: float, origin: str):
+    """Return a runner that exercises the deployed browser-to-HF API path."""
+    import httpx  # already installed with the OCR runtime
+
+    client = httpx.Client(
+        base_url=api_url.rstrip("/"),
+        headers={"Origin": origin},
+        timeout=timeout_s,
+    )
+    atexit.register(client.close)
+    _meta: dict = {}
+
+    def run_ocr(path: str) -> list[dict]:
+        media_type = "image/png" if path.lower().endswith(".png") else "image/jpeg"
+        with open(path, "rb") as image:
+            response = client.post(
+                "/detect",
+                files={"image": (os.path.basename(path), image, media_type)},
+                data={"ocr_engine": engine},
+            )
+        response.raise_for_status()
+        if response.headers.get("access-control-allow-origin") != origin:
+            raise RuntimeError(f"API does not allow browser origin {origin}")
+        payload = response.json()
+        _meta.clear()
+        _meta.update(payload.get("meta") or {})
+        expected_engine = "paddle-gpt-hybrid" if engine == "paddle-gpt" else "paddle"
+        if _meta.get("ocr_engine") != expected_engine:
+            raise RuntimeError(
+                f"API used {_meta.get('ocr_engine')!r}; expected {expected_engine!r}"
+            )
+        if engine == "paddle-gpt" and not _meta.get("gpt_used"):
+            raise RuntimeError("API reported paddle-gpt without GPT refinement")
+        return payload.get("chords") or []
+
+    run_ocr.last_meta = _meta  # type: ignore[attr-defined]
+    return run_ocr
+
+
 def evaluate(image_filename: str, label: dict, run_ocr) -> dict:
     image_path = os.path.join(IMAGES_DIR, image_filename)
 
@@ -123,8 +168,12 @@ def evaluate(image_filename: str, label: dict, run_ocr) -> dict:
 
     hit = sorted(set(detected_unique_list) & expected_unique_set)
     miss = sorted(expected_unique_set - set(detected_unique_list))
+    extra = sorted(set(detected_unique_list) - expected_unique_set)
 
     coverage = len(hit) / len(expected_unique_set) if expected_unique_set else 0.0
+    unique_precision = len(hit) / len(detected_unique_list) if detected_unique_list else 0.0
+    expected_total_min = int(label.get("expected_total_chords_min", 0))
+    expected_total_max = int(label.get("expected_total_chords_max", sys.maxsize))
 
     return {
         "image": image_filename,
@@ -134,7 +183,12 @@ def evaluate(image_filename: str, label: dict, run_ocr) -> dict:
         "expected_unique": expected_unique,
         "hit": hit,
         "miss": miss,
+        "extra": extra,
         "coverage": coverage,
+        "unique_precision": unique_precision,
+        "expected_total_min": expected_total_min,
+        "expected_total_max": expected_total_max,
+        "total_count_ok": expected_total_min <= total_detected <= expected_total_max,
         "ocr_time_s": ocr_time_s,
     }
 
@@ -153,12 +207,52 @@ def main() -> None:
         default=None,
         help="Evaluate only the first N labeled fixtures.",
     )
+    parser.add_argument(
+        "--api-url",
+        help="Run through a deployed HF API instead of local OCR, for example https://example.hf.space.",
+    )
+    parser.add_argument(
+        "--origin",
+        default="https://capomatic.vercel.app",
+        help="Browser Origin header for API mode (default: production Vercel URL).",
+    )
+    parser.add_argument(
+        "--baseline-api-url",
+        help="Production HF API used for fixture-by-fixture quality non-regression comparison.",
+    )
+    parser.add_argument(
+        "--request-timeout-s",
+        type=float,
+        default=240.0,
+        help="Per-image API timeout in seconds (default: 240).",
+    )
     args = parser.parse_args()
     if args.max_fixtures is not None and args.max_fixtures < 1:
         parser.error("--max-fixtures must be at least 1")
+    if args.api_url and args.engine not in {"paddle", "paddle-gpt"}:
+        parser.error("--api-url supports --engine paddle or paddle-gpt")
+    if args.baseline_api_url and not args.api_url:
+        parser.error("--baseline-api-url requires --api-url")
+    if args.request_timeout_s <= 0:
+        parser.error("--request-timeout-s must be positive")
 
-    run_ocr = build_runner(args.engine)
-    print(f"Engine: {args.engine}\n")
+    run_ocr = (
+        build_api_runner(args.api_url, args.engine, args.request_timeout_s, args.origin)
+        if args.api_url else build_runner(args.engine)
+    )
+    baseline_runner = (
+        build_api_runner(
+            args.baseline_api_url,
+            args.engine,
+            args.request_timeout_s,
+            args.origin,
+        )
+        if args.baseline_api_url else None
+    )
+    print(f"Engine: {args.engine}")
+    if args.api_url:
+        print(f"API: {args.api_url}  (Origin: {args.origin})")
+    print()
 
     # Drive evaluation by labels, not by image filenames.
     label_files = sorted(f for f in os.listdir(LABELS_DIR) if f.endswith(".json"))
@@ -177,10 +271,36 @@ def main() -> None:
     disk_map = {nfc("NFC", f): f for f in disk_files}  # NFC key → real filename
     labeled_nfc: set = set()
 
-    results: list = []
-    any_coverage_fail = False
+    selected_label_files = label_files[:args.max_fixtures]
+    is_full_suite = len(selected_label_files) == len(label_files)
 
-    for label_file in label_files[:args.max_fixtures]:
+    if args.api_url:
+        warmup_path = None
+        for label_file in selected_label_files:
+            with open(os.path.join(LABELS_DIR, label_file)) as f:
+                warmup_label = json.load(f)
+            warmup_name = disk_map.get(nfc("NFC", warmup_label["image"]))
+            if warmup_name:
+                warmup_path = os.path.join(IMAGES_DIR, warmup_name)
+                break
+        if warmup_path:
+            for name, runner in (("candidate", run_ocr), ("baseline", baseline_runner)):
+                if runner is None:
+                    continue
+                t0 = time.perf_counter()
+                runner(warmup_path)
+                print(
+                    f"Pre-gate {name} warm-up: {time.perf_counter() - t0:.2f} s "
+                    "(record as cold only immediately after a Space restart)"
+                )
+            print()
+
+    results: list = []
+    baseline_results: list = []
+    any_fixture_fail = False
+    any_quality_regression = False
+
+    for label_file in selected_label_files:
         label_path = os.path.join(LABELS_DIR, label_file)
         with open(label_path) as f:
             label = json.load(f)
@@ -191,18 +311,30 @@ def main() -> None:
 
         if img_nfc not in disk_map:
             print(f"[ERROR] {img_label} — listed in {label_file} but not found in fixtures/images/")
-            any_coverage_fail = True
+            any_fixture_fail = True
             print("-" * 50)
             continue
 
         img = disk_map[img_nfc]                    # actual filename on disk
+        baseline = evaluate(img, label, baseline_runner) if baseline_runner else None
+        if baseline:
+            baseline_results.append(baseline)
         r = evaluate(img, label, run_ocr)
         results.append(r)
 
         coverage_ok = r["coverage"] >= COVERAGE_THRESHOLD
-        if not coverage_ok:
-            any_coverage_fail = True
-        status = "PASS" if coverage_ok else "FAIL"
+        fixture_ok = coverage_ok and r["total_count_ok"]
+        if not fixture_ok:
+            any_fixture_fail = True
+        regression = bool(
+            baseline
+            and (
+                r["coverage"] < baseline["coverage"]
+                or r["unique_precision"] < baseline["unique_precision"]
+            )
+        )
+        any_quality_regression = any_quality_regression or regression
+        status = "PASS" if fixture_ok and not regression else "FAIL"
 
         print(f"Image            : {r['image']}")
         print(f"Total detected   : {r['total_detected']}")
@@ -210,7 +342,19 @@ def main() -> None:
         print(f"Expected unique  : {r['expected_unique']}")
         print(f"Hit              : {r['hit']}")
         print(f"Miss             : {r['miss']}")
+        print(f"Extra            : {r['extra']}")
         print(f"Coverage         : {r['coverage']:.2%}  ({len(r['hit'])}/{len(r['expected_unique'])})")
+        print(f"Unique precision : {r['unique_precision']:.2%}")
+        print(
+            f"Expected total    : {r['expected_total_min']}–{r['expected_total_max']} "
+            f"({'PASS' if r['total_count_ok'] else 'FAIL'})"
+        )
+        if baseline:
+            print(
+                f"Production quality: coverage {baseline['coverage']:.2%}, "
+                f"precision {baseline['unique_precision']:.2%} "
+                f"({'REGRESSION' if regression else 'PASS'})"
+            )
         print(f"OCR time         : {r['ocr_time_s'] * 1000:.1f} ms")
         print(f"Status           : {status}")
         if hasattr(run_ocr, "last_meta") and run_ocr.last_meta:
@@ -253,22 +397,40 @@ def main() -> None:
         if unlabeled:
             print()
 
-    if not results and not any_coverage_fail:
+    if not results and not any_fixture_fail:
         print("No fixtures evaluated. Add images + labels to fixtures/ to run evaluation.")
         sys.exit(0)
 
     avg_coverage = sum(r["coverage"] for r in results) / len(results) if results else 0.0
+    avg_unique_precision = (
+        sum(r["unique_precision"] for r in results) / len(results) if results else 0.0
+    )
     times_s      = [r["ocr_time_s"] for r in results]
     avg_time_s   = sum(times_s) / len(times_s) if times_s else 0.0
     median_time_s = statistics.median(times_s) if times_s else 0.0
-    time_ok = avg_time_s <= MAX_AVG_TIME_S
+    max_avg_time_s = MAX_API_AVG_TIME_S if args.api_url else MAX_AVG_TIME_S
+    time_stddev_s = statistics.pstdev(times_s) if len(times_s) > 1 else 0.0
+    time_ok = avg_time_s <= max_avg_time_s
+    variability_ok = (
+        not args.api_url
+        or (len(results) >= MIN_API_FIXTURES and time_stddev_s <= MAX_API_STDDEV_TIME_S)
+    )
+    full_suite_coverage_ok = not is_full_suite or avg_coverage >= MIN_FULL_SUITE_COVERAGE
+    full_suite_precision_ok = not is_full_suite or avg_unique_precision >= MIN_FULL_SUITE_PRECISION
 
     print(f"\nSUMMARY")
     print(f"Engine             : {args.engine}")
     print(f"Fixtures evaluated : {len(results)}")
     print(f"Avg coverage       : {avg_coverage:.2%}")
-    print(f"Avg OCR time       : {avg_time_s * 1000:.1f} ms  (limit: {int(MAX_AVG_TIME_S * 1000)} ms)")
+    print(f"Avg unique precision: {avg_unique_precision:.2%}")
+    print(f"Avg OCR time       : {avg_time_s * 1000:.1f} ms  (limit: {int(max_avg_time_s * 1000)} ms)")
     print(f"Median OCR time    : {median_time_s * 1000:.1f} ms")
+    if args.api_url:
+        print(f"Time stddev        : {time_stddev_s * 1000:.1f} ms  (limit: {int(MAX_API_STDDEV_TIME_S * 1000)} ms)")
+    if baseline_results:
+        baseline_times = [r["ocr_time_s"] for r in baseline_results]
+        print(f"Production avg time: {statistics.mean(baseline_times) * 1000:.1f} ms")
+        print(f"Production stddev  : {statistics.pstdev(baseline_times) * 1000:.1f} ms")
     predict_ms_list = [r["predict_ms"] for r in results if "predict_ms" in r]
     if predict_ms_list:
         print(f"Avg predict time   : {sum(predict_ms_list) / len(predict_ms_list):.1f} ms")
@@ -278,12 +440,30 @@ def main() -> None:
         print(f"Avg input tokens   : {sum(input_tokens_list) / len(input_tokens_list):.1f}")
         print(f"Median input tokens: {statistics.median(input_tokens_list):.1f}")
 
-    if any_coverage_fail:
-        print("\nFAIL: one or more fixtures below 0.70 coverage threshold.")
+    if any_fixture_fail:
+        print("\nFAIL: one or more fixtures is below 0.70 coverage or outside its expected total range.")
+    if any_quality_regression:
+        print("\nFAIL: candidate quality regressed against production on one or more fixtures.")
+    if not full_suite_coverage_ok:
+        print(f"\nFAIL: full-suite coverage {avg_coverage:.2%} is below the {MIN_FULL_SUITE_COVERAGE:.2%} production baseline.")
+    if not full_suite_precision_ok:
+        print(f"\nFAIL: full-suite unique precision {avg_unique_precision:.2%} is below the {MIN_FULL_SUITE_PRECISION:.2%} production baseline.")
     if not time_ok:
-        print(f"\nFAIL: avg OCR time {avg_time_s:.2f}s exceeds {MAX_AVG_TIME_S}s limit.")
+        print(f"\nFAIL: avg OCR time {avg_time_s:.2f}s exceeds {max_avg_time_s}s limit.")
+    if not variability_ok:
+        if len(results) < MIN_API_FIXTURES:
+            print(f"\nFAIL: API timing needs at least {MIN_API_FIXTURES} fixtures; got {len(results)}.")
+        else:
+            print(f"\nFAIL: API time stddev {time_stddev_s:.2f}s exceeds {MAX_API_STDDEV_TIME_S}s limit.")
 
-    if any_coverage_fail or not time_ok:
+    if (
+        any_fixture_fail
+        or any_quality_regression
+        or not full_suite_coverage_ok
+        or not full_suite_precision_ok
+        or not time_ok
+        or not variability_ok
+    ):
         sys.exit(1)
 
     print("\nAll fixtures passed.")

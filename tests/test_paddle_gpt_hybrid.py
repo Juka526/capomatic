@@ -1,6 +1,8 @@
 """Unit tests for Paddle + GPT hybrid OCR post-processing."""
 from __future__ import annotations
 
+import threading
+
 from PIL import Image
 
 from backend.ocr import paddle_gpt_hybrid as hybrid
@@ -110,11 +112,35 @@ def test_gpt_recognize_crops_batched_preserves_global_ids(monkeypatch):
         batch_size=2,
     )
 
-    assert calls == [2, 1]
+    assert sorted(calls) == [1, 2]
     assert sorted(result) == [1, 2, 3]
     assert result[3]["text"] == "C"
     assert meta["batches"] == 2
+    assert meta["max_concurrency"] == 2
     assert meta["usage"]["prompt_tokens"] == 20
+
+
+def test_gpt_crop_batches_run_concurrently(monkeypatch):
+    img = Image.new("RGB", (300, 200), "white")
+    both_started = threading.Barrier(2)
+
+    def fake_recognize(image, items, **kwargs):
+        both_started.wait(timeout=1)
+        return ({1: {"text": items[0]["text"], "confidence": 0.95}}, {"usage": {}})
+
+    monkeypatch.setattr(hybrid, "GPT_MAX_CONCURRENCY", 2)
+    monkeypatch.setattr(hybrid, "_gpt_recognize_crops", fake_recognize)
+
+    result, _ = hybrid._gpt_recognize_crops_batched(
+        img,
+        [
+            {"text": "A", "bbox": [0, 0, 10, 10]},
+            {"text": "B", "bbox": [10, 0, 20, 10]},
+        ],
+        batch_size=1,
+    )
+
+    assert [result[idx]["text"] for idx in sorted(result)] == ["A", "B"]
 
 
 def test_run_hybrid_without_api_key_returns_paddle_only(monkeypatch):
@@ -308,6 +334,48 @@ def test_refine_adds_high_recall_gpt_gap_without_full_image_gap(monkeypatch):
     assert items[1]["source"] == "paddle_high_recall_gpt_gap"
     assert meta["gap_candidate_count"] == 1
     assert meta["gpt_gap_candidates_accepted"] == 1
+
+
+def test_refine_runs_text_and_gap_branches_concurrently(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr(hybrid, "ENABLE_GAP_FILL", True)
+    monkeypatch.setattr(hybrid, "ENABLE_HIGH_RECALL_GAP_FILL", True)
+    monkeypatch.setattr(hybrid, "ENABLE_FULL_IMAGE_GAP_FILL", False)
+    both_started = threading.Barrier(2)
+
+    def fake_text(*args, **kwargs):
+        both_started.wait(timeout=1)
+        return ({1: {"text": "Am", "confidence": 0.95}}, {
+            "batches": 1,
+            "max_concurrency": 1,
+            "elapsed_ms": 1.0,
+            "usage": {"prompt_tokens": 10, "completion_tokens": 2},
+        })
+
+    def fake_gap(*args, **kwargs):
+        both_started.wait(timeout=1)
+        return ([{
+            "text": "Fmaj7",
+            "confidence": 0.92,
+            "bbox": [100, 20, 150, 44],
+            "source": "paddle_high_recall_gpt_gap",
+        }], {
+            "gpt_gap_used": True,
+            "gpt_gap_count": 1,
+            "gpt_gap_candidates_accepted": 1,
+        })
+
+    monkeypatch.setattr(hybrid, "_gpt_recognize_crops_batched", fake_text)
+    monkeypatch.setattr(hybrid, "_refine_gap_items", fake_gap)
+
+    items, meta = hybrid.refine_paddle_items_with_gpt(
+        Image.new("RGB", (300, 200), "white"),
+        [{"text": "Am", "confidence": 0.9, "bbox": [10, 20, 50, 44]}],
+        base_meta={"regions": [{"y0": 0, "h": 80}]},
+    )
+
+    assert [item["text"] for item in items] == ["Am", "Fmaj7"]
+    assert meta["parallel_refinement"] is True
 
 
 def test_refine_runs_gap_fill_when_initial_gpt_text_confirmation_fails(monkeypatch):

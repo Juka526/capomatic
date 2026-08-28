@@ -300,7 +300,9 @@ def get_ocr(
             use_doc_orientation_classify=False,
             use_doc_unwarping=False,
             use_textline_orientation=False,
-            enable_mkldnn=False,  # disable oneDNN — crashes on x86 Linux with 3.3.0+
+            # Paddle 3.3.x has a Linux oneDNN regression. Production stays on
+            # 3.2.2, but acceleration remains opt-in until the HF gate passes.
+            enable_mkldnn=os.environ.get("PADDLE_ENABLE_MKLDNN", "0") == "1",
         )
         explicit_params = {
             "det_db_thresh": det_db_thresh,

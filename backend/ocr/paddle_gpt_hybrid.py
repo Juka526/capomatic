@@ -6,11 +6,13 @@ Paddle boxes and to optionally fill missed chord gaps.
 from __future__ import annotations
 
 import base64
+import concurrent.futures
 import io
 import json
 import os
 import re
 import tempfile
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -42,6 +44,8 @@ HIGH_RECALL_DET_DB_UNCLIP_RATIO = float(os.environ.get("HYBRID_PADDLE_DET_DB_UNC
 HIGH_RECALL_MIN_NEW_CONF = float(os.environ.get("HYBRID_PADDLE_MIN_NEW_CONF", "0.35"))
 CROP_RECOGNITION_BATCH_SIZE = int(os.environ.get("HYBRID_GPT_CROP_BATCH_SIZE", "20"))
 GAP_VALIDATION_BATCH_SIZE = int(os.environ.get("HYBRID_GPT_GAP_BATCH_SIZE", "12"))
+GPT_MAX_CONCURRENCY = max(1, int(os.environ.get("HYBRID_GPT_MAX_CONCURRENCY", "2")))
+_GPT_REQUEST_SLOTS = threading.BoundedSemaphore(GPT_MAX_CONCURRENCY)
 
 _CROP_PROMPT = (
     "Each numbered crop contains one or more possible chord symbols from a sheet music image. "
@@ -111,8 +115,9 @@ def _request_openai_image(
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:  # noqa: S310
-            response_data = json.loads(resp.read().decode("utf-8"))
+        with _GPT_REQUEST_SLOTS:
+            with urllib.request.urlopen(req, timeout=60) as resp:  # noqa: S310
+                response_data = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"OpenAI OCR request failed: {exc.code} {detail}") from exc
@@ -279,27 +284,41 @@ def _gpt_recognize_crops_batched(
     if not items:
         return {}, {}
 
+    t_start = time.perf_counter()
     result: dict[int, dict] = {}
     meta: dict[str, Any] = {
         "usage": _empty_usage(),
         "batches": 0,
     }
     batch_size = max(1, batch_size)
-    for start in range(0, len(items), batch_size):
-        batch = items[start:start + batch_size]
+    batches = [
+        (start, items[start:start + batch_size])
+        for start in range(0, len(items), batch_size)
+    ]
+
+    def recognize_batch(batch_info: tuple[int, list[dict]]) -> tuple[int, dict, dict]:
+        start, batch = batch_info
         batch_by_id, batch_meta = _gpt_recognize_crops(
             img,
             batch,
             recover_invalid=recover_invalid,
         )
-        meta["batches"] += 1
-        _add_usage(meta["usage"], batch_meta.get("usage", {}))
-        for local_idx, value in batch_by_id.items():
-            result[start + local_idx] = value
+        return start, batch_by_id, batch_meta
+
+    workers = min(GPT_MAX_CONCURRENCY, len(batches))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+        batch_results = pool.map(recognize_batch, batches)
+        for start, batch_by_id, batch_meta in batch_results:
+            meta["batches"] += 1
+            _add_usage(meta["usage"], batch_meta.get("usage", {}))
+            for local_idx, value in batch_by_id.items():
+                result[start + local_idx] = value
 
     meta["usage"]["total_tokens"] = (
         meta["usage"]["prompt_tokens"] + meta["usage"]["completion_tokens"]
     )
+    meta["max_concurrency"] = workers
+    meta["elapsed_ms"] = round((time.perf_counter() - t_start) * 1000, 1)
     return result, meta
 
 
@@ -692,57 +711,89 @@ def _gpt_validate_gap_candidates(
     if not candidates:
         return [], {}
 
+    gpt_by_id, batch_meta = _gpt_recognize_crops_batched(
+        img,
+        candidates,
+        batch_size=GAP_VALIDATION_BATCH_SIZE,
+        recover_invalid=True,
+    )
     accepted: list[dict] = []
     rejected = 0
-    meta: dict[str, Any] = {
-        "usage": {"prompt_tokens": 0, "completion_tokens": 0},
-        "gpt_gap_batches": 0,
-    }
-    batch_size = max(1, GAP_VALIDATION_BATCH_SIZE)
-    for start in range(0, len(candidates), batch_size):
-        batch = candidates[start:start + batch_size]
-        gpt_by_id, batch_meta = _gpt_recognize_crops(img, batch, recover_invalid=True)
-        meta["gpt_gap_batches"] += 1
-        usage = batch_meta.get("usage", {})
-        meta["usage"]["prompt_tokens"] += int(usage.get("prompt_tokens") or 0)
-        meta["usage"]["completion_tokens"] += int(usage.get("completion_tokens") or 0)
-
-        for idx, candidate in enumerate(batch, start=1):
-            gpt = gpt_by_id.get(idx)
-            if not gpt or gpt["confidence"] < GPT_GAP_CONF:
+    for idx, candidate in enumerate(candidates, start=1):
+        gpt = gpt_by_id.get(idx)
+        if not gpt or gpt["confidence"] < GPT_GAP_CONF:
+            rejected += 1
+            continue
+        before_count = len(accepted)
+        recovered_items = gpt.get("recovered_items")
+        if isinstance(recovered_items, list) and recovered_items:
+            for item in recovered_items:
+                text = item.get("text")
+                bbox = item.get("bbox") or candidate["bbox"]
+                if not isinstance(text, str) or not is_chord_candidate(text):
+                    continue
+                accepted.append({
+                    "text": text,
+                    "bbox": [int(v) for v in bbox],
+                    "confidence": min(1.0, max(float(candidate.get("confidence", 0.0)), gpt["confidence"])),
+                    "source": "paddle_high_recall_gpt_gap",
+                })
+            if len(accepted) == before_count:
                 rejected += 1
-                continue
-            before_count = len(accepted)
-            recovered_items = gpt.get("recovered_items")
-            if isinstance(recovered_items, list) and recovered_items:
-                for item in recovered_items:
-                    text = item.get("text")
-                    bbox = item.get("bbox") or candidate["bbox"]
-                    if not isinstance(text, str) or not is_chord_candidate(text):
-                        continue
-                    accepted.append({
-                        "text": text,
-                        "bbox": [int(v) for v in bbox],
-                        "confidence": min(1.0, max(float(candidate.get("confidence", 0.0)), gpt["confidence"])),
-                        "source": "paddle_high_recall_gpt_gap",
-                    })
-                if len(accepted) == before_count:
-                    rejected += 1
-                continue
-            accepted.append({
-                "text": gpt["text"],
-                "bbox": candidate["bbox"],
-                "confidence": min(1.0, max(float(candidate.get("confidence", 0.0)), gpt["confidence"])),
-                "source": "paddle_high_recall_gpt_gap",
-            })
+            continue
+        accepted.append({
+            "text": gpt["text"],
+            "bbox": candidate["bbox"],
+            "confidence": min(1.0, max(float(candidate.get("confidence", 0.0)), gpt["confidence"])),
+            "source": "paddle_high_recall_gpt_gap",
+        })
 
-    meta["usage"]["total_tokens"] = (
-        meta["usage"]["prompt_tokens"] + meta["usage"]["completion_tokens"]
-    )
+    meta: dict[str, Any] = {
+        "usage": batch_meta.get("usage", _empty_usage()),
+        "gpt_gap_batches": batch_meta.get("batches", 0),
+        "gpt_gap_max_concurrency": batch_meta.get("max_concurrency", 1),
+    }
     meta["gpt_gap_candidates_sent"] = len(candidates)
     meta["gpt_gap_candidates_accepted"] = len(accepted)
     meta["gpt_gap_candidates_rejected"] = rejected
     return accepted, meta
+
+
+def _refine_gap_items(
+    img: Image.Image,
+    paddle_items: list[dict],
+    regions: list[dict] | None,
+) -> tuple[list[dict], dict]:
+    """Discover and validate missed chords without changing Paddle detections."""
+    t_start = time.perf_counter()
+    component_candidates, component_meta = _component_gap_candidates(
+        img,
+        paddle_items,
+        regions,
+    )
+    candidates = list(component_candidates)
+    high_recall_candidates, candidate_meta = _run_high_recall_paddle_candidates(
+        img,
+        paddle_items + candidates,
+        regions,
+    )
+    candidates.extend(high_recall_candidates)
+    validated, gap_meta = _gpt_validate_gap_candidates(img, candidates)
+    return validated, {
+        **candidate_meta,
+        **component_meta,
+        "gpt_gap_mode": "paddle_high_recall_candidates",
+        "gpt_gap_used": bool(candidates),
+        "gpt_gap_ms": round((time.perf_counter() - t_start) * 1000, 1),
+        "gpt_gap_count": len(validated),
+        "gpt_gap_batches": gap_meta.get("gpt_gap_batches"),
+        "gpt_gap_max_concurrency": gap_meta.get("gpt_gap_max_concurrency"),
+        "gpt_gap_input_tokens": gap_meta.get("usage", {}).get("prompt_tokens"),
+        "gpt_gap_output_tokens": gap_meta.get("usage", {}).get("completion_tokens"),
+        "gpt_gap_candidates_sent": gap_meta.get("gpt_gap_candidates_sent", len(candidates)),
+        "gpt_gap_candidates_accepted": gap_meta.get("gpt_gap_candidates_accepted", len(validated)),
+        "gpt_gap_candidates_rejected": gap_meta.get("gpt_gap_candidates_rejected", 0),
+    }
 
 
 def _merge_gpt_text(
@@ -796,69 +847,52 @@ def refine_paddle_items_with_gpt(
         meta["total_ms"] = round((time.perf_counter() - t_start) * 1000, 1)
         return paddle_items, meta
 
-    try:
-        t0 = time.perf_counter()
-        gpt_by_id, crop_meta = _gpt_recognize_crops_batched(
-            img,
+    gap_items: list[dict] = []
+    regions = (base_meta or {}).get("regions")
+    gap_enabled = ENABLE_GAP_FILL and ENABLE_HIGH_RECALL_GAP_FILL
+
+    # GPT text correction preserves every Paddle bbox. Gap discovery depends on
+    # those bboxes only, so both quality-equivalent branches can run together.
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        crop_future = pool.submit(
+            _gpt_recognize_crops_batched,
+            img.copy(),
             paddle_items,
             batch_size=CROP_RECOGNITION_BATCH_SIZE,
         )
-        crop_ms = round((time.perf_counter() - t0) * 1000, 1)
-        merged, replaced, low_conf_flags = _merge_gpt_text(paddle_items, gpt_by_id)
-        meta.update({
-            "gpt_used": True,
-            "gpt_crop_batches": crop_meta.get("batches"),
-            "gpt_crop_ms": crop_ms,
-            "gpt_crop_items": len(gpt_by_id),
-            "gpt_text_replaced": replaced,
-            "low_conf_flags": low_conf_flags,
-            "gpt_crop_input_tokens": crop_meta.get("usage", {}).get("prompt_tokens"),
-            "gpt_crop_output_tokens": crop_meta.get("usage", {}).get("completion_tokens"),
-            "gpt_crop_sent_image_width": crop_meta.get("sent_image_width"),
-            "gpt_crop_sent_image_height": crop_meta.get("sent_image_height"),
-        })
-    except Exception as exc:  # noqa: BLE001
-        merged = [{**item, "source": "paddle"} for item in paddle_items]
-        meta["gpt_error"] = str(exc)
+        gap_future = (
+            pool.submit(_refine_gap_items, img.copy(), paddle_items, regions)
+            if gap_enabled else None
+        )
 
-    gap_items: list[dict] = []
-    regions = (base_meta or {}).get("regions")
-    if ENABLE_GAP_FILL and ENABLE_HIGH_RECALL_GAP_FILL:
         try:
-            t0 = time.perf_counter()
-            component_candidates, component_meta = _component_gap_candidates(
-                img,
-                merged,
-                regions,
-            )
-            candidates = list(component_candidates)
-            high_recall_candidates, candidate_meta = _run_high_recall_paddle_candidates(
-                img,
-                merged + candidates,
-                regions,
-            )
-            candidates.extend(high_recall_candidates)
-            validated, gap_meta = _gpt_validate_gap_candidates(img, candidates)
-            gap_items.extend(validated)
+            gpt_by_id, crop_meta = crop_future.result()
+            merged, replaced, low_conf_flags = _merge_gpt_text(paddle_items, gpt_by_id)
             meta.update({
-                **candidate_meta,
-                **component_meta,
-                "gpt_used": bool(candidates) or bool(meta.get("gpt_used")),
-                "gpt_gap_mode": "paddle_high_recall_candidates",
-                "gpt_gap_used": bool(candidates),
-                "gpt_gap_ms": round((time.perf_counter() - t0) * 1000, 1),
-                "gpt_gap_count": len(validated),
-                "gpt_gap_batches": gap_meta.get("gpt_gap_batches"),
-                "gpt_gap_input_tokens": gap_meta.get("usage", {}).get("prompt_tokens"),
-                "gpt_gap_output_tokens": gap_meta.get("usage", {}).get("completion_tokens"),
-                "gpt_gap_candidates_sent": gap_meta.get("gpt_gap_candidates_sent", len(candidates)),
-                "gpt_gap_candidates_accepted": gap_meta.get("gpt_gap_candidates_accepted", len(validated)),
-                "gpt_gap_candidates_rejected": gap_meta.get("gpt_gap_candidates_rejected", 0),
-                "gpt_gap_sent_image_width": gap_meta.get("sent_image_width"),
-                "gpt_gap_sent_image_height": gap_meta.get("sent_image_height"),
+                "gpt_used": True,
+                "gpt_crop_batches": crop_meta.get("batches"),
+                "gpt_crop_max_concurrency": crop_meta.get("max_concurrency"),
+                "gpt_crop_ms": crop_meta.get("elapsed_ms"),
+                "gpt_crop_items": len(gpt_by_id),
+                "gpt_text_replaced": replaced,
+                "low_conf_flags": low_conf_flags,
+                "gpt_crop_input_tokens": crop_meta.get("usage", {}).get("prompt_tokens"),
+                "gpt_crop_output_tokens": crop_meta.get("usage", {}).get("completion_tokens"),
             })
         except Exception as exc:  # noqa: BLE001
-            meta["gpt_gap_error"] = str(exc)
+            merged = [{**item, "source": "paddle"} for item in paddle_items]
+            meta["gpt_error"] = str(exc)
+
+        if gap_future is not None:
+            try:
+                gap_items, gap_stage_meta = gap_future.result()
+                meta.update(gap_stage_meta)
+                meta["gpt_used"] = bool(gap_stage_meta.get("gpt_gap_used")) or bool(meta.get("gpt_used"))
+            except Exception as exc:  # noqa: BLE001
+                meta["gpt_gap_error"] = str(exc)
+
+    meta["parallel_refinement"] = gap_enabled
+    meta["gpt_max_concurrency"] = GPT_MAX_CONCURRENCY
 
     if ENABLE_GAP_FILL and ENABLE_FULL_IMAGE_GAP_FILL and meta.get("gpt_used"):
         try:

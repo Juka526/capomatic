@@ -184,7 +184,13 @@ class TestDetectEndpoint:
     def test_detect_uses_paddle_gpt_when_requested(self, mock_detect):
         mock_detect.return_value = (
             [{"text": "G", "confidence": 1.0, "bbox": [0, 0, 10, 10]}],
-            {"ocr_engine": "paddle-gpt-hybrid", "predict_ms": 5},
+            {
+                "ocr_engine": "paddle-gpt-hybrid",
+                "predict_ms": 5,
+                "total_ms": 9,
+                "gpt_crop_ms": 3,
+                "parallel_refinement": True,
+            },
         )
         resp = client.post(
             "/detect",
@@ -192,8 +198,28 @@ class TestDetectEndpoint:
             data={"ocr_engine": "paddle-gpt"},
         )
         assert resp.status_code == 200
-        assert resp.json()["meta"]["ocr_engine"] == "paddle-gpt-hybrid"
+        meta = resp.json()["meta"]
+        assert meta["ocr_engine"] == "paddle-gpt-hybrid"
+        assert meta["total_ms"] == 9
+        assert meta["gpt_crop_ms"] == 3
+        assert meta["parallel_refinement"] is True
+        assert meta["service_ms"] >= 0
         mock_detect.assert_called_once()
+
+    def test_detect_reports_paddle_only_after_hybrid_fallback(self):
+        fallback_result = ([{"text": "G", "confidence": 1.0, "bbox": [0, 0, 10, 10]}], {})
+        with (
+            patch("backend.api.main.run_ocr_paddle_gpt_hybrid", side_effect=RuntimeError("boom")),
+            patch("backend.api.main.detect_chords_hybrid", return_value=fallback_result),
+        ):
+            resp = client.post(
+                "/detect",
+                files={"image": ("test.png", _png_bytes(), "image/png")},
+                data={"ocr_engine": "paddle-gpt"},
+            )
+
+        assert resp.status_code == 200
+        assert resp.json()["meta"]["ocr_engine"] == "paddle-only"
 
     def test_detect_rejects_invalid_ocr_engine(self):
         resp = client.post(

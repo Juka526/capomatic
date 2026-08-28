@@ -1,0 +1,73 @@
+from unittest.mock import Mock
+
+import httpx
+
+from scripts import eval_ocr
+
+
+def test_api_runner_posts_fixture_through_detect(monkeypatch, tmp_path):
+    image_path = tmp_path / "sheet.png"
+    image_path.write_bytes(b"png")
+    response = Mock()
+    response.json.return_value = {
+        "chords": [{"text": "Am", "confidence": 0.9, "bbox": [1, 2, 3, 4]}],
+        "meta": {"ocr_engine": "paddle", "predict_ms": 123},
+    }
+    response.headers = {"access-control-allow-origin": "https://capomatic.vercel.app"}
+    client = Mock()
+    client.post.return_value = response
+    monkeypatch.setattr(httpx, "Client", Mock(return_value=client))
+
+    runner = eval_ocr.build_api_runner(
+        "https://example.hf.space/",
+        "paddle",
+        240,
+        "https://capomatic.vercel.app",
+    )
+
+    assert runner(str(image_path))[0]["text"] == "Am"
+    assert runner.last_meta["predict_ms"] == 123
+    assert client.post.call_args.kwargs["data"] == {"ocr_engine": "paddle"}
+    response.raise_for_status.assert_called_once()
+
+
+def test_api_runner_rejects_silent_engine_fallback(monkeypatch, tmp_path):
+    image_path = tmp_path / "sheet.png"
+    image_path.write_bytes(b"png")
+    response = Mock()
+    response.json.return_value = {"chords": [], "meta": {"ocr_engine": "paddle-only"}}
+    response.headers = {"access-control-allow-origin": "https://capomatic.vercel.app"}
+    client = Mock()
+    client.post.return_value = response
+    monkeypatch.setattr(httpx, "Client", Mock(return_value=client))
+    runner = eval_ocr.build_api_runner(
+        "https://example.hf.space",
+        "paddle-gpt",
+        240,
+        "https://capomatic.vercel.app",
+    )
+
+    try:
+        runner(str(image_path))
+    except RuntimeError as exc:
+        assert "expected 'paddle-gpt-hybrid'" in str(exc)
+    else:
+        raise AssertionError("silent hybrid fallback should fail the benchmark")
+
+
+def test_evaluate_enforces_expected_total_range(tmp_path, monkeypatch):
+    monkeypatch.setattr(eval_ocr, "IMAGES_DIR", str(tmp_path))
+    (tmp_path / "sheet.png").write_bytes(b"png")
+    result = eval_ocr.evaluate(
+        "sheet.png",
+        {
+            "expected_unique_chords": ["Am"],
+            "expected_total_chords_min": 2,
+            "expected_total_chords_max": 3,
+        },
+        lambda _: [{"text": "Am"}],
+    )
+
+    assert result["coverage"] == 1.0
+    assert result["unique_precision"] == 1.0
+    assert result["total_count_ok"] is False

@@ -2,7 +2,7 @@
 pytest
 
 # Section 3 OCR & image processing
-paddleocr>=3.0.1
+paddleocr==3.7.0       # production quality baseline; upgrade only after the HF API gate passes
 paddlepaddle==3.2.2      # 3.3.0+ has a PIR/oneDNN regression on x86 Linux
 opencv-python-headless
 Pillow
