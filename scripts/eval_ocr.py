@@ -406,6 +406,7 @@ def main() -> None:
             continue
         cases.append((label_path, label, image_path))
 
+    evaluation_errors: list[dict] = []
     if args.api_url:
         warmup_path = cases[0][2] if cases else None
         if warmup_path:
@@ -413,16 +414,25 @@ def main() -> None:
                 if runner is None:
                     continue
                 t0 = time.perf_counter()
-                runner(warmup_path)
-                print(
-                    f"Pre-gate {name} warm-up: {time.perf_counter() - t0:.2f} s "
-                    "(record as cold only immediately after a Space restart)"
-                )
+                try:
+                    runner(warmup_path)
+                except Exception as exc:
+                    evaluation_errors.append({
+                        "phase": f"{name}_warmup",
+                        "image": os.path.basename(warmup_path),
+                        "error": f"{type(exc).__name__}: {exc}",
+                    })
+                    print(f"[ERROR] Pre-gate {name} warm-up failed: {exc}")
+                else:
+                    print(
+                        f"Pre-gate {name} warm-up: {time.perf_counter() - t0:.2f} s "
+                        "(record as cold only immediately after a Space restart)"
+                    )
             print()
 
     results: list = []
     baseline_results: list = []
-    any_fixture_fail = bool(missing_labels)
+    any_fixture_fail = bool(missing_labels or evaluation_errors)
     any_quality_regression = False
 
     report_meta_keys = {
@@ -463,11 +473,24 @@ def main() -> None:
         )
 
     for label_path, label, image_path in cases:
-        baseline = (
-            evaluate(image_path, label, baseline_runner, label_file=label_path)
-            if baseline_runner else None
-        )
-        r = evaluate(image_path, label, run_ocr, label_file=label_path)
+        try:
+            baseline = (
+                evaluate(image_path, label, baseline_runner, label_file=label_path)
+                if baseline_runner else None
+            )
+            r = evaluate(image_path, label, run_ocr, label_file=label_path)
+        except Exception as exc:
+            evaluation_errors.append({
+                "phase": "fixture",
+                "image": label["image"],
+                "image_sha256": _sha256_file(image_path),
+                "label_file": label_path,
+                "error": f"{type(exc).__name__}: {exc}",
+            })
+            any_fixture_fail = True
+            print(f"[ERROR] {label['image']} — {type(exc).__name__}: {exc}")
+            print("-" * 50)
+            continue
         if hasattr(run_ocr, "last_meta"):
             r["meta"] = {
                 key: value
@@ -710,6 +733,7 @@ def main() -> None:
                 baseline_report.get("deployment_sha") if baseline_report else None
             ),
             "results": results,
+            "errors": evaluation_errors,
             "summary": summary,
             "gate": {
                 "pass": not gate_failed,

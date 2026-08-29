@@ -130,3 +130,33 @@ def test_failing_gate_still_writes_report(monkeypatch, tmp_path):
     assert report["summary"]["passed"] is False
     assert report["summary"]["failure_reasons"] == ["fixture_quality"]
     assert report["results"][0]["image_sha256"]
+
+
+def test_runner_error_still_writes_report(monkeypatch, tmp_path):
+    images_dir = tmp_path / "images"
+    labels_dir = tmp_path / "labels"
+    images_dir.mkdir()
+    labels_dir.mkdir()
+    (images_dir / "sheet.png").write_bytes(b"png")
+    (labels_dir / "sheet.json").write_text(json.dumps({
+        "image": "sheet.png",
+        "expected_unique_chords": ["Am"],
+    }))
+    report_path = tmp_path / "report.json"
+
+    def fail(_):
+        raise httpx.RemoteProtocolError("server disconnected")
+
+    monkeypatch.setattr(eval_ocr, "IMAGES_DIR", str(images_dir))
+    monkeypatch.setattr(eval_ocr, "LABELS_DIR", str(labels_dir))
+    monkeypatch.setattr(eval_ocr, "build_runner", lambda _: fail)
+    monkeypatch.setattr(sys, "argv", [
+        "eval_ocr.py", "--report-json", str(report_path),
+    ])
+
+    with pytest.raises(SystemExit, match="1"):
+        eval_ocr.main()
+
+    report = json.loads(report_path.read_text())
+    assert report["summary"]["passed"] is False
+    assert report["errors"][0]["error"].startswith("RemoteProtocolError:")
