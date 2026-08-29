@@ -113,6 +113,11 @@ class TestApplyDirectionFilter:
 # filter.py edge cases
 # ---------------------------------------------------------------------------
 
+@pytest.mark.parametrize("text", ["Am7b5", "D7b9", "C7#9", "G13b9"])
+def test_chord_candidate_accepts_altered_degrees(text):
+    assert is_chord_candidate(text)
+
+
 class TestStripLeadingNumber:
     @pytest.mark.parametrize("text,expected", [
         ("7Am", "Am"),
