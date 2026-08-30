@@ -31,7 +31,6 @@ _RESCUE_FLOOR = 0.40
 # Root       [A-G][#b]?
 # Quality    maj | m (not followed by "aj") | dim | aug | sus
 # Numeric    1-2 digit extension (6, 7, 9, 11, 13, ...)
-# Alteration zero or more altered degrees (#5, b5, #9, b9, ...)
 # Sus suffix sus followed by optional 2 or 4
 # Add suffix add followed by digits
 # Paren      any parenthesised block, e.g. (sus4), (add9), (b5)
@@ -45,7 +44,6 @@ _CHORD_RE = re.compile(
     r"[A-G][#b]?"                        # root
     r"(?:maj|m(?!aj)|dim|aug|sus)?"      # optional quality
     r"(?:[0-9]{1,2})?"                   # optional numeric extension
-    r"(?:[#b][0-9]{1,2})*"               # optional altered degrees
     r"(?:sus[24]?)?"                     # optional sus modifier
     r"(?:add[0-9]+)?"                    # optional add modifier
     r"(?:\([^)]*\))?"                    # optional parenthesised part
