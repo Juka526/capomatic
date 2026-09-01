@@ -955,6 +955,55 @@ def _insert_whitespace(
     return new_img
 
 
+def _safe_above_insert_y(
+    img_arr: np.ndarray,
+    row_top: int,
+    font_size: int,
+    *,
+    dark_threshold: int = 200,
+    content_ratio_threshold: float = 0.02,
+) -> int | None:
+    """Find a blank horizontal band above a chord row."""
+    H = img_arr.shape[0]
+    if H == 0 or row_top <= 1:
+        return None
+
+    needed = max(4, int((font_size + _GAP) * 0.7))
+    search_top = max(0, row_top - max(font_size * 3, needed * 2))
+    search_bottom = max(search_top, min(H, row_top))
+    if search_bottom - search_top < needed:
+        return None
+
+    region = img_arr[search_top:search_bottom, :]
+    if region.size == 0:
+        return None
+
+    row_dark_ratio = np.mean(region < dark_threshold, axis=1)
+    blank_rows = row_dark_ratio <= content_ratio_threshold
+
+    best_start: int | None = None
+    best_len = 0
+    start: int | None = None
+    for idx, is_blank in enumerate(blank_rows):
+        if is_blank and start is None:
+            start = idx
+        elif not is_blank and start is not None:
+            run_len = idx - start
+            if run_len >= needed:
+                best_start = start
+                best_len = run_len
+            start = None
+    if start is not None:
+        run_len = len(blank_rows) - start
+        if run_len >= needed:
+            best_start = start
+            best_len = run_len
+
+    if best_start is None:
+        return None
+    return search_top + best_start + best_len
+
+
 def _render_above(
     img: Image.Image,
     chords: list[dict],
@@ -983,9 +1032,10 @@ def _render_above(
         label_top = max(0, min_y1 - font_size - _GAP)
         region = img_arr[label_top:min_y1, :]
         if region.size > 0 and np.mean(region < 200) > 0.02:
-            insert_y = min_y1
-            expansions.append((insert_y, needed))
-            row_insert_y[row_idx] = insert_y
+            insert_y = _safe_above_insert_y(img_arr, min_y1, font_size)
+            if insert_y is not None:
+                expansions.append((insert_y, needed))
+                row_insert_y[row_idx] = insert_y
 
     # Pass 2 — expand the image where needed.
     if expansions:
