@@ -301,7 +301,7 @@ class TestRenderReplaceRefinements:
             (120, 90, "D"),
         ]
 
-    def test_replace_aligns_same_row_to_one_y(self, monkeypatch):
+    def test_replace_uses_each_original_chord_y(self, monkeypatch):
         calls = []
 
         def fake_draw(draw, x, y, transposed, font, small_font, fill):
@@ -318,7 +318,57 @@ class TestRenderReplaceRefinements:
         ]
         render_module.render_overlay(img, chords, "replace")
 
-        assert [call[1] for call in calls] == [40, 40, 40]
+        assert [call[1] for call in calls] == [40, 44, 36]
+
+    def test_replace_y_is_not_pulled_up_by_row_median(self, monkeypatch):
+        calls = []
+
+        def fake_draw(draw, x, y, transposed, font, small_font, fill):
+            calls.append((transposed, y))
+            return 0
+
+        monkeypatch.setattr(render_module, "_draw_chord_text", fake_draw)
+
+        img = _white_img(w=1000, h=1400)
+        chords = [
+            _chord("BbM7", "BbM7", [156, 1266, 225, 1294]),
+            _chord("C/Bb", "C/Bb", [225, 1266, 271, 1294]),
+            _chord("Am7", "Am7", [306, 1268, 353, 1292]),
+            _chord("Bb/D", "Bb/D", [881, 1257, 968, 1298]),
+        ]
+
+        render_module.render_overlay(img, chords, "replace")
+
+        assert calls == [
+            ("BbM7", 1266),
+            ("C/Bb", 1266),
+            ("Am7", 1268),
+            ("Bb/D", 1257),
+        ]
+
+    def test_render_drops_lyric_row_false_positive_near_staff(self, monkeypatch):
+        calls = []
+
+        def fake_staff_systems(_img):
+            return [(196, 229), (349, 383), (513, 547)]
+
+        def fake_draw(draw, x, y, transposed, font, small_font, fill):
+            calls.append(transposed)
+            return 0
+
+        monkeypatch.setattr("backend.ocr.preprocess.detect_staff_systems", fake_staff_systems)
+        monkeypatch.setattr(render_module, "_draw_chord_text", fake_draw)
+
+        img = _white_img(w=996, h=700)
+        chords = [
+            _chord("BbM7", "BbM7", [245, 308, 302, 333]),
+            _chord("A2", "A2", [283, 427, 369, 452]),
+            _chord("Am7", "Am7", [385, 474, 430, 497]),
+        ]
+
+        render_module.render_overlay(img, chords, "replace")
+
+        assert calls == ["BbM7", "Am7"]
 
     def test_replace_draws_white_rectangular_label_background(self):
         original_draw = render_module._draw_chord_text

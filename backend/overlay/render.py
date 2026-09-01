@@ -904,6 +904,7 @@ def render_overlay(
         c for c in chords
         if c.get("transposed") is not None and c.get("bbox") is not None
     ]
+    eligible = _filter_chords_near_staff(img, eligible)
 
     if mode == "above":
         return _render_above(
@@ -919,6 +920,35 @@ def render_overlay(
             target_key=target_key,
             semitones=semitones,
         )
+
+
+def _filter_chords_near_staff(img: Image.Image, chords: list[dict]) -> list[dict]:
+    """Drop OCR false positives that sit in lyric rows instead of chord rows."""
+    if not chords:
+        return []
+    try:
+        from backend.ocr.preprocess import detect_staff_systems
+
+        systems = detect_staff_systems(img)
+    except Exception:
+        return chords
+    if not systems:
+        return chords
+
+    tops = [top for top, _ in systems]
+    gaps = [tops[i + 1] - tops[i] for i in range(len(tops) - 1)]
+    normal_gap = int(statistics.median(gaps)) if gaps else img.size[1]
+    max_above_gap = max(35, int(normal_gap * 0.33))
+    kept: list[dict] = []
+    for chord in chords:
+        x1, y1, x2, y2 = chord["bbox"]
+        next_staff_top = next((top for top in tops if top > y1), None)
+        if next_staff_top is None:
+            kept.append(chord)
+            continue
+        if 0 <= next_staff_top - y2 <= max_above_gap:
+            kept.append(chord)
+    return kept
 
 
 # ---------------------------------------------------------------------------
@@ -1128,21 +1158,22 @@ def _render_replace(
         row_size = _resolve_replace_row_font_size(row, font_size, W)
         font = _load_font(row_size)
         small_font = _load_font(int(row_size * _SMALL_FONT_RATIO))
-        row_y = _row_aligned_top(row)
         placements = _place_replace_row_labels(row, font, small_font, W)
         for chord, x in placements:
+            chord_y = chord["bbox"][1]
             _draw_replace_label_background(
                 draw,
                 chord,
                 x,
-                row_y,
+                chord_y,
                 chord["transposed"],
                 font,
                 small_font,
                 W,
             )
         for chord, x in placements:
-            _draw_chord_text(draw, x, row_y, chord["transposed"],
+            chord_y = chord["bbox"][1]
+            _draw_chord_text(draw, x, chord_y, chord["transposed"],
                              font, small_font, ink_by_id.get(id(chord), _DEFAULT_INK))
 
     _draw_info_header(
