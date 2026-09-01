@@ -651,25 +651,6 @@ def _place_row_labels_anchored(
     return [(p[0], p[1]) for p in placements]
 
 
-def _label_area_has_ink(
-    img_arr: np.ndarray,
-    x: int,
-    y1: int,
-    y2: int,
-    text_w: int,
-    *,
-    dark_threshold: int = 200,
-    content_ratio_threshold: float = 0.02,
-) -> bool:
-    H, W = img_arr.shape[:2]
-    top = max(0, min(H, y1))
-    bottom = max(top, min(H, y2))
-    left = max(0, min(W, x - 2))
-    right = max(left, min(W, x + text_w + 2))
-    region = img_arr[top:bottom, left:right]
-    return bool(region.size and np.mean(region < dark_threshold) > content_ratio_threshold)
-
-
 def _font_fits_row(
     row: list[dict],
     sizes: dict[int, int],
@@ -974,64 +955,6 @@ def _insert_whitespace(
     return new_img
 
 
-def _safe_above_insert_y(
-    img_arr: np.ndarray,
-    row_top: int,
-    font_size: int,
-    *,
-    dark_threshold: int = 200,
-    content_ratio_threshold: float = 0.02,
-) -> int | None:
-    """Find a mostly blank horizontal band above a chord row.
-
-    Above mode may need to add vertical space for labels.  Inserting exactly at
-    the chord row can split lyric or staff content when the area above the row
-    is occupied.  This helper only returns an insertion y when there is a blank
-    band wide enough to cut through safely.
-    """
-    H = img_arr.shape[0]
-    if H == 0 or row_top <= 1:
-        return None
-
-    needed = max(4, int((font_size + _GAP) * 0.7))
-    search_top = max(0, row_top - max(font_size * 3, needed * 2))
-    search_bottom = max(search_top, min(H, row_top))
-    if search_bottom - search_top < needed:
-        return None
-
-    region = img_arr[search_top:search_bottom, :]
-    if region.size == 0:
-        return None
-
-    row_dark_ratio = np.mean(region < dark_threshold, axis=1)
-    blank_rows = row_dark_ratio <= content_ratio_threshold
-
-    best_start: int | None = None
-    best_len = 0
-    start: int | None = None
-    for idx, is_blank in enumerate(blank_rows):
-        if is_blank and start is None:
-            start = idx
-        elif not is_blank and start is not None:
-            run_len = idx - start
-            if run_len >= needed:
-                best_start = start
-                best_len = run_len
-            start = None
-    if start is not None:
-        run_len = len(blank_rows) - start
-        if run_len >= needed:
-            best_start = start
-            best_len = run_len
-
-    if best_start is None:
-        return None
-
-    # Insert near the lower edge of the blank band so the new space appears
-    # close to the chord row without cutting through visible content.
-    return search_top + best_start + best_len
-
-
 def _render_above(
     img: Image.Image,
     chords: list[dict],
@@ -1058,23 +981,11 @@ def _render_above(
         needed = font_size + _GAP + 2
         min_y1 = min(c["bbox"][1] for c in row)
         label_top = max(0, min_y1 - font_size - _GAP)
-        font = _load_font(font_size)
-        small_font = _load_font(int(font_size * _SMALL_FONT_RATIO))
-        has_ink = any(
-            _label_area_has_ink(
-                img_arr,
-                label_x,
-                label_top,
-                min_y1,
-                int(_chord_display_width(chord["transposed"], font, small_font)),
-            )
-            for chord, label_x in _place_row_labels_anchored(row, font, small_font, W)
-        )
-        if has_ink:
-            insert_y = _safe_above_insert_y(img_arr, min_y1, font_size)
-            if insert_y is not None:
-                expansions.append((insert_y, needed))
-                row_insert_y[row_idx] = insert_y
+        region = img_arr[label_top:min_y1, :]
+        if region.size > 0 and np.mean(region < 200) > 0.02:
+            insert_y = min_y1
+            expansions.append((insert_y, needed))
+            row_insert_y[row_idx] = insert_y
 
     # Pass 2 — expand the image where needed.
     if expansions:
