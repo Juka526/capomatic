@@ -26,12 +26,7 @@ import logging
 from backend.ocr.paddle_ocr import run_ocr_paddle
 
 logger = logging.getLogger(__name__)
-from backend.ocr.filter import (
-    CONFIDENCE_THRESHOLD,
-    _RESCUE_FLOOR,
-    is_chord_candidate,
-    recover_candidates,
-)
+from backend.ocr.filter import filter_candidates_with_recovery, is_chord_candidate
 from backend.ocr.quality_gate import evaluate_ocr_quality, GateDecision
 from backend.ocr.ai_fallback import (
     ai_detect_chords_rows,
@@ -101,15 +96,11 @@ def detect_chords_hybrid(
     # ------------------------------------------------------------------
     # 2. Filter (mirrors the logic in eval_ocr.py / ocr_debug.py)
     # ------------------------------------------------------------------
-    confident = [i for i in raw_items if i["confidence"] > CONFIDENCE_THRESHOLD]
-    strict    = [i for i in confident if is_chord_candidate(i["text"])]
-    failed    = [i for i in confident if not is_chord_candidate(i["text"])]
-    recovered, parse_count, split_count = recover_candidates(failed)
-    # Chord-syntax rescue for lower-confidence items
-    rescued = [
-        i for i in raw_items
-        if _RESCUE_FLOOR < i["confidence"] <= CONFIDENCE_THRESHOLD
-        and is_chord_candidate(i["text"])
+    filtered_items, recovered, parse_count, split_count = filter_candidates_with_recovery(raw_items)
+    recovered_ids = {id(item) for item in recovered}
+    strict = [
+        i for i in filtered_items
+        if id(i) not in recovered_ids and is_chord_candidate(i["text"])
     ]
 
     # ------------------------------------------------------------------
@@ -122,7 +113,7 @@ def detect_chords_hybrid(
     # ------------------------------------------------------------------
     if ai_result is not None and ai_result.rows:
         # Always-on merge: Claude text is authoritative, Paddle bboxes reused
-        paddle_rows = cluster_paddle_items_by_row(strict + recovered + rescued)
+        paddle_rows = cluster_paddle_items_by_row(filtered_items)
         final_items = merge_rows(paddle_rows, ai_result.rows)
         ai_used = True
         merge_stats: dict | None = {
@@ -132,7 +123,7 @@ def detect_chords_hybrid(
         }
     else:
         # Legacy path: Claude unavailable (mock, timeout, API error)
-        final_items = strict + recovered + rescued
+        final_items = filtered_items
         ai_used = False
         merge_stats = None
 

@@ -23,6 +23,14 @@ if TYPE_CHECKING:
 
 _ocr_instances: "dict[tuple[str, float | None, float | None, float | None], _PaddleOCRType]" = {}
 
+_DET_MODEL_NAMES = {
+    "server": None,
+    "mobile": "PP-OCRv5_mobile_det",
+    "v6-tiny": "PP-OCRv6_tiny_det",
+    "v6-small": "PP-OCRv6_small_det",
+    "v6-medium": "PP-OCRv6_medium_det",
+}
+
 # Maximum total pixel count of the stitched canvas fed to predict().
 # Canvases larger than this are downscaled proportionally with INTER_AREA before
 # inference and their OCR coordinates are scaled back afterward.
@@ -70,6 +78,10 @@ _DIRECTION_PROXIMITY_Y = 30   # px: vertical distance to direction token center
 # These appear when PaddleOCR reads volta bracket endings (1st/2nd/3rd endings)
 # as a single text block, e.g. "2. Bb/D C/E F/A D.S." or "|3.Bb/D".
 _VOLTA_PREFIX_RE = re.compile(r'^\|?\d+\.?\s*')
+_SECTION_PREFIX_RE = re.compile(
+    r'^\s*\[(?:INTRO|VERSE|CHORUS|BRIDGE|OUTRO)\]\s*(.*)$',
+    re.IGNORECASE,
+)
 
 
 def _is_direction_token(raw_text: str) -> bool:
@@ -132,6 +144,34 @@ def _extract_volta_chords(raw_text: str, item: dict) -> list[dict]:
             "bbox":       item["bbox"],
         })
     return results
+
+
+def _extract_section_suffix_chord(raw_text: str, item: dict) -> dict | None:
+    """Recover a chord fused after a section marker, e.g. "[CHORUS] F"."""
+    match = _SECTION_PREFIX_RE.match(raw_text)
+    if not match:
+        return None
+    suffix = match.group(1).strip()
+    if not suffix:
+        return {"drop": True}
+    normalized = normalize_chord_text(suffix)
+    if not normalized or not is_chord_candidate(normalized):
+        return {"drop": True}
+
+    bbox = item.get("bbox")
+    if bbox is None:
+        suffix_bbox = None
+    else:
+        x1, y1, x2, y2 = bbox
+        suffix_start = len(raw_text) - len(match.group(1))
+        ratio = min(1.0, max(0.0, suffix_start / max(1, len(raw_text))))
+        suffix_bbox = [x1 + int((x2 - x1) * ratio), y1, x2, y2]
+
+    return {
+        "text": normalized,
+        "confidence": item["confidence"],
+        "bbox": suffix_bbox,
+    }
 
 
 def _split_multi_token(raw_text: str, item: dict) -> list[dict]:
@@ -212,6 +252,12 @@ def _apply_direction_filter(raw_items: list[dict]) -> list[dict]:
     for item in raw_items:
         raw_text = item["raw_text"]
 
+        section_chord = _extract_section_suffix_chord(raw_text, item)
+        if section_chord is not None:
+            if not section_chord.get("drop"):
+                chords.append(section_chord)
+            continue
+
         # Volta bracket extraction: try to recover chords from text like
         # "2. Bb/D C/E F/A D.S." before the period filter discards it.
         if "." in raw_text and _VOLTA_PREFIX_RE.match(raw_text):
@@ -252,6 +298,32 @@ def _apply_direction_filter(raw_items: list[dict]) -> list[dict]:
     return chords
 
 
+def _sort_reading_order(items: list[dict]) -> list[dict]:
+    """Sort OCR chord items by staff row, then left-to-right within each row."""
+    boxed = [item for item in items if item.get("bbox") is not None]
+    unboxed = [item for item in items if item.get("bbox") is None]
+    if not boxed:
+        return items
+
+    avg_h = sum(item["bbox"][3] - item["bbox"][1] for item in boxed) / len(boxed)
+    threshold = max(20, int(avg_h * 1.5))
+    rows: list[list[dict]] = []
+    for item in sorted(boxed, key=lambda i: (i["bbox"][1], i["bbox"][0])):
+        if not rows:
+            rows.append([item])
+            continue
+        row_min_y = min(i["bbox"][1] for i in rows[-1])
+        if item["bbox"][1] - row_min_y <= threshold:
+            rows[-1].append(item)
+        else:
+            rows.append([item])
+    return [
+        item
+        for row in rows
+        for item in sorted(row, key=lambda i: i["bbox"][0])
+    ] + unboxed
+
+
 def get_ocr(
     det_variant: "str | None" = None,
     *,
@@ -266,7 +338,7 @@ def get_ocr(
 
     Parameters
     ----------
-    det_variant : "server" | "mobile" | None
+    det_variant : "server" | "mobile" | "v6-tiny" | "v6-small" | "v6-medium" | None
         Which detector to use. When None the value is read from the env var
         CHORDTAYLOR_OCR_DET_MODEL (default "server"). Separate cached instances
         are kept per variant so switching does not reuse the wrong model.
@@ -278,7 +350,7 @@ def get_ocr(
       flat and upright so these add time with no benefit.
     * use_textline_orientation=False — skips per-line rotation model for speed.
     * Set PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True to skip connectivity check.
-    * CHORDTAYLOR_OCR_DET_MODEL=server|mobile selects the detection model variant.
+    * CHORDTAYLOR_OCR_DET_MODEL=server|mobile|v6-tiny|v6-small|v6-medium selects the detection model variant.
     * PADDLE_DET_DB_THRESH (default 0.25): lower → higher recall, more noise.
     * PADDLE_DET_DB_BOX_THRESH (default 0.45): box confidence cutoff.
     * PADDLE_DET_DB_UNCLIP_RATIO (default 1.8): box expansion ratio for small glyphs.
@@ -289,9 +361,10 @@ def get_ocr(
     global _ocr_instances
     if det_variant is None:
         det_variant = os.environ.get("CHORDTAYLOR_OCR_DET_MODEL", "server").lower()
-    if det_variant not in ("server", "mobile"):
+    if det_variant not in _DET_MODEL_NAMES:
         raise ValueError(
-            f"CHORDTAYLOR_OCR_DET_MODEL must be 'server' or 'mobile', got {det_variant!r}"
+            "CHORDTAYLOR_OCR_DET_MODEL must be one of "
+            f"{sorted(_DET_MODEL_NAMES)}, got {det_variant!r}"
         )
     cache_key = (det_variant, det_db_thresh, det_db_box_thresh, det_db_unclip_ratio)
     if cache_key not in _ocr_instances:
@@ -323,8 +396,9 @@ def get_ocr(
         ]:
             if explicit_params[kwarg_name] is None and env_var in os.environ:
                 kwargs[kwarg_name] = float(os.environ[env_var])
-        if det_variant == "mobile":
-            kwargs["text_detection_model_name"] = "PP-OCRv5_mobile_det"
+        model_name = _DET_MODEL_NAMES[det_variant]
+        if model_name:
+            kwargs["text_detection_model_name"] = model_name
         _ocr_instances[cache_key] = PaddleOCR(**kwargs)
     return _ocr_instances[cache_key]
 
@@ -363,15 +437,17 @@ def run_ocr_paddle(
         resize_applied   : bool
         resize_scale     : float or None
         resized_shape    : [H, W] or None
-        det_model_variant: "server" | "mobile"
+        det_model_variant: "server" | "mobile" | "v6-tiny" | "v6-small" | "v6-medium"
     """
     t_start = time.perf_counter()
 
     det_variant = os.environ.get("CHORDTAYLOR_OCR_DET_MODEL", "server").lower()
-    if det_variant not in ("server", "mobile"):
+    if det_variant not in _DET_MODEL_NAMES:
         raise ValueError(
-            f"CHORDTAYLOR_OCR_DET_MODEL must be 'server' or 'mobile', got {det_variant!r}"
+            "CHORDTAYLOR_OCR_DET_MODEL must be one of "
+            f"{sorted(_DET_MODEL_NAMES)}, got {det_variant!r}"
         )
+    det_model_name = _DET_MODEL_NAMES[det_variant] or "PP-OCRv5_server_det"
 
     # ------------------------------------------------------------------
     # Stage 1 — preprocess: load image + select OCR regions
@@ -580,6 +656,8 @@ def run_ocr_paddle(
         "resize_scale":    round(resize_scale, 4) if resize_applied else None,
         "resized_shape":   resized_shape,
         "det_model_variant": det_variant,
+        "det_model_name": det_model_name,
+        "mkldnn_enabled": os.environ.get("PADDLE_ENABLE_MKLDNN", "0") == "1",
         "det_db_thresh": det_db_thresh,
         "det_db_box_thresh": det_db_box_thresh,
         "det_db_unclip_ratio": det_db_unclip_ratio,
@@ -590,4 +668,4 @@ def run_ocr_paddle(
         "min_stitch_resize_scale": MIN_STITCH_RESIZE_SCALE,
     })
 
-    return items, meta
+    return _sort_reading_order(items), meta

@@ -8,11 +8,13 @@ from backend.ocr.paddle_ocr import (
     _is_bare_root,
     _is_direction_token,
     _near_any_direction,
+    _sort_reading_order,
 )
 from backend.ocr.filter import (
     _split_bbox,
     _split_concatenated,
     _strip_leading_number,
+    filter_candidates,
     is_chord_candidate,
     recover_candidates,
 )
@@ -108,6 +110,34 @@ class TestApplyDirectionFilter:
         result = _apply_direction_filter(raw_items)
         assert len(result) == 2
 
+    def test_recovers_chord_after_section_marker_with_suffix_bbox(self):
+        raw_items = [
+            {"raw_text": "[CHORUS] F", "confidence": 0.93, "bbox": [100, 40, 200, 60]},
+        ]
+
+        result = _apply_direction_filter(raw_items)
+
+        assert result == [
+            {"text": "F", "confidence": 0.93, "bbox": [190, 40, 200, 60]},
+        ]
+
+    @pytest.mark.parametrize("text", ["[CHORUS]", "[VERSE] refrain", "[INTRO] H"])
+    def test_drops_section_marker_without_valid_chord_suffix(self, text):
+        raw_items = [{"raw_text": text, "confidence": 0.93, "bbox": [100, 40, 200, 60]}]
+
+        assert _apply_direction_filter(raw_items) == []
+
+    def test_sort_reading_order_groups_rows_before_x_sort(self):
+        items = [
+            {"text": "C/F", "confidence": 1, "bbox": [500, 100, 540, 124]},
+            {"text": "F", "confidence": 1, "bbox": [100, 101, 120, 123]},
+            {"text": "G", "confidence": 1, "bbox": [100, 180, 120, 202]},
+        ]
+
+        result = _sort_reading_order(items)
+
+        assert [item["text"] for item in result] == ["F", "C/F", "G"]
+
 
 # ---------------------------------------------------------------------------
 # filter.py edge cases
@@ -193,3 +223,14 @@ class TestRecoverCandidates:
         items = [{"text": "HelloWorld", "confidence": 0.9, "bbox": [0, 0, 10, 10]}]
         recovered, parse_count, split_count = recover_candidates(items)
         assert len(recovered) == 0
+
+    def test_filter_candidates_preserves_recovered_order(self):
+        items = [
+            {"text": "Am7b5", "confidence": 1.0, "bbox": [0, 0, 10, 10]},
+            {"text": "D7b9Gm7", "confidence": 1.0, "bbox": [10, 0, 80, 10]},
+            {"text": "Bb", "confidence": 1.0, "bbox": [80, 0, 100, 10]},
+        ]
+
+        result = filter_candidates(items)
+
+        assert [item["text"] for item in result] == ["Am7b5", "D7b9", "Gm7", "Bb"]

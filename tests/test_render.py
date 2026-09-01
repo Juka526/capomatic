@@ -8,6 +8,7 @@ import backend.overlay.render as render_module
 from backend.overlay.render import (
     _chord_display_width,
     _load_font,
+    _place_row_labels_anchored,
     _shorten_chord_display,
     render_overlay,
 )
@@ -331,6 +332,40 @@ class TestRenderReplaceRefinements:
 
         assert [call[1] for call in calls] == [41, 41, 41]
 
+    def test_above_row_placement_resolves_chained_overlap(self, monkeypatch):
+        class FakeFont:
+            size = 18
+
+        monkeypatch.setattr(render_module, "_chord_display_width", lambda *args: 42)
+        row = [
+            _chord("Gm7", "Gm7", [10, 40, 30, 60]),
+            _chord("Am7", "Am7", [35, 40, 55, 60]),
+            _chord("Bbm7", "Bbm7", [60, 40, 80, 60]),
+        ]
+
+        placed = _place_row_labels_anchored(row, FakeFont(), FakeFont(), 180)
+        xs = [x for _, x in placed]
+
+        assert xs[1] >= xs[0] + 42 + 2 * render_module._BOX_PAD + 6
+        assert xs[2] >= xs[1] + 42 + 2 * render_module._BOX_PAD + 6
+
+    def test_above_row_placement_keeps_order_when_row_cannot_fit(self, monkeypatch):
+        class FakeFont:
+            size = 18
+
+        monkeypatch.setattr(render_module, "_chord_display_width", lambda *args: 42)
+        row = [
+            _chord("Gm7", "Gm7", [10, 40, 30, 60]),
+            _chord("Am7", "Am7", [35, 40, 55, 60]),
+            _chord("Bbm7", "Bbm7", [60, 40, 80, 60]),
+        ]
+
+        placed = _place_row_labels_anchored(row, FakeFont(), FakeFont(), 130)
+        xs = [x for _, x in placed]
+
+        assert xs[1] >= xs[0] + 42 + 2 * render_module._BOX_PAD + 6
+        assert xs[2] >= xs[1] + 42 + 2 * render_module._BOX_PAD + 6
+
     def test_replace_shifts_dense_row_to_avoid_overlap(self, monkeypatch):
         calls = []
 
@@ -362,6 +397,32 @@ class TestRenderReplaceRefinements:
 
         xs = [call[0] for call in calls]
         assert xs == [10, 44, 78]
+
+    def test_replace_draws_row_backgrounds_before_text(self, monkeypatch):
+        calls = []
+
+        def fake_bg(draw, chord, x, y, transposed, font, small_font, img_width):
+            calls.append(("bg", transposed))
+            draw.rectangle([0, 0, 80, 80], fill=(255, 255, 255))
+
+        def fake_draw(draw, x, y, transposed, font, small_font, fill):
+            calls.append(("text", transposed))
+            if transposed == "Bm":
+                draw.point((10, 50), fill=(0, 0, 0))
+            return 0
+
+        monkeypatch.setattr(render_module, "_draw_replace_label_background", fake_bg)
+        monkeypatch.setattr(render_module, "_draw_chord_text", fake_draw)
+
+        img = _white_img(w=120, h=90)
+        chords = [
+            _chord("Am", "Bm", [10, 40, 30, 60]),
+            _chord("C", "D", [35, 40, 55, 60]),
+        ]
+        result = render_module.render_overlay(img, chords, "replace")
+
+        assert calls == [("bg", "Bm"), ("bg", "D"), ("text", "Bm"), ("text", "D")]
+        assert result.getpixel((10, 50)) == (0, 0, 0)
 
     def test_replace_uses_one_median_bbox_font_size(self, monkeypatch):
         calls = []

@@ -286,17 +286,31 @@ def filter_candidates(ocr_items: list[dict]) -> list[dict]:
     if they pass the strict chord regex (chord-syntax rescue).
     Bbox and confidence are preserved (split items share the source bbox).
     """
-    candidates = [item for item in ocr_items if item["confidence"] > CONFIDENCE_THRESHOLD]
-    strict = [item for item in candidates if is_chord_candidate(item["text"])]
-    failed = [item for item in candidates if not is_chord_candidate(item["text"])]
-    extra, _, _ = recover_candidates(failed)
+    result, _, _, _ = filter_candidates_with_recovery(ocr_items)
+    return result
 
-    # Chord-syntax rescue: accept lower-confidence items that match the
-    # strict chord regex.  The regex rejects noise so this is safe.
-    rescued = [
-        item for item in ocr_items
-        if _RESCUE_FLOOR < item["confidence"] <= CONFIDENCE_THRESHOLD
-        and is_chord_candidate(item["text"])
-    ]
 
-    return strict + extra + rescued
+def filter_candidates_with_recovery(
+    ocr_items: list[dict],
+) -> tuple[list[dict], list[dict], int, int]:
+    """Return filtered chord items, recovered items, and recovery counts."""
+    result: list[dict] = []
+    recovered_items: list[dict] = []
+    parse_count = 0
+    split_count = 0
+    for item in ocr_items:
+        if item["confidence"] > CONFIDENCE_THRESHOLD:
+            if is_chord_candidate(item["text"]):
+                result.append(item)
+            else:
+                recovered, pc, sc = recover_candidates([item])
+                result.extend(recovered)
+                recovered_items.extend(recovered)
+                parse_count += pc
+                split_count += sc
+        elif (
+            _RESCUE_FLOOR < item["confidence"] <= CONFIDENCE_THRESHOLD
+            and is_chord_candidate(item["text"])
+        ):
+            result.append(item)
+    return result, recovered_items, parse_count, split_count

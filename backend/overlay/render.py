@@ -635,18 +635,39 @@ def _place_row_labels_anchored(
         x = max(chord["bbox"][0], chord["bbox"][2] - tw)
         x = min(x, max(0, img_width - tw))
         placements.append([chord, x, tw + 2 * _BOX_PAD])
-    for i in range(len(placements) - 1):
-        x_i = placements[i][1]
-        ew_i = placements[i][2]
-        x_next = placements[i + 1][1]
-        overlap = (x_i + ew_i + h_gap) - x_next
-        if overlap > 0:
-            shift_left = overlap // 2
-            shift_right = overlap - shift_left
-            placements[i][1] = max(0, x_i - shift_left)
-            ew_next = placements[i + 1][2]
-            placements[i + 1][1] = min(img_width - ew_next, x_next + shift_right)
+    prev_right = -h_gap
+    for p in placements:
+        p[1] = max(p[1], prev_right + h_gap)
+        prev_right = p[1] + p[2]
+
+    overflow = prev_right - img_width
+    if overflow > 0 and placements:
+        for p in placements:
+            p[1] = max(0, p[1] - overflow)
+        prev_right = -h_gap
+        for p in placements:
+            p[1] = max(p[1], prev_right + h_gap)
+            prev_right = p[1] + p[2]
     return [(p[0], p[1]) for p in placements]
+
+
+def _label_area_has_ink(
+    img_arr: np.ndarray,
+    x: int,
+    y1: int,
+    y2: int,
+    text_w: int,
+    *,
+    dark_threshold: int = 200,
+    content_ratio_threshold: float = 0.02,
+) -> bool:
+    H, W = img_arr.shape[:2]
+    top = max(0, min(H, y1))
+    bottom = max(top, min(H, y2))
+    left = max(0, min(W, x - 2))
+    right = max(left, min(W, x + text_w + 2))
+    region = img_arr[top:bottom, left:right]
+    return bool(region.size and np.mean(region < dark_threshold) > content_ratio_threshold)
 
 
 def _font_fits_row(
@@ -1037,14 +1058,23 @@ def _render_above(
         needed = font_size + _GAP + 2
         min_y1 = min(c["bbox"][1] for c in row)
         label_top = max(0, min_y1 - font_size - _GAP)
-        region = img_arr[label_top:min_y1, :]
-        if region.size > 0:
-            dark_ratio = np.mean(region < 200)
-            if dark_ratio > 0.02:
-                insert_y = _safe_above_insert_y(img_arr, min_y1, font_size)
-                if insert_y is not None:
-                    expansions.append((insert_y, needed))
-                    row_insert_y[row_idx] = insert_y
+        font = _load_font(font_size)
+        small_font = _load_font(int(font_size * _SMALL_FONT_RATIO))
+        has_ink = any(
+            _label_area_has_ink(
+                img_arr,
+                label_x,
+                label_top,
+                min_y1,
+                int(_chord_display_width(chord["transposed"], font, small_font)),
+            )
+            for chord, label_x in _place_row_labels_anchored(row, font, small_font, W)
+        )
+        if has_ink:
+            insert_y = _safe_above_insert_y(img_arr, min_y1, font_size)
+            if insert_y is not None:
+                expansions.append((insert_y, needed))
+                row_insert_y[row_idx] = insert_y
 
     # Pass 2 — expand the image where needed.
     if expansions:
@@ -1138,7 +1168,8 @@ def _render_replace(
         font = _load_font(row_size)
         small_font = _load_font(int(row_size * _SMALL_FONT_RATIO))
         row_y = _row_aligned_top(row)
-        for chord, x in _place_replace_row_labels(row, font, small_font, W):
+        placements = _place_replace_row_labels(row, font, small_font, W)
+        for chord, x in placements:
             _draw_replace_label_background(
                 draw,
                 chord,
@@ -1149,6 +1180,7 @@ def _render_replace(
                 small_font,
                 W,
             )
+        for chord, x in placements:
             _draw_chord_text(draw, x, row_y, chord["transposed"],
                              font, small_font, ink_by_id.get(id(chord), _DEFAULT_INK))
 
