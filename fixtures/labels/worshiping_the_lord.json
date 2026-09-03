@@ -4,7 +4,8 @@
     "Bbmaj7", "C/Bb", "Am7", "Dm7", "Gm7", "Csus4", "C", "F", "Bb", "Bb/C", "Eb/F", "F/G", "G/B", "F/A", "Bbm/F"
   ],
   "hard_targets": [
-    "Bbmaj7(G/B)",
+    "Bbmaj7",
+    "G/B",
     "Eb/F",
     "Bbm/F"
   ],

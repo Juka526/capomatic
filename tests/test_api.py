@@ -96,6 +96,23 @@ class TestBuildChordItem:
         result = _build_chord_item(item, semitones=0, target_key=None)
         assert result["bbox"] is None
 
+    @pytest.mark.parametrize("marker,expected", [
+        ("open", "(Bb/Ab"),
+        ("close", "Bb/Ab)"),
+        ("both", "(Bb/Ab)"),
+    ])
+    def test_preserves_parentheses_after_transpose(self, marker, expected):
+        item = {
+            "text": "C/Bb",
+            "confidence": 1.0,
+            "bbox": [0, 0, 10, 10],
+            "style": {"parenthesis": marker},
+        }
+
+        result = _build_chord_item(item, semitones=-2, target_key="Eb")
+
+        assert result["transposed"] == expected
+
 
 # ---------------------------------------------------------------------------
 # Detection cache
@@ -159,9 +176,21 @@ class TestDetectEndpoint:
         assert "detection_id" in data
         assert data["count"] == 1
         assert data["chords"][0]["text"] == "Am"
+        assert data["song_title"] == "알수없음"
         assert "original_key" in data
         # No transposed field in /detect response
         assert "transposed" not in data["chords"][0]
+
+    @patch("backend.api.main.detect_chords_hybrid")
+    def test_detect_returns_ocr_song_title(self, mock_detect):
+        mock_detect.return_value = ([], {"song_title": "온 맘 다해"})
+
+        resp = client.post(
+            "/detect",
+            files={"image": ("wrong-filename.png", _png_bytes(), "image/png")},
+        )
+
+        assert resp.json()["song_title"] == "온 맘 다해"
 
     @patch("backend.api.main.detect_chords_hybrid")
     def test_detect_caches_results(self, mock_detect):
@@ -184,7 +213,13 @@ class TestDetectEndpoint:
     def test_detect_uses_paddle_gpt_when_requested(self, mock_detect):
         mock_detect.return_value = (
             [{"text": "G", "confidence": 1.0, "bbox": [0, 0, 10, 10]}],
-            {"ocr_engine": "paddle-gpt-hybrid", "predict_ms": 5},
+            {
+                "ocr_engine": "paddle-gpt-hybrid",
+                "predict_ms": 5,
+                "total_ms": 9,
+                "gpt_crop_ms": 3,
+                "parallel_refinement": True,
+            },
         )
         resp = client.post(
             "/detect",
@@ -192,8 +227,28 @@ class TestDetectEndpoint:
             data={"ocr_engine": "paddle-gpt"},
         )
         assert resp.status_code == 200
-        assert resp.json()["meta"]["ocr_engine"] == "paddle-gpt-hybrid"
+        meta = resp.json()["meta"]
+        assert meta["ocr_engine"] == "paddle-gpt-hybrid"
+        assert meta["total_ms"] == 9
+        assert meta["gpt_crop_ms"] == 3
+        assert meta["parallel_refinement"] is True
+        assert meta["service_ms"] >= 0
         mock_detect.assert_called_once()
+
+    def test_detect_reports_paddle_only_after_hybrid_fallback(self):
+        fallback_result = ([{"text": "G", "confidence": 1.0, "bbox": [0, 0, 10, 10]}], {})
+        with (
+            patch("backend.api.main.run_ocr_paddle_gpt_hybrid", side_effect=RuntimeError("boom")),
+            patch("backend.api.main.detect_chords_hybrid", return_value=fallback_result),
+        ):
+            resp = client.post(
+                "/detect",
+                files={"image": ("test.png", _png_bytes(), "image/png")},
+                data={"ocr_engine": "paddle-gpt"},
+            )
+
+        assert resp.status_code == 200
+        assert resp.json()["meta"]["ocr_engine"] == "paddle-only"
 
     def test_detect_rejects_invalid_ocr_engine(self):
         resp = client.post(

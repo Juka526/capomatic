@@ -54,9 +54,10 @@ export async function getUser() {
   }
 }
 
-export async function login() {
+export async function login(returnTo = '/') {
   if (!auth0Client) return;
   await auth0Client.loginWithRedirect({
+    appState: { returnTo },
     authorizationParams: { redirect_uri: window.location.origin },
   });
 }
@@ -68,11 +69,16 @@ export async function logout() {
   });
 }
 
-export async function handleRedirectCallback() {
-  if (!auth0Client) return;
+export async function handleRedirectCallback(): Promise<string> {
+  if (!auth0Client) return '/';
   try {
-    await auth0Client.handleRedirectCallback();
+    const result = await auth0Client.handleRedirectCallback();
+    const returnTo = result.appState?.returnTo;
+    return typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('//')
+      ? returnTo
+      : '/';
   } catch {
     // ignore stale callbacks
+    return '/';
   }
 }

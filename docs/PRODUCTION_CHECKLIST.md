@@ -7,7 +7,7 @@ Browser ──> Vercel frontend (capomatic.vercel.app)
    └──────> HF API (juka526-capomatic.hf.space)
 ```
 
-## Audited state (2026-08-28)
+## Audited state (2026-08-29)
 
 Confirmed:
 
@@ -19,11 +19,11 @@ Confirmed:
 - [x] Local verification: 296 backend tests passed, 10 live integration tests skipped, the Next.js 16 production build passed, and `npm audit` reports zero vulnerabilities.
 - [x] HF pre-sync commit `ad28e00ef7344d2f9ca0154da59ac23bbb190366` removed `.venv/`, `.idea/`, and `.claude/settings.local.json`; the canonical tree also excludes them.
 
-Audit-start deployment identities, before this remediation release:
+Current deployment identities:
 
-- Local/GitHub base HEAD: `1cfe2637f724a15d0fcc812946ac889e19abf6a3` (the fixes in this audit are still uncommitted)
-- Vercel Next.js build ID: `nJ4GX0fwsyzlwOs3oNI4V` (the public deployment does not expose its source SHA)
-- HF runtime SHA: `ad28e00ef7344d2f9ca0154da59ac23bbb190366`
+- Local/GitHub `main`: `5740b4ab4abb2bd3b30ff8eb6e611bead5378f77`
+- Vercel Next.js build ID: `VPaLW_Km8pXWeei_iN0Gi` (the public deployment does not expose its source SHA)
+- HF runtime SHA: `4d05f243a3053abf6f13289f16661b79ec3cbd4d`
 
 Intentionally disabled in the current public-only deployment:
 
@@ -39,8 +39,29 @@ Remaining operational decisions:
 - [ ] HF historical storage still reports about 662 MB after current-tree cleanup; reclaiming history needs a separate reviewed decision.
 - [ ] **Release blocker:** GPT refinement is public and uses a paid API key. Add an auth/rate/budget boundary or disable the secret.
 
-The local/GitHub source tree and current HF tree now exclude local environments. Historical HF
-storage still needs a separate reviewed reclamation decision.
+## Detection performance baseline (2026-08-29)
+
+Measured against production HF SHA `4d05f243a3053abf6f13289f16661b79ec3cbd4d` on one
+`cpu-basic` replica, using `POST /detect` with `ocr_engine=paddle`:
+
+| Labeled sheet | API total | Paddle predict | Coverage | Unique precision |
+| --- | ---: | ---: | ---: | ---: |
+| 만왕의 왕 내주께서 | 39.68 s | 36.78 s | 100% | 100% |
+| 친구야 | 62.76 s | 60.95 s | 100% | 76.47% |
+| 믿음으로 나아가네 | 155.68 s | 153.14 s | 100% | 100% |
+
+The three-case cross-fixture mean is 86.04 seconds and population standard deviation is 50.13 seconds, so the
+60 ±20 second service target is not met. DNS, TCP, and TLS completed within one second; Paddle
+prediction dominates. The production Vercel HTML loaded in 0.44 seconds and the frontend sends
+the upload directly to HF, so Vercel is not a material part of post-upload detection latency.
+This small sample records the current service bottleneck; the full labeled API gate below remains
+the release decision.
+
+Dependency screen on the same 15 labeled sheets (local Apple Silicon, so not an HF service SLA):
+PaddlePaddle 3.2.2 and 3.3.1 both produced 98.07% coverage and 88.91% unique precision, while their
+mean OCR times were 16.17 and 19.00 seconds respectively. Keep 3.2.2; the latest release did not earn
+an HF candidate deployment because it was 17.5% slower at equal measured quality and its Linux x86
+oneDNN path has a reported upstream regression.
 
 ## 1. Local release gate
 
@@ -50,6 +71,36 @@ storage still needs a separate reviewed reclamation decision.
 - [ ] Review `git status --short`; do not include local artifacts or unrelated fixture changes.
 - [ ] Confirm no `.env`, tokens, or credentials are tracked.
 - [ ] Confirm the root `Dockerfile` is the only backend deployment definition.
+
+Local OCR timing is a dependency screen, not the production latency gate. Deploy the exact
+candidate commit to a private HF canary Space with the same Docker image, `cpu-basic` hardware,
+and non-secret runtime variables as production. Do not replace production before this gate passes.
+Set the canary URL explicitly and exercise the same browser-to-HF request path:
+
+```bash
+CANDIDATE_HF_API_URL=https://juka526-capomatic-perf-canary.hf.space
+python scripts/eval_ocr.py --engine paddle \
+  --api-url "$CANDIDATE_HF_API_URL" \
+  --baseline-api-url https://juka526-capomatic.hf.space
+```
+
+Run from the Seoul client against a ready, warmed Space, sequentially once for every one of the 15
+JSON labels in `fixtures/labels`; each label names its image in `fixtures/images`. The evaluator uses
+a 240-second per-request timeout and sends `Origin: https://capomatic.vercel.app`, so it also verifies
+the production browser CORS boundary. It warms both APIs once before the measured pass and compares
+every candidate fixture against production quality. Record that warm-up as the cold-start result only
+when the Space was restarted immediately before the command; it is not mixed into the warm aggregate.
+
+The full labeled suite must keep at least the current 98.06% coverage and 88.90% unique-chord
+precision. “60 ±20 seconds” means a cross-fixture mean at most 80 seconds and population standard
+deviation at most 20 seconds; a faster mean is not a failure. The deviation describes workload
+spread across sheets, not repeated-request jitter. A run with fewer than three fixtures is only a
+smoke test.
+
+Because the existing fixtures have informed OCR tuning, label one new sheet before testing either
+deployment. The candidate must have 100% unique-chord coverage and precision on it, and a manual
+overlay review must find no missing, extra, or displaced chord relative to the label. Do not release
+if either the corpus gate or this unseen-sheet check regresses quality.
 
 ## 2. Vercel
 
@@ -151,6 +202,8 @@ Do not diagnose a code regression until all three point to the intended source t
 ## Runtime characteristics
 
 - HF `cpu-basic` can have a slow cold start and PaddleOCR model warm-up.
+- The Vercel frontend sends uploads directly to HF; Vercel page load is not part of `/detect`
+  processing time. API-mode evaluation still sends the production Vercel `Origin` header.
 - Detection IDs live in one backend process and disappear on restart.
 - Keep one replica until detection state moves to a shared store or requests gain session affinity.
 - History lives in browser `localStorage`, not PostgreSQL.

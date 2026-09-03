@@ -25,12 +25,40 @@ CONFIDENCE_THRESHOLD = 0.78
 # fall just below the main threshold.
 _RESCUE_FLOOR = 0.40
 
+SECTION_MARKERS = {
+    "V", "V1", "V2", "V3",
+    "C", "C1", "C2",
+    "B", "B1", "B2",
+    "Intro", "Outro", "Bridge",
+    "Coda", "Tag", "Pre",
+    "Chorus", "Verse",
+    "D.S", "D.C", "Fine",
+    "optional", "tacet",
+}
+_AMBIGUOUS_SECTION_MARKERS = {"B", "C"}
+_SECTION_MARKERS_CASEFOLD = {marker.casefold() for marker in SECTION_MARKERS}
+
+
+def is_section_marker(
+    text: str,
+    bbox: list[int] | None = None,
+    image_width: int | None = None,
+) -> bool:
+    """Return whether OCR text is a section label rather than a chord."""
+    marker = text.strip().strip("[]:.")
+    if marker.casefold() not in _SECTION_MARKERS_CASEFOLD:
+        return False
+    if marker.upper() not in _AMBIGUOUS_SECTION_MARKERS:
+        return True
+    return bool(bbox and image_width and bbox[0] < image_width * 0.1)
+
 # ---------------------------------------------------------------------------
 # Strict regex (pass 1)
 # ---------------------------------------------------------------------------
 # Root       [A-G][#b]?
 # Quality    maj | m (not followed by "aj") | dim | aug | sus
 # Numeric    1-2 digit extension (6, 7, 9, 11, 13, ...)
+# Alteration zero or more altered degrees (#5, b5, #9, b9, ...)
 # Sus suffix sus followed by optional 2 or 4
 # Add suffix add followed by digits
 # Paren      any parenthesised block, e.g. (sus4), (add9), (b5)
@@ -44,6 +72,7 @@ _CHORD_RE = re.compile(
     r"[A-G][#b]?"                        # root
     r"(?:maj|m(?!aj)|dim|aug|sus)?"      # optional quality
     r"(?:[0-9]{1,2})?"                   # optional numeric extension
+    r"(?:[#b][0-9]{1,2})*"               # optional altered degrees
     r"(?:sus[24]?)?"                     # optional sus modifier
     r"(?:add[0-9]+)?"                    # optional add modifier
     r"(?:\([^)]*\))?"                    # optional parenthesised part
@@ -74,6 +103,13 @@ _SPLIT_ROOT_RE = re.compile(r"(?<=[^/])([A-G][#b]?)")
 # Matches a leading digit sequence followed by a chord root, e.g. "7Am", "4G/B".
 # The captured group is the chord portion (everything after the digits).
 _LEADING_NUM_RE = re.compile(r"^\d+([A-G].*)$")
+
+# Volta labels and score directions can be fused into a multi-chord OCR box.
+_VOLTA_PREFIX_RE = re.compile(r"^\s*\|?\s*[123]\s*[.)]\s*")
+_DIRECTION_MARKER_RE = re.compile(
+    r"(?<![A-Za-z])(?:D\s*\.\s*[SC]\s*\.?|Fine|Coda|al)(?![A-Za-z])",
+    re.IGNORECASE,
+)
 
 # OCR confusion: trailing "b" after a quality/extension → try "6".
 # In music-engraving fonts, "6" and "b" (flat) are visually similar and OCR
@@ -140,30 +176,82 @@ def _split_concatenated(text: str) -> list[str]:
     return []
 
 
+def _split_chord_text(text: str) -> list[str]:
+    """Extract valid chords from a space-separated or volta OCR block."""
+    parenthetical = re.fullmatch(r"\s*([^()]*)\(([^()]*)\)\s*", text)
+    if parenthetical:
+        outer = normalize_chord_text(parenthetical.group(1))
+        if not outer:
+            return []
+        inner = normalize_chord_text(parenthetical.group(2))
+        if not is_chord_candidate(outer):
+            return []
+        inner_parts = [inner] if is_chord_candidate(inner) else _split_concatenated(inner)
+        if inner_parts:
+            return ([outer] if outer else []) + inner_parts
+
+    volta = bool(_VOLTA_PREFIX_RE.match(text))
+    if not volta and not any(char.isspace() for char in text):
+        return []
+
+    cleaned = _VOLTA_PREFIX_RE.sub("", text, count=1)
+    cleaned = _DIRECTION_MARKER_RE.sub(" ", cleaned)
+    parts: list[str] = []
+    for token in cleaned.split():
+        normalized = normalize_chord_text(token)
+        if not normalized:
+            continue
+        if is_chord_candidate(normalized):
+            parts.append(normalized)
+            continue
+        split = _split_concatenated(normalized)
+        if not split:
+            return []
+        parts.extend(split)
+
+    if len(parts) >= 2 or (volta and parts):
+        return parts
+    return []
+
+
 def _split_bbox(
     item: dict,
     parts: list[str],
     bbox: list[int] | None,
 ) -> list[dict]:
-    """Create split items with proportionally divided bboxes.
+    """Create split items with evenly divided bboxes.
 
-    Divides the original bbox horizontally by character-length ratio so each
-    chord gets its own approximate bounding box.  Supports any number of parts.
+    Divides the original bbox horizontally into one equal segment per chord.
     If bbox is None, all items share bbox=None.
     """
-    if bbox is None:
-        return [{**item, "text": part} for part in parts]
-
-    x1, y1, x2, y2 = bbox
-    total_len = sum(len(p) for p in parts)
+    parenthetical = re.fullmatch(r"\s*([^()]*)\(([^()]*)\)\s*", item["text"])
+    parenthetical_from = (
+        1
+        if parenthetical else None
+    )
     results: list[dict] = []
-    cur_x = x1
     for i, part in enumerate(parts):
-        ratio = len(part) / total_len if total_len > 0 else 1 / len(parts)
-        seg_w = int((x2 - x1) * ratio)
-        seg_x2 = cur_x + seg_w if i < len(parts) - 1 else x2
-        results.append({**item, "text": part, "bbox": [cur_x, y1, seg_x2, y2]})
-        cur_x = seg_x2
+        split_item = {**item, "text": part}
+        if bbox is not None:
+            x1, y1, x2, y2 = bbox
+            seg_x1 = x1 + (x2 - x1) * i // len(parts)
+            seg_x2 = x1 + (x2 - x1) * (i + 1) // len(parts)
+            split_item["bbox"] = [seg_x1, y1, seg_x2, y2]
+        if parenthetical_from is not None and i >= parenthetical_from:
+            if i == parenthetical_from == len(parts) - 1:
+                marker = "both"
+            elif i == parenthetical_from:
+                marker = "open"
+            elif i == len(parts) - 1:
+                marker = "close"
+            else:
+                marker = None
+            if marker:
+                split_item["style"] = {
+                    **(item.get("style") or {}),
+                    "parenthesis": marker,
+                }
+        results.append(split_item)
     return results
 
 
@@ -194,6 +282,15 @@ def recover_candidates(
 
     for item in items:
         text = item["text"]
+
+        parts = _split_chord_text(text)
+        if parts:
+            recovered.extend(_split_bbox(item, parts, item.get("bbox")))
+            if len(parts) == 1:
+                parse_count += 1
+            else:
+                split_count += 1
+            continue
 
         # --- leading-number strip recovery ---
         # Handles OCR artefacts like "7Am" or "4G/B" where a measure/beat
@@ -282,19 +379,45 @@ def filter_candidates(ocr_items: list[dict]) -> list[dict]:
     Runs the strict regex first, then attempts recovery on failing items.
     Items below CONFIDENCE_THRESHOLD but above _RESCUE_FLOOR are accepted
     if they pass the strict chord regex (chord-syntax rescue).
-    Bbox and confidence are preserved (split items share the source bbox).
+    Confidence is preserved; split items evenly divide the source bbox.
     """
-    candidates = [item for item in ocr_items if item["confidence"] > CONFIDENCE_THRESHOLD]
-    strict = [item for item in candidates if is_chord_candidate(item["text"])]
-    failed = [item for item in candidates if not is_chord_candidate(item["text"])]
-    extra, _, _ = recover_candidates(failed)
+    result, _, _, _ = filter_candidates_with_recovery(ocr_items)
+    return result
 
-    # Chord-syntax rescue: accept lower-confidence items that match the
-    # strict chord regex.  The regex rejects noise so this is safe.
-    rescued = [
-        item for item in ocr_items
-        if _RESCUE_FLOOR < item["confidence"] <= CONFIDENCE_THRESHOLD
-        and is_chord_candidate(item["text"])
-    ]
 
-    return strict + extra + rescued
+def filter_candidates_with_recovery(
+    ocr_items: list[dict],
+) -> tuple[list[dict], list[dict], int, int]:
+    """Return filtered chord items, recovered items, and recovery counts."""
+    result: list[dict] = []
+    recovered_items: list[dict] = []
+    parse_count = 0
+    split_count = 0
+    for item in ocr_items:
+        if is_section_marker(
+            item["text"],
+            item.get("bbox"),
+            item.get("image_width"),
+        ):
+            continue
+        if item["confidence"] > CONFIDENCE_THRESHOLD:
+            parts = _split_chord_text(item["text"])
+            if parts:
+                split_items = _split_bbox(item, parts, item.get("bbox"))
+                result.extend(split_items)
+                recovered_items.extend(split_items)
+                split_count += 1
+            elif is_chord_candidate(item["text"]):
+                result.append(item)
+            else:
+                recovered, pc, sc = recover_candidates([item])
+                result.extend(recovered)
+                recovered_items.extend(recovered)
+                parse_count += pc
+                split_count += sc
+        elif (
+            _RESCUE_FLOOR < item["confidence"] <= CONFIDENCE_THRESHOLD
+            and is_chord_candidate(item["text"])
+        ):
+            result.append(item)
+    return result, recovered_items, parse_count, split_count

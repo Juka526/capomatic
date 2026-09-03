@@ -6,22 +6,36 @@ the already-initialised models without re-loading weights.
 from __future__ import annotations
 
 import math
+import logging
 import os
 import re
 import time
 from typing import TYPE_CHECKING
 
 import cv2
+import numpy as np
 from PIL import Image
 
 from backend.ocr.preprocess import select_ocr_regions, stitch_regions
 from backend.chords.normalize import normalize_chord_text
-from backend.ocr.filter import is_chord_candidate
+from backend.ocr.filter import SECTION_MARKERS, is_chord_candidate, is_section_marker, recover_candidates
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from paddleocr import PaddleOCR as _PaddleOCRType
 
 _ocr_instances: "dict[tuple[str, float | None, float | None, float | None], _PaddleOCRType]" = {}
+_title_recognizer = None
+_SECTION_MARKERS_CASEFOLD = {marker.casefold() for marker in SECTION_MARKERS}
+
+_DET_MODEL_NAMES = {
+    "server": None,
+    "mobile": "PP-OCRv5_mobile_det",
+    "v6-tiny": "PP-OCRv6_tiny_det",
+    "v6-small": "PP-OCRv6_small_det",
+    "v6-medium": "PP-OCRv6_medium_det",
+}
 
 # Maximum total pixel count of the stitched canvas fed to predict().
 # Canvases larger than this are downscaled proportionally with INTER_AREA before
@@ -70,6 +84,16 @@ _DIRECTION_PROXIMITY_Y = 30   # px: vertical distance to direction token center
 # These appear when PaddleOCR reads volta bracket endings (1st/2nd/3rd endings)
 # as a single text block, e.g. "2. Bb/D C/E F/A D.S." or "|3.Bb/D".
 _VOLTA_PREFIX_RE = re.compile(r'^\|?\d+\.?\s*')
+_SECTION_PREFIX_RE = re.compile(
+    r'^\s*\[(?:INTRO|VERSE|CHORUS|BRIDGE|OUTRO)\]\s*(.*)$',
+    re.IGNORECASE,
+)
+_TITLE_METADATA_RE = re.compile(
+    r"^(?:key|capo|tempo|bpm|words?|music|lyrics?|arr(?:anged)?|"
+    r"작사|작곡|편곡|원곡|노래)\b",
+    re.IGNORECASE,
+)
+_TRANSPOSE_HEADER_RE = re.compile(r"^[A-G][#b]?\s*(?:->|→)\s*[A-G][#b]?", re.IGNORECASE)
 
 
 def _is_direction_token(raw_text: str) -> bool:
@@ -107,31 +131,45 @@ def _extract_volta_chords(raw_text: str, item: dict) -> list[dict]:
     """Extract chord symbols from volta bracket OCR text.
 
     PaddleOCR may read volta endings as a single text block, e.g.
-    "2. Bb/D C/E F/A D.S." or "|3.Bb/D".  This function strips the volta
-    numbering, splits by whitespace, normalises each token, and returns
-    valid chord items.  Non-chord tokens (D.S., al, Coda) are discarded.
+    "2. Bb/D C/E F/A D.S." or "|3.Bb/D".  The shared recovery filter
+    extracts valid chords and discards direction markers.
 
     Returns an empty list if the text does not look like a volta block.
     """
-    stripped = _VOLTA_PREFIX_RE.sub("", raw_text).strip()
-    if not stripped:
-        return []
+    recovered, _, _ = recover_candidates([{
+        "text": raw_text,
+        "confidence": item["confidence"],
+        "bbox": item["bbox"],
+    }])
+    return recovered
 
-    tokens = stripped.split()
-    results: list[dict] = []
-    for token in tokens:
-        # Skip direction markers (D.S., al, Coda, Fine, etc.)
-        if "." in token or _is_direction_token(token):
-            continue
-        normalized = normalize_chord_text(token)
-        if not normalized:
-            continue
-        results.append({
-            "text":       normalized,
-            "confidence": item["confidence"],
-            "bbox":       item["bbox"],
-        })
-    return results
+
+def _extract_section_suffix_chord(raw_text: str, item: dict) -> dict | None:
+    """Recover a chord fused after a section marker, e.g. "[CHORUS] F"."""
+    match = _SECTION_PREFIX_RE.match(raw_text)
+    if not match:
+        return None
+    suffix = match.group(1).strip()
+    if not suffix:
+        return {"drop": True}
+    normalized = normalize_chord_text(suffix)
+    if not normalized or not is_chord_candidate(normalized):
+        return {"drop": True}
+
+    bbox = item.get("bbox")
+    if bbox is None:
+        suffix_bbox = None
+    else:
+        x1, y1, x2, y2 = bbox
+        suffix_start = len(raw_text) - len(match.group(1))
+        ratio = min(1.0, max(0.0, suffix_start / max(1, len(raw_text))))
+        suffix_bbox = [x1 + int((x2 - x1) * ratio), y1, x2, y2]
+
+    return {
+        "text": normalized,
+        "confidence": item["confidence"],
+        "bbox": suffix_bbox,
+    }
 
 
 def _split_multi_token(raw_text: str, item: dict) -> list[dict]:
@@ -139,54 +177,23 @@ def _split_multi_token(raw_text: str, item: dict) -> list[dict]:
 
     PaddleOCR sometimes reads adjacent chords as a single text block,
     e.g. "A D/E E7" or "D/E E/D".  This function splits on whitespace,
-    normalises each token, and returns valid chord items with proportionally
-    divided bounding boxes.
+    normalises each token, and returns valid chord items with evenly divided
+    bounding boxes.
 
     Returns an empty list if fewer than 2 tokens normalise to valid chords.
     """
-    tokens = raw_text.split()
-    if len(tokens) < 2:
-        return []
-
-    normalised: list[str] = []
-    for token in tokens:
-        if _is_direction_token(token):
-            continue
-        norm = normalize_chord_text(token)
-        if norm and is_chord_candidate(norm):
-            normalised.append(norm)
-
-    if len(normalised) < 2:
-        return []
-
-    # Proportionally divide the bbox horizontally by token character count.
-    bbox = item["bbox"]
-    results: list[dict] = []
-    if bbox is not None:
-        x1, y1, x2, y2 = bbox
-        total_len = sum(len(t) for t in normalised)
-        cur_x = x1
-        for i, norm in enumerate(normalised):
-            ratio = len(norm) / total_len if total_len > 0 else 1 / len(normalised)
-            seg_w = int((x2 - x1) * ratio)
-            seg_x2 = cur_x + seg_w if i < len(normalised) - 1 else x2
-            results.append({
-                "text":       norm,
-                "confidence": item["confidence"],
-                "bbox":       [cur_x, y1, seg_x2, y2],
-            })
-            cur_x = seg_x2
-    else:
-        for norm in normalised:
-            results.append({
-                "text":       norm,
-                "confidence": item["confidence"],
-                "bbox":       None,
-            })
-    return results
+    recovered, _, _ = recover_candidates([{
+        "text": raw_text,
+        "confidence": item["confidence"],
+        "bbox": item["bbox"],
+    }])
+    return recovered
 
 
-def _apply_direction_filter(raw_items: list[dict]) -> list[dict]:
+def _apply_direction_filter(
+    raw_items: list[dict],
+    image_width: int | None = None,
+) -> list[dict]:
     """Convert raw OCR items to chord dicts, rejecting direction-contaminated detections.
 
     Collects all detections, identifies direction-marker tokens (al, Coda, Fine,
@@ -212,17 +219,23 @@ def _apply_direction_filter(raw_items: list[dict]) -> list[dict]:
     for item in raw_items:
         raw_text = item["raw_text"]
 
+        if is_section_marker(raw_text, item.get("bbox"), image_width):
+            continue
+
+        section_chord = _extract_section_suffix_chord(raw_text, item)
+        if section_chord is not None:
+            if not section_chord.get("drop"):
+                chords.append(section_chord)
+            continue
+
         # Volta bracket extraction: try to recover chords from text like
         # "2. Bb/D C/E F/A D.S." before the period filter discards it.
         if "." in raw_text and _VOLTA_PREFIX_RE.match(raw_text):
             chords.extend(_extract_volta_chords(raw_text, item))
             continue
 
-        # Period in the raw text → definitely a direction marker, not a chord.
-        if "." in raw_text:
-            continue
-
-        # Multi-token splitting: "A D/E E7" or "D/E E/D" read as one block.
+        # Multi-token splitting: "A D/E E7" or chords followed by "D.S."
+        # read as one block.  This must run before the period-only rejection.
         if " " in raw_text:
             split_items = _split_multi_token(raw_text, item)
             if split_items:
@@ -234,6 +247,10 @@ def _apply_direction_filter(raw_items: list[dict]) -> list[dict]:
                         continue
                     chords.append(si)
                 continue
+
+        # Period in the raw text → direction marker, not a chord.
+        if "." in raw_text:
+            continue
 
         normalized = normalize_chord_text(raw_text)
 
@@ -252,6 +269,162 @@ def _apply_direction_filter(raw_items: list[dict]) -> list[dict]:
     return chords
 
 
+def _sort_reading_order(items: list[dict]) -> list[dict]:
+    """Sort OCR chord items by staff row, then left-to-right within each row."""
+    boxed = [item for item in items if item.get("bbox") is not None]
+    unboxed = [item for item in items if item.get("bbox") is None]
+    if not boxed:
+        return items
+
+    avg_h = sum(item["bbox"][3] - item["bbox"][1] for item in boxed) / len(boxed)
+    threshold = max(20, int(avg_h * 1.5))
+    rows: list[list[dict]] = []
+    for item in sorted(boxed, key=lambda i: (i["bbox"][1], i["bbox"][0])):
+        if not rows:
+            rows.append([item])
+            continue
+        row_min_y = min(i["bbox"][1] for i in rows[-1])
+        if item["bbox"][1] - row_min_y <= threshold:
+            rows[-1].append(item)
+        else:
+            rows.append([item])
+    return [
+        item
+        for row in rows
+        for item in sorted(row, key=lambda i: i["bbox"][0])
+    ] + unboxed
+
+
+def _select_song_title(raw_items: list[dict], image_size: tuple[int, int]) -> str | None:
+    """Pick the prominent centered text from the title area."""
+    width, height = image_size
+    min_height = max(14, round(height * 0.022))
+    candidates: list[tuple[int, float, str]] = []
+    for item in raw_items:
+        text = str(item.get("raw_text", "")).strip()
+        bbox = item.get("bbox")
+        if not text or not bbox or len(re.sub(r"[^0-9A-Za-z가-힣]", "", text)) < 2:
+            continue
+        x1, y1, x2, y2 = bbox
+        box_height = y2 - y1
+        center_x = (x1 + x2) / 2
+        if (
+            box_height < min_height
+            or not width * 0.15 <= center_x <= width * 0.85
+            or _TITLE_METADATA_RE.match(text)
+            or _TRANSPOSE_HEADER_RE.match(text)
+            or _is_section_marker_row(text)
+            or is_section_marker(text, bbox, width)
+            or is_chord_candidate(normalize_chord_text(text))
+        ):
+            continue
+        candidates.append((box_height, -abs(center_x - width / 2), text))
+    return max(candidates)[2] if candidates else None
+
+
+def _merge_title_line_items(raw_items: list[dict]) -> list[dict]:
+    """Join nearby OCR boxes that form one title line."""
+    merged: list[dict] = []
+    for item in sorted(raw_items, key=lambda value: (value["bbox"][1], value["bbox"][0])):
+        if not item.get("raw_text", "").strip():
+            continue
+        if merged:
+            previous = merged[-1]
+            x1, y1, x2, y2 = item["bbox"]
+            px1, py1, px2, py2 = previous["bbox"]
+            height = max(y2 - y1, py2 - py1)
+            if (
+                abs((y1 + y2) / 2 - (py1 + py2) / 2) <= height * 0.5
+                and x1 - px2 <= height * 1.5
+            ):
+                previous["raw_text"] = f'{previous["raw_text"].rstrip()} {item["raw_text"].lstrip()}'
+                previous["bbox"] = [min(px1, x1), min(py1, y1), max(px2, x2), max(py2, y2)]
+                continue
+        merged.append({**item, "bbox": list(item["bbox"])})
+    return merged
+
+
+def _is_section_marker_row(text: str) -> bool:
+    parts = [
+        part.strip().strip("[]:.")
+        for part in re.split(r"[-–—−|]+", text)
+        if part.strip().strip("[]:.")
+    ]
+    return len(parts) >= 2 and all(part.casefold() in _SECTION_MARKERS_CASEFOLD for part in parts)
+
+
+def _get_title_recognizer():
+    global _title_recognizer
+    if _title_recognizer is None:
+        from paddleocr import TextRecognition  # noqa: PLC0415
+        _title_recognizer = TextRecognition(
+            model_name="korean_PP-OCRv5_mobile_rec",
+            enable_mkldnn=os.environ.get("PADDLE_ENABLE_MKLDNN", "0") == "1",
+        )
+    return _title_recognizer
+
+
+def _read_song_title(ocr, img: Image.Image, regions: list[dict], mode: str) -> tuple[str | None, float]:
+    """OCR only the page header above the first chord band."""
+    if not regions:
+        return None, 0.0
+    title_bottom = (
+        min(region["y0"] for region in regions)
+        if mode == "staff_bands"
+        else round(img.height * 0.25)
+    )
+    if title_bottom < max(40, round(img.height * 0.04)):
+        return None, 0.0
+
+    margin = round(img.width * 0.05)
+    crop = np.array(img)[0:title_bottom, margin:img.width - margin]
+    t0 = time.perf_counter()
+    result = ocr.predict(crop)
+    if not result:
+        return None, (time.perf_counter() - t0) * 1000
+
+    res = result[0]
+    raw_items = []
+    blank_candidates = []
+    for text, confidence, poly in zip(
+        res.get("rec_texts", []) or [],
+        res.get("rec_scores", []) or [],
+        res.get("rec_polys", []) or [],
+    ):
+        xs = [p[0] for p in poly]
+        ys = [p[1] for p in poly]
+        bbox = [
+            int(min(xs)) + margin,
+            int(min(ys)),
+            int(max(xs)) + margin,
+            int(max(ys)),
+        ]
+        raw_items.append({
+            "raw_text": str(text),
+            "confidence": float(confidence),
+            "bbox": bbox,
+        })
+        if not str(text).strip():
+            pad = max(2, round((max(ys) - min(ys)) * 0.1))
+            blank_candidates.append(np.array(img)[
+                max(0, int(min(ys)) - pad):min(title_bottom, int(max(ys)) + pad),
+                max(0, int(min(xs)) + margin - pad):min(img.width, int(max(xs)) + margin + pad),
+            ])
+
+    if blank_candidates:
+        try:
+            recognized = list(_get_title_recognizer().predict(blank_candidates))
+            blank_index = 0
+            for item in raw_items:
+                if not item["raw_text"].strip():
+                    item["raw_text"] = str(recognized[blank_index].get("rec_text", ""))
+                    blank_index += 1
+        except Exception:
+            logger.warning("Korean title recognition failed", exc_info=True)
+    title = _select_song_title(_merge_title_line_items(raw_items), img.size)
+    return title, (time.perf_counter() - t0) * 1000
+
+
 def get_ocr(
     det_variant: "str | None" = None,
     *,
@@ -266,7 +439,7 @@ def get_ocr(
 
     Parameters
     ----------
-    det_variant : "server" | "mobile" | None
+    det_variant : "server" | "mobile" | "v6-tiny" | "v6-small" | "v6-medium" | None
         Which detector to use. When None the value is read from the env var
         CHORDTAYLOR_OCR_DET_MODEL (default "server"). Separate cached instances
         are kept per variant so switching does not reuse the wrong model.
@@ -278,7 +451,7 @@ def get_ocr(
       flat and upright so these add time with no benefit.
     * use_textline_orientation=False — skips per-line rotation model for speed.
     * Set PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True to skip connectivity check.
-    * CHORDTAYLOR_OCR_DET_MODEL=server|mobile selects the detection model variant.
+    * CHORDTAYLOR_OCR_DET_MODEL=server|mobile|v6-tiny|v6-small|v6-medium selects the detection model variant.
     * PADDLE_DET_DB_THRESH (default 0.25): lower → higher recall, more noise.
     * PADDLE_DET_DB_BOX_THRESH (default 0.45): box confidence cutoff.
     * PADDLE_DET_DB_UNCLIP_RATIO (default 1.8): box expansion ratio for small glyphs.
@@ -289,9 +462,10 @@ def get_ocr(
     global _ocr_instances
     if det_variant is None:
         det_variant = os.environ.get("CHORDTAYLOR_OCR_DET_MODEL", "server").lower()
-    if det_variant not in ("server", "mobile"):
+    if det_variant not in _DET_MODEL_NAMES:
         raise ValueError(
-            f"CHORDTAYLOR_OCR_DET_MODEL must be 'server' or 'mobile', got {det_variant!r}"
+            "CHORDTAYLOR_OCR_DET_MODEL must be one of "
+            f"{sorted(_DET_MODEL_NAMES)}, got {det_variant!r}"
         )
     cache_key = (det_variant, det_db_thresh, det_db_box_thresh, det_db_unclip_ratio)
     if cache_key not in _ocr_instances:
@@ -300,7 +474,9 @@ def get_ocr(
             use_doc_orientation_classify=False,
             use_doc_unwarping=False,
             use_textline_orientation=False,
-            enable_mkldnn=False,  # disable oneDNN — crashes on x86 Linux with 3.3.0+
+            # Paddle 3.3.x has a Linux oneDNN regression. Production stays on
+            # 3.2.2, but acceleration remains opt-in until the HF gate passes.
+            enable_mkldnn=os.environ.get("PADDLE_ENABLE_MKLDNN", "0") == "1",
         )
         explicit_params = {
             "det_db_thresh": det_db_thresh,
@@ -321,8 +497,9 @@ def get_ocr(
         ]:
             if explicit_params[kwarg_name] is None and env_var in os.environ:
                 kwargs[kwarg_name] = float(os.environ[env_var])
-        if det_variant == "mobile":
-            kwargs["text_detection_model_name"] = "PP-OCRv5_mobile_det"
+        model_name = _DET_MODEL_NAMES[det_variant]
+        if model_name:
+            kwargs["text_detection_model_name"] = model_name
         _ocr_instances[cache_key] = PaddleOCR(**kwargs)
     return _ocr_instances[cache_key]
 
@@ -333,6 +510,7 @@ def run_ocr_paddle(
     det_db_thresh: float | None = None,
     det_db_box_thresh: float | None = None,
     det_db_unclip_ratio: float | None = None,
+    read_title: bool = True,
 ) -> tuple[list[dict], dict]:
     """Run PaddleOCR on chord-band regions of *image_path*.
 
@@ -361,15 +539,17 @@ def run_ocr_paddle(
         resize_applied   : bool
         resize_scale     : float or None
         resized_shape    : [H, W] or None
-        det_model_variant: "server" | "mobile"
+        det_model_variant: "server" | "mobile" | "v6-tiny" | "v6-small" | "v6-medium"
     """
     t_start = time.perf_counter()
 
     det_variant = os.environ.get("CHORDTAYLOR_OCR_DET_MODEL", "server").lower()
-    if det_variant not in ("server", "mobile"):
+    if det_variant not in _DET_MODEL_NAMES:
         raise ValueError(
-            f"CHORDTAYLOR_OCR_DET_MODEL must be 'server' or 'mobile', got {det_variant!r}"
+            "CHORDTAYLOR_OCR_DET_MODEL must be one of "
+            f"{sorted(_DET_MODEL_NAMES)}, got {det_variant!r}"
         )
+    det_model_name = _DET_MODEL_NAMES[det_variant] or "PP-OCRv5_server_det"
 
     # ------------------------------------------------------------------
     # Stage 1 — preprocess: load image + select OCR regions
@@ -385,6 +565,13 @@ def run_ocr_paddle(
         det_db_box_thresh=det_db_box_thresh,
         det_db_unclip_ratio=det_db_unclip_ratio,
     )
+    song_title = None
+    title_predict_ms = 0.0
+    if read_title:
+        try:
+            song_title, title_predict_ms = _read_song_title(ocr, img, regions, mode)
+        except Exception:
+            logger.warning("Song title OCR failed", exc_info=True)
     items: list[dict] = []
 
     region_meta = [
@@ -503,7 +690,7 @@ def run_ocr_paddle(
                     ],
                 })
 
-        items.extend(_apply_direction_filter(raw_items))
+        items.extend(_apply_direction_filter(raw_items, img.width))
         post_ms = (time.perf_counter() - t0) * 1000
 
         meta = {
@@ -550,7 +737,7 @@ def run_ocr_paddle(
                         int(max(ys)) + y0,
                     ],
                 })
-            items.extend(_apply_direction_filter(raw_region_items))
+            items.extend(_apply_direction_filter(raw_region_items, img.width))
             post_ms += (time.perf_counter() - t0) * 1000
 
         meta = {
@@ -578,6 +765,8 @@ def run_ocr_paddle(
         "resize_scale":    round(resize_scale, 4) if resize_applied else None,
         "resized_shape":   resized_shape,
         "det_model_variant": det_variant,
+        "det_model_name": det_model_name,
+        "mkldnn_enabled": os.environ.get("PADDLE_ENABLE_MKLDNN", "0") == "1",
         "det_db_thresh": det_db_thresh,
         "det_db_box_thresh": det_db_box_thresh,
         "det_db_unclip_ratio": det_db_unclip_ratio,
@@ -586,6 +775,8 @@ def run_ocr_paddle(
         "stitched_resize_scale": round(stitched_resize_scale, 4),
         "stitch_max_safe_pixels": STITCH_MAX_SAFE_PIXELS,
         "min_stitch_resize_scale": MIN_STITCH_RESIZE_SCALE,
+        "song_title": song_title,
+        "title_predict_ms": round(title_predict_ms, 1),
     })
 
-    return items, meta
+    return _sort_reading_order(items), meta

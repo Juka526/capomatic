@@ -180,6 +180,17 @@ class TestHybridDetect:
         texts = [i["text"] for i in items]
         assert "D" in texts
 
+    def test_paddle_only_preserves_recovered_candidate_order(self, monkeypatch):
+        paddle_items, paddle_meta = self._make_paddle_result(["Am7b5", "D7b9Gm7", "Bb"])
+
+        import backend.ocr.hybrid_detect as hd
+        monkeypatch.setattr(hd, "run_ocr_paddle", lambda _: (paddle_items, paddle_meta))
+
+        items, meta = hd.detect_chords_hybrid("fake.jpg", use_ai_fallback=False)
+
+        assert [item["text"] for item in items] == ["Am7b5", "D7b9", "Gm7", "Bb"]
+        assert meta["recovery"] == {"parse": 0, "split": 1}
+
     def test_paddle_kept_when_ai_returns_empty_rows(self, monkeypatch):
         """If AI returns empty rows (e.g. mock), fall through to Paddle result."""
         bad_paddle_items, paddle_meta = self._make_paddle_result(["D", "A", "G"])

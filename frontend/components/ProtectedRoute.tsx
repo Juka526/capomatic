@@ -23,9 +23,9 @@ export default function ProtectedRoute({
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      login();
+      login(router.asPath);
     }
-  }, [isLoading, isAuthenticated, login]);
+  }, [isLoading, isAuthenticated, login, router.asPath]);
 
   if (isLoading) {
     return (

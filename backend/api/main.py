@@ -14,8 +14,10 @@ Usage
 """
 from __future__ import annotations
 
+import asyncio
 import base64
 import concurrent.futures
+import functools
 import io
 import logging
 import os
@@ -39,7 +41,7 @@ from backend.ocr.hybrid_detect import detect_chords_hybrid
 from backend.chords.parser import parse_chord
 from backend.chords.transpose import transpose_chord, compute_target_key
 from backend.chords.key_detect import infer_key
-from backend.overlay.render import render_overlay
+from backend.overlay.render import _get_staff_systems, render_overlay
 from backend.auth.auth0 import get_current_user, require_admin
 from backend.db.database import get_db
 from backend.db.models import User
@@ -62,6 +64,9 @@ _VALID_KEYS = frozenset({
 # ---------------------------------------------------------------------------
 _MAX_CACHE = 20
 _detection_cache: OrderedDict[str, dict] = OrderedDict()
+# Keep Paddle requests serialized, but run them off the event loop so health
+# checks and other lightweight endpoints stay responsive during OCR.
+_ocr_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
 
 def _cache_put(detection_id: str, data: dict) -> None:
@@ -158,13 +163,20 @@ def _build_chord_item(item: dict, semitones: int, target_key: str | None) -> dic
     except (ValueError, KeyError):
         logger.debug("Could not transpose %r: skipping", item["text"])
 
+    style = item.get("style")
+    parenthesis = style.get("parenthesis") if isinstance(style, dict) else None
+    if transposed is not None and parenthesis in {"open", "both"}:
+        transposed = f"({transposed}"
+    if transposed is not None and parenthesis in {"close", "both"}:
+        transposed = f"{transposed})"
+
     raw_bbox = item.get("bbox")
     return {
         "text":       item["text"],
         "transposed": transposed,
         "confidence": float(item["confidence"]),
         "bbox":       [int(v) for v in raw_bbox] if raw_bbox is not None else None,
-        "style":      item.get("style"),
+        "style":      style,
     }
 
 
@@ -236,6 +248,7 @@ async def detect(
     original_key : Optional override for the original key of the song.
                    When omitted, auto-detected from the chord progression.
     """
+    request_started = time.perf_counter()
     if original_key is not None and original_key not in _VALID_KEYS:
         raise HTTPException(
             status_code=422,
@@ -258,13 +271,36 @@ async def detect(
 
         if ocr_engine == "paddle-gpt":
             try:
-                items, raw_meta = run_ocr_paddle_gpt_hybrid(tmp_path)
+                items, raw_meta = await asyncio.get_running_loop().run_in_executor(
+                    _ocr_executor,
+                    run_ocr_paddle_gpt_hybrid,
+                    tmp_path,
+                )
             except Exception as exc:  # noqa: BLE001
                 logger.warning("Hybrid Paddle+GPT OCR failed; falling back to PaddleOCR: %s", exc)
-                items, raw_meta = detect_chords_hybrid(tmp_path, use_ai_fallback=False)
+                fallback = functools.partial(
+                    detect_chords_hybrid,
+                    tmp_path,
+                    use_ai_fallback=False,
+                )
+                items, raw_meta = await asyncio.get_running_loop().run_in_executor(
+                    _ocr_executor,
+                    fallback,
+                )
+                raw_meta["ocr_engine"] = "paddle-only"
+                raw_meta["gpt_error"] = str(exc)
         else:
-            items, raw_meta = detect_chords_hybrid(tmp_path, use_ai_fallback=False)
+            runner = functools.partial(
+                detect_chords_hybrid,
+                tmp_path,
+                use_ai_fallback=False,
+            )
+            items, raw_meta = await asyncio.get_running_loop().run_in_executor(
+                _ocr_executor,
+                runner,
+            )
         img = Image.open(tmp_path).convert("RGB")
+        _get_staff_systems(img)
     finally:
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
@@ -287,13 +323,27 @@ async def detect(
         "ocr_engine":  raw_meta.get("ocr_engine", ocr_engine),
         "crop_mode":   raw_meta.get("crop_mode"),
         "num_regions": raw_meta.get("num_regions"),
+        "stitched":    raw_meta.get("stitched"),
+        "predict_calls": raw_meta.get("predict_calls"),
         "predict_ms":  raw_meta.get("predict_ms"),
+        "total_ms":    raw_meta.get("total_ms"),
+        "title_predict_ms": raw_meta.get("title_predict_ms"),
+        "det_model_variant": raw_meta.get("det_model_variant"),
+        "det_model_name": raw_meta.get("det_model_name"),
+        "mkldnn_enabled": raw_meta.get("mkldnn_enabled"),
+        "service_ms":  round((time.perf_counter() - request_started) * 1000, 1),
         "gate_pass":   gate.get("pass"),
         "ai_used":     raw_meta.get("ai_used", False),
+        "gpt_used":    raw_meta.get("gpt_used", False),
+        "gpt_crop_ms": raw_meta.get("gpt_crop_ms"),
+        "gpt_gap_ms":  raw_meta.get("gpt_gap_ms"),
+        "high_recall_predict_ms": raw_meta.get("high_recall_predict_ms"),
+        "parallel_refinement": raw_meta.get("parallel_refinement", False),
     }
 
     return {
         "detection_id": detection_id,
+        "song_title":   raw_meta.get("song_title") or "알수없음",
         "chords":       chords,
         "count":        len(chords),
         "original_key": original_key,
@@ -306,6 +356,7 @@ async def refine_detection(
     detection_id: str = Form(...),
 ) -> dict:
     """Refine cached Paddle detections with GPT without re-running PaddleOCR."""
+    request_started = time.perf_counter()
     if not os.environ.get("OPENAI_API_KEY"):
         raise HTTPException(
             status_code=503,
@@ -322,10 +373,15 @@ async def refine_detection(
     items = cached["items"]
     img = cached["img"]
     try:
-        refined_items, raw_meta = refine_paddle_items_with_gpt(
+        runner = functools.partial(
+            refine_paddle_items_with_gpt,
             img,
             items,
             base_meta=cached.get("meta"),
+        )
+        refined_items, raw_meta = await asyncio.get_running_loop().run_in_executor(
+            _ocr_executor,
+            runner,
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("Cached GPT refinement failed: %s", exc)
@@ -354,6 +410,7 @@ async def refine_detection(
             "input_tokens": raw_meta.get("input_tokens"),
             "output_tokens": raw_meta.get("output_tokens"),
             "total_ms": raw_meta.get("total_ms"),
+            "service_ms": round((time.perf_counter() - request_started) * 1000, 1),
             "reused_paddle_detection": raw_meta.get("reused_paddle_detection", True),
         },
     }
@@ -494,7 +551,11 @@ async def overlay(
             tmp.write(data)
             tmp_path = tmp.name
 
-        items, _ = detect_chords_hybrid(tmp_path)
+        items, _ = await asyncio.get_running_loop().run_in_executor(
+            _ocr_executor,
+            detect_chords_hybrid,
+            tmp_path,
+        )
         img = Image.open(tmp_path).convert("RGB")
     finally:
         if tmp_path and os.path.exists(tmp_path):

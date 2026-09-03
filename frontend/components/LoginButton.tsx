@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { UserRound } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { useLang } from './LangProvider';
 
@@ -31,7 +32,7 @@ export default function LoginButton() {
   if (!isAuthenticated) {
     return (
       <button
-        onClick={login}
+        onClick={() => void login()}
         style={{
           width: 32, height: 32, borderRadius: '50%',
           background: '#1a1a2e', border: 'none', cursor: 'pointer',
@@ -40,10 +41,7 @@ export default function LoginButton() {
         }}
         title={t.login}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
+        <UserRound size={16} color="white" strokeWidth={2} />
       </button>
     );
   }
