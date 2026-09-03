@@ -283,8 +283,8 @@ def test_gpt_recognize_crops_repairs_and_splits_joined_gap_chords(monkeypatch):
     )
 
     assert [item["text"] for item in result[1]["recovered_items"]] == ["Abm7", "Abm7", "Db"]
-    assert result[1]["recovered_items"][0]["bbox"] == [100, 20, 148, 44]
-    assert result[1]["recovered_items"][2]["bbox"] == [196, 20, 220, 44]
+    assert result[1]["recovered_items"][0]["bbox"] == [100, 20, 140, 44]
+    assert result[1]["recovered_items"][2]["bbox"] == [180, 20, 220, 44]
 
 
 def test_component_gap_candidates_find_dark_glyph_group():

@@ -552,6 +552,7 @@ def _run_high_recall_paddle_candidates(
             det_db_thresh=HIGH_RECALL_DET_DB_THRESH,
             det_db_box_thresh=HIGH_RECALL_DET_DB_BOX_THRESH,
             det_db_unclip_ratio=HIGH_RECALL_DET_DB_UNCLIP_RATIO,
+            read_title=False,
         )
     finally:
         if os.path.exists(tmp_path):

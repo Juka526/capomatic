@@ -19,7 +19,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: () => Promise<void>;
+  login: (returnTo?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -39,9 +39,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Handle redirect callback if present
       const query = window.location.search;
       if (query.includes('code=') && query.includes('state=')) {
-        await handleRedirectCallback();
-        // Clean up URL
-        window.history.replaceState({}, document.title, window.location.pathname);
+        const returnTo = await handleRedirectCallback();
+        if (returnTo !== window.location.pathname) {
+          window.location.replace(returnTo);
+          return;
+        }
+        window.history.replaceState({}, document.title, returnTo);
       }
 
       // Check authentication status
@@ -77,9 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function handleLogin() {
+  async function handleLogin(returnTo = '/') {
     try {
-      await auth0Login();
+      await auth0Login(returnTo);
     } catch (error) {
       console.error('Login failed:', error);
     }

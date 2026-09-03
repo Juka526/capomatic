@@ -75,6 +75,7 @@ export default function Home() {
   const [hybridStatus, setHybridStatus] = useState<string | null>(null);
 
   const [detectionId, setDetectionId] = useState<string | null>(null);
+  const [songTitle, setSongTitle] = useState("알수없음");
   const [originalKey, setOriginalKey] = useState<string | null>(null);
   const [detecting, setDetecting] = useState(false);
   const [detectProgress, setDetectProgress] = useState(0);
@@ -174,6 +175,7 @@ export default function Home() {
     setDetectElapsed(0);
     setError(null);
     setDetectionId(null);
+    setSongTitle("알수없음");
     setHybridApplied(false);
     setHybridStatus(null);
     setOriginalKey(null);
@@ -197,6 +199,7 @@ export default function Home() {
       const data = await res.json();
       setDetectProgress(100);
       setDetectionId(data.detection_id);
+      setSongTitle(data.song_title || "알수없음");
       setOriginalKey(data.original_key);
       const chords: ChordItem[] = (data.chords || []).map((c: any) => ({ text: c.text, bbox: c.bbox }));
       setDetectedChords(chords);
@@ -360,7 +363,7 @@ export default function Home() {
       if (!data || versionAtStart !== editVersionRef.current) return;
       applyRenderResult(data);
       setShowOriginal(false);
-      saveToLocalHistory(file?.name, originalKey, data.target_key, semitoneOverride);
+      saveToLocalHistory(songTitle, originalKey, data.target_key, semitoneOverride);
       if (scrollToResult) {
         setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
       }
@@ -373,12 +376,12 @@ export default function Home() {
     }
   };
 
-  const saveToLocalHistory = (fileName: string | undefined, origKey: string | null, tgtKey: string | null, semi: number) => {
+  const saveToLocalHistory = (title: string, origKey: string | null, tgtKey: string | null, semi: number) => {
     try {
       const existing = JSON.parse(localStorage.getItem("tc-history") || "[]");
       const entry = {
         id: Math.random().toString(36).slice(2),
-        song_name: fileName ? fileName.replace(/\.[^.]+$/, "") : null,
+        song_name: title || "알수없음",
         original_key: origKey,
         target_key: tgtKey,
         semitones: semi,
@@ -536,6 +539,7 @@ export default function Home() {
     selectedSemitoneRef.current = 0;
     setFile(null);
     setDetectionId(null);
+    setSongTitle("알수없음");
     setHybridRefining(false);
     setHybridApplied(false);
     setHybridStatus(null);
@@ -576,7 +580,7 @@ export default function Home() {
         applyRenderResult(cached);
         setShowOriginal(false);
         setRenderUpdating(false);
-        saveToLocalHistory(file?.name, originalKey, cached.target_key, next);
+        saveToLocalHistory(songTitle, originalKey, cached.target_key, next);
         if (shouldScrollToResult) {
           setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
         }
@@ -596,7 +600,7 @@ export default function Home() {
         ) {
           applyRenderResult(data);
           setShowOriginal(false);
-          saveToLocalHistory(file?.name, originalKey, data.target_key, next);
+          saveToLocalHistory(songTitle, originalKey, data.target_key, next);
           if (shouldScrollToResult) {
             setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
           }

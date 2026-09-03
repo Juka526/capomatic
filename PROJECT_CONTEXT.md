@@ -21,7 +21,10 @@ Product rules:
 - Space: `juka526/capomatic`, Docker SDK, port `7860`, one `cpu-basic` replica
 - Required HF variable: `CORS_ORIGINS=https://capomatic.vercel.app`
 - Browser API target: `NEXT_PUBLIC_API_URL=https://juka526-capomatic.hf.space`
-- Database/Auth0: not configured in the current public-only deployment
+- Frontend Auth0 (SPA) is live on Vercel: `NEXT_PUBLIC_AUTH0_DOMAIN=dev-em2gvqp2q71brplg.us.auth0.com`,
+  `NEXT_PUBLIC_AUTH0_CLIENT_ID=ftLB1Swg3LHaWrADVs0gPnnZDrqDjZ3c`, token audience `https://capomatic-api`
+- Backend has no `DATABASE_URL`, so `/api/auth/*` and `/api/admin/*` are mounted but answer 503
+  `Database is not configured`. Public OCR is unaffected.
 - OpenAI: optional refinement secret is present; the public cost-control boundary is unresolved
 
 GitHub `main` is the canonical source and Vercel deploys it directly. HF uses a runtime-only
@@ -54,21 +57,44 @@ until this state moves to a shared store or requests gain session affinity.
 Evaluate OCR changes against labeled fixtures and report coverage, OCR/predict time, stitched
 pixel count, quality-gate result, and fallback usage.
 
-## Optional auth/admin
+## Auth0 and optional auth/admin
 
-Auth0 JWT verification and a PostgreSQL-backed user/admin list exist in code but are not enabled
-in production. Public OCR works without `DATABASE_URL`. Enabling auth/admin requires
+Auth0 tenant `dev-em2gvqp2q71brplg` (US-5) backs the deployed frontend.
+
+- SPA application `Capomatic Deploy` (`ftLB1Swg3LHaWrADVs0gPnnZDrqDjZ3c`) allows
+  `https://capomatic.vercel.app` with and without a trailing slash for callback, logout, and web
+  origins. `frontend/lib/auth0.ts` sends `window.location.origin`, which carries no trailing slash.
+- M2M application `Capomatic Branding M2M` holds only `read:branding`, `update:branding`,
+  `read:prompts`, and `update:prompts` on the Management API. Its secret lives in the untracked
+  `.env.auth0.local` and is never required at runtime.
+- Universal Login is branded through the Management API, not the dashboard: theme `Capomatic`,
+  primary `#E05D00`, page background `#F5EDD8`, links `#A33F00`, logo
+  `https://capomatic.vercel.app/favicon.svg`. Links are darker than the primary on purpose so link
+  text clears WCAG AA on white; `#E05D00` only reaches 3.66:1.
+- Tenant default language is `ko`, supported languages are `ko` and `en`, and both carry custom
+  login prompt text.
+
+Backend JWT verification and the PostgreSQL-backed user/admin list exist in code but are not
+enabled in production. Public OCR works without `DATABASE_URL`. Enabling auth/admin requires
 `DATABASE_URL`, `AUTH0_DOMAIN`, and `AUTH0_AUDIENCE` together, plus an explicit admin-role,
 migration, backup, and restore procedure.
+
+Login is already exposed in the UI: `components/LoginButton.tsx` renders in the `pages/index.tsx`
+nav, so a visitor can complete an Auth0 login today. `AuthProvider` calls `/api/auth/me` only to
+enrich the role and swallows the failure, so ordinary login still behaves correctly. The visible
+break is `pages/admin/dashboard.tsx`, whose `lib/admin-api.ts` rethrows the raw
+`Database is not configured` detail from `/api/admin/users`.
 
 ## Current priorities
 
 1. Keep reviewed releases synchronized across GitHub, Vercel, and HF, then decide whether
    historical HF storage should be reclaimed.
-2. Put an authentication, rate-limit, or budget boundary around paid public GPT refinement,
+2. Resolve the frontend/backend auth mismatch: provision `DATABASE_URL`, `AUTH0_DOMAIN`, and
+   `AUTH0_AUDIENCE` on the Space, or gate `/admin/dashboard` so it stops surfacing the raw 503.
+3. Put an authentication, rate-limit, or budget boundary around paid public GPT refinement,
    or disable its production secret.
-3. Continue reducing OCR latency only when fixture coverage remains acceptable.
-4. Validate OCR changes on unseen Korean worship sheets.
+4. Continue reducing OCR latency only when fixture coverage remains acceptable.
+5. Validate OCR changes on unseen Korean worship sheets.
 
 ## Change rules
 

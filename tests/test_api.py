@@ -96,6 +96,23 @@ class TestBuildChordItem:
         result = _build_chord_item(item, semitones=0, target_key=None)
         assert result["bbox"] is None
 
+    @pytest.mark.parametrize("marker,expected", [
+        ("open", "(Bb/Ab"),
+        ("close", "Bb/Ab)"),
+        ("both", "(Bb/Ab)"),
+    ])
+    def test_preserves_parentheses_after_transpose(self, marker, expected):
+        item = {
+            "text": "C/Bb",
+            "confidence": 1.0,
+            "bbox": [0, 0, 10, 10],
+            "style": {"parenthesis": marker},
+        }
+
+        result = _build_chord_item(item, semitones=-2, target_key="Eb")
+
+        assert result["transposed"] == expected
+
 
 # ---------------------------------------------------------------------------
 # Detection cache
@@ -159,9 +176,21 @@ class TestDetectEndpoint:
         assert "detection_id" in data
         assert data["count"] == 1
         assert data["chords"][0]["text"] == "Am"
+        assert data["song_title"] == "알수없음"
         assert "original_key" in data
         # No transposed field in /detect response
         assert "transposed" not in data["chords"][0]
+
+    @patch("backend.api.main.detect_chords_hybrid")
+    def test_detect_returns_ocr_song_title(self, mock_detect):
+        mock_detect.return_value = ([], {"song_title": "온 맘 다해"})
+
+        resp = client.post(
+            "/detect",
+            files={"image": ("wrong-filename.png", _png_bytes(), "image/png")},
+        )
+
+        assert resp.json()["song_title"] == "온 맘 다해"
 
     @patch("backend.api.main.detect_chords_hybrid")
     def test_detect_caches_results(self, mock_detect):

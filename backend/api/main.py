@@ -41,7 +41,7 @@ from backend.ocr.hybrid_detect import detect_chords_hybrid
 from backend.chords.parser import parse_chord
 from backend.chords.transpose import transpose_chord, compute_target_key
 from backend.chords.key_detect import infer_key
-from backend.overlay.render import render_overlay
+from backend.overlay.render import _get_staff_systems, render_overlay
 from backend.auth.auth0 import get_current_user, require_admin
 from backend.db.database import get_db
 from backend.db.models import User
@@ -163,13 +163,20 @@ def _build_chord_item(item: dict, semitones: int, target_key: str | None) -> dic
     except (ValueError, KeyError):
         logger.debug("Could not transpose %r: skipping", item["text"])
 
+    style = item.get("style")
+    parenthesis = style.get("parenthesis") if isinstance(style, dict) else None
+    if transposed is not None and parenthesis in {"open", "both"}:
+        transposed = f"({transposed}"
+    if transposed is not None and parenthesis in {"close", "both"}:
+        transposed = f"{transposed})"
+
     raw_bbox = item.get("bbox")
     return {
         "text":       item["text"],
         "transposed": transposed,
         "confidence": float(item["confidence"]),
         "bbox":       [int(v) for v in raw_bbox] if raw_bbox is not None else None,
-        "style":      item.get("style"),
+        "style":      style,
     }
 
 
@@ -293,6 +300,7 @@ async def detect(
                 runner,
             )
         img = Image.open(tmp_path).convert("RGB")
+        _get_staff_systems(img)
     finally:
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
@@ -319,6 +327,7 @@ async def detect(
         "predict_calls": raw_meta.get("predict_calls"),
         "predict_ms":  raw_meta.get("predict_ms"),
         "total_ms":    raw_meta.get("total_ms"),
+        "title_predict_ms": raw_meta.get("title_predict_ms"),
         "det_model_variant": raw_meta.get("det_model_variant"),
         "det_model_name": raw_meta.get("det_model_name"),
         "mkldnn_enabled": raw_meta.get("mkldnn_enabled"),
@@ -334,6 +343,7 @@ async def detect(
 
     return {
         "detection_id": detection_id,
+        "song_title":   raw_meta.get("song_title") or "알수없음",
         "chords":       chords,
         "count":        len(chords),
         "original_key": original_key,

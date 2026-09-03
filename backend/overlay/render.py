@@ -60,6 +60,7 @@ _HEADER_BG  = (255, 255, 255, 220)   # info header background
 _REPLACE_LABEL_BG = (255, 255, 255)
 _CLARITY_THRESHOLD = 0.58
 _RENDER_USE_INPAINT = os.environ.get("RENDER_USE_INPAINT", "0") == "1"
+_STAFF_SYSTEMS_INFO_KEY = "capomatic_staff_systems"
 
 # Quality/modifier suffixes rendered in smaller font.
 _SMALL_SUFFIXES = ("sus", "dim", "aug")
@@ -293,6 +294,7 @@ def _shorten_chord_display(transposed: str) -> tuple[str, str]:
     return text, ""
 
 
+@lru_cache(maxsize=2048)
 def _text_width(font: ImageFont.ImageFont, text: str) -> float:
     """Return the horizontal pixel width of *text* rendered with *font*."""
     try:
@@ -302,6 +304,16 @@ def _text_width(font: ImageFont.ImageFont, text: str) -> float:
             return font.getsize(text)[0]  # type: ignore[attr-defined]
         except AttributeError:
             return len(text) * getattr(font, "size", _MIN_FONT_SIZE) * 0.6
+
+
+@lru_cache(maxsize=2048)
+def _text_height(font: ImageFont.ImageFont, text: str) -> int:
+    """Return the visible pixel height of text rendered with *font*."""
+    try:
+        bbox = font.getbbox(text, anchor="lt")
+        return max(1, int(bbox[3] - bbox[1]))
+    except Exception:
+        return int(getattr(font, "size", _MIN_FONT_SIZE))
 
 
 def _chord_display_width(
@@ -315,6 +327,18 @@ def _chord_display_width(
     if suffix:
         w += _text_width(small_font, suffix)
     return w
+
+
+def _chord_display_height(
+    transposed: str,
+    font: ImageFont.ImageFont,
+    small_font: ImageFont.ImageFont,
+) -> int:
+    main, suffix = _shorten_chord_display(transposed)
+    heights = [_text_height(font, main)]
+    if suffix:
+        heights.append(_text_height(small_font, suffix))
+    return max(heights)
 
 
 def _render_font_size(chords: list[dict]) -> int:
@@ -556,22 +580,6 @@ def _cluster_by_row(chords: list[dict]) -> list[list[dict]]:
     return rows
 
 
-def _row_aligned_top(row: list[dict]) -> int:
-    """Return one stable text top for every chord in a row.
-
-    OCR boxes in the same printed row can have slightly different heights or y
-    positions.  Aligning from the median bottom minus median height keeps the
-    rendered chord bottoms visually level without mutating stored OCR bboxes.
-    """
-    if not row:
-        return 0
-    bottoms = [c["bbox"][3] for c in row]
-    heights = [c["bbox"][3] - c["bbox"][1] for c in row]
-    row_bottom = statistics.median(bottoms)
-    row_height = statistics.median(heights)
-    return int(round(row_bottom - row_height))
-
-
 def _find_row_font_sizes(
     rows: list[list[dict]],
     initial_size: int,
@@ -599,17 +607,14 @@ def _find_row_font_sizes(
         for size in range(row_initial_size, _MIN_FONT_SIZE - 1, -1):
             font = _load_font(size)
             small_font = _load_font(int(size * _SMALL_FONT_RATIO))
-            fits = True
             prev_right = -h_gap
             for chord in sorted_row:
                 tw = int(_chord_display_width(chord["transposed"], font, small_font))
                 effective_w = tw + 2 * _BOX_PAD
-                anchor_x = max(chord["bbox"][0], chord["bbox"][2] - effective_w)
-                if anchor_x < prev_right + h_gap:
-                    fits = False
-                    break
-                prev_right = anchor_x + effective_w
-            if fits:
+                anchor_x = max(chord["bbox"][0], chord["bbox"][2] - tw)
+                label_x = max(anchor_x, prev_right + h_gap)
+                prev_right = label_x + effective_w
+            if prev_right <= img_width:
                 found = size
                 break
         sizes.append(found)
@@ -806,7 +811,7 @@ def _place_replace_row_labels(
 
 
 # ---------------------------------------------------------------------------
-# Info header (replace mode only)
+# Info header
 # ---------------------------------------------------------------------------
 
 def _draw_info_header(
@@ -817,6 +822,7 @@ def _draw_info_header(
     original_key: str | None,
     target_key: str | None,
     semitones: int,
+    text_fill: tuple[int, int, int],
 ) -> None:
     """Draw key info, and capo info only for down-transpose/capo renders."""
     if not original_key and not target_key and semitones == 0:
@@ -870,7 +876,7 @@ def _draw_info_header(
         draw.text(
             (x0 + 8, y0 + 4 + i * line_h),
             line,
-            fill=_DARK_BLUE,
+            fill=text_fill,
             font=header_font,
         )
 
@@ -922,16 +928,24 @@ def render_overlay(
         )
 
 
+def _get_staff_systems(img: Image.Image) -> list[tuple[int, int]]:
+    """Return staff systems once per cached source image."""
+    if _STAFF_SYSTEMS_INFO_KEY in img.info:
+        return img.info[_STAFF_SYSTEMS_INFO_KEY]
+    try:
+        from backend.ocr.preprocess import detect_staff_systems
+        systems = detect_staff_systems(img)
+    except Exception:
+        systems = []
+    img.info[_STAFF_SYSTEMS_INFO_KEY] = systems
+    return systems
+
+
 def _filter_chords_near_staff(img: Image.Image, chords: list[dict]) -> list[dict]:
     """Drop OCR false positives that sit in lyric rows instead of chord rows."""
     if not chords:
         return []
-    try:
-        from backend.ocr.preprocess import detect_staff_systems
-
-        systems = detect_staff_systems(img)
-    except Exception:
-        return chords
+    systems = _get_staff_systems(img)
     if not systems:
         return chords
 
@@ -985,55 +999,6 @@ def _insert_whitespace(
     return new_img
 
 
-def _safe_above_insert_y(
-    img_arr: np.ndarray,
-    row_top: int,
-    font_size: int,
-    *,
-    dark_threshold: int = 200,
-    content_ratio_threshold: float = 0.02,
-) -> int | None:
-    """Find a blank horizontal band above a chord row."""
-    H = img_arr.shape[0]
-    if H == 0 or row_top <= 1:
-        return None
-
-    needed = max(4, int((font_size + _GAP) * 0.7))
-    search_top = max(0, row_top - max(font_size * 3, needed * 2))
-    search_bottom = max(search_top, min(H, row_top))
-    if search_bottom - search_top < needed:
-        return None
-
-    region = img_arr[search_top:search_bottom, :]
-    if region.size == 0:
-        return None
-
-    row_dark_ratio = np.mean(region < dark_threshold, axis=1)
-    blank_rows = row_dark_ratio <= content_ratio_threshold
-
-    best_start: int | None = None
-    best_len = 0
-    start: int | None = None
-    for idx, is_blank in enumerate(blank_rows):
-        if is_blank and start is None:
-            start = idx
-        elif not is_blank and start is not None:
-            run_len = idx - start
-            if run_len >= needed:
-                best_start = start
-                best_len = run_len
-            start = None
-    if start is not None:
-        run_len = len(blank_rows) - start
-        if run_len >= needed:
-            best_start = start
-            best_len = run_len
-
-    if best_start is None:
-        return None
-    return search_top + best_start + best_len
-
-
 def _render_above(
     img: Image.Image,
     chords: list[dict],
@@ -1048,24 +1013,42 @@ def _render_above(
     if not rows:
         return img
 
-    # One font size is used across all rows in this render.
     font_size = _render_font_size(chords)
+    row_font_sizes = _find_row_font_sizes(rows, font_size, W)
 
     # Pass 1 — adaptively insert whitespace above each chord row.
     import numpy as np
     img_arr = np.array(img.convert("L"))
     expansions: list[tuple[int, int]] = []
     row_insert_y: dict[int, int] = {}
+    row_label_heights: dict[int, int] = {}
     for row_idx, row in enumerate(rows):
-        needed = font_size + _GAP + 2
+        row_font_size = row_font_sizes[row_idx]
+        font = _load_font(row_font_size)
+        small_font = _load_font(int(row_font_size * _SMALL_FONT_RATIO))
+        label_height = max(
+            _chord_display_height(chord["transposed"], font, small_font)
+            for chord in row
+        )
+        row_label_heights[row_idx] = label_height
+        needed = label_height + _GAP + 1
         min_y1 = min(c["bbox"][1] for c in row)
-        label_top = max(0, min_y1 - font_size - _GAP)
+        label_top = max(0, min_y1 - label_height - _GAP)
         region = img_arr[label_top:min_y1, :]
-        if region.size > 0 and np.mean(region < 200) > 0.02:
-            insert_y = _safe_above_insert_y(img_arr, min_y1, font_size)
-            if insert_y is not None:
-                expansions.append((insert_y, needed))
-                row_insert_y[row_idx] = insert_y
+        occupied = region.size > 0 and np.mean(region < 200) > 0.02
+        if not occupied:
+            for chord, label_x in _place_row_labels_anchored(row, font, small_font, W):
+                label_w = int(_chord_display_width(chord["transposed"], font, small_font))
+                label_region = img_arr[
+                    label_top:min_y1,
+                    max(0, label_x - 2):min(W, label_x + label_w + 2),
+                ]
+                if label_region.size > 0 and np.mean(label_region < 200) > 0.01:
+                    occupied = True
+                    break
+        if occupied:
+            expansions.append((min_y1, needed))
+            row_insert_y[row_idx] = min_y1
 
     # Pass 2 — expand the image where needed.
     if expansions:
@@ -1082,17 +1065,18 @@ def _render_above(
 
     # Pass 4 — draw labels with one vertical anchor per row.
     draw = ImageDraw.Draw(img)
-    font = _load_font(font_size)
-    small_font = _load_font(int(font_size * _SMALL_FONT_RATIO))
     for row_idx, row in enumerate(rows):
-
-        row_y1 = _row_aligned_top(row)
+        row_font_size = row_font_sizes[row_idx]
+        font = _load_font(row_font_size)
+        small_font = _load_font(int(row_font_size * _SMALL_FONT_RATIO))
+        row_y1 = min(c["bbox"][1] for c in row)
+        label_height = row_label_heights[row_idx]
         if row_idx in row_insert_y:
             insert_y = row_insert_y[row_idx]
-            label_y = insert_y + _y_offset_before(insert_y) + 2
+            label_y = insert_y + _y_offset_before(insert_y) + 1
         else:
             offset = _y_offset_for(row_y1)
-            label_y = row_y1 + offset - font_size - _GAP
+            label_y = row_y1 + offset - label_height - _GAP
 
         for chord, label_x in _place_row_labels_anchored(row, font, small_font, W):
             _draw_chord_text(draw, label_x, label_y, chord["transposed"],
@@ -1103,6 +1087,7 @@ def _render_above(
         original_key=original_key,
         target_key=target_key,
         semitones=semitones,
+        text_fill=_ORANGE,
     )
 
     return img
@@ -1181,6 +1166,7 @@ def _render_replace(
         original_key=original_key,
         target_key=target_key,
         semitones=semitones,
+        text_fill=_DARK_BLUE,
     )
 
     return composited
