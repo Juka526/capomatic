@@ -1,11 +1,15 @@
 """Unit tests for direction-marker filter (paddle_ocr) and filter.py edge cases."""
 from __future__ import annotations
 
+import sys
+import types
+
 import pytest
 from PIL import Image
 
 from backend.ocr.paddle_ocr import (
     _apply_direction_filter,
+    _get_title_ocr,
     _is_bare_root,
     _is_direction_token,
     _near_any_direction,
@@ -42,6 +46,21 @@ class TestIsDirectionToken:
 
 
 class TestSelectSongTitle:
+    def test_title_ocr_uses_mobile_korean_models(self, monkeypatch):
+        calls = []
+
+        class FakePaddleOCR:
+            def __init__(self, **kwargs):
+                calls.append(kwargs)
+
+        monkeypatch.setattr("backend.ocr.paddle_ocr._title_ocr", None)
+        monkeypatch.setitem(sys.modules, "paddleocr", types.SimpleNamespace(PaddleOCR=FakePaddleOCR))
+
+        _get_title_ocr()
+
+        assert calls[0]["text_detection_model_name"] == "PP-OCRv5_mobile_det"
+        assert calls[0]["text_recognition_model_name"] == "korean_PP-OCRv5_mobile_rec"
+
     def test_selects_prominent_title_over_metadata(self):
         raw_items = [
             {"raw_text": "Capo: 2", "bbox": [40, 20, 140, 40]},
