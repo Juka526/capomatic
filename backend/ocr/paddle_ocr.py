@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from paddleocr import PaddleOCR as _PaddleOCRType
 
 _ocr_instances: "dict[tuple[str, float | None, float | None, float | None], _PaddleOCRType]" = {}
+_title_ocr = None
 _title_recognizer = None
 _SECTION_MARKERS_CASEFOLD = {marker.casefold() for marker in SECTION_MARKERS}
 
@@ -364,6 +365,21 @@ def _get_title_recognizer():
     return _title_recognizer
 
 
+def _get_title_ocr():
+    global _title_ocr
+    if _title_ocr is None:
+        from paddleocr import PaddleOCR  # noqa: PLC0415
+        _title_ocr = PaddleOCR(
+            text_detection_model_name="PP-OCRv5_mobile_det",
+            text_recognition_model_name="korean_PP-OCRv5_mobile_rec",
+            use_doc_orientation_classify=False,
+            use_doc_unwarping=False,
+            use_textline_orientation=False,
+            enable_mkldnn=os.environ.get("PADDLE_ENABLE_MKLDNN", "0") == "1",
+        )
+    return _title_ocr
+
+
 def _read_song_title(ocr, img: Image.Image, regions: list[dict], mode: str) -> tuple[str | None, float]:
     """OCR only the page header above the first chord band."""
     if not regions:
@@ -569,7 +585,7 @@ def run_ocr_paddle(
     title_predict_ms = 0.0
     if read_title:
         try:
-            song_title, title_predict_ms = _read_song_title(ocr, img, regions, mode)
+            song_title, title_predict_ms = _read_song_title(_get_title_ocr(), img, regions, mode)
         except Exception:
             logger.warning("Song title OCR failed", exc_info=True)
     items: list[dict] = []
