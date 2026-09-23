@@ -206,9 +206,9 @@ Status values are `PASS`, `FAIL`, `BLOCKED`, or `PENDING`. A local pass is not a
 | Gate | Status | Evidence or blocker |
 | --- | --- | --- |
 | V1 scope retirement and upload safety | PASS (local) | Automated API tests; deployment smoke pending |
-| Local backend/frontend/security checks | PASS (working tree) | 408 passed, 10 skipped; frontend check and both dependency audits pass; exact candidate SHA rerun still required |
+| Local backend/frontend/security checks | PASS (working tree) | 409 passed, 11 skipped from a clean tracked-only export; frontend check and both dependency audits pass; [`ISSUE_10_RC_EVIDENCE.md`](ISSUE_10_RC_EVIDENCE.md); exact candidate SHA rerun still required |
 | GitHub required CI | PENDING | Candidate SHA not created |
-| Docker build and dependency parity | PENDING | Candidate image not built |
+| Docker build and dependency parity | BLOCKED | Candidate image not built; the audit workstation has no container runtime, so the build, version assertion, and startup step are all unverified ([`ISSUE_10_RC_EVIDENCE.md`](ISSUE_10_RC_EVIDENCE.md)) |
 | OCR regression corpus | BLOCKED | Canary not deployed; candidate baseline report not yet recorded |
 | Independent unseen sheet | FAIL | `IMG＿7710.png` was frozen and independently labeled before output; the local candidate detected 56/60 and failed exact count/order. This sheet is now a development sample, so a different unseen sheet is required after correction. |
 | Browser and accessibility | PASS (local automated) | Lighthouse 13.4.1 mobile: 100 on all four pages; staging and physical-device evidence required |

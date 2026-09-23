@@ -50,3 +50,17 @@ jobs:
           "import paddleocr; import importlib.metadata as m;
           assert m.version('paddleocr') == '3.7.0';
           assert m.version('paddlepaddle') == '3.2.2'"
+      # Gate 1 requires the image to start, not only to build.
+      - name: Container serves /health
+        run: |
+          docker run --rm --detach --name capomatic-ci --publish 7860:7860 capomatic-v1-ci
+          for _ in $(seq 1 60); do
+            if curl --fail --silent http://localhost:7860/health; then
+              docker stop capomatic-ci
+              exit 0
+            fi
+            sleep 5
+          done
+          docker logs capomatic-ci
+          docker stop capomatic-ci
+          exit 1
