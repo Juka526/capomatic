@@ -13,15 +13,15 @@ pytestmark = pytest.mark.skipif(
 
 
 class TestAuthMe:
-    """GET /api/auth/me — authenticated user profile."""
+    """GET /api/auth/me — verified Auth0 identity."""
 
     def test_returns_profile(self, client: httpx.Client, auth_headers: dict):
         res = client.get("/api/auth/me", headers=auth_headers)
         assert res.status_code == 200
         body = res.json()
-        assert "id" in body
-        assert "role" in body
-        assert body["role"] in ("user", "admin")
+        assert body["sub"]
+        assert "email" in body
+        assert "name" in body
 
     def test_returns_401_without_token(self, client: httpx.Client):
         res = client.get("/api/auth/me")
@@ -36,19 +36,15 @@ class TestAuthMe:
 
 
 class TestAdminTest:
-    """GET /api/auth/admin-test — admin role check."""
+    """GET /api/auth/admin-test — retired in V1."""
 
-    def test_non_admin_gets_403(self, client: httpx.Client, auth_headers: dict):
-        # First check if the user is already admin
-        me = client.get("/api/auth/me", headers=auth_headers).json()
-        if me.get("role") == "admin":
-            pytest.skip("Test user is admin — can't test 403")
+    def test_authenticated_gets_410(self, client: httpx.Client, auth_headers: dict):
         res = client.get("/api/auth/admin-test", headers=auth_headers)
-        assert res.status_code == 403
+        assert res.status_code == 410
 
-    def test_unauthenticated_gets_401(self, client: httpx.Client):
+    def test_unauthenticated_gets_410(self, client: httpx.Client):
         res = client.get("/api/auth/admin-test")
-        assert res.status_code == 401
+        assert res.status_code == 410
 
 
 class TestPublicEndpointsUnchanged:

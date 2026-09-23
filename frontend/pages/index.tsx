@@ -3,13 +3,14 @@ import { Upload, Download, Loader2, AlertCircle, ArrowRight } from "lucide-react
 import Head from "next/head";
 import Link from "next/link";
 import LoginButton from "@/components/LoginButton";
-import { useAuth } from "@/components/AuthProvider";
 import { useLang, LangToggle } from "@/components/LangProvider";
 import { GuitarFretboard } from "@/components/GuitarFretboard";
 import { translations } from "@/lib/i18n";
+import { computeTargetKey } from "@/lib/target-key.mjs";
+import { prependJobHistory } from "@/lib/job-history.mjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const MAX_FILE_SIZE = 8 * 1024 * 1024;
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const RENDER_CACHE_LIMIT = 5;
 
 type ChordItem = { text: string; bbox: number[] | null };
@@ -22,15 +23,18 @@ type RenderResult = {
   semitones: number;
 };
 const ESTIMATED_DETECT_MS = 60000;
-const KEY_NAMES = ["C","Db","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
-
-function computeTargetKey(originalKey: string, semitones: number): string {
-  const idx = KEY_NAMES.indexOf(originalKey);
-  if (idx === -1) return originalKey;
-  return KEY_NAMES[((idx + semitones) % 12 + 12) % 12];
-}
-
 type Row = { y1: number; y2: number; yCenter: number };
+
+function userFacingApiError(
+  status: number,
+  messages: typeof translations.ko | typeof translations.en,
+): string {
+  if (status === 404) return messages.detectionExpired;
+  if (status === 413) return messages.uploadTooLarge;
+  if (status === 422) return messages.invalidUpload;
+  if (status === 429) return messages.ocrBusy;
+  return messages.failedConnect;
+}
 
 function detectRows(chords: ChordItem[]): Row[] {
   const valid = chords.filter(c => c.bbox !== null) as { text: string; bbox: number[] }[];
@@ -64,15 +68,10 @@ function nearestRow(rows: Row[], y: number): Row | null {
 }
 
 export default function Home() {
-  const { user } = useAuth();
   const { t, lang } = useLang();
 
   const [file, setFile] = useState<File | null>(null);
   const [semitoneShift, setSemitoneShift] = useState<number>(0); // -7 to +7
-  const [useGptHybrid, setUseGptHybrid] = useState(false);
-  const [hybridRefining, setHybridRefining] = useState(false);
-  const [hybridApplied, setHybridApplied] = useState(false);
-  const [hybridStatus, setHybridStatus] = useState<string | null>(null);
 
   const [detectionId, setDetectionId] = useState<string | null>(null);
   const [songTitle, setSongTitle] = useState("알수없음");
@@ -107,6 +106,7 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const guideDialogRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const renderCacheRef = useRef<Map<string, RenderResult>>(new Map());
   const inFlightRenderRef = useRef<Map<string, Promise<RenderResult>>>(new Map());
@@ -130,6 +130,36 @@ export default function Home() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!guideOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const firstButton = guideDialogRef.current?.querySelector<HTMLButtonElement>('button');
+    firstButton?.focus();
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setGuideOpen(false);
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      previousFocus?.focus();
+    };
+  }, [guideOpen]);
+
+  const trapGuideFocus = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Tab') return;
+    const buttons = guideDialogRef.current?.querySelectorAll<HTMLButtonElement>('button');
+    if (!buttons?.length) return;
+    const first = buttons[0];
+    const last = buttons[buttons.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 
   const capoFret = semitoneShift < 0 ? Math.abs(semitoneShift) : null;
   const semitones = semitoneShift;
@@ -176,8 +206,6 @@ export default function Home() {
     setError(null);
     setDetectionId(null);
     setSongTitle("알수없음");
-    setHybridApplied(false);
-    setHybridStatus(null);
     setOriginalKey(null);
     setReplaceResult(null);
     setAboveResult(null);
@@ -193,9 +221,9 @@ export default function Home() {
     try {
       const formData = new FormData();
       formData.append("image", f);
-      formData.append("ocr_engine", useGptHybrid ? "paddle-gpt" : "paddle");
+      formData.append("ocr_engine", "paddle");
       const res = await fetch(`${API_URL}/detect`, { method: "POST", body: formData });
-      if (!res.ok) throw new Error((await res.text()) || `Server error (${res.status})`);
+      if (!res.ok) throw new Error(userFacingApiError(res.status, t));
       const data = await res.json();
       setDetectProgress(100);
       setDetectionId(data.detection_id);
@@ -204,16 +232,14 @@ export default function Home() {
       const chords: ChordItem[] = (data.chords || []).map((c: any) => ({ text: c.text, bbox: c.bbox }));
       setDetectedChords(chords);
       setEditableChords(chords);
-      setHybridApplied(data.meta?.ocr_engine === "paddle-gpt-hybrid");
     } catch (err) {
       setError(err instanceof Error ? err.message : t.failedConnect);
     } finally {
       setDetecting(false);
     }
-  }, [t, useGptHybrid]);
+  }, [t]);
 
   const handleFile = useCallback((f: File) => {
-    if (!f.type.match(/^image\/(png|jpeg)$/)) { setError(t.onlyPngJpg); return; }
     if (f.size > MAX_FILE_SIZE) { setError(t.fileTooLarge); return; }
     setFile(f);
     setError(null);
@@ -292,7 +318,7 @@ export default function Home() {
         formData.append("chords_override", JSON.stringify(chordsOverride));
       }
       const res = await fetch(`${API_URL}/render`, { method: "POST", body: formData });
-      if (!res.ok) throw new Error((await res.text()) || `Server error (${res.status})`);
+      if (!res.ok) throw new Error(userFacingApiError(res.status, t));
       const data = await res.json() as RenderResult;
       return storeRenderCache(key, data);
     })();
@@ -308,7 +334,7 @@ export default function Home() {
   };
 
   const prefetchRender = (semi: number, mode: RenderMode = activeTab) => {
-    if (!detectionId || semi === 0 || detecting || hybridRefining || reRendering) return;
+    if (!detectionId || semi === 0 || detecting || reRendering) return;
     const key = renderCacheKey(semi);
     const cached = key ? renderCacheRef.current.get(key) : null;
     if (
@@ -378,16 +404,15 @@ export default function Home() {
 
   const saveToLocalHistory = (title: string, origKey: string | null, tgtKey: string | null, semi: number) => {
     try {
-      const existing = JSON.parse(localStorage.getItem("tc-history") || "[]");
       const entry = {
-        id: Math.random().toString(36).slice(2),
+        id: crypto.randomUUID(),
         song_name: title || "알수없음",
         original_key: origKey,
         target_key: tgtKey,
         semitones: semi,
         timestamp: new Date().toISOString(),
       };
-      const updated = [entry, ...existing].slice(0, 50);
+      const updated = prependJobHistory(localStorage.getItem("tc-history"), entry);
       localStorage.setItem("tc-history", JSON.stringify(updated));
     } catch {}
   };
@@ -411,63 +436,6 @@ export default function Home() {
       setError(err instanceof Error ? err.message : t.failedConnect);
     } finally {
       setReRendering(false);
-    }
-  };
-
-  const handleGptHybridRefine = async () => {
-    if (!detectionId || hybridRefining) return;
-    const shouldRenderAfterRefine = Boolean((replaceResult || aboveResult) && semitones !== 0);
-    setHybridRefining(true);
-    setError(null);
-    setHybridStatus(null);
-    try {
-      const formData = new FormData();
-      formData.append("detection_id", detectionId);
-      const res = await fetch(`${API_URL}/detect/refine`, { method: "POST", body: formData });
-      if (!res.ok) {
-        let message = `Server error (${res.status})`;
-        try {
-          const errData = await res.json();
-          message = errData.detail || message;
-        } catch {
-          message = (await res.text()) || message;
-        }
-        throw new Error(message);
-      }
-      const data = await res.json();
-      const meta = data.meta || {};
-      if (!meta.gpt_used) {
-        throw new Error(meta.gpt_error || t.gptHybridUnavailable);
-      }
-      const chords: ChordItem[] = (data.chords || []).map((c: any) => ({ text: c.text, bbox: c.bbox }));
-      editVersionRef.current += 1;
-      clearRenderCache();
-      setDetectedChords(chords);
-      setEditableChords(chords);
-      setHybridApplied(true);
-      const added = Number(meta.gpt_gap_candidates_accepted ?? meta.gpt_gap_count ?? 0);
-      const corrected = Number(meta.gpt_text_replaced ?? 0);
-      setHybridStatus(
-        added > 0 || corrected > 0
-          ? t.gptHybridChanged(added, corrected)
-          : t.gptHybridNoChange
-      );
-      setEditingIdx(null);
-      setAddingChord(false);
-      setAddModeActive(false);
-      setPendingPosition(null);
-      setPendingChordText("");
-      setHoverImgPos(null);
-      if (shouldRenderAfterRefine) {
-        await performRender(chords);
-      } else {
-        setReplaceResult(null);
-        setAboveResult(null);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t.failedConnect);
-    } finally {
-      setHybridRefining(false);
     }
   };
 
@@ -513,11 +481,18 @@ export default function Home() {
   };
 
   const confirmPositionedChord = () => {
-    if (!pendingPosition || !pendingChordText.trim()) return;
+    if (!pendingPosition || !pendingChordText.trim() || !imgNaturalSize) return;
     const { x, y1, y2 } = pendingPosition;
+    const boundedX1 = Math.max(0, Math.min(imgNaturalSize.w - 1, Math.round(x)));
+    const boundedY1 = Math.max(0, Math.min(imgNaturalSize.h - 1, Math.round(y1)));
+    const boundedX2 = Math.min(imgNaturalSize.w, boundedX1 + 80);
+    const boundedY2 = Math.max(
+      boundedY1 + 1,
+      Math.min(imgNaturalSize.h, Math.round(y2)),
+    );
     setEditableChords(prev => [...prev, {
       text: pendingChordText.trim(),
-      bbox: [x, y1, x + 80, y2],
+      bbox: [boundedX1, boundedY1, boundedX2, boundedY2],
     }]);
     setPendingPosition(null);
     setPendingChordText("");
@@ -540,9 +515,6 @@ export default function Home() {
     setFile(null);
     setDetectionId(null);
     setSongTitle("알수없음");
-    setHybridRefining(false);
-    setHybridApplied(false);
-    setHybridStatus(null);
     setOriginalKey(null);
     setReplaceResult(null);
     setAboveResult(null);
@@ -565,7 +537,7 @@ export default function Home() {
 
   const applySemitoneShift = async (value: number) => {
     const next = Math.max(-7, Math.min(7, value));
-    if (next === semitoneShift || reRendering || hybridRefining || detecting) return;
+    if (next === semitoneShift || reRendering || detecting) return;
     const versionAtStart = editVersionRef.current;
     const shouldScrollToResult = !(replaceResult || aboveResult);
     selectedSemitoneRef.current = next;
@@ -671,7 +643,7 @@ export default function Home() {
         <meta name="description" content="Transpose chord sheets easily" />
       </Head>
 
-      <div style={{ minHeight: "100vh", backgroundColor: "#F5EDD8", fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: "hidden" }}>
+      <div role="main" style={{ minHeight: "100vh", backgroundColor: "#F5EDD8", fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: "hidden" }}>
 
         {/* Nav */}
         <nav style={{
@@ -686,6 +658,8 @@ export default function Home() {
             {/* Hamburger */}
             <button
               onClick={() => setMenuOpen(v => !v)}
+              aria-label={t.guide}
+              aria-expanded={menuOpen}
               style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3a4847" strokeWidth="2" strokeLinecap="round">
@@ -702,7 +676,7 @@ export default function Home() {
               <rect x="21" y="10" width="3" height="16" rx="1.5" fill="white" opacity="0.9" />
             </svg>
             <span style={{ fontWeight: 800, fontSize: "0.96rem", color: "#3a4847", letterSpacing: "-0.01em", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-              Capo<span style={{ color: "#e05d00" }}>matic</span>
+              Capo<span style={{ color: "#9c3d00" }}>matic</span>
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -717,9 +691,9 @@ export default function Home() {
           {/* Panel header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 52, borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
             <span style={{ fontWeight: 800, fontSize: "0.96rem", color: "#1a1a2e", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-              Capo<span style={{ color: "#e05d00" }}>matic</span>
+              Capo<span style={{ color: "#9c3d00" }}>matic</span>
             </span>
-            <button onClick={() => setMenuOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}>
+            <button onClick={() => setMenuOpen(false)} aria-label={t.closeMenu} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" strokeWidth="2" strokeLinecap="round">
                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
               </svg>
@@ -731,12 +705,6 @@ export default function Home() {
               style={{ display: "block", padding: "14px 24px", fontSize: "0.9rem", fontWeight: 600, color: "#1a1a2e", textDecoration: "none" }}>
               {t.myJobs}
             </Link>
-            {user?.role === "admin" && (
-              <Link href="/admin/dashboard" onClick={() => setMenuOpen(false)}
-                style={{ display: "block", padding: "14px 24px", fontSize: "0.9rem", fontWeight: 600, color: "#1a1a2e", textDecoration: "none" }}>
-                {t.admin}
-              </Link>
-            )}
             <button
               onClick={() => { setMenuOpen(false); setGuideStep(0); setGuideOpen(true); }}
               style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: "14px 24px", fontSize: "0.9rem", fontWeight: 600, color: "#1a1a2e" }}>
@@ -769,7 +737,7 @@ export default function Home() {
               onClick={() => fileInputRef.current?.click()}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 10,
-                background: "linear-gradient(135deg, #e05d00, #c84b00)",
+                background: "linear-gradient(135deg, #a34200, #7f3000)",
                 border: "none", cursor: "pointer",
                 borderRadius: 12, padding: "15px 24px",
                 color: "white", fontSize: "0.98rem", fontWeight: 900,
@@ -783,23 +751,6 @@ export default function Home() {
               {t.heroPrimaryCta}
               <ArrowRight size={18} color="white" strokeWidth={2.4} />
             </button>
-            <label className="ai-option" style={{
-              display: "flex", alignItems: "flex-start", gap: 9,
-              maxWidth: 360, marginTop: 18, cursor: "pointer", userSelect: "none",
-              color: "#4f4a43", fontSize: "0.78rem", lineHeight: 1.35,
-              padding: "10px 12px", borderRadius: 12,
-              background: "rgba(255,255,255,0.5)", border: "1px solid rgba(0,0,0,0.05)",
-            }}>
-              <input
-                type="checkbox"
-                checked={useGptHybrid}
-                onChange={e => setUseGptHybrid(e.target.checked)}
-                style={{ marginTop: 1, accentColor: "#0b4ea2" }}
-              />
-              <span>
-                <span style={{ display: "block", fontWeight: 800 }}>{t.gptHybridLabel}</span>
-              </span>
-            </label>
             {error && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 14, color: "#d4183d", fontSize: "0.78rem", fontWeight: 600 }}>
                 <AlertCircle size={13} />
@@ -822,14 +773,14 @@ export default function Home() {
           <div className="active-info-bar" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 20px 16px", gap: 10 }}>
             {detecting && (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, width: 260 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#e05d00", fontSize: "0.8rem", fontWeight: 600 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#9c3d00", fontSize: "0.8rem", fontWeight: 600 }}>
                   <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
                   {t.detectingChords}
                 </div>
                 <div style={{ width: "100%", height: 4, background: "rgba(0,0,0,0.1)", borderRadius: 2, overflow: "hidden" }}>
                   <div style={{ width: `${detectProgress}%`, height: "100%", background: "linear-gradient(90deg,#e05d00,#c84b00)", borderRadius: 2, transition: "width 0.3s ease-out" }} />
                 </div>
-                <span style={{ fontSize: "0.7rem", color: "#aaa" }}>{(detectElapsed / 1000).toFixed(1)}s</span>
+                <span style={{ fontSize: "0.7rem", color: "#646464" }}>{(detectElapsed / 1000).toFixed(1)}s</span>
               </div>
             )}
 
@@ -843,15 +794,15 @@ export default function Home() {
                 {semitones !== 0 && targetKey && (
                   <>
                     <span style={{ color: "#ccc" }}>→</span>
-                    <span style={{ fontWeight: 700, color: "#e05d00", background: "rgba(224,93,0,0.08)", padding: "2px 10px", borderRadius: 20 }}>
+                    <span style={{ fontWeight: 700, color: "#9c3d00", background: "rgba(163,66,0,0.08)", padding: "2px 10px", borderRadius: 20 }}>
                       {targetKey}
                     </span>
                     {semitones < 0 ? (
-                      <span style={{ fontSize: "0.72rem", color: "#aaa", fontWeight: 600 }}>
+                      <span style={{ fontSize: "0.72rem", color: "#646464", fontWeight: 600 }}>
                         {t.capo} {Math.abs(semitones)}
                       </span>
                     ) : (
-                      <span style={{ fontSize: "0.72rem", color: "#aaa", fontWeight: 600 }}>
+                      <span style={{ fontSize: "0.72rem", color: "#646464", fontWeight: 600 }}>
                         {t.transposeUpInfo(semitones)}
                       </span>
                     )}
@@ -862,40 +813,12 @@ export default function Home() {
 
             {!detecting && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 8 }}>
-                {detectionId && (
-                  <button
-                    onClick={handleGptHybridRefine}
-                    disabled={hybridRefining || rendering}
-                    style={{
-                      border: "1.5px solid rgba(11,78,162,0.24)",
-                      borderRadius: 20,
-                      padding: "6px 14px",
-                      fontSize: "0.75rem",
-                      fontWeight: 800,
-                      color: hybridApplied ? "#0b6b3a" : "#0b4ea2",
-                      background: hybridApplied ? "rgba(11,107,58,0.08)" : "rgba(11,78,162,0.08)",
-                      cursor: hybridRefining || rendering ? "not-allowed" : "pointer",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 6,
-                    }}
-                  >
-                    {hybridRefining ? (
-                      <><Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} />{t.gptHybridRefining}</>
-                    ) : hybridApplied ? t.gptHybridApplied : t.gptHybridButton}
-                  </button>
-                )}
                 <button
                   onClick={clearFile}
-                  style={{ background: "none", border: "1.5px solid rgba(0,0,0,0.15)", borderRadius: 20, padding: "5px 14px", fontSize: "0.75rem", fontWeight: 700, color: "#888", cursor: "pointer", letterSpacing: "0.04em" }}
+                  style={{ background: "none", border: "1.5px solid rgba(0,0,0,0.15)", borderRadius: 20, padding: "5px 14px", fontSize: "0.75rem", fontWeight: 700, color: "#595959", cursor: "pointer", letterSpacing: "0.04em" }}
                 >
                   {t.changeSheet}
                 </button>
-                {hybridStatus && (
-                  <span style={{ flexBasis: "100%", textAlign: "center", color: "#0b6b3a", fontSize: "0.72rem", fontWeight: 700 }}>
-                    {hybridStatus}
-                  </span>
-                )}
               </div>
             )}
 
@@ -918,20 +841,20 @@ export default function Home() {
           <div className="transpose-panel" style={{ background: "rgba(255,255,255,0.55)", borderRadius: 16, padding: 12, border: "1px solid rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", display: "grid", gridTemplateColumns: "52px 1fr 52px", alignItems: "center", gap: 10 }}>
             <button
               onClick={() => applySemitoneShift(semitones - 1)}
-              disabled={!detectionId || detecting || reRendering || hybridRefining || semitones <= -7}
-              aria-label="Transpose down"
+              disabled={!detectionId || detecting || reRendering || semitones <= -7}
+              aria-label={t.transposeDown}
               style={{
                 height: 44, borderRadius: 12,
                 border: "1.5px solid rgba(0,0,0,0.1)",
-                background: semitones < 0 ? "linear-gradient(135deg, #e05d00, #c84b00)" : "rgba(255,255,255,0.75)",
+                background: semitones < 0 ? "linear-gradient(135deg, #a34200, #7f3000)" : "rgba(255,255,255,0.75)",
                 color: semitones < 0 ? "white" : "#3a4847",
                 fontSize: "1.35rem", fontWeight: 900,
-                cursor: detectionId && !detecting && !reRendering && !hybridRefining && semitones > -7 ? "pointer" : "not-allowed",
-                opacity: detectionId && !detecting && !reRendering && !hybridRefining && semitones > -7 ? 1 : 0.45,
+                cursor: detectionId && !detecting && !reRendering && semitones > -7 ? "pointer" : "not-allowed",
+                opacity: detectionId && !detecting && !reRendering && semitones > -7 ? 1 : 0.45,
               }}
             >-</button>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "0.68rem", fontWeight: 800, color: "#a09070", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              <div style={{ fontSize: "0.68rem", fontWeight: 800, color: "#695c42", letterSpacing: "0.08em", textTransform: "uppercase" }}>
                 {t.capoPosition}
               </div>
               <div style={{ marginTop: 3, fontSize: "1.05rem", fontWeight: 900, color: "#1a1a2e" }}>
@@ -940,16 +863,16 @@ export default function Home() {
             </div>
             <button
               onClick={() => applySemitoneShift(semitones + 1)}
-              disabled={!detectionId || detecting || reRendering || hybridRefining || semitones >= 7}
-              aria-label="Transpose up"
+              disabled={!detectionId || detecting || reRendering || semitones >= 7}
+              aria-label={t.transposeUp}
               style={{
                 height: 44, borderRadius: 12,
                 border: "1.5px solid rgba(0,0,0,0.1)",
                 background: semitones > 0 ? "linear-gradient(135deg, #0b4ea2, #093b7a)" : "rgba(255,255,255,0.75)",
                 color: semitones > 0 ? "white" : "#3a4847",
                 fontSize: "1.35rem", fontWeight: 900,
-                cursor: detectionId && !detecting && !reRendering && !hybridRefining && semitones < 7 ? "pointer" : "not-allowed",
-                opacity: detectionId && !detecting && !reRendering && !hybridRefining && semitones < 7 ? 1 : 0.45,
+                cursor: detectionId && !detecting && !reRendering && semitones < 7 ? "pointer" : "not-allowed",
+                opacity: detectionId && !detecting && !reRendering && semitones < 7 ? 1 : 0.45,
               }}
             >+</button>
           </div>
@@ -969,7 +892,7 @@ export default function Home() {
                       flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
                       borderRadius: 8,
                       background: activeTab === tab ? "white" : "transparent",
-                      color: activeTab === tab ? "#3a4847" : "#999",
+                      color: activeTab === tab ? "#3a4847" : "#666",
                       fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
                       boxShadow: activeTab === tab ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
                       transition: "all 0.18s",
@@ -998,7 +921,7 @@ export default function Home() {
                   <img
                     ref={imgRef}
                     src={previewSrc}
-                    alt={showOriginal ? "Original chord sheet" : `Transposed chord sheet (${activeTab} mode)`}
+                    alt={showOriginal ? t.originalSheetAlt : t.renderedSheetAlt(activeTab)}
                     style={{ width: "100%", display: "block", cursor: addModeActive && !showOriginal ? "crosshair" : "default" }}
                     onLoad={e => setImgNaturalSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
                     onClick={handleImageClick}
@@ -1067,7 +990,7 @@ export default function Home() {
                     <button
                       onClick={confirmPositionedChord}
                       disabled={!pendingChordText.trim()}
-                      style={{ background: "linear-gradient(135deg,#e05d00,#c84b00)", border: "none", borderRadius: 8, padding: "7px 16px", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", color: "white", opacity: pendingChordText.trim() ? 1 : 0.5 }}
+                      style={{ background: "linear-gradient(135deg,#a34200,#7f3000)", border: "none", borderRadius: 8, padding: "7px 16px", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", color: "white", opacity: pendingChordText.trim() ? 1 : 0.5 }}
                     >Add</button>
                   </div>
                 </div>
@@ -1092,13 +1015,13 @@ export default function Home() {
               {!showOriginal && editableChords.length > 0 && (
                 <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(0,0,0,0.07)" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                    <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#a09070", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#695c42", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                       Detected Chords
                     </span>
                     {JSON.stringify(editableChords) !== JSON.stringify(detectedChords) && (
                       <button
                         onClick={() => { setEditableChords(detectedChords); setEditingIdx(null); setAddingChord(false); }}
-                        style={{ background: "none", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 20, padding: "3px 12px", fontSize: "0.7rem", fontWeight: 700, color: "#888", cursor: "pointer" }}
+                        style={{ background: "none", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 20, padding: "3px 12px", fontSize: "0.7rem", fontWeight: 700, color: "#595959", cursor: "pointer" }}
                       >
                         Reset
                       </button>
@@ -1159,7 +1082,7 @@ export default function Home() {
                     ) : (
                       <button
                         onClick={() => setAddingChord(true)}
-                        style={{ background: "none", border: "1.5px dashed rgba(0,0,0,0.18)", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700, color: "#aaa", cursor: "pointer" }}
+                        style={{ background: "none", border: "1.5px dashed rgba(0,0,0,0.18)", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700, color: "#646464", cursor: "pointer" }}
                       >
                         + Add
                       </button>
@@ -1167,7 +1090,7 @@ export default function Home() {
                     {!addingChord && (
                       <button
                         onClick={() => setAddModeActive(true)}
-                        style={{ background: "none", border: "1.5px dashed rgba(224,93,0,0.4)", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700, color: "#e05d00", cursor: "pointer" }}
+                        style={{ background: "none", border: "1.5px dashed rgba(156,61,0,0.5)", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700, color: "#9c3d00", cursor: "pointer" }}
                       >
                         + Add at position
                       </button>
@@ -1175,7 +1098,7 @@ export default function Home() {
                   </div>
 
                   {editableChords.some(c => c.bbox === null) && (
-                    <p style={{ margin: "8px 0 0", fontSize: "0.7rem", color: "#e05d00", fontWeight: 600 }}>
+                    <p style={{ margin: "8px 0 0", fontSize: "0.7rem", color: "#9c3d00", fontWeight: 600 }}>
                       ⚠ Added chords won't be positioned on the image.
                     </p>
                   )}
@@ -1207,10 +1130,14 @@ export default function Home() {
 
         {/* Footer */}
         <footer style={{ borderTop: "1px solid rgba(0,0,0,0.06)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-          <span style={{ fontSize: "0.75rem", color: "#c0b090", fontWeight: 700, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
-            Capo<span style={{ color: "#e05d00" }}>matic</span>
+          <span style={{ fontSize: "0.75rem", color: "#675d4a", fontWeight: 700, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
+            Capo<span style={{ color: "#9c3d00" }}>matic</span>
           </span>
-          <span style={{ fontSize: "0.7rem", color: "#ccc", fontWeight: 500 }}>{t.footerTagline}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <span style={{ fontSize: "0.7rem", color: "#666", fontWeight: 500 }}>{t.footerTagline}</span>
+            <Link href="/privacy" style={{ fontSize: "0.7rem", color: "#665e54" }}>{t.privacy}</Link>
+            <Link href="/terms" style={{ fontSize: "0.7rem", color: "#665e54" }}>{t.terms}</Link>
+          </div>
         </footer>
 
         <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
@@ -1227,16 +1154,17 @@ export default function Home() {
           return (
             <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)" }}
               onClick={() => setGuideOpen(false)}>
-              <div style={{ background: "white", borderRadius: 20, width: "min(380px, 90vw)", padding: "40px 32px 28px", textAlign: "center", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}
+              <div ref={guideDialogRef} role="dialog" aria-modal="true" aria-labelledby="guide-title" onKeyDown={trapGuideFocus}
+                style={{ background: "white", borderRadius: 20, width: "min(380px, 90vw)", padding: "40px 32px 28px", textAlign: "center", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}
                 onClick={e => e.stopPropagation()}>
                 {/* Icon */}
-                <div style={{ fontSize: "3rem", marginBottom: 20, color: "#e05d00", lineHeight: 1 }}>{step.icon}</div>
+                <div aria-hidden="true" style={{ fontSize: "3rem", marginBottom: 20, color: "#9c3d00", lineHeight: 1 }}>{step.icon}</div>
                 {/* Title */}
-                <h2 style={{ margin: "0 0 10px", fontSize: "1.3rem", fontWeight: 800, color: "#1a1a2e" }}>{step.label}</h2>
+                <h2 id="guide-title" style={{ margin: "0 0 10px", fontSize: "1.3rem", fontWeight: 800, color: "#1a1a2e" }}>{step.label}</h2>
                 {/* Description */}
-                <p style={{ margin: "0 0 28px", fontSize: "0.88rem", color: "#999", lineHeight: 1.5 }}>{step.desc}</p>
+                <p style={{ margin: "0 0 28px", fontSize: "0.88rem", color: "#666", lineHeight: 1.5 }}>{step.desc}</p>
                 {/* Dot indicators */}
-                <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
+                <div aria-hidden="true" style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
                   {steps.map((_, i) => (
                     <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: i === guideStep ? "#e05d00" : "#e8ddd0", transition: "background 0.2s" }} />
                   ))}
@@ -1244,13 +1172,13 @@ export default function Home() {
                 {/* Buttons */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
                   <button onClick={() => setGuideOpen(false)}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: "12px 28px", fontSize: "0.9rem", fontWeight: 600, color: "#b0a8c0" }}>
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: "12px 28px", fontSize: "0.9rem", fontWeight: 600, color: "#595959" }}>
                     {t.skip}
                   </button>
                   <button onClick={() => { if (isLast) setGuideOpen(false); else setGuideStep(guideStep + 1); }}
-                    style={{ background: "#e05d00", color: "white", border: "none", cursor: "pointer", borderRadius: 12, padding: "12px 48px", fontSize: "0.95rem", fontWeight: 700, boxShadow: "0 4px 14px rgba(224,93,0,0.35)", transition: "all 0.2s" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "#c84b00")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "#e05d00")}>
+                    style={{ background: "#a34200", color: "white", border: "none", cursor: "pointer", borderRadius: 12, padding: "12px 48px", fontSize: "0.95rem", fontWeight: 700, boxShadow: "0 4px 14px rgba(163,66,0,0.35)", transition: "all 0.2s" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "#7f3000")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "#a34200")}>
                     {isLast ? t.done : t.next}
                   </button>
                 </div>

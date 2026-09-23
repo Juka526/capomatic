@@ -3,18 +3,13 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime, timezone
-from typing import Optional
+import json
 
 import httpx
+import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from backend.db.database import get_db
-from backend.db.models import User
+from jwt.algorithms import RSAAlgorithm
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +20,7 @@ ALGORITHMS = ["RS256"]
 _bearer = HTTPBearer(auto_error=False)
 
 # JWKS cache — populated on first token verification.
-_jwks: Optional[dict] = None
+_jwks: dict | None = None
 
 
 async def _fetch_jwks() -> dict:
@@ -57,7 +52,7 @@ async def verify_token(token: str) -> dict:
 
     try:
         unverified_header = jwt.get_unverified_header(token)
-    except JWTError:
+    except jwt.InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token header",
@@ -82,19 +77,21 @@ async def verify_token(token: str) -> dict:
         )
 
     try:
+        public_key = RSAAlgorithm.from_jwk(json.dumps(rsa_key))
         payload = jwt.decode(
             token,
-            rsa_key,
+            public_key,
             algorithms=ALGORITHMS,
             audience=AUTH0_AUDIENCE,
             issuer=f"https://{AUTH0_DOMAIN}/",
+            options={"require": ["exp", "iss", "sub"]},
         )
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
         )
-    except JWTError:
+    except jwt.InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
@@ -103,64 +100,13 @@ async def verify_token(token: str) -> dict:
     return payload
 
 
-async def get_current_user(
+async def get_token_payload(
     credentials: HTTPAuthorizationCredentials = Depends(_bearer),
-    db: AsyncSession = Depends(get_db),
-) -> User:
-    """FastAPI dependency: verify JWT → find-or-create User row."""
+) -> dict:
+    """Verify a bearer token without requiring the optional user database."""
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
         )
-
-    payload = await verify_token(credentials.credentials)
-
-    auth0_id: str = payload.get("sub", "")
-    email: str = payload.get("email", payload.get(f"https://{AUTH0_DOMAIN}/email", ""))
-    name: str | None = payload.get("name", payload.get(f"https://{AUTH0_DOMAIN}/name"))
-
-    # Find or create user
-    result = await db.execute(select(User).where(User.auth0_id == auth0_id))
-    user = result.scalar_one_or_none()
-
-    if user is None:
-        user = User(auth0_id=auth0_id, email=email, name=name)
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
-        logger.info("Created new user: %s (%s)", email, auth0_id)
-    else:
-        user.last_login = datetime.now(timezone.utc)
-        if email:
-            user.email = email
-        if name:
-            user.name = name
-        await db.commit()
-
-    return user
-
-
-async def get_current_user_optional(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer),
-    db: AsyncSession = Depends(get_db),
-) -> User | None:
-    """Like get_current_user but returns None if no token is provided."""
-    if credentials is None:
-        return None
-    try:
-        return await get_current_user(credentials, db)
-    except HTTPException:
-        return None
-
-
-async def require_admin(
-    user: User = Depends(get_current_user),
-) -> User:
-    """FastAPI dependency: require the authenticated user to have admin role."""
-    if user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required",
-        )
-    return user
+    return await verify_token(credentials.credentials)

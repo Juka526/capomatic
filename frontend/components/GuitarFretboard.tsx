@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLang } from '@/components/LangProvider';
 
 // ── Layout ──
 const SVG_HEIGHT = 180;
@@ -46,6 +47,7 @@ interface GuitarFretboardProps {
 }
 
 export function GuitarFretboard({ capoFret, onFretSelect }: GuitarFretboardProps) {
+  const { t } = useLang();
   const [hoveredFret, setHoveredFret] = useState<number | null>(null);
 
   const capoX = fcX(capoFret ?? 1);
@@ -58,6 +60,8 @@ export function GuitarFretboard({ capoFret, onFretSelect }: GuitarFretboardProps
       <svg
         viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
         style={{ display: 'block', width: '100%', height: 'auto' }}
+        role="group"
+        aria-label={t.capoSelector}
       >
         <defs>
           <linearGradient id="fbWood" x1="0" y1="0" x2="0" y2="1">
@@ -189,7 +193,16 @@ export function GuitarFretboard({ capoFret, onFretSelect }: GuitarFretboardProps
                 : 'transparent'
               }
               style={{ cursor: 'pointer' }}
+              role="button"
+              tabIndex={0}
+              aria-label={t.selectCapoFret(fret)}
               onClick={() => onFretSelect(fret)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onFretSelect(fret);
+                }
+              }}
               onMouseEnter={() => setHoveredFret(fret)}
               onMouseLeave={() => setHoveredFret(null)}
             />

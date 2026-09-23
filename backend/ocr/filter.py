@@ -116,6 +116,20 @@ _DIRECTION_MARKER_RE = re.compile(
 # frequently misreads one as the other.  "Gmb" is not a valid chord but "Gm6" is.
 _TRAILING_B_RE = re.compile(r'^([A-G][#b]?(?:maj|m(?!aj)|dim|aug|sus)?)b$')
 
+# OCR confusion inside altered extensions: engraved "5" is sometimes read as
+# "s", for example F#m7(b5) -> F#m7(bs). The normalized invalid token ends in
+# "bs"; replacing only that terminal alteration avoids changing valid chords.
+_TRAILING_BS_RE = re.compile(r"^(.*\d)(?:\(b[sS]\)|b[sS])((?:/[A-G][#b]?)?)$")
+
+
+def _repair_altered_five(text: str) -> str:
+    match = _TRAILING_BS_RE.match(text)
+    if match:
+        candidate = f"{match.group(1)}b5{match.group(2)}"
+        if is_chord_candidate(candidate):
+            return candidate
+    return text
+
 
 def _strip_leading_number(text: str) -> str | None:
     """Strip a leading digit sequence when the remainder starts with a chord root.
@@ -181,9 +195,11 @@ def _split_chord_text(text: str) -> list[str]:
     parenthetical = re.fullmatch(r"\s*([^()]*)\(([^()]*)\)\s*", text)
     if parenthetical:
         outer = normalize_chord_text(parenthetical.group(1))
-        if not outer:
-            return []
         inner = normalize_chord_text(parenthetical.group(2))
+        if not outer:
+            # A single optional/alternate chord such as "(Am7)" is still a
+            # musical occurrence. Keep concatenated secondary rows rejected.
+            return [inner] if is_chord_candidate(inner) else []
         if not is_chord_candidate(outer):
             return []
         inner_parts = [inner] if is_chord_candidate(inner) else _split_concatenated(inner)
@@ -225,10 +241,9 @@ def _split_bbox(
     If bbox is None, all items share bbox=None.
     """
     parenthetical = re.fullmatch(r"\s*([^()]*)\(([^()]*)\)\s*", item["text"])
-    parenthetical_from = (
-        1
-        if parenthetical else None
-    )
+    parenthetical_from = None
+    if parenthetical:
+        parenthetical_from = 0 if not parenthetical.group(1).strip() else 1
     results: list[dict] = []
     for i, part in enumerate(parts):
         split_item = {**item, "text": part}
@@ -325,6 +340,13 @@ def recover_candidates(
             parse_count += 1
             continue
 
+        # OCR confusion in altered extensions: b5 may be read as "bs".
+        repaired = _repair_altered_five(norm)
+        if repaired != norm:
+            recovered.append({**item, "text": repaired})
+            parse_count += 1
+            continue
+
         # OCR confusion: trailing "b" → "6" (e.g. "Gmb" → "Gm6").
         # Applied here for items that arrive without leading numbers
         # (e.g. after multi-token space-splitting of "17 Gmb").
@@ -394,6 +416,9 @@ def filter_candidates_with_recovery(
     parse_count = 0
     split_count = 0
     for item in ocr_items:
+        repaired = _repair_altered_five(item["text"])
+        if repaired != item["text"]:
+            item = {**item, "text": repaired}
         if is_section_marker(
             item["text"],
             item.get("bbox"),

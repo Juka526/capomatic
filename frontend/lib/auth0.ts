@@ -4,6 +4,7 @@
  * When Auth0 env vars are absent (local dev), all auth functions are no-ops.
  */
 import { Auth0Client } from '@auth0/auth0-spa-js';
+import { normalizeReturnTo } from './safe-return-to.mjs';
 
 const _domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN;
 const _clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID;
@@ -74,9 +75,7 @@ export async function handleRedirectCallback(): Promise<string> {
   try {
     const result = await auth0Client.handleRedirectCallback();
     const returnTo = result.appState?.returnTo;
-    return typeof returnTo === 'string' && returnTo.startsWith('/') && !returnTo.startsWith('//')
-      ? returnTo
-      : '/';
+    return normalizeReturnTo(returnTo);
   } catch {
     // ignore stale callbacks
     return '/';

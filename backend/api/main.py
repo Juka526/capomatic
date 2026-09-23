@@ -17,41 +17,55 @@ from __future__ import annotations
 import asyncio
 import base64
 import concurrent.futures
+import contextlib
 import functools
 import io
+import json
 import logging
+import math
 import os
 import tempfile
+import threading
 import time
 import uuid
 from collections import OrderedDict
-from contextlib import asynccontextmanager
-from typing import Optional
+from typing import Callable, Iterator, Optional
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from PIL import Image
+from PIL import Image, ImageOps
+from PIL import UnidentifiedImageError
+import sentry_sdk
 
-from backend.ocr.paddle_gpt_hybrid import (
-    refine_paddle_items_with_gpt,
-    run_ocr_paddle_gpt_hybrid,
-)
 from backend.ocr.hybrid_detect import detect_chords_hybrid
 from backend.chords.parser import parse_chord
 from backend.chords.transpose import transpose_chord, compute_target_key
 from backend.chords.key_detect import infer_key
 from backend.overlay.render import _get_staff_systems, render_overlay
-from backend.auth.auth0 import get_current_user, require_admin
-from backend.db.database import get_db
-from backend.db.models import User
-from sqlalchemy import select as sa_select
-from sqlalchemy.ext.asyncio import AsyncSession
+from backend.auth.auth0 import get_token_payload
 
 logger = logging.getLogger(__name__)
 
+_sentry_dsn = os.environ.get("SENTRY_DSN", "").strip()
+if _sentry_dsn:
+    sentry_sdk.init(
+        dsn=_sentry_dsn,
+        environment=os.environ.get("SENTRY_ENVIRONMENT", "production"),
+        release=os.environ.get("SENTRY_RELEASE"),
+        traces_sample_rate=0.05,
+        send_default_pii=False,
+        max_request_body_size="never",
+        include_local_variables=False,
+    )
+
 # Maximum upload size in bytes (20 MB).
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
+MAX_UPLOAD_PIXELS = 50_000_000
+MAX_OCR_IN_FLIGHT = 2
+MAX_RENDER_IN_FLIGHT = 4
+MAX_OVERRIDE_CHORDS = 500
+MAX_CHORD_TEXT_LENGTH = 32
 
 # Valid target key names for enharmonic spelling.
 _VALID_KEYS = frozenset({
@@ -63,16 +77,30 @@ _VALID_KEYS = frozenset({
 # Detection cache — stores OCR results + original image for /render reuse.
 # ---------------------------------------------------------------------------
 _MAX_CACHE = 20
+_MAX_CACHE_PIXELS = 80_000_000
 _detection_cache: OrderedDict[str, dict] = OrderedDict()
 # Keep Paddle requests serialized, but run them off the event loop so health
 # checks and other lightweight endpoints stay responsive during OCR.
 _ocr_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+_render_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+# Admit at most one active OCR job and one queued job. Additional requests fail
+# quickly instead of exhausting the single-replica process with an unbounded
+# executor queue.
+_ocr_admission = threading.BoundedSemaphore(MAX_OCR_IN_FLIGHT)
+_render_admission = threading.BoundedSemaphore(MAX_RENDER_IN_FLIGHT)
 
 
 def _cache_put(detection_id: str, data: dict) -> None:
     _detection_cache[detection_id] = data
     _detection_cache.move_to_end(detection_id)
-    while len(_detection_cache) > _MAX_CACHE:
+    while (
+        len(_detection_cache) > _MAX_CACHE
+        or sum(
+            entry["img"].width * entry["img"].height
+            for entry in _detection_cache.values()
+            if entry.get("img") is not None
+        ) > _MAX_CACHE_PIXELS
+    ):
         _detection_cache.popitem(last=False)
 
 
@@ -87,29 +115,14 @@ def _cache_get(detection_id: str) -> dict | None:
 # App setup
 # ---------------------------------------------------------------------------
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Create database tables when optional database features are configured.
-    try:
-        from backend.db.database import init_db
-        if await init_db():
-            logger.info("Database initialized.")
-        else:
-            logger.info("DATABASE_URL not configured; auth/admin features disabled.")
-    except Exception as exc:
-        logger.warning("Database not available, auth features disabled: %s", exc)
-
-    yield
-
-
-app = FastAPI(title="Capomatic", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Capomatic", version="1.0.0")
 
 _cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:3000")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in _cors_origins.split(",")],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 
@@ -189,16 +202,153 @@ def _build_detect_chord(item: dict) -> dict:
     }
 
 
+def _parse_chords_override(value: str, image_size: tuple[int, int]) -> list[dict]:
+    """Validate user-edited chords before sending them to the renderer."""
+    try:
+        raw = json.loads(value)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="Invalid chord corrections.") from exc
+    if not isinstance(raw, list) or len(raw) > MAX_OVERRIDE_CHORDS:
+        raise HTTPException(status_code=422, detail="Invalid chord corrections.")
+
+    width, height = image_size
+    items: list[dict] = []
+    for row in raw:
+        if not isinstance(row, dict):
+            raise HTTPException(status_code=422, detail="Invalid chord corrections.")
+        text = row.get("text")
+        if not isinstance(text, str):
+            raise HTTPException(status_code=422, detail="Invalid chord corrections.")
+        text = text.strip()
+        if not text or len(text) > MAX_CHORD_TEXT_LENGTH:
+            raise HTTPException(status_code=422, detail="Invalid chord corrections.")
+        try:
+            parse_chord(text)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="Invalid chord corrections.") from exc
+
+        raw_bbox = row.get("bbox")
+        bbox: list[int] | None = None
+        if raw_bbox is not None:
+            if (
+                not isinstance(raw_bbox, list)
+                or len(raw_bbox) != 4
+                or any(
+                    isinstance(coordinate, bool)
+                    or not isinstance(coordinate, (int, float))
+                    or not math.isfinite(coordinate)
+                    for coordinate in raw_bbox
+                )
+            ):
+                raise HTTPException(status_code=422, detail="Invalid chord corrections.")
+            x1, y1, x2, y2 = (round(coordinate) for coordinate in raw_bbox)
+            if not (0 <= x1 < x2 <= width and 0 <= y1 < y2 <= height):
+                raise HTTPException(status_code=422, detail="Invalid chord corrections.")
+            bbox = [x1, y1, x2, y2]
+
+        items.append({"text": text, "confidence": 1.0, "bbox": bbox})
+    return items
+
+
 async def _read_upload(image: UploadFile) -> bytes:
     """Read and validate uploaded image bytes; raise HTTPException if too large."""
-    data = await image.read()
+    data = await image.read(MAX_UPLOAD_BYTES + 1)
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(
             status_code=413,
             detail=f"Image too large ({len(data)} bytes). "
                    f"Maximum is {MAX_UPLOAD_BYTES} bytes.",
         )
+    try:
+        with Image.open(io.BytesIO(data)) as decoded:
+            if decoded.format not in {"PNG", "JPEG"}:
+                raise HTTPException(status_code=422, detail="Upload a PNG or JPEG image.")
+            if getattr(decoded, "is_animated", False):
+                raise HTTPException(status_code=422, detail="Animated images are not supported.")
+            if decoded.width * decoded.height > MAX_UPLOAD_PIXELS:
+                raise HTTPException(status_code=413, detail="Image dimensions are too large.")
+            decoded.load()
+    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError) as exc:
+        raise HTTPException(status_code=422, detail="Upload a valid PNG or JPEG image.") from exc
     return data
+
+
+@contextlib.contextmanager
+def _temporary_upload(data: bytes) -> Iterator[str]:
+    """Expose validated upload bytes as a temp file with EXIF orientation applied."""
+    suffix = ".png" if data.startswith(b"\x89PNG\r\n\x1a\n") else ".jpg"
+    tmp_path: str | None = None
+    try:
+        with Image.open(io.BytesIO(data)) as decoded:
+            orientation = decoded.getexif().get(274, 1)
+            if orientation != 1:
+                suffix = ".png"
+                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                    tmp_path = tmp.name
+                ImageOps.exif_transpose(decoded).convert("RGB").save(tmp_path, format="PNG")
+            else:
+                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                    tmp.write(data)
+                    tmp_path = tmp.name
+        yield tmp_path
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+
+async def _run_ocr(
+    runner: Callable[[], tuple[list[dict], dict]],
+) -> tuple[list[dict], dict]:
+    """Run one admitted OCR job without blocking the event loop."""
+    return await asyncio.get_running_loop().run_in_executor(_ocr_executor, runner)
+
+
+@contextlib.contextmanager
+def _admit_ocr() -> Iterator[None]:
+    """Bound upload decoding, temp storage, and OCR work for one request."""
+    if not _ocr_admission.acquire(blocking=False):
+        raise HTTPException(
+            status_code=429,
+            detail="OCR is busy. Try again shortly.",
+            headers={"Retry-After": "5"},
+        )
+    try:
+        yield
+    finally:
+        _ocr_admission.release()
+
+
+async def _run_render(runner: Callable[[], object]):
+    """Run admitted CPU rendering without blocking lightweight endpoints."""
+    if not _render_admission.acquire(blocking=False):
+        raise HTTPException(
+            status_code=429,
+            detail="Rendering is busy. Try again shortly.",
+            headers={"Retry-After": "2"},
+        )
+    try:
+        return await asyncio.get_running_loop().run_in_executor(_render_executor, runner)
+    finally:
+        _render_admission.release()
+
+
+def _render_requested_modes(
+    img: Image.Image,
+    chords: list[dict],
+    mode: str,
+    original_key: str | None,
+    target_key: str | None,
+    semitones: int,
+) -> tuple[str | None, str | None]:
+    replace_b64 = (
+        _render_to_base64(img, chords, "replace", original_key, target_key, semitones)
+        if mode in {"replace", "both"} else None
+    )
+    above_b64 = (
+        _render_to_base64(img, chords, "above", original_key, target_key, semitones)
+        if mode in {"above", "both"} else None
+    )
+    return replace_b64, above_b64
 
 
 def _render_to_base64(img: Image.Image, chords: list[dict], mode: str,
@@ -254,56 +404,24 @@ async def detect(
             status_code=422,
             detail=f"original_key must be one of {sorted(_VALID_KEYS)}, got {original_key!r}",
         )
-    if ocr_engine not in {"paddle", "paddle-gpt"}:
+    if ocr_engine != "paddle":
         raise HTTPException(
             status_code=422,
-            detail="ocr_engine must be one of: paddle, paddle-gpt",
+            detail="Only PaddleOCR is available in v1.",
         )
 
-    data = await _read_upload(image)
-    suffix = os.path.splitext(image.filename or "upload.png")[1] or ".png"
-
-    tmp_path: str | None = None
-    try:
-        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-            tmp.write(data)
-            tmp_path = tmp.name
-
-        if ocr_engine == "paddle-gpt":
-            try:
-                items, raw_meta = await asyncio.get_running_loop().run_in_executor(
-                    _ocr_executor,
-                    run_ocr_paddle_gpt_hybrid,
-                    tmp_path,
-                )
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("Hybrid Paddle+GPT OCR failed; falling back to PaddleOCR: %s", exc)
-                fallback = functools.partial(
-                    detect_chords_hybrid,
-                    tmp_path,
-                    use_ai_fallback=False,
-                )
-                items, raw_meta = await asyncio.get_running_loop().run_in_executor(
-                    _ocr_executor,
-                    fallback,
-                )
-                raw_meta["ocr_engine"] = "paddle-only"
-                raw_meta["gpt_error"] = str(exc)
-        else:
+    with _admit_ocr():
+        data = await _read_upload(image)
+        with _temporary_upload(data) as tmp_path:
             runner = functools.partial(
                 detect_chords_hybrid,
                 tmp_path,
                 use_ai_fallback=False,
             )
-            items, raw_meta = await asyncio.get_running_loop().run_in_executor(
-                _ocr_executor,
-                runner,
-            )
-        img = Image.open(tmp_path).convert("RGB")
-        _get_staff_systems(img)
-    finally:
-        if tmp_path and os.path.exists(tmp_path):
-            os.unlink(tmp_path)
+            items, raw_meta = await _run_ocr(runner)
+            with Image.open(tmp_path) as uploaded:
+                img = uploaded.convert("RGB")
+            _get_staff_systems(img)
 
     if original_key is None:
         original_key = infer_key(items)
@@ -355,65 +473,8 @@ async def detect(
 async def refine_detection(
     detection_id: str = Form(...),
 ) -> dict:
-    """Refine cached Paddle detections with GPT without re-running PaddleOCR."""
-    request_started = time.perf_counter()
-    if not os.environ.get("OPENAI_API_KEY"):
-        raise HTTPException(
-            status_code=503,
-            detail="GPT hybrid refinement is not configured: OPENAI_API_KEY is not set.",
-        )
-
-    cached = _cache_get(detection_id)
-    if cached is None:
-        raise HTTPException(
-            status_code=404,
-            detail="detection_id not found — it may have expired. Please re-upload.",
-        )
-
-    items = cached["items"]
-    img = cached["img"]
-    try:
-        runner = functools.partial(
-            refine_paddle_items_with_gpt,
-            img,
-            items,
-            base_meta=cached.get("meta"),
-        )
-        refined_items, raw_meta = await asyncio.get_running_loop().run_in_executor(
-            _ocr_executor,
-            runner,
-        )
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Cached GPT refinement failed: %s", exc)
-        raise HTTPException(status_code=502, detail=f"GPT refinement failed: {exc}") from exc
-
-    cached["items"] = refined_items
-    cached["meta"] = raw_meta
-    if cached.get("original_key") is None:
-        cached["original_key"] = infer_key(refined_items)
-
-    chords = [_build_detect_chord(item) for item in refined_items]
-    return {
-        "detection_id": detection_id,
-        "chords":       chords,
-        "count":        len(chords),
-        "original_key": cached.get("original_key"),
-        "meta": {
-            "ocr_engine": raw_meta.get("ocr_engine", "paddle-gpt-hybrid"),
-            "gpt_used": raw_meta.get("gpt_used", False),
-            "gpt_error": raw_meta.get("gpt_error"),
-            "gpt_text_replaced": raw_meta.get("gpt_text_replaced", 0),
-            "gpt_gap_count": raw_meta.get("gpt_gap_count", 0),
-            "dedupe_dropped": raw_meta.get("dedupe_dropped", 0),
-            "gap_candidate_count": raw_meta.get("gap_candidate_count", 0),
-            "gpt_gap_candidates_accepted": raw_meta.get("gpt_gap_candidates_accepted", 0),
-            "input_tokens": raw_meta.get("input_tokens"),
-            "output_tokens": raw_meta.get("output_tokens"),
-            "total_ms": raw_meta.get("total_ms"),
-            "service_ms": round((time.perf_counter() - request_started) * 1000, 1),
-            "reused_paddle_detection": raw_meta.get("reused_paddle_detection", True),
-        },
-    }
+    """Retired V1 endpoint: paid refinement is not available."""
+    raise HTTPException(status_code=410, detail="GPT refinement is unavailable in v1.")
 
 
 @app.post("/render")
@@ -435,8 +496,6 @@ async def render(
                       When provided, replaces the cached OCR items.
                       Chords with ``bbox: null`` are transposed but not rendered.
     """
-    import json as _json
-
     if not (-11 <= semitones <= 11):
         raise HTTPException(
             status_code=422,
@@ -456,15 +515,7 @@ async def render(
         )
 
     if chords_override is not None:
-        try:
-            raw = _json.loads(chords_override)
-            items = [
-                {"text": r["text"], "confidence": 1.0, "bbox": r.get("bbox")}
-                for r in raw
-                if isinstance(r.get("text"), str) and r["text"].strip()
-            ]
-        except (ValueError, KeyError, TypeError):
-            raise HTTPException(status_code=422, detail="chords_override must be a valid JSON array")
+        items = _parse_chords_override(chords_override, cached["img"].size)
     else:
         items = cached["items"]
 
@@ -479,30 +530,15 @@ async def render(
 
     t_start = time.perf_counter()
 
-    replace_b64: str | None = None
-    above_b64: str | None = None
-    if mode == "both":
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-            fut_replace = pool.submit(
-                _render_to_base64, img, chords, "replace",
-                original_key, target_key, semitones,
-            )
-            fut_above = pool.submit(
-                _render_to_base64, img, chords, "above",
-                original_key, target_key, semitones,
-            )
-            replace_b64 = fut_replace.result()
-            above_b64 = fut_above.result()
-    elif mode == "replace":
-        replace_b64 = _render_to_base64(
-            img, chords, "replace",
-            original_key, target_key, semitones,
-        )
-    else:
-        above_b64 = _render_to_base64(
-            img, chords, "above",
-            original_key, target_key, semitones,
-        )
+    replace_b64, above_b64 = await _run_render(functools.partial(
+        _render_requested_modes,
+        img,
+        chords,
+        mode,
+        original_key,
+        target_key,
+        semitones,
+    ))
 
     elapsed_ms = int((time.perf_counter() - t_start) * 1000)
 
@@ -543,35 +579,32 @@ async def overlay(
 
     t_start = time.perf_counter()
 
-    data = await _read_upload(image)
-    suffix = os.path.splitext(image.filename or "upload.png")[1] or ".png"
-    tmp_path: str | None = None
-    try:
-        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-            tmp.write(data)
-            tmp_path = tmp.name
-
-        items, _ = await asyncio.get_running_loop().run_in_executor(
-            _ocr_executor,
-            detect_chords_hybrid,
-            tmp_path,
-        )
-        img = Image.open(tmp_path).convert("RGB")
-    finally:
-        if tmp_path and os.path.exists(tmp_path):
-            os.unlink(tmp_path)
+    with _admit_ocr():
+        data = await _read_upload(image)
+        with _temporary_upload(data) as tmp_path:
+            runner = functools.partial(
+                detect_chords_hybrid,
+                tmp_path,
+                use_ai_fallback=False,
+            )
+            items, _ = await _run_ocr(runner)
+            with Image.open(tmp_path) as uploaded:
+                img = uploaded.convert("RGB")
 
     original_key, target_key = _resolve_keys(
         items, semitones, original_key, target_key,
     )
     chords = [_build_chord_item(item, semitones, target_key) for item in items]
 
-    result = render_overlay(
-        img, chords, mode,
+    result = await _run_render(functools.partial(
+        render_overlay,
+        img,
+        chords,
+        mode,
         original_key=original_key,
         target_key=target_key,
         semitones=semitones,
-    )
+    ))
 
     elapsed_ms = int((time.perf_counter() - t_start) * 1000)
 
@@ -590,20 +623,19 @@ async def overlay(
 # ---------------------------------------------------------------------------
 
 @app.get("/api/auth/me")
-async def auth_me(user: User = Depends(get_current_user)) -> dict:
-    """Return the authenticated user's profile."""
+async def auth_me(payload: dict = Depends(get_token_payload)) -> dict:
+    """Return verified Auth0 identity claims without requiring a database."""
     return {
-        "id": str(user.id),
-        "email": user.email,
-        "name": user.name,
-        "role": user.role,
+        "sub": payload.get("sub"),
+        "email": payload.get("email"),
+        "name": payload.get("name"),
     }
 
 
 @app.get("/api/auth/admin-test")
-async def auth_admin_test(user: User = Depends(require_admin)) -> dict:
-    """Test endpoint — requires admin role."""
-    return {"message": "Admin access granted", "user": user.email}
+async def auth_admin_test() -> dict:
+    """Retired V1 endpoint: administrator roles are not supported."""
+    raise HTTPException(status_code=410, detail="Administration is unavailable in v1.")
 
 
 # ---------------------------------------------------------------------------
@@ -611,23 +643,6 @@ async def auth_admin_test(user: User = Depends(require_admin)) -> dict:
 # ---------------------------------------------------------------------------
 
 @app.get("/api/admin/users")
-async def admin_users(
-    admin: User = Depends(require_admin),
-    db: AsyncSession = Depends(get_db),
-) -> dict:
-    """All users (admin only)."""
-    result = await db.execute(sa_select(User).order_by(User.created_at.desc()))
-    users = result.scalars().all()
-    return {
-        "users": [
-            {
-                "id": str(u.id),
-                "email": u.email,
-                "name": u.name,
-                "role": u.role,
-                "created_at": u.created_at.isoformat(),
-                "last_login": u.last_login.isoformat() if u.last_login else None,
-            }
-            for u in users
-        ],
-    }
+async def admin_users() -> dict:
+    """Retired V1 endpoint: no user list is exposed."""
+    raise HTTPException(status_code=410, detail="Administration is unavailable in v1.")

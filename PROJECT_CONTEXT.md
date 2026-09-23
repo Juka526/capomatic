@@ -14,7 +14,13 @@ Product rules:
 - Prefer practical target-key spellings over theoretical names such as E#, Cb, Fb, or B#.
 - Optimize for Korean worship sheets without tuning to one publisher.
 
-## Current production
+The V1 scope decision and release gates live only in
+[`docs/V1_RELEASE_PLAN.md`](docs/V1_RELEASE_PLAN.md).
+
+## Current production snapshot
+
+This describes the deployment before the pending non-MVP V1 release; it is operational history,
+not the V1 scope definition.
 
 - Frontend: Next.js on Vercel at `https://capomatic.vercel.app`
 - Backend: FastAPI/PaddleOCR Docker Space at `https://juka526-capomatic.hf.space`
@@ -23,22 +29,20 @@ Product rules:
 - Browser API target: `NEXT_PUBLIC_API_URL=https://juka526-capomatic.hf.space`
 - Frontend Auth0 (SPA) is live on Vercel: `NEXT_PUBLIC_AUTH0_DOMAIN=dev-em2gvqp2q71brplg.us.auth0.com`,
   `NEXT_PUBLIC_AUTH0_CLIENT_ID=ftLB1Swg3LHaWrADVs0gPnnZDrqDjZ3c`, token audience `https://capomatic-api`
-- Backend has no `DATABASE_URL`, so `/api/auth/*` and `/api/admin/*` are mounted but answer 503
-  `Database is not configured`. Public OCR is unaffected.
-- OpenAI: optional refinement secret is present; the public cost-control boundary is unresolved
+- Backend has no `DATABASE_URL`; the old deployed administrator paths are not a supported mode.
+- The old deployment has an OpenAI refinement secret that must be removed when V1 is deployed.
 
 GitHub `main` is the canonical source and Vercel deploys it directly. HF uses a runtime-only
 snapshot because GitHub history contains binary test fixtures that do not belong in the Space;
 each HF deployment commit records its source GitHub SHA.
-See `docs/PRODUCTION_CHECKLIST.md` for the audited state and release gates.
+See `docs/PRODUCTION_CHECKLIST.md` for the audited deployment state and release procedure.
 
 ## Request and state flow
 
 1. `POST /detect` runs PaddleOCR and returns chords plus a `detection_id`.
 2. The backend keeps up to 20 detections in a process-local LRU cache.
-3. `POST /detect/refine` optionally refines a cached detection with OpenAI.
-4. `POST /render` deterministically transposes and returns Replace/Above images as base64 JSON.
-5. The frontend stores user history in browser `localStorage`.
+3. `POST /render` deterministically transposes and returns Replace/Above images as base64 JSON.
+4. The frontend stores user history in browser `localStorage`.
 
 Detection IDs disappear on restart and are not safe across multiple replicas. Keep one replica
 until this state moves to a shared store or requests gain session affinity.
@@ -57,7 +61,7 @@ until this state moves to a shared store or requests gain session affinity.
 Evaluate OCR changes against labeled fixtures and report coverage, OCR/predict time, stitched
 pixel count, quality-gate result, and fallback usage.
 
-## Auth0 and optional auth/admin
+## Auth0 login and retired administration
 
 Auth0 tenant `dev-em2gvqp2q71brplg` (US-5) backs the deployed frontend.
 
@@ -74,27 +78,17 @@ Auth0 tenant `dev-em2gvqp2q71brplg` (US-5) backs the deployed frontend.
 - Tenant default language is `ko`, supported languages are `ko` and `en`, and both carry custom
   login prompt text.
 
-Backend JWT verification and the PostgreSQL-backed user/admin list exist in code but are not
-enabled in production. Public OCR works without `DATABASE_URL`. Enabling auth/admin requires
-`DATABASE_URL`, `AUTH0_DOMAIN`, and `AUTH0_AUDIENCE` together, plus an explicit admin-role,
-migration, backup, and restore procedure.
-
-Login is already exposed in the UI: `components/LoginButton.tsx` renders in the `pages/index.tsx`
-nav, so a visitor can complete an Auth0 login today. `AuthProvider` calls `/api/auth/me` only to
-enrich the role and swallows the failure, so ordinary login still behaves correctly. The visible
-break is `pages/admin/dashboard.tsx`, whose `lib/admin-api.ts` rethrows the raw
-`Database is not configured` detail from `/api/admin/users`.
+V1 supports optional Auth0 login/logout and token verification without PostgreSQL. The My Jobs
+page remains public and browser-local. Administrator UI, roles, and user-list endpoints are retired for
+V1; see the V1 release plan for the authoritative boundary.
 
 ## Current priorities
 
-1. Keep reviewed releases synchronized across GitHub, Vercel, and HF, then decide whether
-   historical HF storage should be reclaimed.
-2. Resolve the frontend/backend auth mismatch: provision `DATABASE_URL`, `AUTH0_DOMAIN`, and
-   `AUTH0_AUDIENCE` on the Space, or gate `/admin/dashboard` so it stops surfacing the raw 503.
-3. Put an authentication, rate-limit, or budget boundary around paid public GPT refinement,
-   or disable its production secret.
-4. Continue reducing OCR latency only when fixture coverage remains acceptable.
-5. Validate OCR changes on unseen Korean worship sheets.
+1. Close every gate in `docs/V1_RELEASE_PLAN.md`.
+2. Validate the candidate against the labeled OCR corpus and one unseen Korean worship sheet.
+3. Verify production Auth0 login/logout and `/api/auth/me` without enabling PostgreSQL.
+4. Remove the production OpenAI secret and verify GPT/admin retirement after deployment.
+5. Synchronize and record the reviewed GitHub, Vercel, and HF release identities.
 
 ## Change rules
 

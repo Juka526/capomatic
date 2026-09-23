@@ -6,25 +6,16 @@ import { useAuth } from '@/components/AuthProvider';
 import { useLang, LangToggle } from '@/components/LangProvider';
 import Link from 'next/link';
 import Head from 'next/head';
-
-interface HistoryEntry {
-  id: string;
-  song_name: string | null;
-  original_key: string | null;
-  target_key: string | null;
-  semitones: number;
-  timestamp: string;
-}
+import { parseJobHistory, type JobHistoryEntry } from '@/lib/job-history.mjs';
 
 function HistoryContent() {
   const { user } = useAuth();
   const { t } = useLang();
-  const [entries, setEntries] = useState<HistoryEntry[]>([]);
+  const [entries, setEntries] = useState<JobHistoryEntry[]>([]);
 
   useEffect(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem('tc-history') || '[]');
-      setEntries(stored);
+      setEntries(parseJobHistory(localStorage.getItem('tc-history')));
     } catch {
       setEntries([]);
     }
@@ -53,7 +44,7 @@ function HistoryContent() {
                 <rect x="21" y="10" width="3" height="16" rx="1.5" fill="white" opacity="0.9" />
               </svg>
               <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1a1a2e', fontFamily: 'Georgia, serif', fontStyle: 'italic', whiteSpace: 'nowrap' }}>
-                Capo<span style={{ color: '#e05d00' }}>matic</span>
+                Capo<span style={{ color: '#9c3d00' }}>matic</span>
               </span>
             </Link>
             <span style={{ color: 'rgba(0,0,0,0.15)', flexShrink: 0 }}>|</span>
@@ -61,7 +52,7 @@ function HistoryContent() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
             <LangToggle />
-            <span className="history-username" style={{ fontSize: '0.8rem', color: '#888', fontWeight: 500 }}>{user?.name || user?.email}</span>
+            <span className="history-username" style={{ fontSize: '0.8rem', color: '#595959', fontWeight: 500 }}>{user?.name || user?.email}</span>
           </div>
         </nav>
 
@@ -69,8 +60,8 @@ function HistoryContent() {
           {entries.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '64px 20px', background: 'rgba(255,255,255,0.55)', borderRadius: 16, border: '2px dashed rgba(0,0,0,0.08)' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🎵</div>
-              <p style={{ color: '#aaa', marginBottom: 20, fontSize: '0.9rem' }}>{t.noJobs}</p>
-              <Link href="/" style={{ display: 'inline-block', background: 'linear-gradient(135deg, #e05d00, #c84b00)', color: 'white', textDecoration: 'none', borderRadius: 50, padding: '11px 26px', fontWeight: 700, fontSize: '0.85rem', boxShadow: '0 4px 14px rgba(224,93,0,0.28)' }}>
+              <p style={{ color: '#686868', marginBottom: 20, fontSize: '0.9rem' }}>{t.noJobs}</p>
+              <Link href="/" style={{ display: 'inline-block', background: 'linear-gradient(135deg, #a34200, #7f3000)', color: 'white', textDecoration: 'none', borderRadius: 50, padding: '11px 26px', fontWeight: 700, fontSize: '0.85rem', boxShadow: '0 4px 14px rgba(163,66,0,0.28)' }}>
                 {t.processFirst}
               </Link>
             </div>
@@ -82,7 +73,7 @@ function HistoryContent() {
                     <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#1a1a2e' }}>
                       {entry.song_name || t.untitled}
                     </h3>
-                    <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: '#888' }}>
+                    <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: '#595959' }}>
                       {entry.original_key && entry.target_key && (
                         <span style={{ fontWeight: 700, color: '#1a1a2e' }}>{entry.original_key} → {entry.target_key}</span>
                       )}

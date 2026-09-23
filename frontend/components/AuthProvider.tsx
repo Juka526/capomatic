@@ -4,15 +4,14 @@
  */
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { getAccessToken, getUser, isAuthenticated, handleRedirectCallback, login as auth0Login, logout as auth0Logout } from '@/lib/auth0';
+import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
+import { getUser, isAuthenticated, handleRedirectCallback, login as auth0Login, logout as auth0Logout } from '@/lib/auth0';
 
 interface User {
   name?: string;
   email?: string;
   picture?: string;
   sub?: string;
-  role?: string;
 }
 
 interface AuthContextType {
@@ -55,21 +54,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await getUser();
         setUser(userData ?? null);
 
-        // Fetch database role in the background (non-blocking)
-        getAccessToken().then((token) => {
-          if (!token) return;
-          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-          fetch(`${API_URL}/api/auth/me`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-            .then((res) => (res.ok ? res.json() : null))
-            .then((dbProfile) => {
-              if (dbProfile?.role) {
-                setUser((prev) => (prev ? { ...prev, role: dbProfile.role } : prev));
-              }
-            })
-            .catch(() => {});
-        });
       }
     } catch (error) {
       console.error('Auth initialization failed:', error);
@@ -80,15 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function handleLogin(returnTo = '/') {
+  const handleLogin = useCallback(async (returnTo = '/') => {
     try {
       await auth0Login(returnTo);
     } catch (error) {
       console.error('Login failed:', error);
     }
-  }
+  }, []);
 
-  async function handleLogout() {
+  const handleLogout = useCallback(async () => {
     try {
       await auth0Logout();
       setUser(null);
@@ -96,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Logout failed:', error);
     }
-  }
+  }, []);
 
   return (
     <AuthContext.Provider

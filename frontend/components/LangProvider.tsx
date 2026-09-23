@@ -18,6 +18,10 @@ export function LangProvider({ children }: { children: ReactNode }) {
     if (stored === 'ko' || stored === 'en') setLangState(stored);
   }, []);
 
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   const setLang = (l: Lang) => {
     setLangState(l);
     localStorage.setItem('tc-lang', l);
@@ -40,16 +44,18 @@ export function useLang(): LangContextValue {
 export function LangToggle() {
   const { lang, setLang } = useLang();
   return (
-    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.07)', borderRadius: 20, padding: '2px 3px', gap: 2 }}>
+    <div role="group" aria-label={lang === 'ko' ? '언어 선택' : 'Language'} style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.07)', borderRadius: 20, padding: '2px 3px', gap: 2 }}>
       {(['ko', 'en'] as Lang[]).map(l => (
         <button
           key={l}
           onClick={() => setLang(l)}
+          aria-label={l === 'ko' ? '한국어 KO' : 'English EN'}
+          aria-pressed={lang === l}
           style={{
             padding: '3px 10px', borderRadius: 16, border: 'none', cursor: 'pointer',
             fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.04em',
             background: lang === l ? '#1a1a2e' : 'transparent',
-            color: lang === l ? 'white' : '#888',
+            color: lang === l ? 'white' : '#595959',
             transition: 'all 0.18s',
           }}
         >

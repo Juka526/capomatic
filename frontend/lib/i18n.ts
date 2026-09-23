@@ -3,7 +3,6 @@ export type Lang = 'ko' | 'en';
 export const translations = {
   ko: {
     // Nav
-    admin: '관리자',
     myJobs: '내 작업',
     login: '로그인',
     logout: '로그아웃',
@@ -22,8 +21,17 @@ export const translations = {
     detectedKey: '감지된 키:',
     uploadFirst: '먼저 악보를 업로드하세요',
     onlyPngJpg: 'PNG, JPG 파일만 지원됩니다.',
-    fileTooLarge: '파일 크기가 8MB를 초과합니다.',
+    fileTooLarge: '파일 크기가 20MB를 초과합니다.',
+    uploadTooLarge: '이미지 크기나 해상도가 허용 범위를 초과합니다. 20MB 이하, 5천만 픽셀 이하의 이미지를 사용하세요.',
+    invalidUpload: '이미지를 처리할 수 없습니다. 손상되지 않은 정적 PNG 또는 JPEG 이미지를 선택하세요.',
+    ocrBusy: '현재 악보 감지 요청이 많습니다. 잠시 후 다시 시도하세요.',
+    detectionExpired: '이전 감지 결과가 만료되었습니다. 악보를 다시 업로드하세요.',
     failedConnect: '서버에 연결할 수 없습니다.',
+    closeMenu: '메뉴 닫기',
+    transposeDown: '반음 내리기',
+    transposeUp: '반음 올리기',
+    capoSelector: '카포 프렛 선택',
+    selectCapoFret: (n: number) => `카포 ${n}프렛 선택`,
 
     // Fretboard
     capo: '카포',
@@ -43,6 +51,8 @@ export const translations = {
     viewOriginal: '원본 보기',
     viewRendered: '결과 보기',
     downloadPng: 'PNG 다운로드',
+    originalSheetAlt: '업로드한 원본 코드 악보',
+    renderedSheetAlt: (mode: string) => `${mode === 'replace' ? '교체' : '위에 표시'} 방식으로 전조한 코드 악보`,
 
     // Empty state
     featureUploadLabel: '악보 업로드',
@@ -53,19 +63,11 @@ export const translations = {
     featureDownloadDesc: '변환된 악보를 PNG 이미지로 받으세요',
     uploadYourScore: '악보를 업로드하세요',
     uploadCta: '악보 이미지 업로드하기',
-    uploadHint: 'PNG · JPG 지원 · 최대 8MB',
+    uploadHint: 'PNG · JPG 지원 · 최대 20MB',
     workflowStepUpload: '업로드',
     workflowStepTranspose: '전조',
     workflowStepDownload: '다운로드',
     workflowCaption: '',
-    gptHybridLabel: 'AI로 더욱 정확하게',
-    gptHybridDesc: '',
-    gptHybridButton: 'AI로 개선',
-    gptHybridRefining: 'AI 개선 중…',
-    gptHybridApplied: 'AI 개선 완료',
-    gptHybridUnavailable: '백엔드에 AI가 설정되어 있지 않습니다.',
-    gptHybridNoChange: 'AI가 확인했지만 새 변경 사항은 없습니다.',
-    gptHybridChanged: (added: number, corrected: number) => `누락 ${added}개 추가 · 코드 ${corrected}개 수정`,
 
     // Guide
     guide: '사용법',
@@ -75,6 +77,8 @@ export const translations = {
 
     // Footer
     footerTagline: '코드 악보 변환기 & 카포 도구',
+    privacy: '개인정보 처리 안내',
+    terms: '이용약관',
 
     // History
     historyTitle: '내 작업',
@@ -94,42 +98,10 @@ export const translations = {
     untitled: '제목 없음',
     loadingDots: '로딩 중…',
 
-    // Admin
-    adminDashboard: '관리자 대시보드',
-    overview: '개요',
-    popularSongs: '인기 곡',
-    users: '사용자',
-    totalUsers: '전체 사용자',
-    totalJobsStat: '전체 작업',
-    cachedItems: '캐시 항목',
-    cacheHitRate: '캐시 적중률',
-    avgTime: '평균 시간',
-    top5Songs: '인기 곡 TOP 5',
-    viewAll: '전체 보기',
-    noSongs: '아직 처리된 곡이 없습니다',
-    popularRanking: '인기 곡 순위',
-    rank: '순위',
-    song: '곡명',
-    original: '원래 키',
-    target: '변환 키',
-    semitonesCol: '반음',
-    requests: '요청 수',
-    uniqueUsers: '사용자 수',
-    lastRequested: '마지막 요청',
-    allUsers: '전체 사용자',
-    email: '이메일',
-    name: '이름',
-    role: '역할',
-    created: '가입일',
-    lastLogin: '마지막 로그인',
-    never: '없음',
-    loadingDashboard: '대시보드 로딩 중…',
-    failedLoad: '데이터를 불러오지 못했습니다',
   },
 
   en: {
     // Nav
-    admin: 'Admin',
     myJobs: 'My Jobs',
     login: 'Login',
     logout: 'Logout',
@@ -148,8 +120,17 @@ export const translations = {
     detectedKey: 'Detected key:',
     uploadFirst: 'Upload a sheet first',
     onlyPngJpg: 'Only PNG and JPG files are supported.',
-    fileTooLarge: 'File size exceeds 8MB limit.',
+    fileTooLarge: 'File size exceeds the 20MB limit.',
+    uploadTooLarge: 'The image is too large or has too many pixels. Use an image under 20MB and 50 megapixels.',
+    invalidUpload: 'This image could not be processed. Choose a valid, static PNG or JPEG image.',
+    ocrBusy: 'Chord detection is busy. Please try again shortly.',
+    detectionExpired: 'The previous detection has expired. Upload the sheet again.',
     failedConnect: 'Failed to connect to server.',
+    closeMenu: 'Close menu',
+    transposeDown: 'Transpose down one semitone',
+    transposeUp: 'Transpose up one semitone',
+    capoSelector: 'Capo fret selector',
+    selectCapoFret: (n: number) => `Select capo fret ${n}`,
 
     // Fretboard
     capo: 'Capo',
@@ -169,6 +150,8 @@ export const translations = {
     viewOriginal: 'View Original',
     viewRendered: 'View Rendered',
     downloadPng: 'Download PNG',
+    originalSheetAlt: 'Original uploaded chord sheet',
+    renderedSheetAlt: (mode: string) => `Transposed chord sheet in ${mode} mode`,
 
     // Empty state
     featureUploadLabel: 'Upload Sheet',
@@ -179,19 +162,11 @@ export const translations = {
     featureDownloadDesc: 'Get your transposed sheet as a PNG image',
     uploadYourScore: 'Upload Your Music Score',
     uploadCta: 'Upload Chord Sheet',
-    uploadHint: 'PNG · JPG supported · max 8MB',
+    uploadHint: 'PNG · JPG supported · max 20MB',
     workflowStepUpload: 'Upload',
     workflowStepTranspose: 'Transpose',
     workflowStepDownload: 'Download',
     workflowCaption: '',
-    gptHybridLabel: 'AI OCR',
-    gptHybridDesc: '',
-    gptHybridButton: 'Improve with AI',
-    gptHybridRefining: 'Improving…',
-    gptHybridApplied: 'AI improved',
-    gptHybridUnavailable: 'AI is not configured on the backend.',
-    gptHybridNoChange: 'AI checked the sheet; no new changes found.',
-    gptHybridChanged: (added: number, corrected: number) => `Added ${added} missing · corrected ${corrected} chords`,
 
     // Guide
     guide: 'How to Use',
@@ -201,6 +176,8 @@ export const translations = {
 
     // Footer
     footerTagline: 'Chord Sheet Transposer & Capo Tool',
+    privacy: 'Privacy',
+    terms: 'Terms',
 
     // History
     historyTitle: 'My Jobs',
@@ -220,37 +197,6 @@ export const translations = {
     untitled: 'Untitled',
     loadingDots: 'Loading…',
 
-    // Admin
-    adminDashboard: 'Admin Dashboard',
-    overview: 'Overview',
-    popularSongs: 'Popular Songs',
-    users: 'Users',
-    totalUsers: 'Total Users',
-    totalJobsStat: 'Total Jobs',
-    cachedItems: 'Cached Items',
-    cacheHitRate: 'Cache Hit Rate',
-    avgTime: 'Avg Time',
-    top5Songs: 'Top 5 Popular Songs',
-    viewAll: 'View All',
-    noSongs: 'No songs processed yet',
-    popularRanking: 'Popular Songs Ranking',
-    rank: '#',
-    song: 'Song',
-    original: 'Original',
-    target: 'Target',
-    semitonesCol: 'Semitones',
-    requests: 'Requests',
-    uniqueUsers: 'Users',
-    lastRequested: 'Last Requested',
-    allUsers: 'All Users',
-    email: 'Email',
-    name: 'Name',
-    role: 'Role',
-    created: 'Created',
-    lastLogin: 'Last Login',
-    never: 'Never',
-    loadingDashboard: 'Loading dashboard…',
-    failedLoad: 'Failed to load admin data',
   },
 };
 

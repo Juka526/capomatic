@@ -40,6 +40,7 @@ export default function LoginButton() {
           padding: 0,
         }}
         title={t.login}
+        aria-label={t.login}
       >
         <UserRound size={16} color="white" strokeWidth={2} />
       </button>
@@ -52,6 +53,9 @@ export default function LoginButton() {
     <div ref={ref} style={{ position: 'relative' }}>
       <button
         onClick={() => setOpen(!open)}
+        aria-label={user?.name || user?.email || t.login}
+        aria-expanded={open}
+        aria-haspopup="menu"
         style={{
           width: 32, height: 32, borderRadius: '50%',
           border: 'none', cursor: 'pointer', padding: 0,
@@ -68,7 +72,7 @@ export default function LoginButton() {
       </button>
 
       {open && (
-        <div className="user-dropdown">
+        <div className="user-dropdown" role="menu">
           <div style={{ padding: '10px 16px 8px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
             <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: '#1a1a2e' }}>{user?.name || t.login}</p>
             {user?.email && (
@@ -77,6 +81,7 @@ export default function LoginButton() {
           </div>
           <button
             onClick={() => { setOpen(false); logout(); }}
+            role="menuitem"
             style={{
               display: 'block', width: '100%', textAlign: 'left',
               background: 'none', border: 'none', cursor: 'pointer',

@@ -1,12 +1,16 @@
 # Capomatic Testing Checklist
 
+The authoritative V1 scope and acceptance thresholds are in
+[`V1_RELEASE_PLAN.md`](V1_RELEASE_PLAN.md).
+
 ## Prerequisites
 
 - [ ] Backend running: `uvicorn backend.api.main:app --port 8000`
 - [ ] Frontend running: `cd frontend && npm run dev`
 - [ ] At least one PNG or JPEG test image
 
-PostgreSQL, Auth0, and `TEST_TOKEN` are required only for the optional auth/admin checks.
+Auth0 credentials and `TEST_TOKEN` are required for live login verification. PostgreSQL is not
+part of V1.
 
 ## 1. Public pipeline
 
@@ -15,7 +19,7 @@ PostgreSQL, Auth0, and `TEST_TOKEN` are required only for the optional auth/admi
 - [ ] The detected key and chord boxes appear.
 - [ ] Changing capo position updates the target key.
 - [ ] Replace and Above rendering both work.
-- [ ] AI refinement works when `OPENAI_API_KEY` is configured.
+- [ ] Paid GPT refinement is absent from the UI and both backend entry points reject it.
 - [ ] Download saves the active rendered image.
 - [ ] Invalid or oversized uploads show an error.
 
@@ -26,21 +30,20 @@ PostgreSQL, Auth0, and `TEST_TOKEN` are required only for the optional auth/admi
 - [ ] Deleting a history item removes it from `localStorage`.
 - [ ] Korean/English switching works.
 
-## 3. Optional auth/admin
+## 3. V1 login
 
 - [ ] Login redirects through Auth0 and returns to the app.
-- [ ] `GET /api/auth/me` returns the current database-backed user.
-- [ ] Non-admin users cannot open `/admin/dashboard`.
-- [ ] `GET /api/admin/users` returns users for an admin token.
+- [ ] `GET /api/auth/me` returns verified Auth0 identity claims without a database.
 - [ ] Logout clears the Auth0 session.
+- [ ] `/admin/dashboard` is not found and administrator APIs return `410 Gone`.
 
 ## 4. Security and configuration
 
 - [ ] `/api/auth/me` rejects unauthenticated requests.
-- [ ] `/api/admin/users` rejects non-admin requests.
+- [ ] `/api/admin/users` and `/api/auth/admin-test` return `410 Gone`.
 - [ ] Production CORS allows only `https://capomatic.vercel.app`.
-- [ ] Public routes still work when `DATABASE_URL` is absent.
-- [ ] Database-backed routes return 503 when the database is not configured.
+- [ ] Public routes and `/api/auth/me` work when `DATABASE_URL` is absent.
+- [ ] Invalid, corrupt, unsupported, oversized, and excessive-dimension images return 4xx.
 
 ## Automated checks
 
@@ -48,12 +51,11 @@ PostgreSQL, Auth0, and `TEST_TOKEN` are required only for the optional auth/admi
 # Unit tests; live integration tests skip without TEST_TOKEN.
 python -m pytest
 
-# Frontend type and production build checks.
+# Frontend tests, type check, and production build.
 cd frontend
-npx tsc --noEmit
-npm run build
+npm run check
 
-# Optional live auth/admin integration checks.
+# Live Auth0 integration checks.
 TEST_API_URL=http://localhost:8000 TEST_TOKEN="eyJ..." \
-  python -m pytest tests/integration -v
+  python -m pytest tests/integration/test_auth_flow.py -v
 ```
