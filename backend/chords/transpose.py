@@ -67,12 +67,16 @@ def transpose_chord(
     """Transpose *chord* by *semitones* and return a compact chord string.
 
     Both the root and slash bass are transposed independently.
-    Parentheses are never included in the output; extensions are written
-    compactly (e.g. "7sus4" not "7(sus4)").
+    Extensions are written compactly (e.g. "7sus4" not "7(sus4)"), except an
+    extension starting with an accidental directly after the root, which
+    stays wrapped so "A(b5)" is not read as an A-flat chord.
     """
     prefer = _key_preference(target_key)
     new_root = transpose_note(chord.root, semitones, prefer)
-    result = new_root + chord.quality + chord.extensions
+    suffix = chord.quality + chord.extensions
+    if not chord.quality and chord.extensions[:1] in ("b", "#"):
+        suffix = f"({chord.extensions})"
+    result = new_root + suffix
     if chord.bass is not None:
         result += "/" + transpose_note(chord.bass, semitones, prefer)
     return result

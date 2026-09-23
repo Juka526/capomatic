@@ -157,3 +157,19 @@ class TestComputeTargetKey:
     def test_invalid_note_raises(self):
         with pytest.raises(ValueError):
             compute_target_key("Z", 3)
+
+
+@pytest.mark.parametrize("text,semitones,expected", [
+    ("G(b5)", 2, "A(b5)"),     # unwrapped "Ab5" would be an A-flat chord
+    ("C(#5)", 2, "D(#5)"),
+    ("Em(b5)", 2, "F#mb5"),    # the quality already separates root and alteration
+    ("F#m7(b5)", 2, "G#m7b5"),
+    ("Gb(b5)", 2, "G#(b5)"),
+])
+def test_accidental_extension_after_bare_root_stays_wrapped(text, semitones, expected):
+    assert transpose_chord(parse_chord(text), semitones) == expected
+
+
+def test_bare_root_flat_five_is_not_parsed_as_flat_root():
+    chord = parse_chord("G(b5)")
+    assert (chord.root, chord.extensions) == ("G", "b5")

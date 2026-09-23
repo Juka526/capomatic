@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+import json
 from unittest.mock import patch
 
 import pytest
@@ -510,9 +511,30 @@ class TestChordCorrections:
             "bbox": [1, 3, 30, 40],
         }]
 
+    @pytest.mark.parametrize("marker", ["open", "close", "both"])
+    def test_keeps_only_valid_parenthesis_style(self, marker):
+        value = (
+            '[{"text":"Am7","bbox":null,'
+            f'"style":{{"parenthesis":"{marker}","font_size":999}}}}]'
+        )
+
+        result = _parse_chords_override(value, (100, 100))
+
+        assert result[0]["style"] == {"parenthesis": marker}
+
+    def test_style_without_parenthesis_is_dropped(self):
+        result = _parse_chords_override(
+            '[{"text":"Am7","bbox":null,"style":{"parenthesis":null}}]',
+            (100, 100),
+        )
+
+        assert "style" not in result[0]
+
     @pytest.mark.parametrize("value", [
         '{}',
         '["Am"]',
+        '[{"text":"Am","bbox":null,"style":"both"}]',
+        '[{"text":"Am","bbox":null,"style":{"parenthesis":"left"}}]',
         '[{"text":"","bbox":null}]',
         '[{"text":"not-a-chord","bbox":null}]',
         '[{"text":"Am","bbox":[0,0,101,10]}]',
@@ -595,3 +617,71 @@ def test_auth_me_returns_verified_identity_without_database():
 def test_admin_endpoints_are_retired_in_v1(path):
     resp = client.get(path)
     assert resp.status_code == 410
+
+
+# ---------------------------------------------------------------------------
+# Parenthesis style: detection -> transposition -> Replace/Above rendering
+# ---------------------------------------------------------------------------
+
+class TestParenthesisStyleRoundTrip:
+    def teardown_method(self):
+        _detection_cache.clear()
+
+    def _detect(self):
+        raw_items = [
+            {"text": "(Am7bs)", "confidence": 0.95, "bbox": [20, 40, 90, 60]},
+            {"text": "C(Am7G)", "confidence": 0.95, "bbox": [120, 40, 240, 60]},
+        ]
+        with patch(
+            "backend.ocr.hybrid_detect.run_ocr_paddle",
+            return_value=(raw_items, {}),
+        ):
+            resp = client.post(
+                "/detect",
+                files={"image": ("test.png", _png_bytes(300), "image/png")},
+                data={"original_key": "C"},
+            )
+        assert resp.status_code == 200
+        return resp.json()
+
+    def _rendered_labels(self, detection_id, mode, chords_override=None):
+        drawn: list[str] = []
+
+        def fake_draw(draw, x, y, transposed, font, small_font, fill):
+            drawn.append(transposed)
+            return 0
+
+        data = {"detection_id": detection_id, "semitones": "2", "mode": mode}
+        if chords_override is not None:
+            data["chords_override"] = chords_override
+        with patch("backend.overlay.render._draw_chord_text", side_effect=fake_draw):
+            resp = client.post("/render", data=data)
+        assert resp.status_code == 200
+        return drawn
+
+    def test_detect_exposes_parenthesis_style(self):
+        body = self._detect()
+
+        assert [(c["text"], (c["style"] or {}).get("parenthesis")) for c in body["chords"]] == [
+            ("Am7b5", "both"),
+            ("C", None),
+            ("Am7", "open"),
+            ("G", "close"),
+        ]
+
+    @pytest.mark.parametrize("mode", ["replace", "above"])
+    @pytest.mark.parametrize("use_override", [False, True])
+    def test_render_draws_transposed_parentheses(self, mode, use_override):
+        body = self._detect()
+        # The UI sends its (possibly edited) chords back as corrections.
+        override = (
+            json.dumps([
+                {"text": c["text"], "bbox": c["bbox"], "style": c["style"]}
+                for c in body["chords"]
+            ])
+            if use_override else None
+        )
+
+        drawn = self._rendered_labels(body["detection_id"], mode, override)
+
+        assert sorted(drawn) == sorted(["(Bm7b5)", "D", "(Bm7", "A)"])
