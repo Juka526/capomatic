@@ -64,3 +64,19 @@ jobs:
           docker logs capomatic-ci
           docker stop capomatic-ci
           exit 1
+      # /health does not import paddle; only a real detection proves the image
+      # can run OCR (a missing libgomp1 once passed every step above).
+      - name: Container runs one real detection
+        run: |
+          docker run --rm --detach --name capomatic-ocr --publish 7860:7860 capomatic-v1-ci
+          for _ in $(seq 1 60); do
+            curl --fail --silent http://localhost:7860/health && break
+            sleep 5
+          done
+          status=$(curl --silent --output detect.json --write-out '%{http_code}' \
+            --max-time 240 -F "image=@fixtures/images/친구야.jpeg" http://localhost:7860/detect)
+          docker logs capomatic-ocr > ocr-container.log 2>&1 || true
+          docker stop capomatic-ocr
+          echo "HTTP $status"
+          if [ "$status" != "200" ]; then tail -n 40 ocr-container.log; exit 1; fi
+          python3 -c "import json; n = len(json.load(open('detect.json'))['chords']); print(f'{n} chords'); assert n > 0"
