@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     env:
-      CANDIDATE_SHA: ${{ inputs.candidate_sha || '682c9a069a59f1bbfe18d3afd7f76e92481428f1' }}
+      INPUT_SHA: ${{ inputs.candidate_sha }}
       ORIGIN: https://capomatic.vercel.app
       API: http://127.0.0.1:7860
     steps:
@@ -40,6 +40,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: harness
+
+      # Manual runs use the input; pushes use .github/canary/candidate.txt so the
+      # tested SHA is recorded in history next to its results.
+      - name: Resolve candidate SHA
+        run: |
+          sha="${INPUT_SHA:-$(tr -d '[:space:]' < harness/.github/canary/candidate.txt)}"
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo "bad candidate sha: $sha"; exit 1; }
+          echo "CANDIDATE_SHA=$sha" >> "$GITHUB_ENV"
 
       - name: Check out exact candidate
         uses: actions/checkout@v4
