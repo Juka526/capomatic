@@ -645,3 +645,38 @@ class TestSmallGlyphConfusions:
     ])
     def test_rejected(self, text):
         assert _filter_one(text) == []
+
+
+class TestShortRescuedRoots:
+    @staticmethod
+    def _page(extra):
+        chords = [
+            {"text": t, "confidence": 1.0, "bbox": [i * 60, 100, i * 60 + 40, 124]}
+            for i, t in enumerate(["G", "D/F#", "Em7", "C", "Am7"])
+        ]
+        return chords + [extra]
+
+    def test_short_low_confidence_root_is_dropped(self):
+        noise = {"text": "F", "confidence": 0.6, "bbox": [400, 130, 410, 138]}
+
+        result = filter_candidates(self._page(noise))
+
+        assert "F" not in [i["text"] for i in result]
+
+    @pytest.mark.parametrize("extra", [
+        {"text": "F", "confidence": 0.99, "bbox": [400, 130, 410, 138]},  # confident: kept
+        {"text": "F", "confidence": 0.6, "bbox": [400, 100, 415, 122]},   # full height: kept
+        {"text": "F7", "confidence": 0.6, "bbox": [400, 130, 410, 138]},  # not a bare root: kept
+    ])
+    def test_other_detections_are_kept(self, extra):
+        result = filter_candidates(self._page(extra))
+
+        assert extra["text"] in [i["text"] for i in result]
+
+    def test_too_few_items_for_a_median_keeps_everything(self):
+        items = [
+            {"text": "G", "confidence": 1.0, "bbox": [0, 100, 40, 124]},
+            {"text": "F", "confidence": 0.6, "bbox": [60, 130, 70, 138]},
+        ]
+
+        assert [i["text"] for i in filter_candidates(items)] == ["G", "F"]
