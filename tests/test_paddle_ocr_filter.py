@@ -680,3 +680,13 @@ class TestShortRescuedRoots:
         ]
 
         assert [i["text"] for i in filter_candidates(items)] == ["G", "F"]
+
+
+@pytest.mark.parametrize("text", ["G7", "G9", "G11", "G13", "C69", "C6", "C2", "Am7b5", "C7#11", "G7b13", "Cm7b6"])
+def test_chord_candidate_accepts_musical_extension_degrees(text):
+    assert is_chord_candidate(text)
+
+
+@pytest.mark.parametrize("text", ["G1", "C3", "C8", "C10", "Cm12", "D7b8"])
+def test_chord_candidate_rejects_non_musical_extension_numbers(text):
+    assert not is_chord_candidate(text)
