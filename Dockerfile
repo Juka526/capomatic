@@ -7,7 +7,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-ENV CHORDTAYLOR_OCR_DET_MODEL=mobile \
+# v6-medium matches production and regressed 0/16 canonical sheets against the
+# frozen production baseline in the CI canary (mobile: 11/16). See #9 and #4.
+ENV CHORDTAYLOR_OCR_DET_MODEL=v6-medium \
     PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True \
     PADDLE_MAX_STITCHED_PIXELS=900000 \
     PADDLE_STITCH_MAX_SAFE_PIXELS=900000 \
