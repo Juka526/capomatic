@@ -84,7 +84,9 @@ _DIRECTION_PROXIMITY_Y = 30   # px: vertical distance to direction token center
 # Volta bracket prefix: matches "1.", "2.", "|3.", etc. at the start of OCR text.
 # These appear when PaddleOCR reads volta bracket endings (1st/2nd/3rd endings)
 # as a single text block, e.g. "2. Bb/D C/E F/A D.S." or "|3.Bb/D".
-_VOLTA_PREFIX_RE = re.compile(r'^\|?\d+\.?\s*')
+# A repeat barline before the volta number can be read as one or more
+# pipes ("||2. Eb").
+_VOLTA_PREFIX_RE = re.compile(r'^\|*\s*\d+\.?\s*')
 _SECTION_PREFIX_RE = re.compile(
     r'^\s*\[(?:INTRO|VERSE|CHORUS|BRIDGE|OUTRO)\]\s*(.*)$',
     re.IGNORECASE,

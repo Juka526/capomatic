@@ -438,6 +438,17 @@ class TestRecoverCandidates:
         assert parse_count == 0
         assert split_count == 1
 
+    @pytest.mark.parametrize("raw_text,expected", [
+        ("||2. Eb", ["Eb"]),     # repeat barline read as two pipes
+        ("|2. Eb", ["Eb"]),
+        ("|||3.Bb/D", ["Bb/D"]),
+        ("||2.", []),            # volta number alone is not a chord
+    ])
+    def test_volta_after_repeat_barline_keeps_chord(self, raw_text, expected):
+        raw = [{"raw_text": raw_text, "confidence": 0.85, "bbox": [900, 100, 980, 130]}]
+
+        assert [item["text"] for item in _apply_direction_filter(raw)] == expected
+
     @pytest.mark.parametrize("raw_text", [
         "2. Bb/D C/E F/A D.S.",
         "Bb/D C/E F/A D.S.",
