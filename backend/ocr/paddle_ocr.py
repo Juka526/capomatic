@@ -193,6 +193,20 @@ def _split_multi_token(raw_text: str, item: dict) -> list[dict]:
     return recovered
 
 
+_LYRIC_CHAR_RE = re.compile(r"[\u3131-\u318e\uac00-\ud7a3\u4e00-\u9fff]")
+_LYRIC_LINE_MIN_TOKENS = 2
+
+
+def _same_text_line(a: list[int], b: list[int]) -> bool:
+    """True when each box's vertical centre lies inside the other's extent.
+
+    Mutual containment keeps a tall two-line lyric block from claiming the
+    chord line just below it.
+    """
+    centre_a, centre_b = (a[1] + a[3]) / 2, (b[1] + b[3]) / 2
+    return b[1] <= centre_a <= b[3] and a[1] <= centre_b <= a[3]
+
+
 def _apply_direction_filter(
     raw_items: list[dict],
     image_width: int | None = None,
@@ -269,7 +283,17 @@ def _apply_direction_filter(
             "bbox":       item["bbox"],
         })
 
-    return chords
+    # Korean lyrics are often misread as Hangul/CJK fragments; a Latin letter
+    # sharing a text line with several of them is part of the lyric, not a
+    # chord (e.g. "A" or "A 2" amid misread syllables).
+    lyric_bboxes = [
+        item["bbox"] for item in raw_items if _LYRIC_CHAR_RE.search(item["raw_text"])
+    ]
+    return [
+        chord for chord in chords
+        if sum(_same_text_line(chord["bbox"], b) for b in lyric_bboxes) < _LYRIC_LINE_MIN_TOKENS
+    ]
+
 
 
 def _sort_reading_order(items: list[dict]) -> list[dict]:
