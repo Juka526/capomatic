@@ -173,3 +173,17 @@ def test_accidental_extension_after_bare_root_stays_wrapped(text, semitones, exp
 def test_bare_root_flat_five_is_not_parsed_as_flat_root():
     chord = parse_chord("G(b5)")
     assert (chord.root, chord.extensions) == ("G", "b5")
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("G7(9)", "A7(9)"),     # unwrapped "A79" would merge two numbers
+    ("Dm7(11)", "Em7(11)"),
+    ("G7(b9)", "A7b9"),
+    ("C#o7", "D#dim7"),
+    ("Co7", "Ddim7"),
+    ("Bbo", "Cdim"),
+    ("C°7", "Ddim7"),
+    ("Cø7", "Dm7b5"),
+])
+def test_extended_notation_transposes(text, expected):
+    assert transpose_chord(parse_chord(text), 2) == expected
