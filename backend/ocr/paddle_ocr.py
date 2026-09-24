@@ -271,28 +271,33 @@ def _apply_direction_filter(
 
 
 def _sort_reading_order(items: list[dict]) -> list[dict]:
-    """Sort OCR chord items by staff row, then left-to-right within each row."""
+    """Sort OCR chord items by staff row, then left-to-right within each row.
+
+    An item joins the current row only when its vertical centre falls inside
+    that row's extent. Comparing against the row's top with a fixed
+    threshold let a stray token just above a chord row (lyrics, notes)
+    split the row, emitting its right-hand chords before its left-hand ones.
+    """
     boxed = [item for item in items if item.get("bbox") is not None]
     unboxed = [item for item in items if item.get("bbox") is None]
     if not boxed:
         return items
 
-    avg_h = sum(item["bbox"][3] - item["bbox"][1] for item in boxed) / len(boxed)
-    threshold = max(20, int(avg_h * 1.5))
-    rows: list[list[dict]] = []
-    for item in sorted(boxed, key=lambda i: (i["bbox"][1], i["bbox"][0])):
-        if not rows:
-            rows.append([item])
-            continue
-        row_min_y = min(i["bbox"][1] for i in rows[-1])
-        if item["bbox"][1] - row_min_y <= threshold:
-            rows[-1].append(item)
+    rows: list[dict] = []
+    for item in sorted(boxed, key=lambda i: ((i["bbox"][1] + i["bbox"][3]) / 2, i["bbox"][0])):
+        _, top, _, bottom = item["bbox"]
+        centre = (top + bottom) / 2
+        if rows and rows[-1]["top"] <= centre <= rows[-1]["bottom"]:
+            row = rows[-1]
+            row["items"].append(item)
+            row["top"] = min(row["top"], top)
+            row["bottom"] = max(row["bottom"], bottom)
         else:
-            rows.append([item])
+            rows.append({"items": [item], "top": top, "bottom": bottom})
     return [
         item
         for row in rows
-        for item in sorted(row, key=lambda i: i["bbox"][0])
+        for item in sorted(row["items"], key=lambda i: i["bbox"][0])
     ] + unboxed
 
 
