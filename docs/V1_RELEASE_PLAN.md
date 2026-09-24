@@ -102,8 +102,11 @@ future scope, not a reason to weaken V1.
 
 - `python -m pytest -q`, `npm run check`, `npm audit --audit-level=high`, and
   `pip-audit -r requirements.txt` pass from cleanly installed pinned dependencies.
-- The root Docker image builds from `requirements.txt`, reports the pinned PaddleOCR version, and
-  starts successfully. The root `Dockerfile` is the only backend deployment definition.
+- The root Docker image builds from `requirements.txt`, reports the pinned PaddleOCR version,
+  starts successfully, and **completes one real `/detect`**. `/health` alone is not enough: it
+  does not import paddle, and an image missing `libgomp1` once passed build, version, and health
+  checks while every `/detect` returned 500 (fixed by #22). The root `Dockerfile` is the only backend
+  deployment definition.
 - GitHub branch protection requires the backend, frontend, and Docker CI jobs on the candidate SHA. No
   secret, `.env`, local artifact, or unrelated user change is included.
 
@@ -114,7 +117,9 @@ The canonical regression corpus is every JSON file in `fixtures/labels` and its 
 regression guard rather than independent evidence of general accuracy.
 
 Run `scripts/eval_ocr.py` from a Seoul client against a ready private HF canary on the same
-`cpu-basic`, single-replica Docker/runtime configuration as production. Use `--engine paddle`, a
+`cpu-basic`, single-replica Docker/runtime configuration as production. Until an HF canary exists
+(see *Constraints and decisions*), the GitHub Actions CI canary is the accepted substitute for the
+correctness and per-sheet comparison parts of this gate. Its timing is informational only. Use `--engine paddle`, a
 240-second request timeout, production Vercel Origin, `--render-check`, the production API or a
 frozen production report as baseline, `--deployment-sha`, and `--report-json`. The script warms the
 first sheet once, then measures every selected sheet sequentially once. Cold-start timing is
@@ -189,6 +194,32 @@ public core journey and produces an openable PNG.
 - Perform and time one canary rollback rehearsal using a forward revert/runtime snapshot and the
   prior frontend deployment. Health, CORS, detect, and render must recover within 15 minutes.
 
+## Constraints and decisions (2026-09-24/25)
+
+- **HF requires PRO for a new Docker Space.** `POST /api/repos/create` returns 402, so the private
+  HF canary (#4) cannot be created on the free account. The product owner chose the GitHub Actions
+  CI canary (PR #21) as the substitute. It builds the candidate's `Dockerfile`, runs it with
+  `--cpus=2`, and runs smoke, `eval_ocr.py --baseline-report`, and `load_admission.py`. It **cannot**
+  prove HF runtime identity, memory, or timing. The 2-vCPU runner is about 2–3× slower than HF.
+  Whether runner results may stand in for HF capacity and timing is an **open decision**.
+- **The production HF Space is not to be pushed to.** Free-account pushes risk pausing the Space.
+  The final production backend deployment method (HF PRO, a free-account push, or moving the backend)
+  is an open product-owner decision for #8.
+- **Docker gate gap (fixed by #22).** V1 removed `gcc`/`libpq-dev`, and with them the `libgomp1`
+  that `libpaddle.so` needs. The CI `docker` job checked only build, versions, and `/health`, so it
+  passed while OCR was broken. CI now runs one real `/detect`.
+- **OCR detector.** Production runs `CHORDTAYLOR_OCR_DET_MODEL=v6-medium` as a Space override; the
+  `Dockerfile` defaulted to `mobile`. On the same candidate (`9048dd3`), the CI canary against the
+  frozen production baseline showed **mobile 11/16 sheets regressed, v6-medium 0/16**, with
+  `children_of_light` exact only on v6-medium. PR #27 makes v6-medium the default and awaits
+  product-owner approval. It supersedes an earlier local-only "stay with mobile" decision. Local
+  detection-only timing slightly favors mobile (10.1 s vs 11.1 s mean); end-to-end runner timing
+  favors v6-medium (34.1 s vs 42.6 s).
+- **Coverage floor versus production.** The absolute floor (98.06%) is higher than production's
+  measured 97.75% (frozen baseline `bbb7619`, 2026-09-24). The floor still applies to the candidate.
+- **Vercel does not auto-promote.** With `autoAssignCustomDomains=false`, merging to `main` builds but
+  does not change `capomatic.vercel.app`. Production changes only by manual promotion.
+
 ## Execution order
 
 1. Finish local implementation, automated checks, security audits, and Docker parity.
@@ -207,14 +238,14 @@ Status values are `PASS`, `FAIL`, `BLOCKED`, or `PENDING`. A local pass is not a
 | --- | --- | --- |
 | V1 scope retirement and upload safety | PASS (local) | Automated API tests; deployment smoke pending |
 | Local backend/frontend/security checks | PASS (working tree) | 409 passed, 11 skipped from a clean tracked-only export; frontend check and both dependency audits pass; [`ISSUE_10_RC_EVIDENCE.md`](ISSUE_10_RC_EVIDENCE.md); exact candidate SHA rerun still required |
-| GitHub required CI | PENDING | Candidate SHA not created |
-| Docker build and dependency parity | BLOCKED | Candidate image not built; the audit workstation has no container runtime, so the build, version assertion, and startup step are all unverified ([`ISSUE_10_RC_EVIDENCE.md`](ISSUE_10_RC_EVIDENCE.md)) |
-| OCR regression corpus | BLOCKED | Canary not deployed; candidate baseline report not yet recorded |
-| Independent unseen sheet | FAIL | `IMG＿7710.png` was frozen and independently labeled before output; the local candidate detected 56/60 and failed exact count/order. This sheet is now a development sample, so a different unseen sheet is required after correction. |
+| GitHub required CI | PASS (interim) | Branch protection requires `backend`, `frontend`, `docker` on `main`. All green on `682c9a0` (#10). Rerun and record on the final candidate SHA. |
+| Docker build and dependency parity | FAIL → fix pending | The image built and served `/health`, but every `/detect` returned 500 (missing `libgomp1`; CI canary run `35964776229`). #22 adds `libgomp1` and a real-`/detect` CI step (`HTTP 200`, 36 chords). Merge #22, then rerun on the final candidate. |
+| OCR regression corpus | PENDING | Frozen production baseline recorded (`bbb7619`, 97.75% / 89.43%). CI canary on `9048dd3`: mobile regresses 11/16 sheets, v6-medium 0/16 (98.78% / 89.72%). The detector default (#27) and a final-candidate rerun are pending. `walk_by_faith` exceeds its 50–70 range with v6-medium, exactly as production does. |
+| Independent unseen sheet | FAIL | Attempts 1–5 all failed and each sheet is consumed (#6). Attempt 5 ("아름다운 나라", `main` `a135692`, local): 46/46 occurrences in order, but 2 extras (staff notation read as letters). A new unseen sheet is required on the final candidate. |
 | Browser and accessibility | PASS (local automated) | Lighthouse 13.4.1 mobile: 100 on all four pages; staging and physical-device evidence required |
-| Production Auth0 login | PENDING | Production configuration and live token required |
-| Capacity | PENDING | Canary load report required |
-| Sentry and alerts | PENDING | DSNs, alert rules, and delivery test required |
+| Production Auth0 login | PENDING | Live production login, reload persistence, logout, and the logged-out core journey pass (#12). 401/410 behavior passes in the CI canary. `/api/auth/me` with a valid production token still needs a backend runtime. |
+| Capacity | PENDING | CI canary: all 3 bursts pass on two runs (at most 2 admitted, 429 within 5 s, no 5xx, health within 2 s, renders OK, RSS about 1 GB stable). HF memory and latency are unproven; whether runner results count is an open decision. |
+| Sentry and alerts | PENDING | Frontend test event received under release `682c9a0` with no PII. The 5xx and `/detect` p95 alerts exist, and email delivery was verified (#5). A backend test event is pending. The "at least three sampled transactions" condition is not configurable at 5% trace sampling. The trial ends 2026-10-08. |
 | Rollback rehearsal | PENDING | Exact canary candidate required |
 | Production identities and smoke | PENDING | All pre-production gates must pass first |
 
@@ -231,10 +262,10 @@ serialization alone cannot repair the remaining missing, extra, and displaced oc
 result is a genuine failed gate, not release evidence. The report is
 `/private/tmp/capomatic-v1-independent-local.json` for this workstation session.
 
-The official HF MCP confirmed that `juka526/capomatic` is a Docker Space but exposes no runtime,
-hardware, variable, or secret inspection operation. The official Vercel MCP authentication sees
-zero teams/projects and therefore cannot reach Capomatic. Reauthorize it against the owning account
-or use an approved read-only project token before treating Vercel configuration as verified.
+Vercel project access was restored and inspected read-only (#13). The rollback reference deployment
+is `dpl_Ajnpx1eoo9kGChAfuubvYy5nzBvm` (`85035b3`). HF runtime, hardware, and variables are readable
+through the HF API. The production Space currently runs GitHub `85035b3` with `v6-medium` and
+`PADDLE_ENABLE_MKLDNN=1` overrides.
 
 The release remains **NO-GO** until every row is `PASS` and the product owner records the dated
 go decision here.
