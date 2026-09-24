@@ -15,7 +15,7 @@ frozen production baseline was available for comparison. Details are below.
 | --- | --- |
 | Date | 2026-09-23 |
 | Host | Darwin arm64 (macOS 26.5.1), no container runtime |
-| Base commit | `6354f33` (issue #10) |
+| Base commit | `6354f33` (issue #10). After the rebase onto `main` this is `220fd18`, with an identical tree, so the results below still apply. |
 | Python | 3.12.2 in a venv installed from the pinned `requirements.txt` (`paddleocr 3.7.0`, `paddlepaddle 3.2.2`, `paddlex 3.7.2`, `numpy 1.26.4`) |
 | Runtime settings | Copied from the `Dockerfile` `ENV`: `CHORDTAYLOR_OCR_DET_MODEL=mobile`, `PADDLE_MAX_STITCHED_PIXELS=900000`, `PADDLE_STITCH_MAX_SAFE_PIXELS=900000`, `PADDLE_MIN_STITCH_RESIZE_SCALE=0.85`, `RENDER_USE_INPAINT=0`, `PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True` |
 | Corpus | All 16 labels in `fixtures/labels` (git tree `b57cdd63`) and their images (git tree `28a40520`). This is the full corpus, not a subset (`corpus_complete: true`). |
@@ -63,6 +63,11 @@ raw OCR output for those positions contains no `C` text of any confidence, so th
 the detection level before filtering. No generic text-recovery rule can restore it. Fixing it would
 need detector or cropping work. It would also make this sheet consumed development data, which is
 already true in practice, since it has informed tuning.
+
+One experiment used `PADDLE_DET_DB_THRESH=0.2` and `PADDLE_DET_DB_BOX_THRESH=0.3`, run on this
+sheet only. It recovered 1 of the 5 `C` occurrences (33/37). The run also misses the first `Gm7`
+on the chorus line. A global detector-threshold change affects every sheet and was not adopted
+without a full-corpus and canary timing comparison.
 
 ### Baseline availability
 
