@@ -7,6 +7,7 @@ import { useLang, LangToggle } from "@/components/LangProvider";
 import { GuitarFretboard } from "@/components/GuitarFretboard";
 import { translations } from "@/lib/i18n";
 import { computeTargetKey } from "@/lib/target-key.mjs";
+import { pngDownloadName } from "@/lib/download-name.mjs";
 import { prependJobHistory } from "@/lib/job-history.mjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -505,7 +506,7 @@ export default function Home() {
     if (!activeResult) return;
     const a = document.createElement("a");
     a.href = activeResult;
-    a.download = `transposed_${activeTab}_${file?.name || "output.png"}`;
+    a.download = pngDownloadName(activeTab, file?.name);
     a.click();
   };
 
