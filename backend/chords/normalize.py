@@ -33,5 +33,11 @@ def normalize_chord_text(s: str) -> str:
     s = s.replace("min", "m")
     # Strip parentheses from simple suffix qualifiers so A7(sus4) == A7sus4.
     # Applied after case-folding so paren content is already lowercase.
-    s = re.sub(r"\(([a-z0-9]+)\)", r"\1", s)
+    # Keep "(b...)" right after a bare root: "G(b5)" is G with a flat fifth,
+    # but unwrapped "Gb5" would read as a G-flat power chord.
+    s = re.sub(
+        r"(?<![A-G])\(([a-z0-9]+)\)|(?<=[A-G])\(((?!b)[a-z0-9]+)\)",
+        lambda m: m.group(1) or m.group(2),
+        s,
+    )
     return s
