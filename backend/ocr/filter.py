@@ -57,7 +57,7 @@ def is_section_marker(
 # ---------------------------------------------------------------------------
 # Root       [A-G][#b]?
 # Quality    maj | m (not followed by "aj") | dim | aug | sus
-# Numeric    1-2 digit extension (6, 7, 9, 11, 13, ...)
+# Numeric    extension degree: 2, 4, 5, 6, 7, 9, 11, 13, or 69 ("G1" is noise)
 # Alteration zero or more altered degrees (#5, b5, #9, b9, ...)
 # Sus suffix sus followed by optional 2 or 4
 # Add suffix add followed by digits
@@ -71,8 +71,8 @@ _CHORD_RE = re.compile(
     r"^"
     r"[A-G][#b]?"                        # root
     r"(?:maj|m(?!aj)|dim|aug|sus)?"      # optional quality
-    r"(?:[1-9][0-9]?)?"                  # optional numeric extension
-    r"(?:[#b][1-9][0-9]?)*"              # optional altered degrees
+    r"(?:69|1[13]|[245679])?"            # optional extension (musical degrees only)
+    r"(?:[#b](?:1[13]|[4569]))*"         # optional altered degrees
     r"(?:sus[24]?)?"                     # optional sus modifier
     r"(?:add[0-9]+)?"                    # optional add modifier
     r"(?:\([^)]*\))?"                    # optional parenthesised part

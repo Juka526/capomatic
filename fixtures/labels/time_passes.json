@@ -12,7 +12,8 @@
     "C7sus4",
     "D/F#",
     "G",
-    "F/A"
+    "F/A",
+    "Cmaj7/B"
   ],
   "hard_targets": [
     "Cmaj7/B",
@@ -21,5 +22,5 @@
   ],
   "expected_total_chords_min": 15,
   "expected_total_chords_max": 120,
-  "notes": "Expected list aligned to confirmed OCR outputs. Hard targets are chords likely present on the sheet but not yet detected; prioritize tuning for small symbols (6) and maj7/B readability."
+  "notes": "Expected list aligned to confirmed OCR outputs. Hard targets are chords likely present on the sheet but not yet detected; prioritize tuning for small symbols (6) and maj7/B readability. 2026-09-25: added Cmaj7/B, printed as C^M7/B in the first system after the segno (visually verified); it was missing from the list, so correct readings were scored as extras."
 }
