@@ -13,7 +13,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const RENDER_CACHE_LIMIT = 5;
 
-type ChordItem = { text: string; bbox: number[] | null };
+type ChordStyle = { parenthesis?: "open" | "close" | "both" };
+type ChordItem = { text: string; bbox: number[] | null; style?: ChordStyle | null };
 type RenderMode = "replace" | "above" | "both";
 type RenderResult = {
   replace_image: string | null;
@@ -229,7 +230,7 @@ export default function Home() {
       setDetectionId(data.detection_id);
       setSongTitle(data.song_title || "알수없음");
       setOriginalKey(data.original_key);
-      const chords: ChordItem[] = (data.chords || []).map((c: any) => ({ text: c.text, bbox: c.bbox }));
+      const chords: ChordItem[] = (data.chords || []).map((c: any) => ({ text: c.text, bbox: c.bbox, style: c.style }));
       setDetectedChords(chords);
       setEditableChords(chords);
     } catch (err) {

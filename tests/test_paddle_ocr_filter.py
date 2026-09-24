@@ -479,3 +479,104 @@ class TestRecoverCandidates:
         assert [item.get("style", {}).get("parenthesis") for item in result] == [
             None, "both", None, "both", "both",
         ]
+
+
+# ---------------------------------------------------------------------------
+# Generic OCR confusion repairs (issue #9)
+# ---------------------------------------------------------------------------
+
+def _filter_one(text: str, confidence: float = 0.95) -> list[tuple[str, str | None]]:
+    result = filter_candidates([{"text": text, "confidence": confidence, "bbox": [0, 0, 100, 20]}])
+    return [(item["text"], (item.get("style") or {}).get("parenthesis")) for item in result]
+
+
+class TestOcrConfusionRepairs:
+    @pytest.mark.parametrize("text,expected", [
+        ("F#m7(bs)", "F#m7b5"),
+        ("F#m7(bS)", "F#m7b5"),
+        ("Am7bs", "Am7b5"),
+        ("Am7bS", "Am7b5"),
+        ("Bdim7bs", "Bdim7b5"),
+        ("Asus4bs", "Asus4b5"),
+        ("C7bs(b9)", "C7b5b9"),
+        ("Em(bs)", "Emb5"),
+        ("A(bs)", "A(b5)"),
+    ])
+    def test_five_read_as_s_is_repaired(self, text, expected):
+        assert _filter_one(text) == [(expected, None)]
+
+    @pytest.mark.parametrize("text,expected", [
+        ("Bm7bs/F", "Bm7b5/F"),
+        ("Bm7(bs)/F", "Bm7b5/F"),
+        ("Dm7bS/C", "Dm7b5/C"),
+        ("Flm7(bs)/E", "F#m7b5/E"),
+    ])
+    def test_repair_keeps_slash_bass(self, text, expected):
+        assert _filter_one(text) == [(expected, None)]
+
+    @pytest.mark.parametrize("text", ["Am7b5", "F#m7(b5)", "Am7b5/G", "Absus", "Gb", "Ab7"])
+    def test_already_valid_chords_are_unchanged(self, text):
+        assert _filter_one(text) == [(text, None)]
+
+    @pytest.mark.parametrize("text", [
+        "Bbs",      # B-flat root plus noise: no digit, so "bs" is not an alteration
+        "Gbs",
+        "Am7bs5",   # would become the invalid alteration b55
+        "Cbs/Z",
+        "bs",
+        "Am7bsus",  # "bsus" is not an alteration
+    ])
+    def test_invalid_repairs_are_rejected(self, text):
+        assert _filter_one(text) == []
+
+    @pytest.mark.parametrize("text,expected", [
+        ("Clm", "C#m"),
+        ("CHm", "C#m"),
+        ("Flm", "F#m"),
+        ("F|m", "F#m"),
+        ("FI7", "F#7"),
+        ("Clmaj7", "C#maj7"),
+        ("Gl/B", "G#/B"),
+        ("Flm7bs", "F#m7b5"),
+    ])
+    def test_sharp_read_as_stroke_is_repaired(self, text, expected):
+        assert _filter_one(text) == [(expected, None)]
+
+    def test_sharp_repair_applies_below_main_threshold(self):
+        assert _filter_one("Clm", confidence=0.75) == [("C#m", None)]
+
+    @pytest.mark.parametrize("text", [
+        "Elm",  # E#/B# are not conventional roots
+        "Blm",
+        "Cl",   # no chord syntax after the stroke
+        "CH",
+        "Al",
+        "Dim",  # "i" is excluded: it would collide with dim
+        "Cim",
+    ])
+    def test_sharp_repair_rejects_non_chords(self, text):
+        assert _filter_one(text) == []
+
+
+class TestFullyParenthesizedChords:
+    @pytest.mark.parametrize("text,expected", [
+        ("(Am7)", "Am7"),
+        ("(G/B)", "G/B"),
+        ("(F#m7(b5))", "F#m7b5"),
+        ("(Am7bs)", "Am7b5"),
+        ("(Clm)", "C#m"),
+        (" (Dsus4) ", "Dsus4"),
+    ])
+    def test_single_wrapped_chord_is_one_occurrence(self, text, expected):
+        assert _filter_one(text) == [(expected, "both")]
+
+    @pytest.mark.parametrize("text", ["(Am7G)", "(Am7Dm7)", "(Am)(G)", "(Xyz)", "()"])
+    def test_wrapped_concatenated_or_invalid_rows_are_rejected(self, text):
+        assert _filter_one(text) == []
+
+    def test_chord_with_parenthesized_alternative_row_marks_open_and_close(self):
+        assert _filter_one("C(Am7G)") == [("C", None), ("Am7", "open"), ("G", "close")]
+
+    @pytest.mark.parametrize("text", ["A7(sus4)", "C(add9)", "G(b5)"])
+    def test_parenthesized_modifier_is_not_a_wrapped_chord(self, text):
+        assert _filter_one(text) == [(text, None)]

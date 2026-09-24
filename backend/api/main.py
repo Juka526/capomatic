@@ -47,17 +47,21 @@ from backend.auth.auth0 import get_token_payload
 
 logger = logging.getLogger(__name__)
 
+def _sentry_options() -> dict:
+    """Privacy-safe Sentry settings: no PII, request bodies, or local variables."""
+    return {
+        "environment": os.environ.get("SENTRY_ENVIRONMENT", "production"),
+        "release": os.environ.get("SENTRY_RELEASE"),
+        "traces_sample_rate": 0.05,
+        "send_default_pii": False,
+        "max_request_body_size": "never",
+        "include_local_variables": False,
+    }
+
+
 _sentry_dsn = os.environ.get("SENTRY_DSN", "").strip()
 if _sentry_dsn:
-    sentry_sdk.init(
-        dsn=_sentry_dsn,
-        environment=os.environ.get("SENTRY_ENVIRONMENT", "production"),
-        release=os.environ.get("SENTRY_RELEASE"),
-        traces_sample_rate=0.05,
-        send_default_pii=False,
-        max_request_body_size="never",
-        include_local_variables=False,
-    )
+    sentry_sdk.init(dsn=_sentry_dsn, **_sentry_options())
 
 # Maximum upload size in bytes (20 MB).
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
@@ -199,6 +203,7 @@ def _build_detect_chord(item: dict) -> dict:
         "text":       item["text"],
         "confidence": float(item["confidence"]),
         "bbox":       [int(v) for v in raw_bbox] if raw_bbox is not None else None,
+        "style":      item.get("style"),
     }
 
 
@@ -246,7 +251,19 @@ def _parse_chords_override(value: str, image_size: tuple[int, int]) -> list[dict
                 raise HTTPException(status_code=422, detail="Invalid chord corrections.")
             bbox = [x1, y1, x2, y2]
 
-        items.append({"text": text, "confidence": 1.0, "bbox": bbox})
+        item = {"text": text, "confidence": 1.0, "bbox": bbox}
+        # Only the parenthesis marker round-trips; other style keys are
+        # renderer-internal and must not be client-controlled.
+        style = row.get("style")
+        if style is not None:
+            if not isinstance(style, dict):
+                raise HTTPException(status_code=422, detail="Invalid chord corrections.")
+            parenthesis = style.get("parenthesis")
+            if parenthesis not in {None, "open", "close", "both"}:
+                raise HTTPException(status_code=422, detail="Invalid chord corrections.")
+            if parenthesis:
+                item["style"] = {"parenthesis": parenthesis}
+        items.append(item)
     return items
 
 

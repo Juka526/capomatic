@@ -117,18 +117,42 @@ _DIRECTION_MARKER_RE = re.compile(
 _TRAILING_B_RE = re.compile(r'^([A-G][#b]?(?:maj|m(?!aj)|dim|aug|sus)?)b$')
 
 # OCR confusion inside altered extensions: engraved "5" is sometimes read as
-# "s", for example F#m7(b5) -> F#m7(bs). The normalized invalid token ends in
-# "bs"; replacing only that terminal alteration avoids changing valid chords.
-_TRAILING_BS_RE = re.compile(r"^(.*\d)(?:\(b[sS]\)|b[sS])((?:/[A-G][#b]?)?)$")
+# "s", for example F#m7(b5) -> F#m7(bs). "(bs)" is unambiguous anywhere, but a
+# bare "bs" is repaired only after a digit: "Gbs" may be a G-flat root plus
+# noise, and "Absus" is a valid A-flat sus chord.
+_PAREN_BS_RE = re.compile(r"\(b[sS]\)")
+_BARE_BS_RE = re.compile(r"(?<=\d)b[sS](?![A-Za-z0-9])")
 
 
-def _repair_altered_five(text: str) -> str:
-    match = _TRAILING_BS_RE.match(text)
-    if match:
-        candidate = f"{match.group(1)}b5{match.group(2)}"
-        if is_chord_candidate(candidate):
-            return candidate
-    return text
+# OCR confusion: the engraved sharp's vertical strokes are read as "l", "I",
+# "H", or "|", e.g. C#m -> Clm / CHm. Only roots with a conventional sharp
+# spelling qualify ("Elm" is never E#m), and chord syntax must follow so a
+# lone "Al" or "CH" is not promoted to a chord.
+_SHARP_CONFUSION_RE = re.compile(r"^([ACDFG])[lIH|](?=m|maj|dim|aug|sus|\d|/)")
+
+
+def _repair_ocr_confusions(text: str) -> str:
+    """Apply the sharp and flat-five OCR repairs; keep *text* unless valid."""
+    stripped = text.strip()
+    candidate = _SHARP_CONFUSION_RE.sub(r"\1#", stripped)
+    candidate = _BARE_BS_RE.sub("b5", _PAREN_BS_RE.sub("(b5)", candidate))
+    if candidate == stripped:
+        return text
+    candidate = normalize_chord_text(candidate)
+    return candidate if is_chord_candidate(candidate) else text
+
+
+def _unwrap_single_chord(text: str) -> str | None:
+    """Return the chord inside one outer pair of parentheses, e.g. "(Am7)".
+
+    Inner parentheses may belong to the chord ("(F#m7(b5))"). Concatenated
+    rows such as "(Am7G)" or "(Am)(G)" are not a single chord and return None.
+    """
+    stripped = text.strip()
+    if not (stripped.startswith("(") and stripped.endswith(")")):
+        return None
+    inner = _repair_ocr_confusions(normalize_chord_text(stripped[1:-1]))
+    return inner if is_chord_candidate(inner) else None
 
 
 def _strip_leading_number(text: str) -> str | None:
@@ -192,19 +216,20 @@ def _split_concatenated(text: str) -> list[str]:
 
 def _split_chord_text(text: str) -> list[str]:
     """Extract valid chords from a space-separated or volta OCR block."""
+    # A single optional/alternate chord such as "(Am7)" is still a musical
+    # occurrence. Concatenated secondary rows like "(Am7G)" stay rejected.
+    single = _unwrap_single_chord(text)
+    if single:
+        return [single]
     parenthetical = re.fullmatch(r"\s*([^()]*)\(([^()]*)\)\s*", text)
     if parenthetical:
         outer = normalize_chord_text(parenthetical.group(1))
-        inner = normalize_chord_text(parenthetical.group(2))
-        if not outer:
-            # A single optional/alternate chord such as "(Am7)" is still a
-            # musical occurrence. Keep concatenated secondary rows rejected.
-            return [inner] if is_chord_candidate(inner) else []
-        if not is_chord_candidate(outer):
+        inner = _repair_ocr_confusions(normalize_chord_text(parenthetical.group(2)))
+        if not outer or not is_chord_candidate(outer):
             return []
         inner_parts = [inner] if is_chord_candidate(inner) else _split_concatenated(inner)
         if inner_parts:
-            return ([outer] if outer else []) + inner_parts
+            return [outer] + inner_parts
 
     volta = bool(_VOLTA_PREFIX_RE.match(text))
     if not volta and not any(char.isspace() for char in text):
@@ -242,7 +267,9 @@ def _split_bbox(
     """
     parenthetical = re.fullmatch(r"\s*([^()]*)\(([^()]*)\)\s*", item["text"])
     parenthetical_from = None
-    if parenthetical:
+    if len(parts) == 1 and _unwrap_single_chord(item["text"]):
+        parenthetical_from = 0
+    elif parenthetical:
         parenthetical_from = 0 if not parenthetical.group(1).strip() else 1
     results: list[dict] = []
     for i, part in enumerate(parts):
@@ -341,7 +368,7 @@ def recover_candidates(
             continue
 
         # OCR confusion in altered extensions: b5 may be read as "bs".
-        repaired = _repair_altered_five(norm)
+        repaired = _repair_ocr_confusions(norm)
         if repaired != norm:
             recovered.append({**item, "text": repaired})
             parse_count += 1
@@ -416,7 +443,7 @@ def filter_candidates_with_recovery(
     parse_count = 0
     split_count = 0
     for item in ocr_items:
-        repaired = _repair_altered_five(item["text"])
+        repaired = _repair_ocr_confusions(item["text"])
         if repaired != item["text"]:
             item = {**item, "text": repaired}
         if is_section_marker(
