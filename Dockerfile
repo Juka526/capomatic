@@ -1,8 +1,10 @@
 FROM python:3.12-slim
 
-# Runtime libraries required by OpenCV.
+# Runtime libraries: libgl1/libglib2.0-0 for OpenCV, libgomp1 (OpenMP) for
+# paddlepaddle's libpaddle.so. The pre-V1 image got libgomp1 only as a side
+# effect of installing gcc; without it every /detect fails to import paddle.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1 libglib2.0-0 && \
+    libgl1 libglib2.0-0 libgomp1 && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
