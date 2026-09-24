@@ -48,6 +48,11 @@ jobs:
           sha="${INPUT_SHA:-$(tr -d '[:space:]' < harness/.github/canary/candidate.txt)}"
           [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo "bad candidate sha: $sha"; exit 1; }
           echo "CANDIDATE_SHA=$sha" >> "$GITHUB_ENV"
+          # Optional detector override, e.g. to mirror production's v6-medium.
+          model_file=harness/.github/canary/det-model.txt
+          if [ -f "$model_file" ]; then
+            echo "DET_MODEL=$(tr -d '[:space:]' < "$model_file")" >> "$GITHUB_ENV"
+          fi
 
       - name: Check out exact candidate
         uses: actions/checkout@v4
@@ -79,7 +84,9 @@ jobs:
             -e CORS_ORIGINS="$ORIGIN" \
             -e AUTH0_DOMAIN=dev-em2gvqp2q71brplg.us.auth0.com \
             -e AUTH0_AUDIENCE=https://capomatic-api \
+            ${DET_MODEL:+-e CHORDTAYLOR_OCR_DET_MODEL=$DET_MODEL} \
             capomatic-canary
+          echo "det_model_override=${DET_MODEL:-<Dockerfile default>}" | tee -a out/identity.txt
           for _ in $(seq 1 60); do
             if curl -fsS "$API/health"; then echo; exit 0; fi
             sleep 5
