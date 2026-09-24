@@ -105,7 +105,7 @@ _SPLIT_ROOT_RE = re.compile(r"(?<=[^/])([A-G][#b]?)")
 _LEADING_NUM_RE = re.compile(r"^\d+([A-G].*)$")
 
 # Volta labels and score directions can be fused into a multi-chord OCR box.
-_VOLTA_PREFIX_RE = re.compile(r"^\s*\|?\s*[123]\s*[.)]\s*")
+_VOLTA_PREFIX_RE = re.compile(r"^\s*\|*\s*[123]\s*[.)]\s*")
 _DIRECTION_MARKER_RE = re.compile(
     r"(?<![A-Za-z])(?:D\s*\.\s*[SC]\s*\.?|Fine|Coda|al)(?![A-Za-z])",
     re.IGNORECASE,
