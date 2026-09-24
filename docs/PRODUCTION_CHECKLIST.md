@@ -1,11 +1,39 @@
 # Production Deployment Checklist
 
+V1 scope and go/no-go requirements are defined only in
+[`V1_RELEASE_PLAN.md`](V1_RELEASE_PLAN.md). This file records deployment procedure, historical
+measurements, and release evidence.
+
 Current runtime topology:
 
 ```text
 Browser ──> Vercel frontend (capomatic.vercel.app)
    └──────> HF API (juka526-capomatic.hf.space)
 ```
+
+## Live baseline recheck (2026-09-16, Asia/Seoul)
+
+This is the currently deployed pre-V1 baseline, not candidate evidence:
+
+- [x] Vercel `/` and `/history` return 200.
+- [ ] Vercel `/privacy` and `/terms` return 404; the local candidate pages are not deployed.
+- [ ] Vercel `/admin/dashboard` returns 200; the local candidate retirement is not deployed.
+- [x] HF `/health` and `/` return 200.
+- [ ] HF `/api/auth/me`, `/api/auth/admin-test`, and `/api/admin/users` return the old
+  database-configuration 503 response; login-only V1 behavior is not deployed.
+- [x] The production-origin preflight for `POST /detect` returns 200 and the exact Vercel origin.
+- [x] HF CLI reports `juka526/capomatic` `RUNNING`/`READY`, one `cpu-basic` replica in `us`, and
+  runtime/repository SHA `bbb7619f957a926d5d48efbc2be2cfc18c0207c6`.
+- [ ] HF currently overrides the candidate Docker default with
+  `CHORDTAYLOR_OCR_DET_MODEL=v6-medium`; remove or deliberately reconcile that override before a
+  candidate comparison.
+- [ ] HF still has an `OPENAI_API_KEY` secret. Its value was not inspected; V1 must remove it.
+- [ ] HF has no `AUTH0_DOMAIN`, `AUTH0_AUDIENCE`, or `SENTRY_DSN` configuration.
+- [ ] The newly authenticated official Vercel MCP sees zero teams/projects, so the account-internal
+  project, environment, source-SHA, and deployment settings remain unverified.
+
+These checks prove only that the old service is reachable and identify the post-deploy differences
+that must be smoke-tested. They do not clear a V1 gate.
 
 ## Audited state (2026-08-29)
 
@@ -25,9 +53,9 @@ Current deployment identities:
 - Vercel Next.js build ID: `VPaLW_Km8pXWeei_iN0Gi` (the public deployment does not expose its source SHA)
 - HF runtime SHA: `4d05f243a3053abf6f13289f16661b79ec3cbd4d`
 
-Intentionally disabled in the current public-only deployment:
+Configuration of the 2026-08-29 deployment:
 
-- HF has no database or Auth0 variables. Public OCR works; auth/admin stays disabled.
+- HF had no database or Auth0 variables. Public OCR was unaffected.
 
 Remediation outcome:
 
@@ -37,7 +65,9 @@ Remediation outcome:
 Remaining operational decisions:
 
 - [ ] HF historical storage still reports about 662 MB after current-tree cleanup; reclaiming history needs a separate reviewed decision.
-- [ ] **Release blocker:** GPT refinement is public and uses a paid API key. Add an auth/rate/budget boundary or disable the secret.
+- [x] The V1 candidate retires the public GPT endpoints in code.
+- [ ] Remove the HF `OPENAI_API_KEY` secret while deploying V1 and verify both endpoints return
+  `410 Gone`.
 
 ## Detection performance baseline (2026-08-29)
 
@@ -66,11 +96,28 @@ oneDNN path has a reported upstream regression.
 ## 1. Local release gate
 
 - [ ] `python -m pytest`
-- [ ] `cd frontend && npx tsc --noEmit`
-- [ ] `cd frontend && npm run build`
+- [ ] `cd frontend && npm run check`
+- [ ] `cd frontend && npm audit --audit-level=high`
+- [ ] `pip-audit -r requirements.txt`
+- [ ] Required backend, frontend, and Docker CI checks are green on the candidate GitHub commit and branch protection blocks
+  merging when they fail.
 - [ ] Review `git status --short`; do not include local artifacts or unrelated fixture changes.
 - [ ] Confirm no `.env`, tokens, or credentials are tracked.
 - [ ] Confirm the root `Dockerfile` is the only backend deployment definition.
+
+Local candidate evidence on 2026-09-16:
+
+- [x] Backend suite in a fresh exact-dependency environment: 408 passed and 10
+  credential/network-dependent integration cases skipped.
+- [x] Frontend unit tests, TypeScript, and Next.js production build pass; generated routes are `/`,
+  `/history`, `/privacy`, and `/terms`, with no administrator page.
+- [x] `npm audit --audit-level=high` and `pip-audit -r requirements.txt` report no known
+  vulnerabilities using advisory data checked on 2026-09-16. The recheck found Starlette 0.52.1
+  advisories; upgrading to 1.3.1 cleared them and all 408 tests passed again.
+- [x] Lighthouse 13.4.1 mobile accessibility is 100 on all four generated pages, with no failed
+  scored audit. JSON reports are `/private/tmp/capomatic-lighthouse-{home,history,privacy,terms}.json`.
+- [ ] Repeat all local checks from the exact candidate SHA after the fresh dependency/Docker build;
+  the entries above describe the working tree and are not final release evidence.
 
 Local OCR timing is a dependency screen, not the production latency gate. Deploy the exact
 candidate commit to a private HF canary Space with the same Docker image, `cpu-basic` hardware,
@@ -79,9 +126,12 @@ Set the canary URL explicitly and exercise the same browser-to-HF request path:
 
 ```bash
 CANDIDATE_HF_API_URL=https://juka526-capomatic-perf-canary.hf.space
+CANDIDATE_HF_SHA=<recorded-canary-runtime-sha>
 python scripts/eval_ocr.py --engine paddle \
   --api-url "$CANDIDATE_HF_API_URL" \
-  --baseline-api-url https://juka526-capomatic.hf.space
+  --baseline-api-url https://juka526-capomatic.hf.space \
+  --render-check --deployment-sha "$CANDIDATE_HF_SHA" \
+  --report-json /private/tmp/capomatic-v1-canary-ocr.json
 ```
 
 Run from the Seoul client against a ready, warmed Space, sequentially once for every one of the 15
@@ -92,17 +142,29 @@ every candidate fixture against production quality. Record that warm-up as the c
 when the Space was restarted immediately before the command; it is not mixed into the warm aggregate.
 
 The full labeled suite must keep at least the current 98.06% coverage and 88.90% unique-chord
-precision. “60 ±20 seconds” means a cross-fixture mean at most 80 seconds and population standard
-deviation at most 20 seconds; a faster mean is not a failure. The deviation describes workload
-spread across sheets, not repeated-request jitter. A run with fewer than three fixtures is only a
-smoke test.
+precision. A warm run must have a cross-fixture mean at most 80 seconds and population standard
+deviation at most 20 seconds; P90 and maximum are recorded as diagnostics. The deviation describes
+workload spread across sheets, not repeated-request jitter. A run omitting any canonical label is
+only a smoke test and cannot pass the release gate.
 
-Because the existing fixtures have informed OCR tuning, label one new sheet before testing either
-deployment. The candidate must have 100% unique-chord coverage and precision on it, and a manual
-overlay review must find no missing, extra, or displaced chord relative to the label. Do not release
-if either the corpus gate or this unseen-sheet check regresses quality.
+Because the existing fixtures have informed OCR tuning, an independent reviewer who did not tune
+the model must label and freeze one new sheet before inspecting either deployment. Pass it with
+`--extra-label`; its JSON must set `strict_unseen: true`, include the exact chord sequence, and use
+equal minimum/maximum counts. The candidate must have 100% unique-chord coverage and precision,
+exact count/order, and a manual Replace/Above review with no missing, extra, or displaced chord.
+Do not release if either the regression corpus or this independent check fails.
+
+Attempt 1 used `fixtures/images/IMG＿7710.png`, frozen at SHA-256
+`4ceeb3b23ed2025d3a9c3ccd93e808bf0c0af494e3e7e52f43d77fc8958c30b5`. An isolated same-model
+reviewer labeled 60 occurrences before either output was inspected. The local candidate detected
+56, failed exact count/order, and therefore failed the gate. This image is now a development sample;
+after any correction, freeze and review a different previously unused image for the release gate.
 
 ## 2. Vercel
+
+The official Vercel MCP was authenticated on 2026-09-16 but returned zero visible teams/projects.
+Its project-internal configuration cannot be release evidence until it is reauthorized against the
+account/team that owns Capomatic (or an approved read-only API credential is used).
 
 - [ ] Git repository: `Juka526/capomatic`
 - [ ] Root directory: `frontend`
@@ -113,12 +175,16 @@ if either the corpus gate or this unseen-sheet check regresses quality.
   NEXT_PUBLIC_API_URL=https://juka526-capomatic.hf.space
   ```
 
-- [ ] If Auth0 is enabled, set `NEXT_PUBLIC_AUTH0_DOMAIN` and
-  `NEXT_PUBLIC_AUTH0_CLIENT_ID`.
+- [ ] Set V1 `NEXT_PUBLIC_AUTH0_DOMAIN` and `NEXT_PUBLIC_AUTH0_CLIENT_ID`.
+- [ ] Set `NEXT_PUBLIC_SENTRY_DSN`; trigger a staging client error and confirm receipt.
 - [ ] Confirm the production deployment was built from the intended GitHub SHA.
 - [ ] If Git integration does not create that deployment, use Vercel **Deployments → Create Deployment** with the exact Git SHA.
 
 ## 3. Hugging Face Space
+
+The official HF MCP can confirm the public Docker Space identity but does not expose runtime,
+hardware, variable, or secret inspection operations. The HF CLI live snapshot above remains the
+available read-only evidence; secret values were never inspected.
 
 - [ ] Space: `juka526/capomatic`
 - [ ] SDK: Docker
@@ -130,14 +196,17 @@ if either the corpus gate or this unseen-sheet check regresses quality.
   CORS_ORIGINS=https://capomatic.vercel.app
   ```
 
-- [ ] Optional secret for GPT refinement: `OPENAI_API_KEY`
-- [ ] Optional auth/admin variables, configured together:
+- [ ] Confirm `OPENAI_API_KEY` and `DATABASE_URL` are absent for V1.
+- [ ] Configure the login identity endpoint:
 
   ```env
-  DATABASE_URL=postgresql+asyncpg://...
   AUTH0_DOMAIN=your-domain.auth0.com
   AUTH0_AUDIENCE=https://capomatic-api
   ```
+
+- [ ] Set `SENTRY_DSN`, `SENTRY_ENVIRONMENT=production`, and the candidate
+  `SENTRY_RELEASE`; trigger a staging backend error and confirm receipt.
+- [ ] Configure Sentry alerts for a new 5xx issue and sustained transaction latency.
 
 - [ ] `GET https://juka526-capomatic.hf.space/health` returns
   `{"status":"ok"}`.
@@ -152,10 +221,12 @@ if either the corpus gate or this unseen-sheet check regresses quality.
 - [ ] Load `https://capomatic.vercel.app` without console errors.
 - [ ] Upload a PNG or JPEG and detect chords.
 - [ ] Change capo position and render both overlay modes.
-- [ ] Use AI refinement when `OPENAI_API_KEY` is enabled.
+- [ ] Confirm `POST /detect/refine` and `ocr_engine=paddle-gpt` cannot invoke paid refinement.
 - [ ] Confirm history persists after a page reload in the same browser.
 - [ ] Confirm Korean/English switching and image download.
-- [ ] If auth/admin is enabled, test login, `/api/auth/me`, and `/api/admin/users`.
+- [ ] Test login, logout, and `/api/auth/me` with a production token.
+- [ ] Confirm `/admin/dashboard` is not found and administrator APIs return `410 Gone`.
+- [ ] Open the linked privacy notice and terms in Korean and English.
 
 ## 5. Release synchronization
 
@@ -207,4 +278,5 @@ Do not diagnose a code regression until all three point to the intended source t
 - Detection IDs live in one backend process and disappear on restart.
 - Keep one replica until detection state moves to a shared store or requests gain session affinity.
 - History lives in browser `localStorage`, not PostgreSQL.
-- Auth/admin endpoints intentionally return unavailable until database and Auth0 settings exist.
+- Auth0 login is supported without a database; administrator features and paid GPT refinement
+  are intentionally unavailable in V1.

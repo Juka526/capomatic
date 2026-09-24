@@ -1,6 +1,8 @@
 """Unit tests for backend.ocr.preprocess: find_chord_x_start and build_chord_bands."""
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -165,7 +167,13 @@ class TestDetectStaffSystems:
     def test_fixture_moment_life_detects_all_staff_systems(self):
         from PIL import Image
 
-        img = Image.open("fixtures/images/순간이-삶이-되어.png").convert("RGB")
+        # This sample was never committed, so a clean checkout (including CI) has no
+        # way to run the assertion. Skip instead of failing the whole suite.
+        fixture = Path("fixtures/images/순간이-삶이-되어.png")
+        if not fixture.exists():
+            pytest.skip(f"untracked local-only fixture missing: {fixture}")
+
+        img = Image.open(fixture).convert("RGB")
 
         systems = detect_staff_systems(img)
 

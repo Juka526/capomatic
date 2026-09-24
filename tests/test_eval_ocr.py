@@ -35,6 +35,22 @@ def test_api_runner_posts_fixture_through_detect(monkeypatch, tmp_path):
     response.raise_for_status.assert_called_once()
 
 
+def test_evaluate_rejects_image_changed_after_label_freeze(tmp_path):
+    image_path = tmp_path / "sheet.png"
+    image_path.write_bytes(b"changed")
+
+    with pytest.raises(ValueError, match="does not match frozen label"):
+        eval_ocr.evaluate(
+            str(image_path),
+            {
+                "image": "sheet.png",
+                "image_sha256": "0" * 64,
+                "expected_unique_chords": ["Am"],
+            },
+            lambda _: [{"text": "Am"}],
+        )
+
+
 def test_api_runner_rejects_silent_engine_fallback(monkeypatch, tmp_path):
     image_path = tmp_path / "sheet.png"
     image_path.write_bytes(b"png")
@@ -250,3 +266,39 @@ def test_runner_error_still_writes_report(monkeypatch, tmp_path):
     report = json.loads(report_path.read_text())
     assert report["summary"]["passed"] is False
     assert report["errors"][0]["error"].startswith("RemoteProtocolError:")
+
+
+def test_api_subset_cannot_pass_release_gate(monkeypatch, tmp_path):
+    images_dir = tmp_path / "images"
+    labels_dir = tmp_path / "labels"
+    images_dir.mkdir()
+    labels_dir.mkdir()
+    for name in ("first", "second"):
+        (images_dir / f"{name}.png").write_bytes(b"png")
+        (labels_dir / f"{name}.json").write_text(json.dumps({
+            "image": f"{name}.png",
+            "expected_unique_chords": ["Am"],
+            "expected_total_chords_min": 1,
+            "expected_total_chords_max": 1,
+        }))
+
+    report_path = tmp_path / "report.json"
+    monkeypatch.setattr(eval_ocr, "IMAGES_DIR", str(images_dir))
+    monkeypatch.setattr(eval_ocr, "LABELS_DIR", str(labels_dir))
+    monkeypatch.setattr(
+        eval_ocr,
+        "build_api_runner",
+        lambda *args, **kwargs: lambda _: [{"text": "Am"}],
+    )
+    monkeypatch.setattr(sys, "argv", [
+        "eval_ocr.py", "--engine", "paddle", "--api-url", "https://canary.example",
+        "--label", "first", "--deployment-sha", "candidate-sha",
+        "--report-json", str(report_path),
+    ])
+
+    with pytest.raises(SystemExit, match="1"):
+        eval_ocr.main()
+
+    report = json.loads(report_path.read_text())
+    assert report["gate"]["corpus_complete"] is False
+    assert "corpus_incomplete" in report["summary"]["failure_reasons"]

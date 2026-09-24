@@ -12,32 +12,13 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def _is_admin(client: httpx.Client, headers: dict) -> bool:
-    """Return True if the test token belongs to an admin user."""
-    res = client.get("/api/auth/me", headers=headers)
-    return res.status_code == 200 and res.json().get("role") == "admin"
-
-
 class TestAdminUsers:
-    """GET /api/admin/users"""
+    """GET /api/admin/users — retired in V1."""
 
-    def test_returns_users_for_admin(self, client: httpx.Client, auth_headers: dict):
-        if not _is_admin(client, auth_headers):
-            pytest.skip("Test user is not admin")
+    def test_rejects_authenticated(self, client: httpx.Client, auth_headers: dict):
         res = client.get("/api/admin/users", headers=auth_headers)
-        assert res.status_code == 200
-        body = res.json()
-        assert "users" in body
-        assert isinstance(body["users"], list)
-        assert len(body["users"]) >= 1
-        user = body["users"][0]
-        assert "id" in user
-        assert "email" in user
-        assert "role" in user
-        assert "created_at" in user
+        assert res.status_code == 410
 
-    def test_rejects_non_admin(self, client: httpx.Client, auth_headers: dict):
-        if _is_admin(client, auth_headers):
-            pytest.skip("Test user is admin — can't test 403")
-        res = client.get("/api/admin/users", headers=auth_headers)
-        assert res.status_code == 403
+    def test_rejects_unauthenticated(self, client: httpx.Client):
+        res = client.get("/api/admin/users")
+        assert res.status_code == 410

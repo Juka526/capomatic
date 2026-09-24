@@ -341,6 +341,9 @@ class TestSplitConcatenated:
     def test_parenthesized_secondary_row_is_ignored(self):
         assert _split_chord_text("(Am7Dm7)") == []
 
+    def test_single_parenthesized_chord_is_an_occurrence(self):
+        assert _split_chord_text("(Am7)") == ["Am7"]
+
     @pytest.mark.parametrize("text", ["A7(sus4)", "C(add9)", "G(b5)"])
     def test_parenthesized_modifiers_are_not_split(self, text):
         assert _split_chord_text(text) == []
@@ -434,6 +437,17 @@ class TestRecoverCandidates:
         recovered, parse_count, split_count = recover_candidates(items)
         assert len(recovered) == 0
 
+    def test_recovers_five_read_as_s_in_altered_extension(self):
+        items = [{
+            "text": "F#m7(bs)",
+            "confidence": 0.96,
+            "bbox": [100, 50, 170, 75],
+        }]
+
+        result = filter_candidates(items)
+
+        assert [item["text"] for item in result] == ["F#m7b5"]
+
     def test_filter_candidates_preserves_recovered_order(self):
         items = [
             {"text": "Am7b5", "confidence": 1.0, "bbox": [0, 0, 10, 10]},
@@ -449,18 +463,19 @@ class TestRecoverCandidates:
         items = [
             {"text": "Bb/C(C/Bb)", "confidence": 0.97, "bbox": [400, 230, 500, 250]},
             {"text": "Bb(Gm7)", "confidence": 1.0, "bbox": [140, 230, 210, 250]},
+            {"text": "(Am7)", "confidence": 0.95, "bbox": [215, 230, 270, 250]},
             {"text": "(Am7Dm7)", "confidence": 1.0, "bbox": [520, 250, 600, 270]},
         ]
 
         result = filter_candidates(items)
 
         assert [item["text"] for item in result] == [
-            "Bb/C", "C/Bb", "Bb", "Gm7",
+            "Bb/C", "C/Bb", "Bb", "Gm7", "Am7",
         ]
         assert [item["bbox"] for item in result[:2]] == [
             [400, 230, 450, 250],
             [450, 230, 500, 250],
         ]
         assert [item.get("style", {}).get("parenthesis") for item in result] == [
-            None, "both", None, "both",
+            None, "both", None, "both", "both",
         ]

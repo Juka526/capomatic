@@ -7,6 +7,11 @@ html, body {
   background-color: #F5EDD8;
 }
 
+:where(a, button, input, [role="button"]):focus-visible {
+  outline: 3px solid #0b6bcb !important;
+  outline-offset: 3px !important;
+}
+
 .upload-hero-title {
   white-space: normal;
   overflow-wrap: balance;
