@@ -485,4 +485,33 @@ def filter_candidates_with_recovery(
             and is_chord_candidate(item["text"])
         ):
             result.append(item)
-    return result, recovered_items, parse_count, split_count
+    return _drop_short_rescued_roots(result), recovered_items, parse_count, split_count
+
+
+_BARE_ROOT_RE = re.compile(r"^[A-G][#b]?$")
+# A rescued bare root this much shorter than the page's chord text is a note
+# head, rest, or stem fragment read as a letter, not a chord symbol.
+_SHORT_ROOT_RATIO = 0.6
+_MIN_ITEMS_FOR_MEDIAN = 5
+
+
+def _drop_short_rescued_roots(items: list[dict]) -> list[dict]:
+    """Drop low-confidence bare roots much shorter than the page's chords.
+
+    The low-confidence rescue trusts chord syntax to reject noise, but a
+    single letter has no syntax to check. Height is the extra signal: real
+    chord roots are printed at the chord font size.
+    """
+    heights = sorted(i["bbox"][3] - i["bbox"][1] for i in items if i.get("bbox"))
+    if len(heights) < _MIN_ITEMS_FOR_MEDIAN:
+        return items
+    median = heights[len(heights) // 2]
+    return [
+        item for item in items
+        if not (
+            item.get("bbox")
+            and item["confidence"] <= CONFIDENCE_THRESHOLD
+            and _BARE_ROOT_RE.match(item["text"])
+            and item["bbox"][3] - item["bbox"][1] < median * _SHORT_ROOT_RATIO
+        )
+    ]
