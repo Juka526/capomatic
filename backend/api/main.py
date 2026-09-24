@@ -47,17 +47,21 @@ from backend.auth.auth0 import get_token_payload
 
 logger = logging.getLogger(__name__)
 
+def _sentry_options() -> dict:
+    """Privacy-safe Sentry settings: no PII, request bodies, or local variables."""
+    return {
+        "environment": os.environ.get("SENTRY_ENVIRONMENT", "production"),
+        "release": os.environ.get("SENTRY_RELEASE"),
+        "traces_sample_rate": 0.05,
+        "send_default_pii": False,
+        "max_request_body_size": "never",
+        "include_local_variables": False,
+    }
+
+
 _sentry_dsn = os.environ.get("SENTRY_DSN", "").strip()
 if _sentry_dsn:
-    sentry_sdk.init(
-        dsn=_sentry_dsn,
-        environment=os.environ.get("SENTRY_ENVIRONMENT", "production"),
-        release=os.environ.get("SENTRY_RELEASE"),
-        traces_sample_rate=0.05,
-        send_default_pii=False,
-        max_request_body_size="never",
-        include_local_variables=False,
-    )
+    sentry_sdk.init(dsn=_sentry_dsn, **_sentry_options())
 
 # Maximum upload size in bytes (20 MB).
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
