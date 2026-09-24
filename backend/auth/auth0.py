@@ -23,62 +23,64 @@ _bearer = HTTPBearer(auto_error=False)
 _jwks: dict | None = None
 
 
-async def _fetch_jwks() -> dict:
-    """Fetch JSON Web Key Set from Auth0 (cached after first call)."""
+_LOGIN_UNAVAILABLE = HTTPException(
+    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+    detail="Login is temporarily unavailable.",
+)
+
+
+async def _fetch_jwks(*, refresh: bool = False) -> dict:
+    """Fetch the Auth0 JSON Web Key Set, cached until a key rotation."""
     global _jwks
-    if _jwks is not None:
+    if _jwks is not None and not refresh:
         return _jwks
 
+    # Configuration and network failures are server-side problems: report a
+    # generic 503 and keep domain/URL details in the log only.
     if not AUTH0_DOMAIN:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="AUTH0_DOMAIN not configured",
-        )
-
+        logger.error("AUTH0_DOMAIN is not configured")
+        raise _LOGIN_UNAVAILABLE
     url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(url)
-        resp.raise_for_status()
-        _jwks = resp.json()
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            _jwks = resp.json()
+    except (httpx.HTTPError, ValueError):
+        logger.exception("Could not fetch Auth0 JWKS")
+        raise _LOGIN_UNAVAILABLE from None
     return _jwks
+
+
+def _find_key(jwks: dict, kid: str | None) -> dict | None:
+    return next((key for key in jwks.get("keys", []) if key.get("kid") == kid), None)
+
+
+def _unauthorized(detail: str) -> HTTPException:
+    return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
 
 
 async def verify_token(token: str) -> dict:
     """Verify an Auth0 JWT and return its payload.
 
-    Raises HTTPException(401) on invalid/expired tokens.
+    Raises HTTPException(401) on invalid/expired tokens and 503 when the
+    signing keys cannot be obtained.
     """
-    jwks = await _fetch_jwks()
-
     try:
-        unverified_header = jwt.get_unverified_header(token)
+        kid = jwt.get_unverified_header(token).get("kid")
     except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token header",
-        )
+        raise _unauthorized("Invalid token header") from None
 
-    rsa_key: dict = {}
-    for key in jwks.get("keys", []):
-        if key["kid"] == unverified_header.get("kid"):
-            rsa_key = {
-                "kty": key["kty"],
-                "kid": key["kid"],
-                "use": key["use"],
-                "n": key["n"],
-                "e": key["e"],
-            }
-            break
-
-    if not rsa_key:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Unable to find matching signing key",
-        )
+    key = _find_key(await _fetch_jwks(), kid)
+    if key is None:
+        # Auth0 may have rotated its signing key since the cache was filled.
+        key = _find_key(await _fetch_jwks(refresh=True), kid)
+    if key is None:
+        raise _unauthorized("Unable to find matching signing key")
 
     try:
-        public_key = RSAAlgorithm.from_jwk(json.dumps(rsa_key))
-        payload = jwt.decode(
+        public_key = RSAAlgorithm.from_jwk(json.dumps(key))
+        return jwt.decode(
             token,
             public_key,
             algorithms=ALGORITHMS,
@@ -87,17 +89,9 @@ async def verify_token(token: str) -> dict:
             options={"require": ["exp", "iss", "sub"]},
         )
     except jwt.ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has expired",
-        )
-    except jwt.InvalidTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-        )
-
-    return payload
+        raise _unauthorized("Token has expired") from None
+    except (jwt.InvalidTokenError, ValueError, KeyError):
+        raise _unauthorized("Invalid token") from None
 
 
 async def get_token_payload(
