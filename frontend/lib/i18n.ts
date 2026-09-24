@@ -51,6 +51,9 @@ export const translations = {
     viewOriginal: '원본 보기',
     viewRendered: '결과 보기',
     downloadPng: 'PNG 다운로드',
+    longPressToSave: '이미지를 길게 눌러 저장하세요',
+    saveImageTitle: '전조한 악보 이미지',
+    closeDialog: '닫기',
     originalSheetAlt: '업로드한 원본 코드 악보',
     renderedSheetAlt: (mode: string) => `${mode === 'replace' ? '교체' : '위에 표시'} 방식으로 전조한 코드 악보`,
 
@@ -150,6 +153,9 @@ export const translations = {
     viewOriginal: 'View Original',
     viewRendered: 'View Rendered',
     downloadPng: 'Download PNG',
+    longPressToSave: 'Press and hold the image to save it',
+    saveImageTitle: 'Transposed chord sheet image',
+    closeDialog: 'Close',
     originalSheetAlt: 'Original uploaded chord sheet',
     renderedSheetAlt: (mode: string) => `Transposed chord sheet in ${mode} mode`,
 
