@@ -8,6 +8,7 @@ import { GuitarFretboard } from "@/components/GuitarFretboard";
 import { translations } from "@/lib/i18n";
 import { computeTargetKey } from "@/lib/target-key.mjs";
 import { pngDownloadName } from "@/lib/download-name.mjs";
+import { chooseSaveStrategy, dataUrlToBlob } from "@/lib/download-image.mjs";
 import { prependJobHistory } from "@/lib/job-history.mjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -84,6 +85,8 @@ export default function Home() {
 
   const [replaceResult, setReplaceResult] = useState<string | null>(null);
   const [aboveResult, setAboveResult] = useState<string | null>(null);
+  // blob: URL shown full-screen for long-press saving where downloads are blocked.
+  const [saveOverlayUrl, setSaveOverlayUrl] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"replace" | "above">("replace");
   const [showOriginal, setShowOriginal] = useState(false);
   const [rendering, setRendering] = useState(false);
@@ -500,14 +503,51 @@ export default function Home() {
     setPendingChordText("");
   };
 
+  const closeSaveOverlay = () => {
+    if (saveOverlayUrl) URL.revokeObjectURL(saveOverlayUrl);
+    setSaveOverlayUrl(null);
+  };
+
+  // Results are base64 data URIs; mobile browsers do not reliably download
+  // those via <a download>, so save through a Blob (see #31).
   const handleDownload = () => {
     const activeResult = activeTab === "replace" ? replaceResult : aboveResult;
     if (showOriginal) return;
     if (!activeResult) return;
+    const filename = pngDownloadName(activeTab, file?.name);
+    // Decoded synchronously so navigator.share still has the tap's user activation.
+    const blob = dataUrlToBlob(activeResult);
+    const pngFile = new File([blob], filename, { type: "image/png" });
+    const strategy = chooseSaveStrategy({
+      userAgent: navigator.userAgent,
+      maxTouchPoints: navigator.maxTouchPoints,
+      canShareFiles: typeof navigator.canShare === "function" && navigator.canShare({ files: [pngFile] }),
+    });
+    const blobUrl = URL.createObjectURL(blob);
+
+    if (strategy === "overlay") {
+      setSaveOverlayUrl(blobUrl);
+      return;
+    }
+    if (strategy === "share") {
+      navigator.share({ files: [pngFile], title: filename })
+        .then(() => URL.revokeObjectURL(blobUrl))
+        .catch((err: unknown) => {
+          // Cancelling the share sheet is not an error; anything else falls back to long-press saving.
+          if (err instanceof DOMException && err.name === "AbortError") URL.revokeObjectURL(blobUrl);
+          else setSaveOverlayUrl(blobUrl);
+        });
+      return;
+    }
     const a = document.createElement("a");
-    a.href = activeResult;
-    a.download = pngDownloadName(activeTab, file?.name);
+    a.href = blobUrl;
+    a.download = filename;
+    a.rel = "noopener";
+    document.body.appendChild(a);
     a.click();
+    a.remove();
+    // Some mobile browsers read the blob after click() returns.
+    window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
   };
 
   const clearFile = () => {
@@ -1188,6 +1228,40 @@ export default function Home() {
             </div>
           );
         })()}
+
+        {saveOverlayUrl && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={t.saveImageTitle}
+            onClick={closeSaveOverlay}
+            style={{
+              position: "fixed", inset: 0, zIndex: 1000, background: "rgba(20,16,10,0.92)",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              gap: 14, padding: 16,
+            }}
+          >
+            <p style={{ margin: 0, color: "white", fontSize: "0.95rem", fontWeight: 700, textAlign: "center" }}>
+              {t.longPressToSave}
+            </p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={saveOverlayUrl}
+              alt={t.saveImageTitle}
+              onClick={e => e.stopPropagation()}
+              style={{ maxWidth: "100%", maxHeight: "75vh", objectFit: "contain", borderRadius: 8, background: "white" }}
+            />
+            <button
+              onClick={closeSaveOverlay}
+              style={{
+                minHeight: 44, padding: "10px 28px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.6)",
+                background: "transparent", color: "white", fontSize: "0.9rem", fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              {t.closeDialog}
+            </button>
+          </div>
+        )}
 
         <style>{`
           @keyframes spin { to { transform: rotate(360deg); } }
