@@ -71,8 +71,8 @@ _CHORD_RE = re.compile(
     r"^"
     r"[A-G][#b]?"                        # root
     r"(?:maj|m(?!aj)|dim|aug|sus)?"      # optional quality
-    r"(?:[0-9]{1,2})?"                   # optional numeric extension
-    r"(?:[#b][0-9]{1,2})*"               # optional altered degrees
+    r"(?:[1-9][0-9]?)?"                  # optional numeric extension
+    r"(?:[#b][1-9][0-9]?)*"              # optional altered degrees
     r"(?:sus[24]?)?"                     # optional sus modifier
     r"(?:add[0-9]+)?"                    # optional add modifier
     r"(?:\([^)]*\))?"                    # optional parenthesised part
@@ -125,16 +125,29 @@ _BARE_BS_RE = re.compile(r"(?<=\d)b[sS](?![A-Za-z0-9])")
 
 
 # OCR confusion: the engraved sharp's vertical strokes are read as "l", "I",
-# "H", or "|", e.g. C#m -> Clm / CHm. Only roots with a conventional sharp
-# spelling qualify ("Elm" is never E#m), and chord syntax must follow so a
-# lone "Al" or "CH" is not promoted to a chord.
-_SHARP_CONFUSION_RE = re.compile(r"^([ACDFG])[lIH|](?=m|maj|dim|aug|sus|\d|/)")
+# "H", "|", or "t", e.g. C#m -> Clm / CHm, C#o7 -> Cto7. Only roots with a
+# conventional sharp spelling qualify ("Elm" is never E#m), and chord syntax
+# must follow so a lone "Al" or "CH" is not promoted to a chord.
+_SHARP_CONFUSION_RE = re.compile(
+    r"^([ACDFG])[lIH|t](?=m|maj|dim|aug|sus|\d|/|o(?:7|$))"
+)
+# The small engraved flat is read as "r" (Bbadd2 -> Bradd2). Only roots with
+# a conventional flat spelling qualify ("Cb"/"Fb" are not), and chord syntax
+# must follow, so words such as "Bread" are not rewritten.
+_FLAT_CONFUSION_RE = re.compile(r"^([ABDEG])r(?=add|m|maj|dim|aug|sus|\d|/)")
+# The slash of a slash chord is read as "I", "l", or "|" (F/A -> FIA). The
+# token must end in a bass note, so "Al" or "CH" alone is left untouched.
+_SLASH_CONFUSION_RE = re.compile(
+    r"^([A-G][#b]?(?:maj|m|dim|aug|sus)?\d{0,2})[Il|]([A-G][#b]?)$"
+)
 
 
 def _repair_ocr_confusions(text: str) -> str:
-    """Apply the sharp and flat-five OCR repairs; keep *text* unless valid."""
+    """Apply the slash, sharp, flat, and flat-five OCR repairs; keep *text* unless valid."""
     stripped = text.strip()
-    candidate = _SHARP_CONFUSION_RE.sub(r"\1#", stripped)
+    candidate = _SLASH_CONFUSION_RE.sub(r"\1/\2", stripped)
+    candidate = _SHARP_CONFUSION_RE.sub(r"\1#", candidate)
+    candidate = _FLAT_CONFUSION_RE.sub(r"\1b", candidate)
     candidate = _BARE_BS_RE.sub("b5", _PAREN_BS_RE.sub("(b5)", candidate))
     if candidate == stripped:
         return text

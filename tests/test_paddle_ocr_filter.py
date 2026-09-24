@@ -580,3 +580,31 @@ class TestFullyParenthesizedChords:
     @pytest.mark.parametrize("text", ["A7(sus4)", "C(add9)", "G(b5)"])
     def test_parenthesized_modifier_is_not_a_wrapped_chord(self, text):
         assert _filter_one(text) == [(text, None)]
+
+
+class TestSmallGlyphConfusions:
+    @pytest.mark.parametrize("text,expected", [
+        ("FIA", "F/A"),
+        ("GlB", "G/B"),
+        ("Bm7IA", "Bm7/A"),
+        ("Bradd2", "Bbadd2"),
+        ("Brm7", "Bbm7"),
+        ("Arsus4", "Absus4"),
+        ("Cto", "C#dim"),
+        ("Cto7", "C#dim7"),
+        ("C#o7", "C#dim7"),
+        ("G7(9)", "G7(9)"),
+    ])
+    def test_repaired(self, text, expected):
+        assert _filter_one(text) == [(expected, None)]
+
+    @pytest.mark.parametrize("text", [
+        "Bread", "Br",     # flat repair needs chord syntax after "r"
+        "Frm", "Crm",      # Fb/Cb are not conventional roots
+        "Ct", "Cto3",      # "t" is a sharp only before chord syntax
+        "Go", "Co",        # a bare "o" is a word, not diminished
+        "Al", "Gl",        # no bass note after the stroke
+        "C03", "Am7b05",   # extensions never start with zero
+    ])
+    def test_rejected(self, text):
+        assert _filter_one(text) == []

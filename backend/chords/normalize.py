@@ -14,6 +14,10 @@ def normalize_chord_text(s: str) -> str:
     s = s.strip()
     s = s.replace("\u266f", "#").replace("\u266d", "b")  # ♯ → #, ♭ → b
     s = re.sub(r"\s+", "", s)
+    # Diminished glyphs: ° is dim, ø is half-diminished (m7b5). Converted
+    # before the character filter below would strip them.
+    s = re.sub(r"[\u00b0\u00ba]", "dim", s)
+    s = re.sub(r"\u00f87?", "m7b5", s)
     # Strip OCR noise characters that are never part of a chord symbol
     # (e.g. "$A_$2$" → "A2", "$G_m}$" → "Gm", "B_m7" → "Bm7").
     # Allowed set: letters, digits, #, /, (, ), +, -
@@ -31,13 +35,20 @@ def normalize_chord_text(s: str) -> str:
     s = re.sub(r"(?i)sus", "sus", s)   # SUS, Sus       → sus
     s = re.sub(r"(?i)add", "add", s)   # ADD, Add       → add
     s = s.replace("min", "m")
+    # A plain "o" for diminished (C#o7, Co7, Bbo). Bare "Go"/"Co" is left
+    # alone because it is more likely a word than a chord.
+    s = re.sub(r"^([A-G][#b])o(?=7|/|$)", r"\1dim", s)
+    s = re.sub(r"^([A-G])o(?=7)", r"\1dim", s)
     # Strip parentheses from simple suffix qualifiers so A7(sus4) == A7sus4.
     # Applied after case-folding so paren content is already lowercase.
     # Keep "(b...)" right after a bare root: "G(b5)" is G with a flat fifth,
     # but unwrapped "Gb5" would read as a G-flat power chord.
+    # Keep "(9)" after a digit too: unwrapped "G79" would merge two numbers.
     s = re.sub(
-        r"(?<![A-G])\(([a-z0-9]+)\)|(?<=[A-G])\(((?!b)[a-z0-9]+)\)",
-        lambda m: m.group(1) or m.group(2),
+        r"(?<![A-G0-9])\(([a-z0-9]+)\)"
+        r"|(?<=[A-G])\(((?!b)[a-z0-9]+)\)"
+        r"|(?<=[0-9])\(((?![0-9])[a-z0-9]+)\)",
+        lambda m: m.group(1) or m.group(2) or m.group(3),
         s,
     )
     return s

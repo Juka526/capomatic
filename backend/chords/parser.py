@@ -37,7 +37,12 @@ def parse_chord(s: str) -> Chord:
 
     # Strip parentheses so "A(sus4)" and "Asus4" produce the same extensions.
     # "E7(sus4)" -> "E7sus4" after strip, preserving all content.
-    remaining = remaining.replace("(", "").replace(")", "")
+    # A numeric group after a number stays wrapped ("7(9)" is not "79").
+    remaining = re.sub(
+        r"(?<!\d)\(([^()]*)\)|\(((?!\d)[^()]*)\)",
+        lambda m: m.group(1) if m.group(1) is not None else m.group(2),
+        remaining,
+    )
 
     # --- quality ---
     m = _QUALITY_RE.match(remaining)
