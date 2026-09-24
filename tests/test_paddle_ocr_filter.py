@@ -255,6 +255,32 @@ class TestApplyDirectionFilter:
 
         assert [item["text"] for item in result] == ["F", "C/F", "G"]
 
+    def test_stray_token_above_a_row_does_not_split_it(self):
+        # Lyric/note fragments just above a chord row used to start the row,
+        # pushing the lower-sitting "D" into a row of its own after "Em7".
+        items = [
+            {"text": "HO", "confidence": 0.5, "bbox": [81, 227, 196, 247]},
+            {"text": "G2", "confidence": 1, "bbox": [80, 252, 104, 272]},
+            {"text": "Em7/A", "confidence": 1, "bbox": [270, 252, 315, 272]},
+            {"text": "Em7", "confidence": 1, "bbox": [448, 250, 481, 273]},
+            {"text": "D", "confidence": 1, "bbox": [338, 254, 350, 270]},
+        ]
+
+        result = _sort_reading_order(items)
+
+        assert [item["text"] for item in result] == ["HO", "G2", "Em7/A", "D", "Em7"]
+
+    def test_chords_at_slightly_different_heights_share_a_row(self):
+        items = [
+            {"text": "A7sus4", "confidence": 1, "bbox": [200, 96, 250, 124]},   # taller superscript box
+            {"text": "D", "confidence": 1, "bbox": [100, 102, 115, 120]},
+            {"text": "Em7", "confidence": 1, "bbox": [300, 100, 330, 122]},
+        ]
+
+        result = _sort_reading_order(items)
+
+        assert [item["text"] for item in result] == ["D", "A7sus4", "Em7"]
+
 
 # ---------------------------------------------------------------------------
 # filter.py edge cases
