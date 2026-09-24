@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-24T05:47:57.347495+00:00",
+  "generated_at": "2026-09-24T16:53:27.565318+00:00",
   "engine": "paddle",
   "api_url": "https://juka526-capomatic.hf.space",
   "origin": "https://capomatic.vercel.app",
@@ -10,7 +10,7 @@
     {
       "image": "사랑하기 때문에.png",
       "image_sha256": "31b2724e9d835144ea8ebd4741758d90eb42923774ceaf06fb0c07243fddb462",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/because_i_love.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/because_i_love.json",
       "total_detected": 42,
       "detected_chord_sequence": [
         "G",
@@ -136,52 +136,52 @@
         "C#m/G#"
       ],
       "strict_unseen": false,
-      "ocr_time_s": 27.5404,
+      "ocr_time_s": 28.2344,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 9,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 26399.2,
-        "total_ms": 26916.7,
+        "predict_ms": 26206.9,
+        "total_ms": 26616.7,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 27055.0,
+        "service_ms": 26830.9,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 27540.4,
-        "detection_id": "12a6e508ec7043f4bcc7aa7eb9b59293",
-        "replace_render_median_ms": 274.0,
-        "replace_render_wall_median_ms": 2311.0,
+        "detect_wall_ms": 28234.4,
+        "detection_id": "c813b424522d429d846b976794875569",
+        "replace_render_median_ms": 275.0,
+        "replace_render_wall_median_ms": 564.7,
         "replace_render_ms_samples": [
-          274.0,
-          271.0,
-          327.0
+          275.0,
+          263.0,
+          290.0
         ],
         "replace_render_wall_ms_samples": [
-          2311.0,
-          2088.6,
-          2399.8
+          564.7,
+          553.0,
+          585.5
         ],
-        "above_render_median_ms": 197.0,
-        "above_render_wall_median_ms": 2099.3,
+        "above_render_median_ms": 183.0,
+        "above_render_wall_median_ms": 478.5,
         "above_render_ms_samples": [
-          197.0,
-          188.0,
-          199.0
+          183.0,
+          182.0,
+          186.0
         ],
         "above_render_wall_ms_samples": [
-          2099.3,
-          2324.7,
-          2084.3
+          476.7,
+          478.5,
+          493.7
         ]
       },
-      "predict_ms": 26399.2,
+      "predict_ms": 26206.9,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": false,
@@ -190,7 +190,7 @@
     {
       "image": "children_of_light.png",
       "image_sha256": "91afe33d6138c038e76f1c5f962232ee7da371a6c533eb51f18d9fa930160d5b",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/children_of_light.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/children_of_light.json",
       "total_detected": 37,
       "detected_chord_sequence": [
         "F",
@@ -353,52 +353,52 @@
       ],
       "missing_hard_targets": [],
       "strict_unseen": true,
-      "ocr_time_s": 11.420200000000001,
+      "ocr_time_s": 11.0196,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 6,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 9687.5,
-        "total_ms": 10789.3,
+        "predict_ms": 9394.1,
+        "total_ms": 10517.9,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 11007.5,
+        "service_ms": 10733.2,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 11420.2,
-        "detection_id": "2d0a125aaba4497a885b55b53bcf1889",
-        "replace_render_median_ms": 305.0,
-        "replace_render_wall_median_ms": 1316.9,
+        "detect_wall_ms": 11019.6,
+        "detection_id": "3ced3681be604f74b6dc8c3e31f4c27e",
+        "replace_render_median_ms": 276.0,
+        "replace_render_wall_median_ms": 531.1,
         "replace_render_ms_samples": [
-          305.0,
-          284.0,
-          442.0
+          282.0,
+          272.0,
+          276.0
         ],
         "replace_render_wall_ms_samples": [
-          1316.9,
-          1228.5,
-          1344.3
+          540.9,
+          517.3,
+          531.1
         ],
-        "above_render_median_ms": 134.0,
-        "above_render_wall_median_ms": 1229.7,
+        "above_render_median_ms": 137.0,
+        "above_render_wall_median_ms": 389.9,
         "above_render_ms_samples": [
-          138.0,
-          134.0,
-          133.0
+          142.0,
+          133.0,
+          137.0
         ],
         "above_render_wall_ms_samples": [
-          1397.9,
-          1229.7,
-          1177.0
+          396.3,
+          389.6,
+          389.9
         ]
       },
-      "predict_ms": 9687.5,
+      "predict_ms": 9394.1,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -407,7 +407,7 @@
     {
       "image": "사랑한다 말하시네.png",
       "image_sha256": "ed9a99903c6e9de5cafadd0639ca9e956a785baee8cd9f02af2f14ad546acfc6",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/he_says_love.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/he_says_love.json",
       "total_detected": 62,
       "detected_chord_sequence": [
         "A",
@@ -566,52 +566,52 @@
       ],
       "missing_hard_targets": [],
       "strict_unseen": false,
-      "ocr_time_s": 14.010200000000001,
+      "ocr_time_s": 14.088700000000001,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 7,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 12303.6,
-        "total_ms": 13509.4,
+        "predict_ms": 12400.7,
+        "total_ms": 13696.3,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 13701.5,
+        "service_ms": 13812.7,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 14010.2,
-        "detection_id": "9009742638bd488c831aefaa403a0ebc",
+        "detect_wall_ms": 14088.7,
+        "detection_id": "9a20479a25cd44daba1ab6a2d557cde6",
         "replace_render_median_ms": 263.0,
-        "replace_render_wall_median_ms": 1045.4,
+        "replace_render_wall_median_ms": 500.2,
         "replace_render_ms_samples": [
+          272.0,
           263.0,
-          276.0,
           260.0
         ],
         "replace_render_wall_ms_samples": [
-          1058.5,
-          1034.5,
-          1045.4
+          819.5,
+          500.2,
+          499.4
         ],
-        "above_render_median_ms": 79.0,
-        "above_render_wall_median_ms": 766.6,
+        "above_render_median_ms": 76.0,
+        "above_render_wall_median_ms": 319.5,
         "above_render_ms_samples": [
-          79.0,
-          77.0,
-          80.0
+          76.0,
+          76.0,
+          75.0
         ],
         "above_render_wall_ms_samples": [
-          753.4,
-          766.6,
-          819.5
+          390.8,
+          319.5,
+          318.7
         ]
       },
-      "predict_ms": 12303.6,
+      "predict_ms": 12400.7,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -620,7 +620,7 @@
     {
       "image": "친구야.jpeg",
       "image_sha256": "9025cf66ba1d9fabf64bee12ffe2797acdfb571d0d4775415d9e40d8858b6c60",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/hey_buddy.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/hey_buddy.json",
       "total_detected": 38,
       "detected_chord_sequence": [
         "Asus4",
@@ -736,52 +736,52 @@
       ],
       "missing_hard_targets": [],
       "strict_unseen": false,
-      "ocr_time_s": 11.6038,
+      "ocr_time_s": 11.4409,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 7,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 10595.5,
-        "total_ms": 11231.0,
+        "predict_ms": 10498.0,
+        "total_ms": 11105.0,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 11337.9,
+        "service_ms": 11213.7,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 11603.8,
-        "detection_id": "50552b1eac1e47fc808d12b4905d16cd",
-        "replace_render_median_ms": 206.0,
-        "replace_render_wall_median_ms": 1095.7,
+        "detect_wall_ms": 11440.9,
+        "detection_id": "99f07cadb81d42b8b90d93c195d6ef2a",
+        "replace_render_median_ms": 215.0,
+        "replace_render_wall_median_ms": 518.8,
         "replace_render_ms_samples": [
-          206.0,
-          206.0,
-          208.0
+          224.0,
+          207.0,
+          215.0
         ],
         "replace_render_wall_ms_samples": [
-          1094.3,
-          1095.7,
-          1258.8
+          530.4,
+          518.8,
+          518.2
         ],
-        "above_render_median_ms": 102.0,
-        "above_render_wall_median_ms": 1048.3,
+        "above_render_median_ms": 103.0,
+        "above_render_wall_median_ms": 357.8,
         "above_render_ms_samples": [
+          106.0,
           102.0,
-          102.0,
-          108.0
+          103.0
         ],
         "above_render_wall_ms_samples": [
-          1041.1,
-          1048.3,
-          1048.9
+          357.8,
+          361.8,
+          357.2
         ]
       },
-      "predict_ms": 10595.5,
+      "predict_ms": 10498.0,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -790,7 +790,7 @@
     {
       "image": "만왕의 왕 내주께서.png",
       "image_sha256": "f66e424dcc67888a0b88232fca3a1226216ee85f220d08b617eefc5503a5f1b8",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/king_of_kings.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/king_of_kings.json",
       "total_detected": 22,
       "detected_chord_sequence": [
         "G",
@@ -868,52 +868,52 @@
       ],
       "missing_hard_targets": [],
       "strict_unseen": false,
-      "ocr_time_s": 7.5804,
+      "ocr_time_s": 8.0922,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 4,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 6500.4,
-        "total_ms": 7102.9,
+        "predict_ms": 6706.2,
+        "total_ms": 7639.4,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 7316.5,
+        "service_ms": 7853.9,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 7580.4,
-        "detection_id": "b7a3c471b68d4e2db6315674e66b7a93",
-        "replace_render_median_ms": 226.0,
-        "replace_render_wall_median_ms": 1615.1,
+        "detect_wall_ms": 8092.2,
+        "detection_id": "eb8eb485928a449486b4b7efe9e7c221",
+        "replace_render_median_ms": 227.0,
+        "replace_render_wall_median_ms": 507.0,
         "replace_render_ms_samples": [
-          236.0,
-          224.0,
-          226.0
+          225.0,
+          231.0,
+          227.0
         ],
         "replace_render_wall_ms_samples": [
-          1797.3,
-          1615.1,
-          1512.0
+          480.0,
+          507.0,
+          516.7
         ],
-        "above_render_median_ms": 141.0,
-        "above_render_wall_median_ms": 1349.2,
+        "above_render_median_ms": 145.0,
+        "above_render_wall_median_ms": 409.4,
         "above_render_ms_samples": [
-          149.0,
-          141.0,
-          141.0
+          146.0,
+          145.0,
+          143.0
         ],
         "above_render_wall_ms_samples": [
-          1349.2,
-          1325.7,
-          1350.3
+          409.4,
+          448.9,
+          404.3
         ]
       },
-      "predict_ms": 6500.4,
+      "predict_ms": 6706.2,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -922,7 +922,7 @@
     {
       "image": "주의 자녀로 산다는 것은.png",
       "image_sha256": "1344de44d518c5d9faf04fef5545560950acd2b42b90d52154b5afdebd903ef0",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/living_as_children_of_god.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/living_as_children_of_god.json",
       "total_detected": 31,
       "detected_chord_sequence": [
         "Dadd2",
@@ -1023,52 +1023,52 @@
       ],
       "missing_hard_targets": [],
       "strict_unseen": false,
-      "ocr_time_s": 9.168899999999999,
+      "ocr_time_s": 10.1966,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 4,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 7696.1,
-        "total_ms": 8681.8,
+        "predict_ms": 8095.9,
+        "total_ms": 8866.7,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 8869.8,
+        "service_ms": 9064.2,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 9168.9,
-        "detection_id": "ac7666a5ba8e4a449368ece7ac26a9a3",
+        "detect_wall_ms": 10196.6,
+        "detection_id": "9b44f54e841a4ab09d3d0df9532ac661",
         "replace_render_median_ms": 161.0,
-        "replace_render_wall_median_ms": 618.7,
+        "replace_render_wall_median_ms": 400.1,
         "replace_render_ms_samples": [
-          176.0,
           161.0,
-          159.0
+          167.0,
+          160.0
         ],
         "replace_render_wall_ms_samples": [
-          702.3,
-          618.7,
-          605.6
+          400.1,
+          409.9,
+          397.2
         ],
-        "above_render_median_ms": 61.0,
-        "above_render_wall_median_ms": 507.9,
+        "above_render_median_ms": 59.0,
+        "above_render_wall_median_ms": 390.8,
         "above_render_ms_samples": [
-          62.0,
-          61.0,
-          57.0
+          60.0,
+          59.0,
+          59.0
         ],
         "above_render_wall_ms_samples": [
-          507.9,
-          510.6,
-          504.8
+          390.8,
+          314.0,
+          1316.2
         ]
       },
-      "predict_ms": 7696.1,
+      "predict_ms": 8095.9,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -1077,7 +1077,7 @@
     {
       "image": "주님의 시선.png",
       "image_sha256": "99094b01963fa9bb5a77f21c605db1ede7dcd787079ccdcdc79b6c411c4ca06a",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/lords_gaze.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/lords_gaze.json",
       "total_detected": 41,
       "detected_chord_sequence": [
         "Bb",
@@ -1162,52 +1162,52 @@
       "hard_targets": [],
       "missing_hard_targets": [],
       "strict_unseen": false,
-      "ocr_time_s": 18.8715,
+      "ocr_time_s": 20.225099999999998,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 7,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 16995.6,
-        "total_ms": 18216.3,
+        "predict_ms": 17398.2,
+        "total_ms": 18633.8,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 18413.2,
+        "service_ms": 18829.9,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 18871.5,
-        "detection_id": "b4e12b19eb65442cb67bdb43d75d2f67",
-        "replace_render_median_ms": 160.0,
-        "replace_render_wall_median_ms": 1198.4,
+        "detect_wall_ms": 20225.1,
+        "detection_id": "6f900b6cd0244bdf96391c0dd122c18c",
+        "replace_render_median_ms": 158.0,
+        "replace_render_wall_median_ms": 420.5,
         "replace_render_ms_samples": [
-          159.0,
-          160.0,
-          162.0
+          155.0,
+          158.0,
+          160.0
         ],
         "replace_render_wall_ms_samples": [
-          1068.8,
-          1351.0,
-          1198.4
+          418.7,
+          420.5,
+          495.9
         ],
-        "above_render_median_ms": 101.0,
-        "above_render_wall_median_ms": 1333.1,
+        "above_render_median_ms": 103.0,
+        "above_render_wall_median_ms": 366.8,
         "above_render_ms_samples": [
           101.0,
-          106.0,
-          101.0
+          108.0,
+          103.0
         ],
         "above_render_wall_ms_samples": [
-          1333.1,
-          1272.3,
-          1349.4
+          359.4,
+          369.4,
+          366.8
         ]
       },
-      "predict_ms": 16995.6,
+      "predict_ms": 17398.2,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -1216,7 +1216,7 @@
     {
       "image": "주 사랑이 나를 숨쉬게 해.png",
       "image_sha256": "95c1f0becab76e816b1d5052b9d906cecc3f561dacd69fd199ee59cff4294d67",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/love_of_god_i_breath.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/love_of_god_i_breath.json",
       "total_detected": 36,
       "detected_chord_sequence": [
         "Bb/D",
@@ -1311,52 +1311,52 @@
       "hard_targets": [],
       "missing_hard_targets": [],
       "strict_unseen": false,
-      "ocr_time_s": 10.6241,
+      "ocr_time_s": 11.6275,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 6,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 9389.1,
-        "total_ms": 10153.3,
+        "predict_ms": 9600.0,
+        "total_ms": 10608.0,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 10183.2,
+        "service_ms": 10721.3,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 10624.1,
-        "detection_id": "16e893c5565146f5b9bba8c92f97e7d9",
-        "replace_render_median_ms": 151.0,
-        "replace_render_wall_median_ms": 622.7,
+        "detect_wall_ms": 11627.5,
+        "detection_id": "90fa937fbef8480ea0005157629a7aa9",
+        "replace_render_median_ms": 153.0,
+        "replace_render_wall_median_ms": 1260.7,
         "replace_render_ms_samples": [
-          151.0,
-          154.0,
-          151.0
+          153.0,
+          162.0,
+          152.0
         ],
         "replace_render_wall_ms_samples": [
-          599.0,
-          725.8,
-          622.7
+          1260.7,
+          398.8,
+          1550.2
         ],
         "above_render_median_ms": 60.0,
-        "above_render_wall_median_ms": 506.4,
+        "above_render_wall_median_ms": 296.2,
         "above_render_ms_samples": [
           59.0,
           60.0,
-          60.0
+          67.0
         ],
         "above_render_wall_ms_samples": [
-          510.2,
-          505.9,
-          506.4
+          296.2,
+          288.7,
+          301.9
         ]
       },
-      "predict_ms": 9389.1,
+      "predict_ms": 9600.0,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -1365,7 +1365,7 @@
     {
       "image": "내 몸은 구주의 성전이니.png",
       "image_sha256": "ced29059db0e6e0927947c14f2e09bf0f954518001e77c396b8384125cf93c35",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/mybody_temple__team__page1.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/mybody_temple__team__page1.json",
       "total_detected": 55,
       "detected_chord_sequence": [
         "Gmaj7",
@@ -1497,52 +1497,52 @@
       "hard_targets": [],
       "missing_hard_targets": [],
       "strict_unseen": false,
-      "ocr_time_s": 14.7125,
+      "ocr_time_s": 16.0745,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 8,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 13685.1,
-        "total_ms": 14290.9,
+        "predict_ms": 14097.7,
+        "total_ms": 14788.4,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 14410.6,
+        "service_ms": 14909.8,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 14712.5,
-        "detection_id": "0ac78c5824cb45d6ad24c29efaca0d4a",
-        "replace_render_median_ms": 272.0,
-        "replace_render_wall_median_ms": 817.0,
+        "detect_wall_ms": 16074.5,
+        "detection_id": "6b6db80e969e444c97a467712351a213",
+        "replace_render_median_ms": 288.0,
+        "replace_render_wall_median_ms": 530.6,
         "replace_render_ms_samples": [
-          284.0,
-          271.0,
-          272.0
+          288.0,
+          285.0,
+          292.0
         ],
         "replace_render_wall_ms_samples": [
-          741.4,
-          817.0,
-          1047.5
+          1509.7,
+          528.0,
+          530.6
         ],
-        "above_render_median_ms": 88.0,
-        "above_render_wall_median_ms": 758.6,
+        "above_render_median_ms": 87.0,
+        "above_render_wall_median_ms": 337.3,
         "above_render_ms_samples": [
-          84.0,
-          90.0,
-          88.0
+          87.0,
+          92.0,
+          86.0
         ],
         "above_render_wall_ms_samples": [
-          748.5,
-          758.6,
-          3335.7
+          335.3,
+          337.3,
+          770.1
         ]
       },
-      "predict_ms": 13685.1,
+      "predict_ms": 14097.7,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -1551,7 +1551,7 @@
     {
       "image": "오 주여 당신앞에.jpeg",
       "image_sha256": "0e35708e07dbd74f2af0e17715364f10995062af0440b1fc520a4878e58a0d9a",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/o_lord_before_thee.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/o_lord_before_thee.json",
       "total_detected": 58,
       "detected_chord_sequence": [
         "B/D#",
@@ -1679,52 +1679,52 @@
       ],
       "missing_hard_targets": [],
       "strict_unseen": false,
-      "ocr_time_s": 16.3465,
+      "ocr_time_s": 18.1979,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 7,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 15109.4,
-        "total_ms": 15861.2,
+        "predict_ms": 14798.8,
+        "total_ms": 15421.0,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 15958.7,
+        "service_ms": 15509.6,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 16346.5,
-        "detection_id": "8481be4acb7a4c5eb4b89d1cc2593d1f",
-        "replace_render_median_ms": 265.0,
-        "replace_render_wall_median_ms": 1337.7,
+        "detect_wall_ms": 18197.9,
+        "detection_id": "165d67da8f9e49c0b99f39504918c0d8",
+        "replace_render_median_ms": 264.0,
+        "replace_render_wall_median_ms": 519.3,
         "replace_render_ms_samples": [
-          294.0,
-          265.0,
-          256.0
+          271.0,
+          264.0,
+          260.0
         ],
         "replace_render_wall_ms_samples": [
-          1573.0,
-          1289.3,
-          1337.7
+          520.7,
+          519.3,
+          518.7
         ],
-        "above_render_median_ms": 103.0,
-        "above_render_wall_median_ms": 1345.5,
+        "above_render_median_ms": 104.0,
+        "above_render_wall_median_ms": 363.8,
         "above_render_ms_samples": [
-          103.0,
-          101.0,
+          104.0,
+          104.0,
           104.0
         ],
         "above_render_wall_ms_samples": [
-          1521.3,
-          1345.5,
-          1335.3
+          437.2,
+          363.8,
+          359.7
         ]
       },
-      "predict_ms": 15109.4,
+      "predict_ms": 14798.8,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -1733,7 +1733,7 @@
     {
       "image": "빛으로 비추시네.jpg",
       "image_sha256": "aecaecae5e07fdda7b1abcf8c98ebd86d7be6343edef1d56ae8eee266440765c",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/shine_your_light.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/shine_your_light.json",
       "total_detected": 29,
       "detected_chord_sequence": [
         "G",
@@ -1818,52 +1818,52 @@
       "hard_targets": [],
       "missing_hard_targets": [],
       "strict_unseen": false,
-      "ocr_time_s": 16.8035,
+      "ocr_time_s": 17.5374,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 8,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 15599.4,
-        "total_ms": 16474.3,
+        "predict_ms": 16284.0,
+        "total_ms": 17088.8,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 16567.7,
+        "service_ms": 17191.8,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 16803.5,
-        "detection_id": "be52c0776ef846f4adccb32b8ce1dc48",
-        "replace_render_median_ms": 146.0,
-        "replace_render_wall_median_ms": 1256.8,
+        "detect_wall_ms": 17537.4,
+        "detection_id": "b6b31096b61244ed944674d06e092491",
+        "replace_render_median_ms": 147.0,
+        "replace_render_wall_median_ms": 397.8,
         "replace_render_ms_samples": [
-          144.0,
-          152.0,
-          146.0
+          155.0,
+          147.0,
+          147.0
         ],
         "replace_render_wall_ms_samples": [
-          1154.4,
-          2737.6,
-          1256.8
+          397.8,
+          388.9,
+          398.9
         ],
-        "above_render_median_ms": 79.0,
-        "above_render_wall_median_ms": 1312.3,
+        "above_render_median_ms": 81.0,
+        "above_render_wall_median_ms": 330.3,
         "above_render_ms_samples": [
-          83.0,
-          79.0,
-          79.0
+          80.0,
+          81.0,
+          85.0
         ],
         "above_render_wall_ms_samples": [
-          1353.7,
-          1304.9,
-          1312.3
+          330.3,
+          388.5,
+          327.4
         ]
       },
-      "predict_ms": 15599.4,
+      "predict_ms": 16284.0,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -1872,7 +1872,7 @@
     {
       "image": "시간은 흐르고.png",
       "image_sha256": "550e86e7a90d3dea5566ff06b838c8fb347578817cf6a15f64774ed0438bfa88",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/time_passes.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/time_passes.json",
       "total_detected": 47,
       "detected_chord_sequence": [
         "C",
@@ -1954,7 +1954,8 @@
         "C7sus4",
         "D/F#",
         "G",
-        "F/A"
+        "F/A",
+        "Cmaj7/B"
       ],
       "hit": [
         "Am7",
@@ -1970,14 +1971,16 @@
         "Gm7",
         "Gsus4"
       ],
-      "miss": [],
+      "miss": [
+        "Cmaj7/B"
+      ],
       "extra": [
         "Am",
         "C7/B",
         "Dm",
         "G6/B"
       ],
-      "coverage": 1.0,
+      "coverage": 0.9230769230769231,
       "unique_precision": 0.75,
       "expected_total_min": 15,
       "expected_total_max": 120,
@@ -1997,52 +2000,52 @@
         "Csus4"
       ],
       "strict_unseen": false,
-      "ocr_time_s": 12.8291,
+      "ocr_time_s": 12.9404,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 6,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 11599.6,
-        "total_ms": 12358.5,
+        "predict_ms": 11689.0,
+        "total_ms": 12562.8,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 12555.0,
+        "service_ms": 12683.4,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 12829.1,
-        "detection_id": "d84240a7a2ba4ac2807b880adde3f736",
+        "detect_wall_ms": 12940.4,
+        "detection_id": "b52a84cd526d4f929fb1928e886342f7",
         "replace_render_median_ms": 171.0,
-        "replace_render_wall_median_ms": 723.1,
+        "replace_render_wall_median_ms": 459.2,
         "replace_render_ms_samples": [
-          171.0,
-          179.0,
-          162.0
+          177.0,
+          168.0,
+          171.0
         ],
         "replace_render_wall_ms_samples": [
-          1001.0,
-          723.1,
-          614.3
+          459.2,
+          1227.2,
+          400.3
         ],
-        "above_render_median_ms": 65.0,
-        "above_render_wall_median_ms": 573.3,
+        "above_render_median_ms": 66.0,
+        "above_render_wall_median_ms": 330.9,
         "above_render_ms_samples": [
-          65.0,
-          71.0,
-          65.0
+          66.0,
+          64.0,
+          68.0
         ],
         "above_render_wall_ms_samples": [
-          803.5,
-          573.3,
-          522.1
+          300.0,
+          391.1,
+          330.9
         ]
       },
-      "predict_ms": 11599.6,
+      "predict_ms": 11689.0,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -2051,7 +2054,7 @@
     {
       "image": "믿음으로 나아가네.png",
       "image_sha256": "c3c437bd561dd19874e930c5c36ae2d30b8e3db643833a308a395457cbe11767",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/walk_by_faith.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/walk_by_faith.json",
       "total_detected": 72,
       "detected_chord_sequence": [
         "F/A",
@@ -2202,52 +2205,52 @@
       "hard_targets": [],
       "missing_hard_targets": [],
       "strict_unseen": false,
-      "ocr_time_s": 23.9988,
+      "ocr_time_s": 24.798299999999998,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 8,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 22286.2,
-        "total_ms": 23162.6,
+        "predict_ms": 22390.2,
+        "total_ms": 23186.2,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 23289.6,
+        "service_ms": 23391.6,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 23998.8,
-        "detection_id": "c7e4818952f340fdb4c256e3ab77d135",
-        "replace_render_median_ms": 434.0,
-        "replace_render_wall_median_ms": 1449.6,
+        "detect_wall_ms": 24798.3,
+        "detection_id": "67d29002d91e400f9e9034727c73aa7e",
+        "replace_render_median_ms": 350.0,
+        "replace_render_wall_median_ms": 596.2,
         "replace_render_ms_samples": [
-          434.0,
-          429.0,
-          450.0
+          351.0,
+          337.0,
+          350.0
         ],
         "replace_render_wall_ms_samples": [
-          1122.8,
-          1610.5,
-          1449.6
+          596.2,
+          592.8,
+          695.5
         ],
-        "above_render_median_ms": 105.0,
-        "above_render_wall_median_ms": 1049.8,
+        "above_render_median_ms": 104.0,
+        "above_render_wall_median_ms": 409.5,
         "above_render_ms_samples": [
-          105.0,
-          108.0,
-          99.0
+          100.0,
+          109.0,
+          104.0
         ],
         "above_render_wall_ms_samples": [
-          1044.2,
-          1049.8,
-          1051.4
+          357.1,
+          448.4,
+          409.5
         ]
       },
-      "predict_ms": 22286.2,
+      "predict_ms": 22390.2,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": false,
@@ -2256,7 +2259,7 @@
     {
       "image": "내가 소망하는.jpeg",
       "image_sha256": "519af1f90ccfbe232112e8fb1fcfc5b8a62f56950ac5474f4dd0731aa0180629",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/what_i_long_for.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/what_i_long_for.json",
       "total_detected": 45,
       "detected_chord_sequence": [
         "Bb",
@@ -2354,52 +2357,52 @@
       ],
       "missing_hard_targets": [],
       "strict_unseen": false,
-      "ocr_time_s": 14.398200000000001,
+      "ocr_time_s": 14.474,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 8,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 13016.1,
-        "total_ms": 13927.3,
+        "predict_ms": 13186.8,
+        "total_ms": 13854.6,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 14131.2,
+        "service_ms": 13977.0,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 14398.2,
-        "detection_id": "46f27848fac34666a9dcc62bc4d451fb",
-        "replace_render_median_ms": 323.0,
-        "replace_render_wall_median_ms": 2102.6,
+        "detect_wall_ms": 14474.0,
+        "detection_id": "a31fc76d1db1482ba2d875747533bb4d",
+        "replace_render_median_ms": 339.0,
+        "replace_render_wall_median_ms": 620.2,
         "replace_render_ms_samples": [
-          323.0,
-          319.0,
+          344.0,
+          339.0,
           338.0
         ],
         "replace_render_wall_ms_samples": [
-          2102.6,
-          2083.9,
-          2105.6
+          629.9,
+          620.2,
+          616.4
         ],
-        "above_render_median_ms": 179.0,
-        "above_render_wall_median_ms": 2067.3,
+        "above_render_median_ms": 177.0,
+        "above_render_wall_median_ms": 460.8,
         "above_render_ms_samples": [
-          179.0,
-          185.0,
-          174.0
+          177.0,
+          175.0,
+          193.0
         ],
         "above_render_wall_ms_samples": [
-          1801.8,
-          2088.0,
-          2067.3
+          458.3,
+          460.8,
+          476.8
         ]
       },
-      "predict_ms": 13016.1,
+      "predict_ms": 13186.8,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -2408,7 +2411,7 @@
     {
       "image": "온 맘 다해.png",
       "image_sha256": "06666fbb4f31380f63c7069f08cb5f68b43ab2993573ab40880e08582b0cc571",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/with_all_my_heart.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/with_all_my_heart.json",
       "total_detected": 37,
       "detected_chord_sequence": [
         "F",
@@ -2544,52 +2547,52 @@
       ],
       "missing_hard_targets": [],
       "strict_unseen": false,
-      "ocr_time_s": 12.7273,
+      "ocr_time_s": 12.8179,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 5,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 11017.7,
-        "total_ms": 12222.1,
+        "predict_ms": 10985.4,
+        "total_ms": 12214.3,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 12424.0,
+        "service_ms": 12334.7,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 12727.3,
-        "detection_id": "c746f86fd9f64b7da6f8c56b28c69907",
-        "replace_render_median_ms": 263.0,
-        "replace_render_wall_median_ms": 1879.9,
+        "detect_wall_ms": 12817.9,
+        "detection_id": "04224db0d2fa4cb7a1d7383fd23d4b50",
+        "replace_render_median_ms": 266.0,
+        "replace_render_wall_median_ms": 538.5,
         "replace_render_ms_samples": [
-          263.0,
-          267.0,
-          253.0
+          266.0,
+          261.0,
+          287.0
         ],
         "replace_render_wall_ms_samples": [
-          1879.9,
-          1687.2,
-          1886.5
+          528.5,
+          538.5,
+          573.7
         ],
-        "above_render_median_ms": 160.0,
-        "above_render_wall_median_ms": 1677.5,
+        "above_render_median_ms": 164.0,
+        "above_render_wall_median_ms": 438.9,
         "above_render_ms_samples": [
-          160.0,
-          165.0,
-          160.0
+          162.0,
+          173.0,
+          164.0
         ],
         "above_render_wall_ms_samples": [
-          1677.5,
-          1781.7,
-          1574.3
+          427.6,
+          438.9,
+          486.8
         ]
       },
-      "predict_ms": 11017.7,
+      "predict_ms": 10985.4,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -2598,7 +2601,7 @@
     {
       "image": "주님을 예배하는 것.png",
       "image_sha256": "882908bb525af3a24d4fac00944884138d87df443c4df9604fbc0c9a88bb66f5",
-      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo/fixtures/labels/worshiping_the_lord.json",
+      "label_file": "/Users/juahnkim/.aside/u/0/sessions/2026-09-24_7ucgXgfuvRHqGW0y/tmp/evalrepo2/fixtures/labels/worshiping_the_lord.json",
       "total_detected": 48,
       "detected_chord_sequence": [
         "Bbmaj7",
@@ -2725,52 +2728,52 @@
       ],
       "missing_hard_targets": [],
       "strict_unseen": false,
-      "ocr_time_s": 15.1999,
+      "ocr_time_s": 14.9806,
       "meta": {
         "ocr_engine": "paddle",
         "crop_mode": "staff_bands",
         "num_regions": 6,
         "stitched": true,
         "predict_calls": 1,
-        "predict_ms": 14011.6,
-        "total_ms": 14920.3,
+        "predict_ms": 13901.6,
+        "total_ms": 14733.3,
         "det_model_variant": "v6-medium",
         "det_model_name": "PP-OCRv6_medium_det",
         "mkldnn_enabled": true,
-        "service_ms": 14938.9,
+        "service_ms": 14748.9,
         "gpt_used": false,
         "gpt_crop_ms": null,
         "gpt_gap_ms": null,
         "high_recall_predict_ms": null,
         "parallel_refinement": false,
-        "detect_wall_ms": 15199.9,
-        "detection_id": "090b599859034e319e0f3d04195b88e6",
-        "replace_render_median_ms": 161.0,
-        "replace_render_wall_median_ms": 663.4,
+        "detect_wall_ms": 14980.6,
+        "detection_id": "ac83d398738a4506a6f500d7291a49a6",
+        "replace_render_median_ms": 151.0,
+        "replace_render_wall_median_ms": 385.0,
         "replace_render_ms_samples": [
-          154.0,
-          161.0,
-          335.0
+          151.0,
+          151.0,
+          152.0
         ],
         "replace_render_wall_ms_samples": [
-          600.3,
-          663.4,
-          847.2
+          377.7,
+          396.4,
+          385.0
         ],
-        "above_render_median_ms": 52.0,
-        "above_render_wall_median_ms": 498.1,
+        "above_render_median_ms": 51.0,
+        "above_render_wall_median_ms": 279.1,
         "above_render_ms_samples": [
           52.0,
-          50.0,
-          57.0
+          51.0,
+          50.0
         ],
         "above_render_wall_ms_samples": [
-          496.9,
-          498.1,
-          807.4
+          370.1,
+          278.8,
+          279.1
         ]
       },
-      "predict_ms": 14011.6,
+      "predict_ms": 13901.6,
       "lost_baseline_occurrences": [],
       "new_extra_chords": [],
       "fixture_pass": true,
@@ -2786,13 +2789,13 @@
     ],
     "fixtures_evaluated": 16,
     "quality_fixtures": 15,
-    "avg_coverage": 0.9775192128133304,
+    "avg_coverage": 0.9723910076851253,
     "avg_unique_precision": 0.8942660221752293,
-    "avg_time_s": 14.86470625,
-    "median_time_s": 14.2042,
-    "time_stddev_s": 5.011821277423602,
-    "p90_time_s": 23.9988,
-    "max_time_s": 27.5404
+    "avg_time_s": 15.421625,
+    "median_time_s": 14.28135,
+    "time_stddev_s": 5.209479614546447,
+    "p90_time_s": 24.798299999999998,
+    "max_time_s": 28.2344
   },
   "gate": {
     "pass": false,
