@@ -85,7 +85,9 @@ export default function Home() {
 
   const [replaceResult, setReplaceResult] = useState<string | null>(null);
   const [aboveResult, setAboveResult] = useState<string | null>(null);
-  // blob: URL shown full-screen for long-press saving where downloads are blocked.
+  // data: URL shown full-screen for long-press saving where downloads are blocked.
+  // Not a blob: URL: in-app browsers (KakaoTalk) save long-pressed images outside
+  // the page, where blob: URLs do not resolve (#31, verified on a device).
   const [saveOverlayUrl, setSaveOverlayUrl] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"replace" | "above">("replace");
   const [showOriginal, setShowOriginal] = useState(false);
@@ -503,10 +505,7 @@ export default function Home() {
     setPendingChordText("");
   };
 
-  const closeSaveOverlay = () => {
-    if (saveOverlayUrl) URL.revokeObjectURL(saveOverlayUrl);
-    setSaveOverlayUrl(null);
-  };
+  const closeSaveOverlay = () => setSaveOverlayUrl(null);
 
   // Results are base64 data URIs; mobile browsers do not reliably download
   // those via <a download>, so save through a Blob (see #31).
@@ -523,22 +522,19 @@ export default function Home() {
       maxTouchPoints: navigator.maxTouchPoints,
       canShareFiles: typeof navigator.canShare === "function" && navigator.canShare({ files: [pngFile] }),
     });
-    const blobUrl = URL.createObjectURL(blob);
 
     if (strategy === "overlay") {
-      setSaveOverlayUrl(blobUrl);
+      setSaveOverlayUrl(activeResult);
       return;
     }
     if (strategy === "share") {
-      navigator.share({ files: [pngFile], title: filename })
-        .then(() => URL.revokeObjectURL(blobUrl))
-        .catch((err: unknown) => {
-          // Cancelling the share sheet is not an error; anything else falls back to long-press saving.
-          if (err instanceof DOMException && err.name === "AbortError") URL.revokeObjectURL(blobUrl);
-          else setSaveOverlayUrl(blobUrl);
-        });
+      navigator.share({ files: [pngFile], title: filename }).catch((err: unknown) => {
+        // Cancelling the share sheet is not an error; anything else falls back to long-press saving.
+        if (!(err instanceof DOMException && err.name === "AbortError")) setSaveOverlayUrl(activeResult);
+      });
       return;
     }
+    const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = blobUrl;
     a.download = filename;
