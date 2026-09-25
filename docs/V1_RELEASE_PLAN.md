@@ -211,8 +211,8 @@ public core journey and produces an openable PNG.
 - **OCR detector.** Production runs `CHORDTAYLOR_OCR_DET_MODEL=v6-medium` as a Space override; the
   `Dockerfile` defaulted to `mobile`. On the same candidate (`9048dd3`), the CI canary against the
   frozen production baseline showed **mobile 11/16 sheets regressed, v6-medium 0/16**, with
-  `children_of_light` exact only on v6-medium. PR #27 makes v6-medium the default and awaits
-  product-owner approval. It supersedes an earlier local-only "stay with mobile" decision. Local
+  `children_of_light` exact only on v6-medium. **Decided:** the product owner approved v6-medium
+  as the `Dockerfile` default (#27, merged). It supersedes an earlier local-only "stay with mobile" decision. Local
   detection-only timing slightly favors mobile (10.1 s vs 11.1 s mean); end-to-end runner timing
   favors v6-medium (34.1 s vs 42.6 s).
 - **Coverage floor versus production.** The absolute floor (98.06%) is higher than production's
@@ -234,20 +234,25 @@ public core journey and produces an openable PNG.
 
 Status values are `PASS`, `FAIL`, `BLOCKED`, or `PENDING`. A local pass is not a deployment pass.
 
+**Final V1 candidate: `d42753dda47cf2b67c7d2455670af5b1b3f923e5`** (main, merge of #32), recorded in
+#10. `adf55aa..d42753d` changes only 5 `frontend/` files, and `.dockerignore` excludes `frontend/`,
+so the backend image and the CI canary evidence from `adf55aa` (run 36105907024) apply unchanged.
+Production is still on the pre-V1 build: Vercel `682c9a0`, HF `85035b3`.
+
 | Gate | Status | Evidence or blocker |
 | --- | --- | --- |
 | V1 scope retirement and upload safety | PASS (local) | Automated API tests; deployment smoke pending |
 | Local backend/frontend/security checks | PASS (working tree) | 409 passed, 11 skipped from a clean tracked-only export; frontend check and both dependency audits pass; [`ISSUE_10_RC_EVIDENCE.md`](ISSUE_10_RC_EVIDENCE.md); exact candidate SHA rerun still required |
-| GitHub required CI | PASS (interim) | Branch protection requires `backend`, `frontend`, `docker` on `main`. All green on `682c9a0` (#10). Rerun and record on the final candidate SHA. |
-| Docker build and dependency parity | FAIL → fix pending | The image built and served `/health`, but every `/detect` returned 500 (missing `libgomp1`; CI canary run `35964776229`). #22 adds `libgomp1` and a real-`/detect` CI step (`HTTP 200`, 36 chords). Merge #22, then rerun on the final candidate. |
-| OCR regression corpus | PENDING | Frozen production baseline recorded (`bbb7619`, 97.75% / 89.43%). CI canary on `9048dd3`: mobile regresses 11/16 sheets, v6-medium 0/16 (98.78% / 89.72%). The detector default (#27) and a final-candidate rerun are pending. `walk_by_faith` exceeds its 50–70 range with v6-medium, exactly as production does. |
-| Independent unseen sheet | FAIL | Attempts 1–5 all failed and each sheet is consumed (#6). Attempt 5 ("아름다운 나라", `main` `a135692`, local): 46/46 occurrences in order, but 2 extras (staff notation read as letters). A new unseen sheet is required on the final candidate. |
-| Browser and accessibility | PASS (local automated) | Lighthouse 13.4.1 mobile: 100 on all four pages; staging and physical-device evidence required |
+| GitHub required CI | PASS | All three required checks (`backend`, `frontend`, `docker`) green on `d42753d` (run 36109618239); branch protection requires them on `main`. |
+| Docker build and dependency parity | PASS (CI) | `d42753d` docker job builds the image, asserts pinned PaddleOCR/Paddle, and completes a real `/detect` (#22). Runtime on HF is not yet verified (hosting decision pending). |
+| OCR regression corpus | PASS (CI canary) | `adf55aa` image (= `d42753d` backend), v6-medium: 16/16 fixtures pass, mean 98.26% coverage / 90.98% precision vs production 97.24% / 89.43%. Two occurrence flags (hey_buddy `A`, mybody_temple `D`) were visually confirmed as removed misreads and accepted by the product owner (#9). Timing on the runner is informational; HF timing is still unmeasured. |
+| Independent unseen sheet | FAIL | Attempts 1–5 failed; each sheet is consumed (#6). A new unseen sheet must be run on `d42753d`. |
+| Browser and accessibility | PENDING | Preview `dpl_4BeWvA7UeQRHFk7Ds7cpaSXyTzyK` of `d42753d`: `/`, `/history`, `/privacy`, `/terms` 200, `/admin/dashboard` 404, security headers on every route (#13). PNG download confirmed on iPhone Safari, KakaoTalk in-app, Android Chrome and desktop (#31). Lighthouse 13.4.1 mobile 100 on all four pages (local). The rest of the #11 device matrix is still open. |
 | Production Auth0 login | PENDING | Live production login, reload persistence, logout, and the logged-out core journey pass (#12). 401/410 behavior passes in the CI canary. `/api/auth/me` with a valid production token still needs a backend runtime. |
-| Capacity | PENDING | CI canary: all 3 bursts pass on two runs (at most 2 admitted, 429 within 5 s, no 5xx, health within 2 s, renders OK, RSS about 1 GB stable). HF memory and latency are unproven; whether runner results count is an open decision. |
+| Capacity | PENDING | CI canary on the candidate image: 3 bursts pass (at most 2 admitted, 429 within 5 s, no 5xx, health within 2 s, renders OK, RSS about 1 GB). HF memory and latency are unproven; whether runner results count is an open decision. |
 | Sentry and alerts | PENDING | Frontend test event received under release `682c9a0` with no PII. The 5xx and `/detect` p95 alerts exist, and email delivery was verified (#5). A backend test event is pending. The "at least three sampled transactions" condition is not configurable at 5% trace sampling. The trial ends 2026-10-08. |
-| Rollback rehearsal | PENDING | Exact canary candidate required |
-| Production identities and smoke | PENDING | All pre-production gates must pass first |
+| Rollback rehearsal | PENDING | Rollback reference recorded: Vercel `dpl_Ajnpx1eoo9kGChAfuubvYy5nzBvm` (`85035b3`). The rehearsal waits on the backend hosting decision (#8). |
+| Production identities and smoke | PENDING | Blocked on the backend hosting decision (HF PRO, free-account push, or moving the backend). |
 
 Live baseline rechecked 2026-09-16: the existing deployment still lacks privacy/terms, exposes the
 administrator page, and returns old database-related 503 responses from identity/administrator
