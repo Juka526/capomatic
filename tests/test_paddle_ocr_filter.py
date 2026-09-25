@@ -690,3 +690,32 @@ def test_chord_candidate_accepts_musical_extension_degrees(text):
 @pytest.mark.parametrize("text", ["G1", "C3", "C8", "C10", "Cm12", "D7b8"])
 def test_chord_candidate_rejects_non_musical_extension_numbers(text):
     assert not is_chord_candidate(text)
+
+
+class TestLyricLineFilter:
+    def test_latin_letter_amid_misread_lyrics_is_dropped(self):
+        raw = [
+            {"raw_text": "亡", "confidence": 0.85, "bbox": [243, 428, 269, 451]},
+            {"raw_text": "A 2", "confidence": 0.9, "bbox": [283, 427, 369, 452]},
+            {"raw_text": "巨", "confidence": 0.54, "bbox": [385, 428, 441, 451]},
+        ]
+
+        assert [c["text"] for c in _apply_direction_filter(raw) if c["text"]] == []
+
+    def test_two_line_lyric_block_does_not_claim_chord_line_below(self):
+        raw = [
+            {"raw_text": "可可", "confidence": 0.5, "bbox": [300, 1397, 333, 1453]},
+            {"raw_text": "古人", "confidence": 0.5, "bbox": [329, 1397, 364, 1453]},
+            {"raw_text": "Bb", "confidence": 1.0, "bbox": [181, 1429, 215, 1456]},
+        ]
+
+        assert [c["text"] for c in _apply_direction_filter(raw) if c["text"]] == ["Bb"]
+
+    def test_single_lyric_neighbour_is_not_enough(self):
+        raw = [
+            {"raw_text": "주", "confidence": 0.9, "bbox": [100, 100, 120, 120]},
+            {"raw_text": "G", "confidence": 1.0, "bbox": [200, 100, 215, 120]},
+        ]
+
+        # Hangul normalizes to empty text here; the chord filter drops it later.
+        assert [c["text"] for c in _apply_direction_filter(raw) if c["text"]] == ["G"]
