@@ -814,6 +814,46 @@ def _place_replace_row_labels(
 # Info header
 # ---------------------------------------------------------------------------
 
+_CAPO_MAX_FRET = 7
+
+
+def _semitone_label(semitones: int) -> str:
+    """"-2 semitones", "-1 semitone", "+3 semitones" (sign always shown)."""
+    sign = f"+{semitones}" if semitones > 0 else str(semitones)
+    unit = "semitone" if abs(semitones) == 1 else "semitones"
+    return f"{sign} {unit}"
+
+
+def _header_lines(
+    original_key: str | None,
+    target_key: str | None,
+    semitones: int,
+) -> list[str]:
+    """Key-change lines for the rendered sheet's corner label.
+
+    The capo line appears only when the shift is a capo shift (-1 to -7);
+    shifts outside the capo range, or upward, are played without a capo.
+    """
+    if not original_key and not target_key and semitones == 0:
+        return []
+    lines: list[str] = []
+    if original_key and target_key:
+        if semitones == 0:
+            lines.append(f"Key: {original_key}")
+        else:
+            lines.append(f"{original_key} -> {target_key} ({_semitone_label(semitones)})")
+    elif target_key:
+        lines.append(f"Key: {target_key}")
+    elif original_key:
+        lines.append(f"{original_key} ({_semitone_label(semitones)})")
+    else:
+        # No key names: show the semitone shift on its own.
+        lines.append(f"Semitones: {_semitone_label(semitones)}")
+    if -_CAPO_MAX_FRET <= semitones <= -1:
+        lines.append(f"Capo: {-semitones}")
+    return lines
+
+
 def _draw_info_header(
     draw: ImageDraw.Draw,
     img: Image.Image,
@@ -824,44 +864,23 @@ def _draw_info_header(
     semitones: int,
     text_fill: tuple[int, int, int],
 ) -> None:
-    """Draw key info, and capo info only for down-transpose/capo renders."""
-    if not original_key and not target_key and semitones == 0:
+    """Draw the key change (and capo, for capo shifts) in the top-right corner."""
+    lines = _header_lines(original_key, target_key, semitones)
+    if not lines:
         return
 
-    header_font = _load_font(27)
+    header_size = 27
+    header_font = _load_font(header_size)
 
-    lines: list[str] = []
-    if original_key and target_key:
-        if semitones == 0:
-            lines.append(f"Key: {original_key}")
-        else:
-            sign = f"+{semitones}" if semitones > 0 else str(semitones)
-            lines.append(f"{original_key} -> {target_key} ({sign})")
-    elif target_key:
-        lines.append(f"Key: {target_key}")
-    elif original_key:
-        sign = f"+{semitones}" if semitones > 0 else str(semitones)
-        lines.append(f"{original_key} ({sign})")
-    else:
-        # No key names — show the semitone shift on its own.
-        sign = f"+{semitones}" if semitones > 0 else str(semitones)
-        lines.append(f"Semitones: {sign}")
-
-    if semitones < 0:
-        lines.append("")  # blank line gap between key info and capo
-        capo = (-semitones) % 12
-        if capo:
-            lines.append(f"Capo: {capo}")
-
-    # Measure text block size.
-    line_h = int(font_size * 0.65) + 4
+    # Measure text block size from the header font itself, so stacked lines
+    # (key change, then capo) never overlap.
+    line_h = int(header_size * 1.2)
     max_w = max(_text_width(header_font, line) for line in lines)
     block_w = int(max_w) + 16
     block_h = line_h * len(lines) + 8
 
-    # Draw background rectangle.
-    x0, y0 = 8, 6
-    # Use RGBA overlay for the header background.
+    # Top-right corner, clamped so a very narrow image still shows the start.
+    x0, y0 = max(8, img.width - block_w - 8), 6
     overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
     ov_draw = ImageDraw.Draw(overlay)
     ov_draw.rectangle(

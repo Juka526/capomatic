@@ -7,6 +7,7 @@ from PIL import Image, ImageDraw
 import backend.overlay.render as render_module
 from backend.overlay.render import (
     _chord_display_width,
+    _header_lines,
     _find_row_font_sizes,
     _get_staff_systems,
     _load_font,
@@ -657,3 +658,68 @@ class TestRenderReplaceRefinements:
 
         assert result.getpixel((60, 25)) == (255, 255, 255)
         assert result.getpixel((60, 55)) == (0, 0, 0)
+
+
+# ---------------------------------------------------------------------------
+# Key-change corner label
+# ---------------------------------------------------------------------------
+
+class TestHeaderLines:
+    @pytest.mark.parametrize("semitones,target,expected", [
+        (-2, "F", ["G -> F (-2 semitones)", "Capo: 2"]),
+        (-1, "F#", ["G -> F# (-1 semitone)", "Capo: 1"]),
+        (-7, "C", ["G -> C (-7 semitones)", "Capo: 7"]),
+        (-8, "B", ["G -> B (-8 semitones)"]),
+        (-9, "Bb", ["G -> Bb (-9 semitones)"]),
+        (-11, "Ab", ["G -> Ab (-11 semitones)"]),
+        (1, "Ab", ["G -> Ab (+1 semitone)"]),
+        (2, "A", ["G -> A (+2 semitones)"]),
+    ])
+    def test_key_change_with_singular_plural_and_capo_only_in_range(self, semitones, target, expected):
+        assert _header_lines("G", target, semitones) == expected
+
+    def test_no_shift_shows_the_key(self):
+        assert _header_lines("F", "F", 0) == ["Key: F"]
+
+    def test_nothing_to_show(self):
+        assert _header_lines(None, None, 0) == []
+
+    def test_shift_without_key_names(self):
+        assert _header_lines(None, None, -1) == ["Semitones: -1 semitone", "Capo: 1"]
+
+
+def test_header_is_drawn_in_the_top_right_corner(monkeypatch):
+    positions = []
+    real_text = ImageDraw.ImageDraw.text
+
+    def spy(self, xy, text, *args, **kwargs):
+        if "semitone" in str(text) or str(text).startswith("Capo"):
+            positions.append(xy)
+        return real_text(self, xy, text, *args, **kwargs)
+
+    monkeypatch.setattr(ImageDraw.ImageDraw, "text", spy)
+    img = _white_img(w=1000, h=400)
+    render_overlay(img, [_chord("Am", "Gm", [50, 150, 100, 170])], "replace",
+                   original_key="G", target_key="F", semitones=-2)
+
+    assert positions, "header text was not drawn"
+    assert all(x > 1000 / 2 for x, _ in positions)
+    assert all(y < 60 for _, y in positions)
+
+
+def test_stacked_header_lines_do_not_overlap(monkeypatch):
+    ys = []
+    real_text = ImageDraw.ImageDraw.text
+
+    def spy(self, xy, text, *args, **kwargs):
+        if "semitone" in str(text) or str(text).startswith("Capo"):
+            ys.append(xy[1])
+        return real_text(self, xy, text, *args, **kwargs)
+
+    monkeypatch.setattr(ImageDraw.ImageDraw, "text", spy)
+    # A tiny chord font used to shrink the header line height.
+    render_overlay(_white_img(w=1000, h=400), [_chord("Am", "Gm", [50, 150, 70, 158])], "replace",
+                   original_key="G", target_key="F", semitones=-2)
+
+    assert len(ys) == 2
+    assert ys[1] - ys[0] >= 27  # at least one header-font line apart
