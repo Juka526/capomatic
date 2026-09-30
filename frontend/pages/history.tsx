@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { useLang, LangToggle } from '@/components/LangProvider';
+import { MobileWordmark } from '@/components/MobileWordmark';
 import Link from 'next/link';
 import Head from 'next/head';
 import { parseJobHistory, type JobHistoryEntry } from '@/lib/job-history.mjs';
@@ -43,9 +44,10 @@ function HistoryContent() {
                 <rect x="11" y="20" width="14" height="2.5" rx="1.2" fill="#e05d00" opacity="0.4" />
                 <rect x="21" y="10" width="3" height="16" rx="1.5" fill="white" opacity="0.9" />
               </svg>
-              <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1a1a2e', fontFamily: 'Georgia, serif', fontStyle: 'italic', whiteSpace: 'nowrap' }}>
+              <span className="d-only" style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1a1a2e', fontFamily: 'Georgia, serif', fontStyle: 'italic', whiteSpace: 'nowrap' }}>
                 Capo<span style={{ color: '#9c3d00' }}>matic</span>
               </span>
+              <span className="m-only m-wordmark"><MobileWordmark height={22} /></span>
             </Link>
             <span style={{ color: 'rgba(0,0,0,0.15)', flexShrink: 0 }}>|</span>
             <h1 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#1a1a2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.historyTitle}</h1>
