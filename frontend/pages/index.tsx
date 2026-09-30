@@ -6,12 +6,14 @@ import LoginButton from "@/components/LoginButton";
 import { useLang, LangToggle } from "@/components/LangProvider";
 import { GuitarFretboard } from "@/components/GuitarFretboard";
 import { MobileWordmark } from "@/components/MobileWordmark";
+import { GuideModal } from "@/components/GuideModal";
 import { translations } from "@/lib/i18n";
 import { computeTargetKey } from "@/lib/target-key.mjs";
 import { pngDownloadName } from "@/lib/download-name.mjs";
 import { chooseSaveStrategy, dataUrlToBlob } from "@/lib/download-image.mjs";
 import { prependJobHistory } from "@/lib/job-history.mjs";
 import { SHIFT_LIMIT, mobileStepper, shiftSummary } from "@/lib/transpose-control.mjs";
+import { readGuideDismissed, shouldAutoOpenGuide, writeGuideDismissed } from "@/lib/guide-visibility.mjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
@@ -117,10 +119,10 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideStep, setGuideStep] = useState(0);
+  const [logoIntroReady, setLogoIntroReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const guideDialogRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const mobileImgRef = useRef<HTMLImageElement>(null);
   // Only the mobile result board mounts its own GuitarFretboard: two fretboards
@@ -157,35 +159,28 @@ export default function Home() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [menuOpen]);
 
+  // First visit: open the guide once on the home page until "Don't show again".
+  // Storage is read only after mount, so server and first client render match.
   useEffect(() => {
-    if (!guideOpen) return;
-    const previousFocus = document.activeElement as HTMLElement | null;
-    const firstButton = guideDialogRef.current?.querySelector<HTMLButtonElement>('button');
-    firstButton?.focus();
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setGuideOpen(false);
+    const stored = readGuideDismissed(() => window.localStorage);
+    if (shouldAutoOpenGuide({ storedValue: stored, pathname: window.location.pathname, hasFile: false })) {
+      setGuideStep(0);
+      setGuideOpen(true);
+    } else {
+      setLogoIntroReady(true);
     }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      previousFocus?.focus();
-    };
-  }, [guideOpen]);
+  }, []);
 
-  const trapGuideFocus = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== 'Tab') return;
-    const buttons = guideDialogRef.current?.querySelectorAll<HTMLButtonElement>('button');
-    if (!buttons?.length) return;
-    const first = buttons[0];
-    const last = buttons[buttons.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
+  const closeGuide = useCallback(() => {
+    setGuideOpen(false);
+    // The wordmark's first pluck waits until an auto-opened guide is gone.
+    setLogoIntroReady(true);
+  }, []);
+
+  const dismissGuideForever = useCallback(() => {
+    writeGuideDismissed(() => window.localStorage);
+    closeGuide();
+  }, [closeGuide]);
 
   const capoFret = semitoneShift < 0 ? Math.abs(semitoneShift) : null;
   const semitones = semitoneShift;
@@ -802,7 +797,7 @@ export default function Home() {
               <svg width="18" height="12" viewBox="0 0 18 12" fill="none" aria-hidden="true"><path d="M0 1h18M0 6h18M0 11h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
             </button>
           )}
-          <MobileWordmark />
+          <MobileWordmark introReady={logoIntroReady} />
           <span className="m-spacer" />
           {file ? (
             <button type="button" className="m-icon-btn" onClick={() => fileInputRef.current?.click()} aria-label={t.mUploadAnother}>
@@ -1378,50 +1373,15 @@ export default function Home() {
 
         <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
 
-        {/* Guide modal */}
-        {guideOpen && (() => {
-          const steps = [
-            { icon: "\uD834\uDD1E", label: t.featureUploadLabel, desc: t.featureUploadDesc },
-            { icon: "\u22AB", label: t.featureCapoLabel, desc: t.featureCapoDesc },
-            { icon: "\u266A", label: t.featureDownloadLabel, desc: t.featureDownloadDesc },
-          ];
-          const step = steps[guideStep];
-          const isLast = guideStep === steps.length - 1;
-          return (
-            <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)" }}
-              onClick={() => setGuideOpen(false)}>
-              <div ref={guideDialogRef} role="dialog" aria-modal="true" aria-labelledby="guide-title" onKeyDown={trapGuideFocus}
-                style={{ background: "white", borderRadius: 20, width: "min(380px, 90vw)", padding: "40px 32px 28px", textAlign: "center", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}
-                onClick={e => e.stopPropagation()}>
-                {/* Icon */}
-                <div aria-hidden="true" style={{ fontSize: "3rem", marginBottom: 20, color: "#9c3d00", lineHeight: 1 }}>{step.icon}</div>
-                {/* Title */}
-                <h2 id="guide-title" style={{ margin: "0 0 10px", fontSize: "1.3rem", fontWeight: 800, color: "#1a1a2e" }}>{step.label}</h2>
-                {/* Description */}
-                <p style={{ margin: "0 0 28px", fontSize: "0.88rem", color: "#666", lineHeight: 1.5 }}>{step.desc}</p>
-                {/* Dot indicators */}
-                <div aria-hidden="true" style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
-                  {steps.map((_, i) => (
-                    <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: i === guideStep ? "#e05d00" : "#e8ddd0", transition: "background 0.2s" }} />
-                  ))}
-                </div>
-                {/* Buttons */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
-                  <button onClick={() => setGuideOpen(false)}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: "12px 28px", fontSize: "0.9rem", fontWeight: 600, color: "#595959" }}>
-                    {t.skip}
-                  </button>
-                  <button onClick={() => { if (isLast) setGuideOpen(false); else setGuideStep(guideStep + 1); }}
-                    style={{ background: "#a34200", color: "white", border: "none", cursor: "pointer", borderRadius: 12, padding: "12px 48px", fontSize: "0.95rem", fontWeight: 700, boxShadow: "0 4px 14px rgba(163,66,0,0.35)", transition: "all 0.2s" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "#7f3000")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "#a34200")}>
-                    {isLast ? t.done : t.next}
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
+        {/* Guide modal: short demo video per step */}
+        {guideOpen && (
+          <GuideModal
+            step={guideStep}
+            onStepChange={setGuideStep}
+            onClose={closeGuide}
+            onDismissForever={dismissGuideForever}
+          />
+        )}
 
         {saveOverlayUrl && (
           <div

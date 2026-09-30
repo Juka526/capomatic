@@ -58,12 +58,6 @@ export const translations = {
     renderedSheetAlt: (mode: string) => `${mode === 'replace' ? '교체' : '위에 표시'} 방식으로 전조한 코드 악보`,
 
     // Empty state
-    featureUploadLabel: '악보 업로드',
-    featureUploadDesc: 'PNG 또는 JPG 코드 악보 이미지를 업로드하세요',
-    featureCapoLabel: '카포 선택',
-    featureCapoDesc: '프렛보드에서 원하는 프렛을 선택하세요',
-    featureDownloadLabel: '다운로드',
-    featureDownloadDesc: '변환된 악보를 PNG 이미지로 받으세요',
     uploadYourScore: '악보를 업로드하세요',
     uploadCta: '악보 이미지 업로드하기',
     uploadHint: 'PNG · JPG 지원 · 최대 20MB',
@@ -77,6 +71,41 @@ export const translations = {
     skip: '건너뛰기',
     next: '다음',
     done: '완료',
+    dontShowAgain: '다시 보지 않기',
+    guideStepOf: (n: number, total: number) => `${n} / ${total}`,
+    playGuideVideo: '영상 재생',
+    guideSteps: [
+      {
+        title: '악보 올리기',
+        desc: '코드 악보 사진을 올리면 키를 자동으로 찾아요.',
+        videoMobile: '휴대폰에서 악보 업로드를 누르고 사진을 고르면, 결과 화면으로 넘어가 악보를 읽은 뒤 감지된 키 D가 표시되는 영상',
+        videoDesktop: '마우스로 악보 업로드를 클릭하고 사진을 고르면, 악보를 읽은 뒤 감지된 키 D가 표시되는 영상',
+      },
+      {
+        title: '카포 고르기',
+        desc: '프렛을 누르거나 +/−로 카포를 옮기면 코드가 바로 바뀌어요.',
+        videoMobile: '지판의 2프렛을 눌러 카포를 끼우면 악보의 코드가 바뀌고, + 버튼으로 카포를 3프렛으로 옮기는 영상',
+        videoDesktop: '마우스로 지판의 2프렛을 클릭하면 코드가 바뀐 악보가 나오고, 반음 버튼으로 카포를 3프렛으로 옮기는 영상',
+      },
+      {
+        title: '교체 / 위에',
+        desc: '원래 코드를 덮어쓰거나, 위에 따로 적어 비교할 수 있어요.',
+        videoMobile: '위에를 눌러 원래 코드 위에 새 코드를 함께 보고, 교체로 돌아온 뒤 원본 보기로 원래 악보를 잠깐 보는 영상',
+        videoDesktop: '마우스로 위에를 클릭해 원래 코드 위에 새 코드를 함께 보고, 교체로 돌아온 뒤 원본 보기로 원래 악보를 잠깐 보는 영상',
+      },
+      {
+        title: '코드 고치기',
+        desc: '잘못 읽힌 코드는 눌러서 고치거나 지울 수 있어요.',
+        videoMobile: '감지된 코드 목록에서 코드 하나를 지우고, 위치 지정 추가로 악보 위 한 곳에 새 코드를 넣는 영상',
+        videoDesktop: '마우스로 감지된 코드 하나를 지우고, 위치 지정 추가로 악보 위 한 곳에 새 코드를 넣는 영상',
+      },
+      {
+        title: 'PNG 저장',
+        desc: "바뀐 악보를 이미지로 저장해요. 아이폰은 공유 메뉴에서 '이미지 저장'을 고르세요.",
+        videoMobile: 'PNG 다운로드를 눌러 바뀐 악보를 이미지로 저장하는 영상',
+        videoDesktop: '마우스로 PNG 다운로드를 클릭해 바뀐 악보 이미지가 내려받아지는 영상',
+      },
+    ],
 
     // Footer
     footerTagline: '코드 악보 변환기 & 카포 도구',
@@ -179,12 +208,6 @@ export const translations = {
     renderedSheetAlt: (mode: string) => `Transposed chord sheet in ${mode} mode`,
 
     // Empty state
-    featureUploadLabel: 'Upload Sheet',
-    featureUploadDesc: 'Upload a PNG or JPG chord sheet image',
-    featureCapoLabel: 'Select Capo',
-    featureCapoDesc: 'Pick a fret on the fretboard or use the buttons',
-    featureDownloadLabel: 'Download',
-    featureDownloadDesc: 'Get your transposed sheet as a PNG image',
     uploadYourScore: 'Upload Your Music Score',
     uploadCta: 'Upload Chord Sheet',
     uploadHint: 'PNG · JPG supported · max 20MB',
@@ -198,6 +221,41 @@ export const translations = {
     skip: 'Skip',
     next: 'Next',
     done: 'Done',
+    dontShowAgain: "Don't show again",
+    guideStepOf: (n: number, total: number) => `${n} / ${total}`,
+    playGuideVideo: 'Play video',
+    guideSteps: [
+      {
+        title: 'Upload a sheet',
+        desc: 'Upload a photo of a chord sheet and the key is found automatically.',
+        videoMobile: 'On a phone, tapping Upload sheet and choosing a photo opens the result screen, which reads the sheet and shows the detected key D',
+        videoDesktop: 'Clicking Upload sheet and choosing a photo reads the sheet and shows the detected key D',
+      },
+      {
+        title: 'Pick a capo',
+        desc: 'Tap a fret or use + / − to move the capo, and the chords change right away.',
+        videoMobile: 'Tapping fret 2 puts the capo on and the chords on the sheet change; the + button then moves the capo to fret 3',
+        videoDesktop: 'Clicking fret 2 shows the sheet with changed chords; the semitone button then moves the capo to fret 3',
+      },
+      {
+        title: 'Replace / Above',
+        desc: 'Overwrite the original chords, or write the new ones above them to compare.',
+        videoMobile: 'Tapping Above shows the new chords over the original ones, Replace switches back, and View original briefly shows the original sheet',
+        videoDesktop: 'Clicking Above shows the new chords over the original ones, Replace switches back, and View original briefly shows the original sheet',
+      },
+      {
+        title: 'Fix a chord',
+        desc: 'Tap a misread chord to fix it, or remove it.',
+        videoMobile: 'One chord is removed from the detected list, and Add at position places a new chord on the sheet',
+        videoDesktop: 'One detected chord is removed with the mouse, and Add at position places a new chord on the sheet',
+      },
+      {
+        title: 'Save as PNG',
+        desc: "Save the transposed sheet as an image. On iPhone, choose 'Save Image' in the share menu.",
+        videoMobile: 'Tapping Download PNG saves the transposed sheet as an image',
+        videoDesktop: 'Clicking Download PNG downloads the transposed sheet as an image',
+      },
+    ],
 
     // Footer
     footerTagline: 'Chord Sheet Transposer & Capo Tool',

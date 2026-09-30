@@ -342,3 +342,69 @@ html, body {
   .m-scan::after, .m-spin { animation: none; }
   .m-drop, .m-seg button, .m-btn, .m-sq { transition: none; }
 }
+
+/* ------------------------------------------------------------------ */
+/* How-to guide modal (components/GuideModal.tsx). The video set is     */
+/* picked when the modal opens: .guide-desktop (16:10) or .guide-mobile */
+/* (9:14, full screen).                                                 */
+/* ------------------------------------------------------------------ */
+.guide-backdrop {
+  position: fixed; inset: 0; z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(20, 16, 10, 0.5);
+}
+.guide-dialog {
+  background: #FFFDF7; color: #1a1a2e;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.guide-desktop {
+  width: min(720px, 92vw); max-height: 94vh;
+  border-radius: 20px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+}
+.guide-mobile {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.guide-media { position: relative; flex: none; background: #EDE2C4; overflow: hidden; }
+.guide-desktop .guide-media { aspect-ratio: 16 / 10; width: 100%; }
+.guide-mobile .guide-media {
+  aspect-ratio: 9 / 14;
+  width: min(calc(100% - 32px), calc((100dvh - 290px) * 9 / 14));
+  margin: 12px auto 0; border-radius: 16px;
+  border: 1px solid rgba(26, 26, 46, 0.13);
+}
+.guide-media video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.guide-play {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 60px; height: 60px; border-radius: 50%; border: 0; cursor: pointer;
+  display: grid; place-items: center;
+  background: rgba(26, 26, 46, 0.78); color: #fff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+.guide-body {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 18px 28px 20px; gap: 6px;
+}
+.guide-mobile .guide-body { padding: 14px 20px 16px; flex: 1; justify-content: flex-end; }
+.guide-count { margin: 0; font-size: 0.74rem; font-weight: 700; color: #a09070; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+.guide-title { margin: 0; font-size: 1.3rem; font-weight: 800; color: #1a1a2e; }
+.guide-desc { margin: 0; max-width: 46ch; font-size: 0.9rem; line-height: 1.55; color: #3a4847; text-wrap: balance; }
+.guide-dots { display: flex; gap: 8px; margin: 8px 0 2px; }
+.guide-dots span { width: 8px; height: 8px; border-radius: 50%; background: #e8ddd0; transition: background 0.2s; }
+.guide-dots span.on { background: #E05D00; }
+.guide-dismiss {
+  min-height: 44px; padding: 0 12px; border: 0; background: none; cursor: pointer;
+  font: inherit; font-size: 0.8rem; font-weight: 600; color: #6b6558;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.guide-actions { display: flex; gap: 12px; width: 100%; max-width: 360px; }
+.guide-actions button {
+  flex: 1; min-height: 48px; border-radius: 12px; cursor: pointer;
+  font: inherit; font-size: 0.95rem; font-weight: 700;
+}
+.guide-skip { border: 1px solid rgba(26, 26, 46, 0.13); background: #fff; color: #3a4847; }
+.guide-next { border: 0; color: #fff; background: linear-gradient(180deg, #E05D00, #C84B00); box-shadow: 0 4px 12px -4px rgba(224, 93, 0, 0.65); }
+@media (prefers-reduced-motion: reduce) {
+  .guide-dots span { transition: none; }
+}

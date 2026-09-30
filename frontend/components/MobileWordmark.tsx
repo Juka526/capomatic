@@ -7,10 +7,10 @@ const ACCENT = "#E05D00";
 
 /**
  * Capomatic wordmark for the mobile top bar. The m is a plucked string: it
- * vibrates once on first load and again on each tap, unless the user prefers
- * reduced motion. Outlines are baked in (no runtime font loading).
+ * vibrates once on first load (once `introReady`) and again on each tap,
+ * unless the user prefers reduced motion. Outlines are baked in (no runtime font loading).
  */
-export function MobileWordmark({ height = 23 }: { height?: number }) {
+export function MobileWordmark({ height = 23, introReady = true }: { height?: number; introReady?: boolean }) {
   const mRef = useRef<SVGPathElement>(null);
   const frameRef = useRef<number | null>(null);
 
@@ -40,10 +40,15 @@ export function MobileWordmark({ height = 23 }: { height?: number }) {
     frameRef.current = requestAnimationFrame(step);
   }, [stop]);
 
+  // The first-load pluck waits for `introReady` (e.g. until an auto-opened guide closes).
+  const introPlayed = useRef(false);
   useEffect(() => {
+    if (!introReady || introPlayed.current) return;
+    introPlayed.current = true;
     pluck();
-    return stop;
-  }, [pluck, stop]);
+  }, [introReady, pluck]);
+
+  useEffect(() => stop, [stop]);
 
   return (
     <svg
