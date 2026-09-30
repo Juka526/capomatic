@@ -101,6 +101,25 @@ export const translations = {
     untitled: '제목 없음',
     loadingDots: '로딩 중…',
 
+    // Mobile (≤640px) home and result board
+    mUploadLimits: 'JPG · PNG · 최대 20 MB',
+    mReadingSheet: '악보를 읽고 있어요…',
+    mDetectedKey: '감지된 키',
+    mPickCapo: '카포를 골라 주세요',
+    mCapoN: (n: number) => `카포 ${n}`,
+    mShiftSemitones: (n: number) => `반음 ${n > 0 ? '+' : '−'}${Math.abs(n)}`,
+    mSemitoneValue: (n: number) => `${n > 0 ? '+' : '−'}${Math.abs(n)} 반음`,
+    mOutOfRangeDown: '카포 범위 밖 · 키 내리기',
+    mKeyUpNoCapo: '카포 없이 키 올리기',
+    mCapoUp: '카포 한 프렛 올리기',
+    mCapoDown: '카포 한 프렛 내리기',
+    mKeyDownStep: '카포 없이 키 반음 내리기',
+    mKeyUpStep: '카포 없이 키 반음 올리기',
+    mDisplayMode: '표시 방식',
+    mBack: '뒤로',
+    mUploadAnother: '다른 악보 올리기',
+    mOpenMenu: '메뉴 열기',
+
   },
 
   en: {
@@ -202,6 +221,25 @@ export const translations = {
     deleteFailed: (msg: string) => `Delete failed: ${msg}`,
     untitled: 'Untitled',
     loadingDots: 'Loading…',
+
+    // Mobile (≤640px) home and result board
+    mUploadLimits: 'JPG · PNG · up to 20 MB',
+    mReadingSheet: 'Reading your sheet…',
+    mDetectedKey: 'Detected key',
+    mPickCapo: 'Choose a capo',
+    mCapoN: (n: number) => `Capo ${n}`,
+    mShiftSemitones: (n: number) => `${n > 0 ? '+' : '−'}${Math.abs(n)} ${Math.abs(n) === 1 ? 'semitone' : 'semitones'}`,
+    mSemitoneValue: (n: number) => `${n > 0 ? '+' : '−'}${Math.abs(n)} ${Math.abs(n) === 1 ? 'semitone' : 'semitones'}`,
+    mOutOfRangeDown: 'Beyond capo range · key down',
+    mKeyUpNoCapo: 'Key up, no capo',
+    mCapoUp: 'Move capo up one fret',
+    mCapoDown: 'Move capo down one fret',
+    mKeyDownStep: 'Lower the key one semitone without a capo',
+    mKeyUpStep: 'Raise the key one semitone without a capo',
+    mDisplayMode: 'Display mode',
+    mBack: 'Back',
+    mUploadAnother: 'Upload another sheet',
+    mOpenMenu: 'Open menu',
 
   },
 };
