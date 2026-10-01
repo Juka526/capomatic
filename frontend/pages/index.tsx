@@ -12,7 +12,7 @@ import { computeTargetKey } from "@/lib/target-key.mjs";
 import { pngDownloadName } from "@/lib/download-name.mjs";
 import { chooseSaveStrategy, dataUrlToBlob } from "@/lib/download-image.mjs";
 import { prependJobHistory } from "@/lib/job-history.mjs";
-import { SHIFT_LIMIT, mobileStepper, shiftSummary } from "@/lib/transpose-control.mjs";
+import { SHIFT_LIMIT, shiftSummary, stepperText, transposeStepper } from "@/lib/transpose-control.mjs";
 import { readGuideDismissed, shouldAutoOpenGuide, writeGuideDismissed } from "@/lib/guide-visibility.mjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -20,7 +20,6 @@ const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const RENDER_CACHE_LIMIT = 5;
 // Same breakpoint as styles/globals.css; everything mobile-only keys off it.
 const MOBILE_QUERY = "(max-width: 640px)";
-const DESKTOP_SHIFT_LIMIT = 7;
 
 const prettyKey = (key: string | null) => (key ?? "").replace(/^([A-G])b/, "$1\u266D").replace("#", "\u266F");
 
@@ -593,7 +592,7 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const applySemitoneShift = async (value: number, limit: number = DESKTOP_SHIFT_LIMIT) => {
+  const applySemitoneShift = async (value: number, limit: number = SHIFT_LIMIT) => {
     const next = Math.max(-limit, Math.min(limit, value));
     if (next === semitoneShift || reRendering || detecting) return;
     const versionAtStart = editVersionRef.current;
@@ -731,7 +730,8 @@ export default function Home() {
   // Mobile result board (≤640px). One state: `semitones`.
   const chosen = Boolean(detectionId) && semitones !== 0;
   const mobileSheetSrc = chosen && activeResult && !showOriginal ? activeResult : originalImageUrl;
-  const step = mobileStepper(semitones);
+  const step = transposeStepper(semitones);
+  const stepText = stepperText(step, t);
   const summary = shiftSummary(semitones);
   const stepBusy = !detectionId || detecting || reRendering;
 
@@ -1052,20 +1052,18 @@ export default function Home() {
                   className="m-sq"
                   onClick={() => void applySemitoneShift(step.minus.next, SHIFT_LIMIT)}
                   disabled={stepBusy || step.minus.disabled}
-                  aria-label={step.minus.action === "capoDown" ? t.mCapoDown : t.mKeyUpStep}
+                  aria-label={stepText.minusLabel}
                 >−</button>
                 <div className="m-val" aria-live="polite">
-                  <small>
-                    {step.label.kind === "capo" ? t.capoPosition : step.label.kind === "keyUp" ? t.mKeyUpNoCapo : t.mOutOfRangeDown}
-                  </small>
-                  <b>{step.label.kind === "capo" ? step.label.capo : t.mSemitoneValue(step.label.semitones)}</b>
+                  <small>{stepText.caption}</small>
+                  <b>{stepText.value}</b>
                 </div>
                 <button
                   type="button"
                   className="m-sq"
                   onClick={() => void applySemitoneShift(step.plus.next, SHIFT_LIMIT)}
                   disabled={stepBusy || step.plus.disabled}
-                  aria-label={step.plus.action === "capoUp" ? t.mCapoUp : t.mKeyDownStep}
+                  aria-label={stepText.plusLabel}
                 >+</button>
               </div>
               <div className="m-seg" role="group" aria-label={t.mDisplayMode}>
@@ -1097,39 +1095,39 @@ export default function Home() {
         <div className="transpose-selector d-only" style={{ maxWidth: 360, margin: "16px auto 0", padding: "0 20px" }}>
           <div className="transpose-panel" style={{ background: "rgba(255,255,255,0.55)", borderRadius: 16, padding: 12, border: "1px solid rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", display: "grid", gridTemplateColumns: "52px 1fr 52px", alignItems: "center", gap: 10 }}>
             <button
-              onClick={() => applySemitoneShift(semitones - 1)}
-              disabled={!detectionId || detecting || reRendering || semitones <= -7}
-              aria-label={t.transposeDown}
+              onClick={() => applySemitoneShift(step.minus.next)}
+              disabled={!detectionId || detecting || reRendering || step.minus.disabled}
+              aria-label={stepText.minusLabel}
               style={{
                 height: 44, borderRadius: 12,
                 border: "1.5px solid rgba(0,0,0,0.1)",
                 background: semitones < 0 ? "linear-gradient(135deg, #a34200, #7f3000)" : "rgba(255,255,255,0.75)",
                 color: semitones < 0 ? "white" : "#3a4847",
                 fontSize: "1.35rem", fontWeight: 900,
-                cursor: detectionId && !detecting && !reRendering && semitones > -7 ? "pointer" : "not-allowed",
-                opacity: detectionId && !detecting && !reRendering && semitones > -7 ? 1 : 0.45,
+                cursor: detectionId && !detecting && !reRendering && !step.minus.disabled ? "pointer" : "not-allowed",
+                opacity: detectionId && !detecting && !reRendering && !step.minus.disabled ? 1 : 0.45,
               }}
             >-</button>
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "0.68rem", fontWeight: 800, color: "#695c42", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                {t.capoPosition}
+                {stepText.caption}
               </div>
               <div style={{ marginTop: 3, fontSize: "1.05rem", fontWeight: 900, color: "#1a1a2e" }}>
-                {rendering ? t.rendering : renderUpdating ? t.updating : semitones > 0 ? `+${semitones}` : semitones}
+                {rendering ? t.rendering : renderUpdating ? t.updating : stepText.value}
               </div>
             </div>
             <button
-              onClick={() => applySemitoneShift(semitones + 1)}
-              disabled={!detectionId || detecting || reRendering || semitones >= 7}
-              aria-label={t.transposeUp}
+              onClick={() => applySemitoneShift(step.plus.next)}
+              disabled={!detectionId || detecting || reRendering || step.plus.disabled}
+              aria-label={stepText.plusLabel}
               style={{
                 height: 44, borderRadius: 12,
                 border: "1.5px solid rgba(0,0,0,0.1)",
                 background: semitones > 0 ? "linear-gradient(135deg, #0b4ea2, #093b7a)" : "rgba(255,255,255,0.75)",
                 color: semitones > 0 ? "white" : "#3a4847",
                 fontSize: "1.35rem", fontWeight: 900,
-                cursor: detectionId && !detecting && !reRendering && semitones < 7 ? "pointer" : "not-allowed",
-                opacity: detectionId && !detecting && !reRendering && semitones < 7 ? 1 : 0.45,
+                cursor: detectionId && !detecting && !reRendering && !step.plus.disabled ? "pointer" : "not-allowed",
+                opacity: detectionId && !detecting && !reRendering && !step.plus.disabled ? 1 : 0.45,
               }}
             >+</button>
           </div>

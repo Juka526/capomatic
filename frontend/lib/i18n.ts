@@ -28,8 +28,6 @@ export const translations = {
     detectionExpired: '이전 감지 결과가 만료되었습니다. 악보를 다시 업로드하세요.',
     failedConnect: '서버에 연결할 수 없습니다.',
     closeMenu: '메뉴 닫기',
-    transposeDown: '반음 내리기',
-    transposeUp: '반음 올리기',
     capoSelector: '카포 프렛 선택',
     selectCapoFret: (n: number) => `카포 ${n}프렛 선택`,
 
@@ -178,8 +176,6 @@ export const translations = {
     detectionExpired: 'The previous detection has expired. Upload the sheet again.',
     failedConnect: 'Failed to connect to server.',
     closeMenu: 'Close menu',
-    transposeDown: 'Transpose down one semitone',
-    transposeUp: 'Transpose up one semitone',
     capoSelector: 'Capo fret selector',
     selectCapoFret: (n: number) => `Select capo fret ${n}`,
 
