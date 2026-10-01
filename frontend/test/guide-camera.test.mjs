@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  cameraAt, clampShot, easeInOut, fullShot, pointerAt, screenRectOut, shotFor, toOutput, unionRect,
+  CALM, cameraAt, cameraStats, clampShot, easeInOut, fullShot, mergeIntervals, planCamera, pointerAt, screenRectOut,
+  scrollIntervals, shotContains, shotFor, toOutput, unionRect,
 } from '../../scripts/guide-camera.mjs';
 
 const desktop = { screen: { w: 1280, h: 800 }, aspect: 16 / 10, out: { w: 1280, h: 800 } };
@@ -108,4 +109,87 @@ test('union and pointer helpers', () => {
   assert.deepEqual(pointerAt({ x: 0, y: 0 }, moves, 0.5), { x: 0, y: 0 });
   assert.deepEqual(pointerAt({ x: 0, y: 0 }, moves, 2), { x: 100, y: 50 });
   near(pointerAt({ x: 0, y: 0 }, moves, 1.25).x, 50);
+});
+
+// --- calm camera ---------------------------------------------------------------
+
+const phone = { screen: { w: 390, h: 844 }, aspect: 9 / 15 };
+const phoneFull = fullShot(phone.screen, phone.aspect, 0, 'width');
+const plan = (intents, { scrolls = [], chapters = [{ start: 0, end: 30 }] } = {}) =>
+  planCamera({ intents, scrolls, chapters, ...phone, full: phoneFull, maxZoom: CALM.maxZoom.mobile, pad: 16 });
+const box = (x, y, w = 60, h = 44) => ({ x, y, w, h });
+
+test('calm rules are the agreed values', () => {
+  assert.ok(CALM.moveSeconds >= 0.9 && CALM.moveSeconds <= 1.2);
+  assert.ok(CALM.minHold >= 2 && CALM.minHoldAfterResult >= 2.5);
+  assert.equal(CALM.maxMovesPerChapter, 2);
+  assert.deepEqual(CALM.maxZoom, { mobile: 1.25, desktop: 1.5 });
+});
+
+test('the mobile wide shot fills the width: no side bars', () => {
+  assert.equal(phoneFull.w, 390);
+  const r = screenRectOut(clampShot(phoneFull, phone.screen, phone.aspect), phone.screen, phone.aspect, { w: 720, h: 1200 });
+  near(r.x, 0); near(r.w, 720);
+});
+
+test('scroll intervals come from frame scroll positions', () => {
+  const samples = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 2, 2.1].map((t, i) => ({ t, y: [0, 0, 50, 120, 120, 120, 120, 300][i] }));
+  assert.deepEqual(scrollIntervals(samples, { pad: 0 }), [{ t0: 0.1, t1: 0.3 }, { t0: 2, t1: 2.1 }]);
+  // A change after a quiet gap (no frames) is pinned to the later frame.
+  assert.deepEqual(scrollIntervals([{ t: 1, y: 0 }, { t: 4, y: 10 }], { pad: 0 }), [{ t0: 3.9, t1: 4 }]);
+  assert.deepEqual(mergeIntervals([{ t0: 0, t1: 1 }], [{ t0: 0.5, t1: 2 }, { t0: 3, t1: 4 }]), [{ t0: 0, t1: 2 }, { t0: 3, t1: 4 }]);
+});
+
+test('nearby targets share one framing: no pan between a fret and the + button', () => {
+  const { cues } = plan([
+    { t: 1, roi: box(20, 520, 360, 80), kind: 'target' },
+    { t: 4, roi: box(300, 610), kind: 'target' },
+    { t: 6, roi: box(0, 400, 390, 300), kind: 'result' },
+  ]);
+  assert.equal(cues.length, 0);
+});
+
+test('never moves during a scroll, holds between moves, at most 2 moves per chapter', () => {
+  const scrolls = [{ t0: 5, t1: 6 }, { t0: 10, t1: 11 }, { t0: 15, t1: 16 }];
+  const intents = [
+    { t: 1, roi: box(0, 0, 390, 300), kind: 'target' },
+    { t: 7, roi: box(0, 600, 390, 244), kind: 'target' },
+    { t: 12, roi: box(0, 0, 390, 200), kind: 'result' },
+    { t: 17, roi: box(0, 640, 390, 200), kind: 'result' },
+  ];
+  const { initial, cues } = plan(intents, { scrolls });
+  assert.ok(cues.length <= CALM.maxMovesPerChapter);
+  for (const q of cues) {
+    assert.ok(!scrolls.some((s) => q.t < s.t1 && q.t + q.dur > s.t0), `move at ${q.t} overlaps a scroll`);
+    assert.ok(q.dur >= 0.9 && q.dur <= 1.2);
+  }
+  const stats = cameraStats({ initial, cues, chapters: [{ start: 0, end: 30 }], full: phoneFull });
+  if (stats.shortestHold != null) assert.ok(stats.shortestHold >= CALM.minHold);
+  assert.ok(stats.zoomRange[1] <= CALM.maxZoom.mobile + 1e-9);
+});
+
+test('waits 2.5 s after a result before moving on', () => {
+  const { cues } = plan([
+    { t: 0.5, roi: box(0, 0, 390, 200), kind: 'result' },
+    { t: 1, roi: box(0, 700, 390, 144), kind: 'target' },
+  ], { scrolls: [{ t0: 0.7, t1: 0.9 }] }); // the second target is after a scroll: its own framing
+  assert.equal(cues.length, 1);
+  assert.ok(cues[0].t >= 0.5 + CALM.minHoldAfterResult);
+});
+
+test('zoom stays inside the range and the framing contains its targets', () => {
+  const target = box(150, 400, 40, 40);
+  const { initial } = plan([{ t: 1, roi: target, kind: 'target' }]);
+  assert.ok(phoneFull.w / initial.w <= CALM.maxZoom.mobile + 1e-9);
+  assert.ok(shotContains(initial, target, phone.aspect));
+});
+
+test('moves when the new framing shows more of a target, even one too tall to fit', () => {
+  // Current framing is bottom-aligned; the wanted area runs from near the top to the middle.
+  const { initial, cues } = plan([
+    { t: 0.5, roi: box(0, 300, 390, 544), kind: 'target' },
+    { t: 4, roi: box(100, 60, 200, 700), kind: 'target' },
+  ], { scrolls: [{ t0: 3, t1: 3.5 }] });
+  assert.equal(cues.length, 1);
+  assert.ok(cues[0].shot.cy < initial.cy);
 });
