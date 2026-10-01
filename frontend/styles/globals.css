@@ -211,7 +211,7 @@ html, body {
 
   html, body, .app-root { background-color: #EDE2C4 !important; }
   /* overflow-x: hidden turns the root into a scroll container and breaks the
-     sticky top bar and bottom board; clip hides overflow without that. */
+     sticky top bar; clip hides overflow without that. */
   .app-root { overflow-x: clip !important; }
 
   /* Top bar */
@@ -269,9 +269,10 @@ html, body {
   .m-home-error { display: flex; align-items: center; gap: 6px; margin: -8px 20px 16px; color: #d4183d; font-size: 0.78rem; font-weight: 600; }
 
   /* Result */
-  .m-result { display: block; }
-  .m-wordmark { display: block; }
-  .m-sheet { padding: 12px 14px 10px; }
+  /* Result: the sheet scrolls in its own area above the board, so the board
+     never covers it. The chord editor follows below (page scroll). */
+  .m-result { display: flex; flex-direction: column; height: calc(100dvh - 56px); }
+  .m-sheet { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 10px 14px 8px; }
   .m-page { position: relative; overflow: hidden; background: #fff; border: 1px solid rgba(26, 26, 46, 0.13); border-radius: 12px; }
   .m-page img { display: block; width: 100%; height: auto; }
   .m-scan { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
@@ -282,12 +283,12 @@ html, body {
   }
 
   .m-board {
-    position: sticky; bottom: 0; z-index: 50;
+    flex: none;
     background: #FFFDF7; border-top: 1px solid rgba(26, 26, 46, 0.13);
-    padding: 12px 0 calc(14px + env(safe-area-inset-bottom, 0px));
+    padding: 8px 0 calc(10px + env(safe-area-inset-bottom, 0px));
     box-shadow: 0 -8px 20px -14px rgba(26, 26, 46, 0.35);
   }
-  .m-bhead { display: flex; align-items: center; gap: 8px; padding: 0 20px 8px; min-height: 30px; font-size: 0.86rem; color: #1a1a2e; }
+  .m-bhead { display: flex; align-items: center; gap: 8px; padding: 0 16px 4px; min-height: 28px; font-size: 0.84rem; color: #1a1a2e; }
   .m-ok { color: #28a860; font-weight: 800; }
   .m-muted { color: #3a4847; }
   .m-small { font-size: 0.76rem; }
@@ -299,30 +300,32 @@ html, body {
   .m-arrow { color: #a09070; }
   .m-spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(224, 93, 0, 0.25); border-top-color: #E05D00; animation: m-rot 0.8s linear infinite; flex: none; }
   .m-spin-sm { width: 13px; height: 13px; }
-  .m-fretbox { margin: 0 14px; }
+  /* The fretboard scales with its width; a narrower box keeps the board short. */
+  .m-fretbox { max-width: 300px; margin: 0 auto; }
 
-  .m-stepper { margin: 10px 20px 0; display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; gap: 10px; }
+  .m-controls { display: flex; align-items: center; gap: 8px; margin: 6px 14px 0; }
+  .m-stepper { flex: 1; min-width: 0; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 4px; }
   .m-sq {
-    height: 48px; border-radius: 12px; border: 1px solid rgba(26, 26, 46, 0.13); background: #fff;
+    height: 44px; border-radius: 12px; border: 1px solid rgba(26, 26, 46, 0.13); background: #fff;
     font-family: inherit; font-size: 1.35rem; font-weight: 700; color: #1a1a2e; cursor: pointer;
     transition: background-color 0.15s, border-color 0.15s;
   }
   .m-sq:disabled { opacity: 0.35; cursor: not-allowed; }
   .m-val { text-align: center; }
-  .m-val small { display: block; font-size: 0.7rem; font-weight: 600; color: #a09070; }
-  .m-val b { font-size: 1.2rem; font-weight: 700; color: #1a1a2e; font-variant-numeric: tabular-nums; }
+  .m-val small { display: block; font-size: 0.62rem; line-height: 1.15; font-weight: 600; color: #a09070; text-wrap: balance; }
+  .m-val b { white-space: nowrap; font-size: 1.05rem; font-weight: 700; color: #1a1a2e; font-variant-numeric: tabular-nums; }
 
-  .m-seg { display: flex; margin: 10px 20px 0; background: rgba(26, 26, 46, 0.06); border-radius: 12px; padding: 4px; }
+  .m-seg { flex: none; display: flex; background: rgba(26, 26, 46, 0.06); border-radius: 12px; padding: 3px; }
   .m-seg button {
-    flex: 1; min-height: 42px; border: 0; background: none; border-radius: 9px; cursor: pointer;
-    font-family: inherit; font-size: 0.86rem; font-weight: 700; color: #3a4847;
+    flex: 1; min-height: 38px; padding: 0 10px; border: 0; background: none; border-radius: 9px; cursor: pointer;
+    font-family: inherit; font-size: 0.82rem; font-weight: 700; color: #3a4847;
     transition: background-color 0.15s, color 0.15s, opacity 0.15s;
   }
   .m-seg button[aria-pressed="true"] { background: #FFFDF7; color: #1a1a2e; box-shadow: 0 1px 3px rgba(26, 26, 46, 0.14); }
-  .m-acts { display: flex; gap: 9px; margin: 8px 20px 0; }
+  .m-acts { display: flex; gap: 8px; margin: 6px 14px 0; }
   .m-btn {
-    flex: 1; min-height: 48px; border-radius: 14px; cursor: pointer;
-    font-family: inherit; font-size: 0.95rem; font-weight: 700;
+    flex: 1; min-height: 44px; border-radius: 12px; cursor: pointer;
+    font-family: inherit; font-size: 0.9rem; font-weight: 700;
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     border: 1px solid transparent; transition: opacity 0.15s, filter 0.15s;
   }

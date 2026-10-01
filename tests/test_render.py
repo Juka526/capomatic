@@ -8,6 +8,7 @@ import backend.overlay.render as render_module
 from backend.overlay.render import (
     _chord_display_width,
     _find_row_font_sizes,
+    _header_lines,
     _get_staff_systems,
     _load_font,
     _place_row_labels_anchored,
@@ -657,3 +658,30 @@ class TestRenderReplaceRefinements:
 
         assert result.getpixel((60, 25)) == (255, 255, 255)
         assert result.getpixel((60, 55)) == (0, 0, 0)
+
+
+# ---------------------------------------------------------------------------
+# Key-change header text
+# ---------------------------------------------------------------------------
+
+class TestHeaderLines:
+    @pytest.mark.parametrize("semitones,target,expected", [
+        (-2, "F", ["G -> F (-2 semitones)", "Capo: 2"]),
+        (-1, "F#", ["G -> F# (-1 semitone)", "Capo: 1"]),
+        (-7, "C", ["G -> C (-7 semitones)", "Capo: 7"]),
+        (-8, "B", ["G -> B (-8 semitones)"]),
+        (-11, "Ab", ["G -> Ab (-11 semitones)"]),
+        (1, "Ab", ["G -> Ab (+1 semitone)"]),
+        (2, "A", ["G -> A (+2 semitones)"]),
+    ])
+    def test_semitone_label_and_capo_only_in_range(self, semitones, target, expected):
+        assert _header_lines("G", target, semitones) == expected
+
+    def test_no_shift_shows_the_key(self):
+        assert _header_lines("F", "F", 0) == ["Key: F"]
+
+    def test_nothing_to_show(self):
+        assert _header_lines(None, None, 0) == []
+
+    def test_shift_without_key_names(self):
+        assert _header_lines(None, None, -1) == ["Semitones: -1 semitone", "Capo: 1"]

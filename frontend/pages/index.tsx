@@ -5,7 +5,7 @@ import Link from "next/link";
 import LoginButton from "@/components/LoginButton";
 import { useLang, LangToggle } from "@/components/LangProvider";
 import { GuitarFretboard } from "@/components/GuitarFretboard";
-import { MobileWordmark } from "@/components/MobileWordmark";
+import { Wordmark } from "@/components/Wordmark";
 import { GuideModal } from "@/components/GuideModal";
 import { translations } from "@/lib/i18n";
 import { computeTargetKey } from "@/lib/target-key.mjs";
@@ -766,16 +766,7 @@ export default function Home() {
                 <line x1="3" y1="18" x2="21" y2="18" />
               </svg>
             </button>
-            <svg viewBox="0 0 36 36" width="28" height="28">
-              <circle cx="18" cy="18" r="17" fill="#3a4847" />
-              <rect x="11" y="12" width="14" height="2.5" rx="1.2" fill="#e05d00" />
-              <rect x="11" y="16" width="14" height="2.5" rx="1.2" fill="#e05d00" opacity="0.7" />
-              <rect x="11" y="20" width="14" height="2.5" rx="1.2" fill="#e05d00" opacity="0.4" />
-              <rect x="21" y="10" width="3" height="16" rx="1.5" fill="white" opacity="0.9" />
-            </svg>
-            <span style={{ fontWeight: 800, fontSize: "0.96rem", color: "#3a4847", letterSpacing: "-0.01em", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-              Capo<span style={{ color: "#9c3d00" }}>matic</span>
-            </span>
+            <Wordmark height={22} introReady={logoIntroReady} />
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <LangToggle />
@@ -795,7 +786,7 @@ export default function Home() {
               <svg width="18" height="12" viewBox="0 0 18 12" fill="none" aria-hidden="true"><path d="M0 1h18M0 6h18M0 11h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
             </button>
           )}
-          <MobileWordmark introReady={logoIntroReady} />
+          <Wordmark introReady={logoIntroReady} />
           <span className="m-spacer" />
           {file ? (
             <button type="button" className="m-icon-btn" onClick={() => fileInputRef.current?.click()} aria-label={t.mUploadAnother}>
@@ -814,9 +805,7 @@ export default function Home() {
         <div className={`hamburger-menu${menuOpen ? " open" : ""}`} ref={menuRef}>
           {/* Panel header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 52, borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
-            <span style={{ fontWeight: 800, fontSize: "0.96rem", color: "#1a1a2e", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-              Capo<span style={{ color: "#9c3d00" }}>matic</span>
-            </span>
+            <Wordmark height={20} introReady={false} />
             <button onClick={() => setMenuOpen(false)} aria-label={t.closeMenu} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" strokeWidth="2" strokeLinecap="round">
                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -1044,32 +1033,35 @@ export default function Home() {
                   />
                 )}
               </div>
-              <div className="m-stepper">
-                <button
-                  type="button"
-                  className="m-sq"
-                  onClick={() => void applySemitoneShift(step.minus.next, SHIFT_LIMIT)}
-                  disabled={stepBusy || step.minus.disabled}
-                  aria-label={stepText.minusLabel}
-                >−</button>
-                <div className="m-val" aria-live="polite">
-                  <small>{stepText.caption}</small>
-                  <b>{stepText.value}</b>
+              {/* Capo stepper and display mode share one row to keep the board short. */}
+              <div className="m-controls">
+                <div className="m-stepper">
+                  <button
+                    type="button"
+                    className="m-sq"
+                    onClick={() => void applySemitoneShift(step.minus.next, SHIFT_LIMIT)}
+                    disabled={stepBusy || step.minus.disabled}
+                    aria-label={stepText.minusLabel}
+                  >−</button>
+                  <div className="m-val" aria-live="polite">
+                    <small>{stepText.caption}</small>
+                    <b>{stepText.value}</b>
+                  </div>
+                  <button
+                    type="button"
+                    className="m-sq"
+                    onClick={() => void applySemitoneShift(step.plus.next, SHIFT_LIMIT)}
+                    disabled={stepBusy || step.plus.disabled}
+                    aria-label={stepText.plusLabel}
+                  >+</button>
                 </div>
-                <button
-                  type="button"
-                  className="m-sq"
-                  onClick={() => void applySemitoneShift(step.plus.next, SHIFT_LIMIT)}
-                  disabled={stepBusy || step.plus.disabled}
-                  aria-label={stepText.plusLabel}
-                >+</button>
-              </div>
-              <div className="m-seg" role="group" aria-label={t.mDisplayMode}>
-                {(["replace", "above"] as const).map(tab => (
-                  <button key={tab} type="button" aria-pressed={activeTab === tab} disabled={!chosen} onClick={() => handleResultTabSelect(tab)}>
-                    {tab === "replace" ? t.replace : t.above}
-                  </button>
-                ))}
+                <div className="m-seg" role="group" aria-label={t.mDisplayMode}>
+                  {(["replace", "above"] as const).map(tab => (
+                    <button key={tab} type="button" aria-pressed={activeTab === tab} disabled={!chosen} onClick={() => handleResultTabSelect(tab)}>
+                      {tab === "replace" ? t.replace : t.above}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="m-acts">
                 <button type="button" className="m-btn m-btn-ghost" disabled={!chosen} onClick={() => setShowOriginal(v => !v)}>
@@ -1357,9 +1349,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer style={{ borderTop: "1px solid rgba(0,0,0,0.06)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-          <span style={{ fontSize: "0.75rem", color: "#675d4a", fontWeight: 700, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
-            Capo<span style={{ color: "#9c3d00" }}>matic</span>
-          </span>
+          <Wordmark height={15} introReady={false} />
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <span style={{ fontSize: "0.7rem", color: "#666", fontWeight: 500 }}>{t.footerTagline}</span>
             <Link href="/privacy" style={{ fontSize: "0.7rem", color: "#665e54" }}>{t.privacy}</Link>

@@ -6,11 +6,11 @@ const INK = "#1a1a2e";
 const ACCENT = "#E05D00";
 
 /**
- * Capomatic wordmark for the mobile top bar. The m is a plucked string: it
+ * Capomatic wordmark, used wherever the logo appears. The m is a plucked string: it
  * vibrates once on first load (once `introReady`) and again on each tap,
  * unless the user prefers reduced motion. Outlines are baked in (no runtime font loading).
  */
-export function MobileWordmark({ height = 23, introReady = true }: { height?: number; introReady?: boolean }) {
+export function Wordmark({ height = 23, introReady = true }: { height?: number; introReady?: boolean }) {
   const mRef = useRef<SVGPathElement>(null);
   const frameRef = useRef<number | null>(null);
 
@@ -22,7 +22,7 @@ export function MobileWordmark({ height = 23, introReady = true }: { height?: nu
   const pluck = useCallback(() => {
     const path = mRef.current;
     if (!path || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    // The mobile bar is display:none on desktop; don't animate an invisible logo.
+    // The mobile and desktop bars hide each other; don't animate an invisible logo.
     if (path.getClientRects().length === 0) return;
     stop();
     let start: number | null = null;
