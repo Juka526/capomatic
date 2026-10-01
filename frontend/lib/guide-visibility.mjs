@@ -33,7 +33,7 @@ export function writeGuideDismissed(getStorage) {
 }
 
 /** Video files for one step; `device` is fixed when the modal opens. */
-export function guideMedia(device, lang, stepIndex) {
-  const base = `/guide/${device}/${lang === 'en' ? 'en' : 'ko'}/step${stepIndex + 1}`;
-  return { webm: `${base}.webm`, mp4: `${base}.mp4`, poster: `${base}.jpg` };
+export function guideMedia(device, lang) {
+  const base = `/guide/${device}/${lang === 'en' ? 'en' : 'ko'}/guide`;
+  return { mp4: `${base}.mp4`, poster: `${base}.jpg`, chapters: `${base}.chapters.json` };
 }

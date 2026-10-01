@@ -40,10 +40,10 @@ test('writing stores "1" under the guide key and reads back as dismissed', () =>
   assert.equal(shouldAutoOpenGuide({ storedValue: readGuideDismissed(() => store), pathname: '/', hasFile: false }), false);
 });
 
-test('media paths are per device, language and step', () => {
-  assert.deepEqual(guideMedia('mobile', 'ko', 0), {
-    webm: '/guide/mobile/ko/step1.webm', mp4: '/guide/mobile/ko/step1.mp4', poster: '/guide/mobile/ko/step1.jpg',
+test('one video, poster and chapter file per device and language', () => {
+  assert.deepEqual(guideMedia('mobile', 'ko'), {
+    mp4: '/guide/mobile/ko/guide.mp4', poster: '/guide/mobile/ko/guide.jpg', chapters: '/guide/mobile/ko/guide.chapters.json',
   });
-  assert.equal(guideMedia('desktop', 'en', 4).mp4, '/guide/desktop/en/step5.mp4');
-  assert.equal(guideMedia('desktop', 'fr', 1).webm, '/guide/desktop/ko/step2.webm');
+  assert.equal(guideMedia('desktop', 'en').mp4, '/guide/desktop/en/guide.mp4');
+  assert.equal(guideMedia('desktop', 'fr').mp4, '/guide/desktop/ko/guide.mp4');
 });

@@ -117,7 +117,6 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
-  const [guideStep, setGuideStep] = useState(0);
   const [logoIntroReady, setLogoIntroReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
@@ -163,7 +162,6 @@ export default function Home() {
   useEffect(() => {
     const stored = readGuideDismissed(() => window.localStorage);
     if (shouldAutoOpenGuide({ storedValue: stored, pathname: window.location.pathname, hasFile: false })) {
-      setGuideStep(0);
       setGuideOpen(true);
     } else {
       setLogoIntroReady(true);
@@ -832,7 +830,7 @@ export default function Home() {
               {t.myJobs}
             </Link>
             <button
-              onClick={() => { setMenuOpen(false); setGuideStep(0); setGuideOpen(true); }}
+              onClick={() => { setMenuOpen(false); setGuideOpen(true); }}
               style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: "14px 24px", fontSize: "0.9rem", fontWeight: 600, color: "#1a1a2e" }}>
               {t.guide}
             </button>
@@ -1371,11 +1369,9 @@ export default function Home() {
 
         <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
 
-        {/* Guide modal: short demo video per step */}
+        {/* Guide modal: one demo video, its text follows the scenes */}
         {guideOpen && (
           <GuideModal
-            step={guideStep}
-            onStepChange={setGuideStep}
             onClose={closeGuide}
             onDismissForever={dismissGuideForever}
           />

@@ -1,0 +1,50 @@
+{
+  "duration": 39.767,
+  "chapters": [
+    {
+      "id": "upload",
+      "start": 0,
+      "end": 4.8,
+      "events": {
+        "click": 1.267,
+        "result": 3.5
+      }
+    },
+    {
+      "id": "capo",
+      "start": 4.8,
+      "end": 12.3,
+      "events": {
+        "click": 5.467,
+        "result": 7.3
+      }
+    },
+    {
+      "id": "mode",
+      "start": 12.3,
+      "end": 19.6,
+      "events": {
+        "click": 14.233,
+        "result": 14.3
+      }
+    },
+    {
+      "id": "fix",
+      "start": 19.6,
+      "end": 33.467,
+      "events": {
+        "click": 21.467,
+        "result": 32.167
+      }
+    },
+    {
+      "id": "save",
+      "start": 33.467,
+      "end": 39.767,
+      "events": {
+        "click": 35.367,
+        "result": 36.2
+      }
+    }
+  ]
+}

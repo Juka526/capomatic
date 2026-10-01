@@ -344,9 +344,9 @@ html, body {
 }
 
 /* ------------------------------------------------------------------ */
-/* How-to guide modal (components/GuideModal.tsx). The video set is     */
-/* picked when the modal opens: .guide-desktop (16:10) or .guide-mobile */
-/* (9:14, full screen).                                                 */
+/* How-to guide modal (components/GuideModal.tsx). The video is picked */
+/* when the modal opens: .guide-desktop (16:10) or .guide-mobile (9:14, */
+/* full screen).                                                        */
 /* ------------------------------------------------------------------ */
 .guide-backdrop {
   position: fixed; inset: 0; z-index: 300;
@@ -370,7 +370,7 @@ html, body {
 .guide-desktop .guide-media { aspect-ratio: 16 / 10; width: 100%; }
 .guide-mobile .guide-media {
   aspect-ratio: 9 / 14;
-  width: min(calc(100% - 32px), calc((100dvh - 290px) * 9 / 14));
+  width: min(calc(100% - 32px), calc((100dvh - 352px) * 9 / 14));
   margin: 12px auto 0; border-radius: 16px;
   border: 1px solid rgba(26, 26, 46, 0.13);
 }
@@ -390,20 +390,35 @@ html, body {
 .guide-count { margin: 0; font-size: 0.74rem; font-weight: 700; color: #a09070; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
 .guide-title { margin: 0; font-size: 1.3rem; font-weight: 800; color: #1a1a2e; }
 .guide-desc { margin: 0; max-width: 46ch; font-size: 0.9rem; line-height: 1.55; color: #3a4847; text-wrap: balance; }
-.guide-dots { display: flex; gap: 8px; margin: 8px 0 2px; }
+.guide-controls {
+  display: flex; align-items: center; gap: 8px; padding: 6px 16px 0;
+}
+.guide-mobile .guide-controls { width: min(calc(100% - 32px), calc((100dvh - 352px) * 9 / 14)); margin: 0 auto; padding: 4px 0 0; }
+.guide-toggle {
+  flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;
+  display: grid; place-items: center; background: none; color: #3a4847;
+}
+.guide-seek { flex: 1; min-width: 0; height: 44px; margin: 0; accent-color: #E05D00; cursor: pointer; }
+.guide-text { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.guide-dots { display: flex; margin: 2px 0 -6px; }
+.guide-dots button {
+  width: 32px; height: 44px; padding: 0; border: 0; background: none; cursor: pointer;
+  display: grid; place-items: center;
+}
 .guide-dots span { width: 8px; height: 8px; border-radius: 50%; background: #e8ddd0; transition: background 0.2s; }
-.guide-dots span.on { background: #E05D00; }
+.guide-dots button.on span { background: #E05D00; }
 .guide-dismiss {
   min-height: 44px; padding: 0 12px; border: 0; background: none; cursor: pointer;
   font: inherit; font-size: 0.8rem; font-weight: 600; color: #6b6558;
   text-decoration: underline; text-underline-offset: 3px;
 }
-.guide-actions { display: flex; gap: 12px; width: 100%; max-width: 360px; }
+.guide-actions { display: flex; gap: 10px; width: 100%; max-width: 420px; }
 .guide-actions button {
   flex: 1; min-height: 48px; border-radius: 12px; cursor: pointer;
   font: inherit; font-size: 0.95rem; font-weight: 700;
 }
-.guide-skip { border: 1px solid rgba(26, 26, 46, 0.13); background: #fff; color: #3a4847; }
+.guide-skip, .guide-prev { border: 1px solid rgba(26, 26, 46, 0.13); background: #fff; color: #3a4847; }
+.guide-prev:disabled { opacity: 0.45; cursor: default; }
 .guide-next { border: 0; color: #fff; background: linear-gradient(180deg, #E05D00, #C84B00); box-shadow: 0 4px 12px -4px rgba(224, 93, 0, 0.65); }
 @media (prefers-reduced-motion: reduce) {
   .guide-dots span { transition: none; }
