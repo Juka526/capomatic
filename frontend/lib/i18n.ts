@@ -183,7 +183,7 @@ export const translations = {
     fret: 'Fret',
     open: 'Open',
     capoPosition: 'Capo Position',
-    transposeUpInfo: (n: number) => `+${n} semitones`,
+    transposeUpInfo: (n: number) => `+${n} ${n === 1 ? 'semitone' : 'semitones'}`,
 
     // Options
     rendering: 'Rendering…',
@@ -265,7 +265,7 @@ export const translations = {
     processFirst: 'Process Your First Sheet',
     download: 'Download',
     delete: 'Delete',
-    semitones: (n: number) => `${n > 0 ? '+' : ''}${n} semitones`,
+    semitones: (n: number) => `${n > 0 ? '+' : ''}${n} ${Math.abs(n) === 1 ? 'semitone' : 'semitones'}`,
     deleteConfirm: (name: string) => `Delete "${name}" job?`,
     downloadFailed: (msg: string) => `Download failed: ${msg}`,
     deleteFailed: (msg: string) => `Delete failed: ${msg}`,
