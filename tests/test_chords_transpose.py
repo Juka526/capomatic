@@ -187,3 +187,36 @@ def test_bare_root_flat_five_is_not_parsed_as_flat_root():
 ])
 def test_extended_notation_transposes(text, expected):
     assert transpose_chord(parse_chord(text), 2) == expected
+
+
+# ---------------------------------------------------------------------------
+# Letter-preserving spelling when both keys are known
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("text,original_key,semitones,target_key,expected", [
+    ("Cmaj7", "D", -2, "C", "Bbmaj7"),   # borrowed bVII stays flat
+    ("A/C#", "D", -2, "C", "G/B"),
+    ("D/F#", "D", -2, "C", "C/E"),
+    ("Gm6", "D", -2, "C", "Fm6"),
+    ("F#m7", "D", -2, "C", "Em7"),
+    ("E/G#", "C", 2, "D", "F#/A#"),      # secondary dominant keeps its sharp third
+    ("C#dim", "C", 2, "D", "D#dim"),
+    ("Bb", "C", 2, "D", "C"),
+    ("Ab", "C", -1, "B", "G"),
+    ("F#", "C", -1, "B", "F"),           # E# is forbidden: falls back
+    ("Bb", "G", 1, "Ab", "B"),           # Cb is forbidden: falls back
+    ("D#dim", "C", 1, "Db", "Edim"),
+    ("A#", "D", 0, "D", "A#"),           # no shift: spelling unchanged
+    ("Bb", "D", 0, "D", "Bb"),
+    ("Cmaj7", "D", -9, "F", "Ebmaj7"),
+    ("C#m", "A", -8, "Db", "Fm"),
+])
+def test_letter_preserving_spelling(text, original_key, semitones, target_key, expected):
+    chord = parse_chord(text)
+    assert transpose_chord(chord, semitones, target_key=target_key, original_key=original_key) == expected
+
+
+def test_without_original_key_spelling_is_unchanged():
+    # Key not detected: today's per-key preference only.
+    assert transpose_chord(parse_chord("Cmaj7"), -2, target_key="C") == "A#maj7"
+    assert transpose_chord(parse_chord("Cmaj7"), -2) == "A#maj7"
