@@ -171,12 +171,14 @@ def _resolve_keys(
     return original_key, target_key
 
 
-def _build_chord_item(item: dict, semitones: int, target_key: str | None) -> dict:
+def _build_chord_item(
+    item: dict, semitones: int, target_key: str | None, original_key: str | None = None,
+) -> dict:
     """Build a chord response dict from a raw detection item."""
     transposed: str | None = None
     try:
         chord = parse_chord(item["text"])
-        transposed = transpose_chord(chord, semitones, target_key=target_key)
+        transposed = transpose_chord(chord, semitones, target_key=target_key, original_key=original_key)
     except (ValueError, KeyError):
         logger.debug("Could not transpose %r: skipping", item["text"])
 
@@ -543,7 +545,7 @@ async def render(
         compute_target_key(original_key, semitones) if original_key else None
     )
 
-    chords = [_build_chord_item(item, semitones, target_key) for item in items]
+    chords = [_build_chord_item(item, semitones, target_key, original_key) for item in items]
 
     t_start = time.perf_counter()
 
@@ -611,7 +613,7 @@ async def overlay(
     original_key, target_key = _resolve_keys(
         items, semitones, original_key, target_key,
     )
-    chords = [_build_chord_item(item, semitones, target_key) for item in items]
+    chords = [_build_chord_item(item, semitones, target_key, original_key) for item in items]
 
     result = await _run_render(functools.partial(
         render_overlay,

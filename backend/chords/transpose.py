@@ -12,6 +12,11 @@ _ENHARMONIC_IN = {"E#": "F", "B#": "C", "Cb": "B", "Fb": "E"}
 # Keys that prefer flat spelling in output.
 _FLAT_KEYS = {"F", "Bb", "Eb", "Ab", "Db"}
 
+# Letter names in order, and the pitch class of each natural letter.
+_LETTERS = "CDEFGAB"
+_NATURAL = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
+_FORBIDDEN_OUT = {"E#", "B#", "Cb", "Fb"}
+
 # Standard key names for each chromatic index.
 # Uses flats for enharmonic pairs (Db not C#, Eb not D#, etc.) except F# which
 # is more standard than Gb.  Used by compute_target_key() and key_detect.
@@ -47,6 +52,26 @@ def _key_preference(target_key: Optional[str]) -> str:
     return "flat" if target_key in _FLAT_KEYS else "sharp"
 
 
+def _letter_shift(original_key: str, target_key: str) -> int:
+    """How many letter names the key moves (e.g. D -> C is 6, i.e. one letter down)."""
+    return (_LETTERS.index(target_key[0].upper()) - _LETTERS.index(original_key[0].upper())) % 7
+
+
+def _spell_by_letter(note: str, semitones: int, letter_shift: int) -> Optional[str]:
+    """Transpose keeping the note's letter relation to the key.
+
+    The letter moves by *letter_shift*; the accidental is whatever reaches the
+    transposed pitch. Returns None when that needs a double accidental or a
+    forbidden spelling (E#, B#, Cb, Fb), so the caller can fall back.
+    """
+    letter = _LETTERS[(_LETTERS.index(note[0]) + letter_shift) % 7]
+    pitch = (_note_to_index(note) + semitones) % 12
+    accidental = {0: "", 1: "#", 11: "b"}.get((pitch - _NATURAL[letter]) % 12)
+    if accidental is None or letter + accidental in _FORBIDDEN_OUT:
+        return None
+    return letter + accidental
+
+
 def compute_target_key(original_key: str, semitones: int) -> str:
     """Compute the target key by transposing *original_key* by *semitones*.
 
@@ -63,8 +88,15 @@ def transpose_chord(
     chord: Chord,
     semitones: int,
     target_key: Optional[str] = None,
+    original_key: Optional[str] = None,
 ) -> str:
     """Transpose *chord* by *semitones* and return a compact chord string.
+
+    With both keys known, notes keep their letter relation to the key (as
+    notation software does): a borrowed Bb in D becomes Ab in C, not G#, and
+    A/C# in D becomes G/B in C. Spellings that would need a double accidental
+    or E#/B#/Cb/Fb fall back to the target key's sharp/flat preference. With
+    either key unknown, only that preference is used.
 
     Both the root and slash bass are transposed independently.
     Extensions are written compactly (e.g. "7sus4" not "7(sus4)"), except an
@@ -72,11 +104,17 @@ def transpose_chord(
     stays wrapped so "A(b5)" is not read as an A-flat chord.
     """
     prefer = _key_preference(target_key)
-    new_root = transpose_note(chord.root, semitones, prefer)
+    shift = _letter_shift(original_key, target_key) if original_key and target_key else None
+
+    def spell(note: str) -> str:
+        spelled = _spell_by_letter(note, semitones, shift) if shift is not None else None
+        return spelled or transpose_note(note, semitones, prefer)
+
+    new_root = spell(chord.root)
     suffix = chord.quality + chord.extensions
     if not chord.quality and chord.extensions[:1] in ("b", "#"):
         suffix = f"({chord.extensions})"
     result = new_root + suffix
     if chord.bass is not None:
-        result += "/" + transpose_note(chord.bass, semitones, prefer)
+        result += "/" + spell(chord.bass)
     return result

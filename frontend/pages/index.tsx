@@ -715,11 +715,11 @@ export default function Home() {
           color: "white", fontSize: "0.8rem", fontWeight: 600,
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          <span>Click on the image to place the chord</span>
+          <span>{t.placeChordHint}</span>
           <button
             onClick={() => setAddModeActive(false)}
             style={{ background: "none", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 6, padding: "2px 10px", color: "white", cursor: "pointer", fontSize: "0.75rem" }}
-          >Cancel</button>
+          >{t.cancel}</button>
         </div>
       )}
     </>
@@ -1187,11 +1187,11 @@ export default function Home() {
                   background: "white", borderRadius: 12, padding: "20px 24px",
                   boxShadow: "0 8px 32px rgba(0,0,0,0.25)", zIndex: 1000, minWidth: 260,
                 }}>
-                  <p style={{ margin: "0 0 12px", fontSize: "0.85rem", fontWeight: 700, color: "#1a1a2e" }}>Add chord at position</p>
+                  <p style={{ margin: "0 0 12px", fontSize: "0.85rem", fontWeight: 700, color: "#1a1a2e" }}>{t.addChordAtPositionTitle}</p>
                   <input
                     autoFocus
                     type="text"
-                    placeholder="e.g. Dm7"
+                    placeholder={t.chordPlaceholderDm7}
                     value={pendingChordText}
                     onChange={e => setPendingChordText(e.target.value)}
                     onKeyDown={e => {
@@ -1204,12 +1204,12 @@ export default function Home() {
                     <button
                       onClick={() => { setPendingPosition(null); setPendingChordText(""); }}
                       style={{ background: "none", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 8, padding: "7px 16px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", color: "#666" }}
-                    >Cancel</button>
+                    >{t.cancel}</button>
                     <button
                       onClick={confirmPositionedChord}
                       disabled={!pendingChordText.trim()}
                       style={{ background: "linear-gradient(135deg,#a34200,#7f3000)", border: "none", borderRadius: 8, padding: "7px 16px", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", color: "white", opacity: pendingChordText.trim() ? 1 : 0.5 }}
-                    >Add</button>
+                    >{t.add}</button>
                   </div>
                 </div>
               )}
@@ -1235,14 +1235,14 @@ export default function Home() {
                 <div className="chord-editor" style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(0,0,0,0.07)" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                     <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#695c42", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                      Detected Chords
+                      {t.detectedChords}
                     </span>
                     {JSON.stringify(editableChords) !== JSON.stringify(detectedChords) && (
                       <button
                         onClick={() => { setEditableChords(detectedChords); setEditingIdx(null); setAddingChord(false); }}
                         style={{ background: "none", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 20, padding: "3px 12px", fontSize: "0.7rem", fontWeight: 700, color: "#595959", cursor: "pointer" }}
                       >
-                        Reset
+                        {t.reset}
                       </button>
                     )}
                   </div>
@@ -1274,6 +1274,7 @@ export default function Home() {
                           {chord.text}
                           <button
                             onClick={e => { e.stopPropagation(); setEditableChords(prev => prev.filter((_, j) => j !== i)); if (editingIdx === i) setEditingIdx(null); }}
+                            aria-label={t.removeChord(chord.text)}
                             style={{ background: "none", border: "none", cursor: "pointer", padding: "0 2px", color: "#bbb", fontSize: "0.7rem", lineHeight: 1 }}
                           >✕</button>
                         </span>
@@ -1285,7 +1286,7 @@ export default function Home() {
                         autoFocus
                         value={addInput}
                         onChange={e => setAddInput(e.target.value)}
-                        placeholder="e.g. Am7"
+                        placeholder={t.chordPlaceholderAm7}
                         onBlur={() => { setAddingChord(false); setAddInput(""); }}
                         onKeyDown={e => {
                           if (e.key === "Enter") {
@@ -1303,7 +1304,7 @@ export default function Home() {
                         onClick={() => setAddingChord(true)}
                         style={{ background: "none", border: "1.5px dashed rgba(0,0,0,0.18)", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700, color: "#646464", cursor: "pointer" }}
                       >
-                        + Add
+                        {t.addChord}
                       </button>
                     )}
                     {!addingChord && (
@@ -1311,14 +1312,14 @@ export default function Home() {
                         onClick={() => setAddModeActive(true)}
                         style={{ background: "none", border: "1.5px dashed rgba(156,61,0,0.5)", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700, color: "#9c3d00", cursor: "pointer" }}
                       >
-                        + Add at position
+                        {t.addChordAtPosition}
                       </button>
                     )}
                   </div>
 
                   {editableChords.some(c => c.bbox === null) && (
                     <p style={{ margin: "8px 0 0", fontSize: "0.7rem", color: "#9c3d00", fontWeight: 600 }}>
-                      ⚠ Added chords won't be positioned on the image.
+                      {t.unpositionedChords}
                     </p>
                   )}
 
@@ -1336,8 +1337,8 @@ export default function Home() {
                       }}
                     >
                       {reRendering
-                        ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> Re-rendering…</>
-                        : "↺ Re-render with edits"}
+                        ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> {t.reRendering}</>
+                        : t.reRenderWithEdits}
                     </button>
                   )}
                 </div>
