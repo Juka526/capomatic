@@ -37,6 +37,7 @@ _FONT_CANDIDATES = [
 _BOLD_FONT_CANDIDATES = [
     os.environ.get("CHORD_RENDER_BOLD_FONT", ""),
     "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
     "/usr/local/lib/python3.12/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans-Bold.ttf",
     "/opt/anaconda3/lib/python3.12/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans-Bold.ttf",
 ]
@@ -44,6 +45,10 @@ _BOLD_FONT_CANDIDATES = [
 # Font size = median bbox_height * this scale.
 _FONT_SCALE    = 0.85
 _MIN_FONT_SIZE = 10
+
+# Key-change header text. DejaVu Sans at 23 is as wide as Pillow's built-in
+# font at 27 was, so the top-left box does not grow into song titles.
+_HEADER_FONT_SIZE = 23
 
 # Ratio for the smaller suffix font (sus, dim, aug).
 _SMALL_FONT_RATIO = 0.70
@@ -923,7 +928,7 @@ def _draw_info_header(
     if len(lines) > 1:
         lines.insert(1, "")  # blank line gap between key info and capo
 
-    header_font = _load_font(27)
+    header_font = _load_font(_HEADER_FONT_SIZE)
     lines = [_symbolize_keys(line, header_font) for line in lines]
 
     # Measure text block size.
