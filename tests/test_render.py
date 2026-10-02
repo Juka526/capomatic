@@ -685,3 +685,74 @@ class TestHeaderLines:
 
     def test_shift_without_key_names(self):
         assert _header_lines(None, None, -1) == ["Semitones: -1 semitone", "Capo: 1"]
+
+
+# ---------------------------------------------------------------------------
+# Accidentals drawn as ♭ / ♯ (display only)
+# ---------------------------------------------------------------------------
+
+from PIL import ImageFont  # noqa: E402
+
+_DEJAVU = next((p for p in (
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/opt/anaconda3/lib/python3.12/site-packages/matplotlib/mpl-data/fonts/ttf/DejaVuSans.ttf",
+) if __import__("os").path.exists(p)), None)
+
+
+@pytest.fixture
+def glyphs(monkeypatch):
+    """Pretend the font has ♭/♯ so the mapping is tested independently of installed fonts."""
+    monkeypatch.setattr(render_module, "_has_accidental_glyphs", lambda font: True)
+
+
+@pytest.mark.parametrize("transposed,expected", [
+    ("Bb", ("B♭", "")),
+    ("F#m7", ("F♯m7", "")),
+    ("Ebmaj7/G", ("E♭M7/G", "")),
+    ("G/F#", ("G/F♯", "")),
+    ("A#dim", ("A♯", "dim")),
+    ("Cdim/Eb", ("C", "dim/E♭")),       # slash bass inside the small suffix
+    ("C/E", ("C/E", "")),
+    # Extension alterations stay ASCII, so "b" is never read as a root.
+    ("C7(b9)", ("C7(b9)", "")),
+    ("A(b5)", ("A(b5)", "")),
+    ("G7#5", ("G7#5", "")),
+    ("Bb7b9", ("B♭7b9", "")),
+])
+def test_display_parts_draws_root_and_bass_accidentals_as_symbols(glyphs, transposed, expected):
+    font = render_module._load_font(20)
+    assert render_module._display_parts(transposed, font, font) == expected
+
+
+@pytest.mark.parametrize("line,expected", [
+    ("D -> C (-2 semitones)", "D -> C (-2 semitones)"),
+    ("D -> Bb (-4 semitones)", "D -> B♭ (-4 semitones)"),
+    ("Key: Eb", "Key: E♭"),
+    ("C -> F# (+6 semitones)", "C -> F♯ (+6 semitones)"),
+    ("Semitones: -1 semitone", "Semitones: -1 semitone"),
+    ("Capo: 2", "Capo: 2"),
+])
+def test_header_key_names_use_symbols(glyphs, line, expected):
+    assert render_module._symbolize_keys(line, render_module._load_font(27)) == expected
+
+
+def test_font_without_the_glyphs_keeps_ascii(monkeypatch):
+    monkeypatch.setattr(render_module, "_has_accidental_glyphs", lambda font: False)
+    font = render_module._load_font(20)
+    assert render_module._display_parts("Ebmaj7/G#", font, font) == ("EbM7/G#", "")
+    assert render_module._symbolize_keys("D -> Bb (-4 semitones)", font) == "D -> Bb (-4 semitones)"
+
+
+def test_width_is_measured_on_the_drawn_symbol_text(glyphs):
+    font = render_module._load_font(24)
+    assert render_module._chord_display_width("Bbmaj7", font, font) == render_module._text_width(font, "B♭M7")
+
+
+def test_glyph_check_rejects_a_font_without_the_symbols():
+    # Pillow's built-in font has no ♭/♯: this is what a font-less image falls back to.
+    assert render_module._has_accidental_glyphs(ImageFont.load_default(size=24)) is False
+
+
+@pytest.mark.skipif(_DEJAVU is None, reason="DejaVu Sans not installed")
+def test_glyph_check_accepts_dejavu():
+    assert render_module._has_accidental_glyphs(ImageFont.truetype(_DEJAVU, 24)) is True

@@ -50,6 +50,16 @@ jobs:
           "import paddleocr; import importlib.metadata as m;
           assert m.version('paddleocr') == '3.7.0';
           assert m.version('paddlepaddle') == '3.2.2'"
+      # Which font renders chords in the image, and whether it draws ♭/♯
+      # (render.py falls back to ASCII b/# when it does not). Report only.
+      - name: Report the render font and accidental glyphs
+        run: >-
+          docker run --rm capomatic-v1-ci python -c
+          "from backend.overlay.render import _load_font, _has_accidental_glyphs as g;
+          [print(f'{name} size {size}: {getattr(f, \"path\", \"<Pillow built-in font>\")} -> \u266d/\u266f glyphs: {g(f)}')
+          for name, bold in (('normal', False), ('bold', True))
+          for size in (10, 16, 27)
+          for f in [_load_font(size, bold=bold)]]"
       # Gate 1 requires the image to start, not only to build.
       - name: Container serves /health
         run: |
