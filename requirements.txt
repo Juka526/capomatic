@@ -18,5 +18,5 @@ sentry-sdk[fastapi]==2.69.1
 httpx==0.28.1         # Auth0 JWKS retrieval and deployed API evaluation
 
 # Section 6 (Auth0 token verification)
-PyJWT[crypto]==2.14.0
+PyJWT[crypto]==2.15.0
 cryptography==50.0.1
