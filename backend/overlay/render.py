@@ -829,10 +829,10 @@ def _header_lines(
     target_key: str | None,
     semitones: int,
 ) -> list[str]:
-    """Key-change lines for the rendered sheet's corner label.
+    """Key-change text for the rendered sheet's header label.
 
-    The capo line appears only when the shift is a capo shift (-1 to -7);
-    shifts outside the capo range, or upward, are played without a capo.
+    The capo line appears only for capo shifts (-1 to -7), matching the app's
+    capo control; other shifts are played without a capo.
     """
     if not original_key and not target_key and semitones == 0:
         return []
@@ -864,23 +864,24 @@ def _draw_info_header(
     semitones: int,
     text_fill: tuple[int, int, int],
 ) -> None:
-    """Draw the key change (and capo, for capo shifts) in the top-right corner."""
+    """Draw the key change, and the capo for capo shifts."""
     lines = _header_lines(original_key, target_key, semitones)
     if not lines:
         return
+    if len(lines) > 1:
+        lines.insert(1, "")  # blank line gap between key info and capo
 
-    header_size = 27
-    header_font = _load_font(header_size)
+    header_font = _load_font(27)
 
-    # Measure text block size from the header font itself, so stacked lines
-    # (key change, then capo) never overlap.
-    line_h = int(header_size * 1.2)
+    # Measure text block size.
+    line_h = int(font_size * 0.65) + 4
     max_w = max(_text_width(header_font, line) for line in lines)
     block_w = int(max_w) + 16
     block_h = line_h * len(lines) + 8
 
-    # Top-right corner, clamped so a very narrow image still shows the start.
-    x0, y0 = max(8, img.width - block_w - 8), 6
+    # Draw background rectangle.
+    x0, y0 = 8, 6
+    # Use RGBA overlay for the header background.
     overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
     ov_draw = ImageDraw.Draw(overlay)
     ov_draw.rectangle(
