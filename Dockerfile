@@ -3,8 +3,10 @@ FROM python:3.12-slim
 # Runtime libraries: libgl1/libglib2.0-0 for OpenCV, libgomp1 (OpenMP) for
 # paddlepaddle's libpaddle.so. The pre-V1 image got libgomp1 only as a side
 # effect of installing gcc; without it every /detect fails to import paddle.
+# fonts-dejavu-core gives the renderer a font with ♭/♯ glyphs (DejaVu Sans);
+# without it Pillow's built-in font draws accidentals as ASCII b/#.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1 libglib2.0-0 libgomp1 && \
+    libgl1 libglib2.0-0 libgomp1 fonts-dejavu-core && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
