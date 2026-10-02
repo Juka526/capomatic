@@ -1,0 +1,137 @@
+name: Canary (CI substitute)
+
+# Stand-in for the private HF canary (#4), which needs HF PRO for any new
+# Docker Space. Builds the exact candidate commit with its own root
+# Dockerfile, runs it on a GitHub runner limited to 2 CPUs (HF cpu-basic
+# has 2 vCPU), and runs the release-plan harnesses against it:
+#   - #9 OCR corpus vs the frozen production baseline report
+#   - #7 admission / health / memory load protocol
+#   - #4 / #12 contract smoke (CORS, retired endpoints, identity 401s)
+# It does NOT prove HF runtime identity, HF memory limits, or HF timing.
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Exact candidate commit to build and test
+        required: true
+        default: 682c9a069a59f1bbfe18d3afd7f76e92481428f1
+  push:
+    branches: [v1/ci-canary]
+    paths: ['.github/workflows/canary.yml', '.github/canary/**']
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      INPUT_SHA: ${{ inputs.candidate_sha }}
+      ORIGIN: https://capomatic.vercel.app
+      API: http://127.0.0.1:7860
+    steps:
+      - name: Check out harness
+        uses: actions/checkout@v4
+        with:
+          path: harness
+
+      # Manual runs use the input; pushes use .github/canary/candidate.txt so the
+      # tested SHA is recorded in history next to its results.
+      - name: Resolve candidate SHA
+        run: |
+          sha="${INPUT_SHA:-$(tr -d '[:space:]' < harness/.github/canary/candidate.txt)}"
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo "bad candidate sha: $sha"; exit 1; }
+          echo "CANDIDATE_SHA=$sha" >> "$GITHUB_ENV"
+          # Optional detector override, e.g. to mirror production's v6-medium.
+          model_file=harness/.github/canary/det-model.txt
+          if [ -f "$model_file" ]; then
+            echo "DET_MODEL=$(tr -d '[:space:]' < "$model_file")" >> "$GITHUB_ENV"
+          fi
+
+      - name: Check out exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          path: candidate
+
+      - name: Record identity
+        run: |
+          mkdir -p out
+          actual="$(git -C candidate rev-parse HEAD)"
+          {
+            echo "candidate_sha=$actual"
+            echo "harness_sha=$(git -C harness rev-parse HEAD)"
+            echo "runner_nproc=$(nproc)"
+            free -m
+            uname -a
+          } | tee out/identity.txt
+          test "$actual" = "$CANDIDATE_SHA"
+
+      - name: Build candidate image
+        run: |
+          docker build --tag capomatic-canary candidate
+          docker image inspect capomatic-canary --format '{{.Id}}' | tee out/image-id.txt
+
+      - name: Start candidate container
+        run: |
+          docker run --detach --name canary --cpus=2 --publish 7860:7860 \
+            -e CORS_ORIGINS="$ORIGIN" \
+            -e AUTH0_DOMAIN=dev-em2gvqp2q71brplg.us.auth0.com \
+            -e AUTH0_AUDIENCE=https://capomatic-api \
+            ${DET_MODEL:+-e CHORDTAYLOR_OCR_DET_MODEL=$DET_MODEL} \
+            capomatic-canary
+          echo "det_model_override=${DET_MODEL:-<Dockerfile default>}" | tee -a out/identity.txt
+          for _ in $(seq 1 60); do
+            if curl -fsS "$API/health"; then echo; exit 0; fi
+            sleep 5
+          done
+          docker logs canary
+          exit 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install httpx==0.28.1
+
+      - name: Contract smoke (#4, #12)
+        run: bash harness/.github/canary/smoke.sh 2>&1 | tee out/smoke.txt
+
+      - name: OCR corpus vs frozen production baseline (#9)
+        if: always()
+        working-directory: candidate
+        run: |
+          python scripts/eval_ocr.py --engine paddle \
+            --api-url "$API" --origin "$ORIGIN" \
+            --baseline-report ../harness/.github/canary/prod-baseline-bbb7619-20260924.json \
+            --deployment-sha "$CANDIDATE_SHA" --render-check \
+            --request-timeout-s 240 \
+            --report-json ../out/ocr-report.json 2>&1 | tee ../out/ocr.log
+
+      - name: Admission, health and memory load (#7)
+        if: always()
+        working-directory: candidate
+        run: |
+          pid="$(docker inspect --format '{{.State.Pid}}' canary)"
+          python scripts/load_admission.py --api-url "$API" --origin "$ORIGIN" \
+            --image "fixtures/images/친구야.jpeg" --pid "$pid" --evict 21 \
+            --report-json ../out/load-report.json 2>&1 | tee ../out/load.log
+
+      - name: Container stats and logs
+        if: always()
+        run: |
+          docker stats --no-stream canary | tee out/docker-stats.txt || true
+          docker logs canary > out/container.log 2>&1 || true
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canary-${{ env.CANDIDATE_SHA }}
+          path: out/
