@@ -5,15 +5,22 @@ import Link from "next/link";
 import LoginButton from "@/components/LoginButton";
 import { useLang, LangToggle } from "@/components/LangProvider";
 import { GuitarFretboard } from "@/components/GuitarFretboard";
+import { MobileWordmark } from "@/components/MobileWordmark";
 import { translations } from "@/lib/i18n";
 import { computeTargetKey } from "@/lib/target-key.mjs";
 import { pngDownloadName } from "@/lib/download-name.mjs";
 import { chooseSaveStrategy, dataUrlToBlob } from "@/lib/download-image.mjs";
 import { prependJobHistory } from "@/lib/job-history.mjs";
+import { SHIFT_LIMIT, mobileStepper, shiftSummary } from "@/lib/transpose-control.mjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const RENDER_CACHE_LIMIT = 5;
+// Same breakpoint as styles/globals.css; everything mobile-only keys off it.
+const MOBILE_QUERY = "(max-width: 640px)";
+const DESKTOP_SHIFT_LIMIT = 7;
+
+const prettyKey = (key: string | null) => (key ?? "").replace(/^([A-G])b/, "$1\u266D").replace("#", "\u266F");
 
 type ChordStyle = { parenthesis?: "open" | "close" | "both" };
 type ChordItem = { text: string; bbox: number[] | null; style?: ChordStyle | null };
@@ -115,6 +122,10 @@ export default function Home() {
   const menuRef = useRef<HTMLDivElement>(null);
   const guideDialogRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const mobileImgRef = useRef<HTMLImageElement>(null);
+  // Only the mobile result board mounts its own GuitarFretboard: two fretboards
+  // in the DOM would share SVG gradient ids.
+  const [isMobile, setIsMobile] = useState(false);
   const renderCacheRef = useRef<Map<string, RenderResult>>(new Map());
   const inFlightRenderRef = useRef<Map<string, Promise<RenderResult>>>(new Map());
   const selectedSemitoneRef = useRef(0);
@@ -127,6 +138,14 @@ export default function Home() {
   useEffect(() => () => {
     if (originalImageUrl) URL.revokeObjectURL(originalImageUrl);
   }, [originalImageUrl]);
+
+  useEffect(() => {
+    const query = window.matchMedia(MOBILE_QUERY);
+    const update = () => setIsMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
 
   // Close hamburger menu on outside click
   useEffect(() => {
@@ -184,11 +203,11 @@ export default function Home() {
 
   // Passive touchmove listener to allow preventDefault (suppresses scroll in add mode)
   useEffect(() => {
-    const el = imgRef.current;
-    if (!el) return;
+    const els = [imgRef.current, mobileImgRef.current].filter((el): el is HTMLImageElement => el !== null);
+    if (els.length === 0) return;
     const handler = (e: TouchEvent) => { if (addModeActive) e.preventDefault(); };
-    el.addEventListener("touchmove", handler, { passive: false });
-    return () => el.removeEventListener("touchmove", handler);
+    els.forEach(el => el.addEventListener("touchmove", handler, { passive: false }));
+    return () => els.forEach(el => el.removeEventListener("touchmove", handler));
   }, [addModeActive]);
 
   useEffect(() => {
@@ -254,6 +273,12 @@ export default function Home() {
     setRenderUpdating(false);
     runDetection(f);
   }, [runDetection, t]);
+
+  // The desktop result card sits below the fold; on mobile the result is already on screen.
+  const scrollResultIntoView = () => {
+    if (window.matchMedia(MOBILE_QUERY).matches) return;
+    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+  };
 
   const clearRenderCache = () => {
     renderCacheRef.current.clear();
@@ -398,7 +423,7 @@ export default function Home() {
       setShowOriginal(false);
       saveToLocalHistory(songTitle, originalKey, data.target_key, semitoneOverride);
       if (scrollToResult) {
-        setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+        scrollResultIntoView();
       }
       fetchOtherModeInBackground(semitoneOverride, visibleMode, versionAtStart);
       setTimeout(() => prefetchAdjacentRenders(semitoneOverride), 0);
@@ -573,8 +598,8 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const applySemitoneShift = async (value: number) => {
-    const next = Math.max(-7, Math.min(7, value));
+  const applySemitoneShift = async (value: number, limit: number = DESKTOP_SHIFT_LIMIT) => {
+    const next = Math.max(-limit, Math.min(limit, value));
     if (next === semitoneShift || reRendering || detecting) return;
     const versionAtStart = editVersionRef.current;
     const shouldScrollToResult = !(replaceResult || aboveResult);
@@ -592,7 +617,7 @@ export default function Home() {
         setRenderUpdating(false);
         saveToLocalHistory(songTitle, originalKey, cached.target_key, next);
         if (shouldScrollToResult) {
-          setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+          scrollResultIntoView();
         }
         fetchOtherModeInBackground(next, visibleMode, versionAtStart);
         setTimeout(() => prefetchAdjacentRenders(next), 0);
@@ -612,7 +637,7 @@ export default function Home() {
           setShowOriginal(false);
           saveToLocalHistory(songTitle, originalKey, data.target_key, next);
           if (shouldScrollToResult) {
-            setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+            scrollResultIntoView();
           }
           fetchOtherModeInBackground(next, visibleMode, versionAtStart);
           setTimeout(() => prefetchAdjacentRenders(next), 0);
@@ -673,6 +698,48 @@ export default function Home() {
   const activeResult = activeTab === "replace" ? replaceResult : aboveResult;
   const previewSrc = showOriginal ? originalImageUrl : activeResult;
 
+  // Shared by the desktop result card and the mobile sheet.
+  const addModeOverlays = (
+    <>
+      {/* Ghost bbox preview — snaps to nearest detected chord row */}
+      {!showOriginal && addModeActive && snapRow && hoverImgPos && imgNaturalSize && (
+        <div style={{
+          position: "absolute",
+          left:   `${(hoverImgPos.x / imgNaturalSize.w) * 100}%`,
+          top:    `${(snapRow.y1    / imgNaturalSize.h) * 100}%`,
+          width:  `${(80            / imgNaturalSize.w) * 100}%`,
+          height: `${((snapRow.y2 - snapRow.y1) / imgNaturalSize.h) * 100}%`,
+          border: "2px dashed #e05d00",
+          borderRadius: 3,
+          background: "rgba(224,93,0,0.12)",
+          pointerEvents: "none",
+        }} />
+      )}
+      {!showOriginal && addModeActive && (
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0,
+          padding: "10px 16px",
+          background: "rgba(0,0,0,0.65)",
+          color: "white", fontSize: "0.8rem", fontWeight: 600,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span>Click on the image to place the chord</span>
+          <button
+            onClick={() => setAddModeActive(false)}
+            style={{ background: "none", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 6, padding: "2px 10px", color: "white", cursor: "pointer", fontSize: "0.75rem" }}
+          >Cancel</button>
+        </div>
+      )}
+    </>
+  );
+
+  // Mobile result board (≤640px). One state: `semitones`.
+  const chosen = Boolean(detectionId) && semitones !== 0;
+  const mobileSheetSrc = chosen && activeResult && !showOriginal ? activeResult : originalImageUrl;
+  const step = mobileStepper(semitones);
+  const summary = shiftSummary(semitones);
+  const stepBusy = !detectionId || detecting || reRendering;
+
   return (
     <>
       <Head>
@@ -681,10 +748,10 @@ export default function Home() {
         <meta name="description" content="Transpose chord sheets easily" />
       </Head>
 
-      <div role="main" style={{ minHeight: "100vh", backgroundColor: "#F5EDD8", fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: "hidden" }}>
+      <div role="main" className="app-root" style={{ minHeight: "100vh", backgroundColor: "#F5EDD8", fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: "hidden" }}>
 
         {/* Nav */}
-        <nav style={{
+        <nav className="d-only" style={{
           position: "sticky", top: 0, zIndex: 100,
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "0 24px", height: 52,
@@ -723,6 +790,32 @@ export default function Home() {
           </div>
         </nav>
 
+
+        {/* Mobile top bar (≤640px) */}
+        <nav className="m-only m-nav" data-screen={file ? "result" : "home"}>
+          {file ? (
+            <button type="button" className="m-icon-btn" onClick={clearFile} aria-label={t.mBack}>
+              <svg width="17" height="14" viewBox="0 0 16 14" fill="none" aria-hidden="true"><path d="M15 7H1m0 0l5.5-5.5M1 7l5.5 5.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+            </button>
+          ) : (
+            <button type="button" className="m-icon-btn m-menu" onClick={() => setMenuOpen(v => !v)} aria-label={t.mOpenMenu} aria-expanded={menuOpen}>
+              <svg width="18" height="12" viewBox="0 0 18 12" fill="none" aria-hidden="true"><path d="M0 1h18M0 6h18M0 11h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+            </button>
+          )}
+          <MobileWordmark />
+          <span className="m-spacer" />
+          {file ? (
+            <button type="button" className="m-icon-btn" onClick={() => fileInputRef.current?.click()} aria-label={t.mUploadAnother}>
+              <svg width="18" height="18" viewBox="0 0 17 17" fill="none" aria-hidden="true"><path d="M8.5 12V3m0 0L4.8 6.7M8.5 3l3.7 3.7M2 12.5v1A1.5 1.5 0 003.5 15h10a1.5 1.5 0 001.5-1.5v-1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+            </button>
+          ) : (
+            <div className="m-nav-right">
+              <LangToggle />
+              <LoginButton />
+            </div>
+          )}
+        </nav>
+
         {/* Hamburger backdrop + side panel */}
         <div className={`hamburger-backdrop${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
         <div className={`hamburger-menu${menuOpen ? " open" : ""}`} ref={menuRef}>
@@ -753,7 +846,7 @@ export default function Home() {
 
         {/* Upload-first hero */}
         {!file && (
-          <section className="upload-hero" style={{
+          <section className="upload-hero d-only" style={{
             maxWidth: 760,
             margin: "0 auto",
             padding: "46px 20px 22px",
@@ -798,8 +891,34 @@ export default function Home() {
           </section>
         )}
 
+
+        {/* Mobile home (≤640px): one left edge for menu glyph, copy and upload card */}
+        {!file && (
+          <section className="m-only m-home">
+            <h1 className="m-hero">
+              {lang === "ko" && <span className="m-kicker">전조, 이제 쉽게 끝</span>}
+              <span className="m-headline">{lang === "ko" ? "악보 사진을 올려보세요" : t.heroHeadline}</span>
+            </h1>
+            <div className="m-dropwrap">
+              <button type="button" className="m-drop" onClick={() => fileInputRef.current?.click()}>
+                <span className="m-ruled" aria-hidden="true" />
+                <span className="m-drop-mid">
+                  <span className="m-cta">
+                    <svg width="21" height="21" viewBox="0 0 19 19" fill="none" aria-hidden="true"><path d="M9.5 13.5V3m0 0L5.4 7.1M9.5 3l4.1 4.1M2.5 13v2A1.5 1.5 0 004 16.5h11a1.5 1.5 0 001.5-1.5v-2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                    {t.heroPrimaryCta}
+                  </span>
+                  <span className="m-sub">{t.mUploadLimits}</span>
+                </span>
+              </button>
+            </div>
+            {error && (
+              <p className="m-home-error" role="alert"><AlertCircle size={13} aria-hidden="true" /> {error}</p>
+            )}
+          </section>
+        )}
+
         {file && (
-          <div className="active-title-wrap" style={{ textAlign: "center", padding: "30px 24px 0" }}>
+          <div className="active-title-wrap d-only" style={{ textAlign: "center", padding: "30px 24px 0" }}>
             <h1 className="active-title" style={{ margin: "0 0 6px", fontSize: "clamp(1.8rem, 5vw, 2.5rem)", fontWeight: 900, color: "#1a1a2e", letterSpacing: 0 }}>
               {t.subtitle}
             </h1>
@@ -808,7 +927,7 @@ export default function Home() {
 
         {/* Active info bar — shown once a file is loaded */}
         {file && (
-          <div className="active-info-bar" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 20px 16px", gap: 10 }}>
+          <div className="active-info-bar d-only" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 20px 16px", gap: 10 }}>
             {detecting && (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, width: 260 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#9c3d00", fontSize: "0.8rem", fontWeight: 600 }}>
@@ -869,13 +988,118 @@ export default function Home() {
           </div>
         )}
 
+
+        {/* Mobile result (≤640px): the sheet on top, the board pinned to the bottom */}
+        {file && (
+          <div className="m-only m-result">
+            <div className="m-sheet">
+              <div className="m-page">
+                {mobileSheetSrc && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    ref={mobileImgRef}
+                    src={mobileSheetSrc}
+                    alt={mobileSheetSrc === originalImageUrl ? t.originalSheetAlt : t.renderedSheetAlt(activeTab)}
+                    style={{ cursor: addModeActive && !showOriginal ? "crosshair" : "default" }}
+                    onLoad={e => setImgNaturalSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
+                    onClick={handleImageClick}
+                    onMouseMove={handleImageMouseMove}
+                    onMouseLeave={handleImageMouseLeave}
+                    onTouchMove={handleImageTouchMove}
+                    onTouchEnd={handleImageTouchEnd}
+                  />
+                )}
+                {chosen && addModeOverlays}
+                {detecting && <div className="m-scan" aria-hidden="true" />}
+              </div>
+            </div>
+            <div className="m-board">
+              <div className="m-bhead" aria-live="polite">
+                {detecting ? (
+                  <>
+                    <span className="m-spin" aria-hidden="true" />
+                    <span className="m-muted">{t.mReadingSheet}</span>
+                  </>
+                ) : !detectionId ? (
+                  error ? <span className="m-err"><AlertCircle size={13} aria-hidden="true" /> {error}</span> : null
+                ) : semitones === 0 ? (
+                  <>
+                    <span className="m-ok" aria-hidden="true">✓</span>
+                    <span className="m-muted">{t.mDetectedKey}</span>
+                    {originalKey && <span className="m-pill">{prettyKey(originalKey)}</span>}
+                    <span className="m-muted m-right m-small">{t.mPickCapo}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="m-ok" aria-hidden="true">✓</span>
+                    <span className="m-pill">{prettyKey(originalKey)}</span>
+                    <span className="m-arrow" aria-hidden="true">→</span>
+                    <span className="m-pill m-to">{prettyKey(targetKey)}</span>
+                    {(rendering || renderUpdating) && <span className="m-spin m-spin-sm" aria-hidden="true" />}
+                    <span className="m-muted m-right">
+                      {summary.kind === "capo" ? t.mCapoN(summary.capo) : t.mShiftSemitones(summary.semitones)}
+                    </span>
+                  </>
+                )}
+              </div>
+              {error && detectionId && <p className="m-board-error" role="alert">{error}</p>}
+              <div className="m-fretbox">
+                {isMobile && (
+                  <GuitarFretboard
+                    capoFret={step.capo || null}
+                    onFretSelect={detectionId && !detecting ? handleFretSelect : undefined}
+                  />
+                )}
+              </div>
+              <div className="m-stepper">
+                <button
+                  type="button"
+                  className="m-sq"
+                  onClick={() => void applySemitoneShift(step.minus.next, SHIFT_LIMIT)}
+                  disabled={stepBusy || step.minus.disabled}
+                  aria-label={step.minus.action === "capoDown" ? t.mCapoDown : t.mKeyUpStep}
+                >−</button>
+                <div className="m-val" aria-live="polite">
+                  <small>
+                    {step.label.kind === "capo" ? t.capoPosition : step.label.kind === "keyUp" ? t.mKeyUpNoCapo : t.mOutOfRangeDown}
+                  </small>
+                  <b>{step.label.kind === "capo" ? step.label.capo : t.mSemitoneValue(step.label.semitones)}</b>
+                </div>
+                <button
+                  type="button"
+                  className="m-sq"
+                  onClick={() => void applySemitoneShift(step.plus.next, SHIFT_LIMIT)}
+                  disabled={stepBusy || step.plus.disabled}
+                  aria-label={step.plus.action === "capoUp" ? t.mCapoUp : t.mKeyDownStep}
+                >+</button>
+              </div>
+              <div className="m-seg" role="group" aria-label={t.mDisplayMode}>
+                {(["replace", "above"] as const).map(tab => (
+                  <button key={tab} type="button" aria-pressed={activeTab === tab} disabled={!chosen} onClick={() => handleResultTabSelect(tab)}>
+                    {tab === "replace" ? t.replace : t.above}
+                  </button>
+                ))}
+              </div>
+              <div className="m-acts">
+                <button type="button" className="m-btn m-btn-ghost" disabled={!chosen} onClick={() => setShowOriginal(v => !v)}>
+                  {showOriginal ? t.viewRendered : t.viewOriginal}
+                </button>
+                <button type="button" className="m-btn m-btn-primary" disabled={!chosen || showOriginal || !activeResult} onClick={handleDownload}>
+                  <svg width="16" height="16" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M7.5 1v9m0 0L4 6.6M7.5 10L11 6.6M1.5 11v1.5A1.5 1.5 0 003 14h9a1.5 1.5 0 001.5-1.5V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                  {t.downloadPng}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Fretboard section — full width, no card, responsive padding via CSS */}
-        <section className="fretboard-section">
+        <section className="fretboard-section d-only">
           <GuitarFretboard capoFret={capoFret} onFretSelect={detectionId && !detecting ? handleFretSelect : undefined} />
         </section>
 
         {/* Semitone selector */}
-        <div className="transpose-selector" style={{ maxWidth: 360, margin: "16px auto 0", padding: "0 20px" }}>
+        <div className="transpose-selector d-only" style={{ maxWidth: 360, margin: "16px auto 0", padding: "0 20px" }}>
           <div className="transpose-panel" style={{ background: "rgba(255,255,255,0.55)", borderRadius: 16, padding: 12, border: "1px solid rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", display: "grid", gridTemplateColumns: "52px 1fr 52px", alignItems: "center", gap: 10 }}>
             <button
               onClick={() => applySemitoneShift(semitones - 1)}
@@ -921,7 +1145,7 @@ export default function Home() {
           <div ref={resultRef} className="result-wrap" style={{ maxWidth: 720, margin: "32px auto 48px", padding: "0 20px" }}>
             <div className="result-card" style={{ background: "rgba(230, 226, 219, 0.5)", borderRadius: 18, padding: "20px 20px 20px", border: "1px solid rgba(0,0,0,0.05)" }}>
               {/* Replace / Above toggle */}
-              <div style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(0,0,0,0.04)", borderRadius: 10, padding: 4 }}>
+              <div className="d-only" style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(0,0,0,0.04)", borderRadius: 10, padding: 4 }}>
                 {(["replace", "above"] as const).map(tab => (
                   <button
                     key={tab}
@@ -941,6 +1165,7 @@ export default function Home() {
                 ))}
               </div>
               <button
+                className="d-only"
                 onClick={() => setShowOriginal(v => !v)}
                 disabled={!originalImageUrl}
                 style={{
@@ -954,7 +1179,7 @@ export default function Home() {
                 {showOriginal ? t.viewRendered : t.viewOriginal}
               </button>
               {/* Sheet image */}
-              <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "white" }}>
+              <div className="d-only" style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "white" }}>
                 {previewSrc && (
                   <img
                     ref={imgRef}
@@ -969,35 +1194,7 @@ export default function Home() {
                     onTouchEnd={handleImageTouchEnd}
                   />
                 )}
-                {/* Ghost bbox preview — snaps to nearest detected chord row */}
-                {!showOriginal && addModeActive && snapRow && hoverImgPos && imgNaturalSize && (
-                  <div style={{
-                    position: "absolute",
-                    left:   `${(hoverImgPos.x / imgNaturalSize.w) * 100}%`,
-                    top:    `${(snapRow.y1    / imgNaturalSize.h) * 100}%`,
-                    width:  `${(80            / imgNaturalSize.w) * 100}%`,
-                    height: `${((snapRow.y2 - snapRow.y1) / imgNaturalSize.h) * 100}%`,
-                    border: "2px dashed #e05d00",
-                    borderRadius: 3,
-                    background: "rgba(224,93,0,0.12)",
-                    pointerEvents: "none",
-                  }} />
-                )}
-                {!showOriginal && addModeActive && (
-                  <div style={{
-                    position: "absolute", top: 0, left: 0, right: 0,
-                    padding: "10px 16px",
-                    background: "rgba(0,0,0,0.65)",
-                    color: "white", fontSize: "0.8rem", fontWeight: 600,
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                  }}>
-                    <span>Click on the image to place the chord</span>
-                    <button
-                      onClick={() => setAddModeActive(false)}
-                      style={{ background: "none", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 6, padding: "2px 10px", color: "white", cursor: "pointer", fontSize: "0.75rem" }}
-                    >Cancel</button>
-                  </div>
-                )}
+                {addModeOverlays}
               </div>
 
               {/* Chord position modal */}
@@ -1035,6 +1232,7 @@ export default function Home() {
               )}
               {/* Download */}
               <button
+                className="d-only"
                 onClick={handleDownload}
                 disabled={showOriginal}
                 style={{
@@ -1051,7 +1249,7 @@ export default function Home() {
 
               {/* Chord editor */}
               {!showOriginal && editableChords.length > 0 && (
-                <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(0,0,0,0.07)" }}>
+                <div className="chord-editor" style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(0,0,0,0.07)" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                     <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#695c42", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                       Detected Chords
