@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useLang, LangToggle } from '@/components/LangProvider';
+import { Wordmark } from '@/components/Wordmark';
 
 type Section = { heading: string; paragraphs: string[] };
 
@@ -20,7 +21,7 @@ export default function LegalPage({ title, sections }: LegalPageProps) {
       </Head>
       <div style={{ minHeight: '100vh', background: '#F5EDD8', color: '#252525' }}>
         <nav style={{ height: 52, padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
-          <Link href="/" style={{ color: '#1a1a2e', fontWeight: 800, textDecoration: 'none' }}>Capomatic</Link>
+          <Link href="/" style={{ display: 'flex', textDecoration: 'none' }}><Wordmark height={22} /></Link>
           <LangToggle />
         </nav>
         <main style={{ maxWidth: 760, margin: '0 auto', padding: '40px 20px 64px', lineHeight: 1.7 }}>

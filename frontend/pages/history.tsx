@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { useLang, LangToggle } from '@/components/LangProvider';
-import { MobileWordmark } from '@/components/MobileWordmark';
+import { Wordmark } from '@/components/Wordmark';
 import Link from 'next/link';
 import Head from 'next/head';
 import { parseJobHistory, type JobHistoryEntry } from '@/lib/job-history.mjs';
@@ -37,17 +37,7 @@ function HistoryContent() {
         <nav className="history-nav">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', flexShrink: 0 }}>
-              <svg viewBox="0 0 36 36" width="24" height="24">
-                <circle cx="18" cy="18" r="17" fill="#1a1a2e" />
-                <rect x="11" y="12" width="14" height="2.5" rx="1.2" fill="#e05d00" />
-                <rect x="11" y="16" width="14" height="2.5" rx="1.2" fill="#e05d00" opacity="0.7" />
-                <rect x="11" y="20" width="14" height="2.5" rx="1.2" fill="#e05d00" opacity="0.4" />
-                <rect x="21" y="10" width="3" height="16" rx="1.5" fill="white" opacity="0.9" />
-              </svg>
-              <span className="d-only" style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1a1a2e', fontFamily: 'Georgia, serif', fontStyle: 'italic', whiteSpace: 'nowrap' }}>
-                Capo<span style={{ color: '#9c3d00' }}>matic</span>
-              </span>
-              <span className="m-only m-wordmark"><MobileWordmark height={22} /></span>
+              <Wordmark height={22} />
             </Link>
             <span style={{ color: 'rgba(0,0,0,0.15)', flexShrink: 0 }}>|</span>
             <h1 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#1a1a2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.historyTitle}</h1>

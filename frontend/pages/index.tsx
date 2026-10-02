@@ -5,20 +5,21 @@ import Link from "next/link";
 import LoginButton from "@/components/LoginButton";
 import { useLang, LangToggle } from "@/components/LangProvider";
 import { GuitarFretboard } from "@/components/GuitarFretboard";
-import { MobileWordmark } from "@/components/MobileWordmark";
+import { Wordmark } from "@/components/Wordmark";
+import { GuideModal } from "@/components/GuideModal";
 import { translations } from "@/lib/i18n";
 import { computeTargetKey } from "@/lib/target-key.mjs";
 import { pngDownloadName } from "@/lib/download-name.mjs";
 import { chooseSaveStrategy, dataUrlToBlob } from "@/lib/download-image.mjs";
 import { prependJobHistory } from "@/lib/job-history.mjs";
-import { SHIFT_LIMIT, mobileStepper, shiftSummary } from "@/lib/transpose-control.mjs";
+import { SHIFT_LIMIT, shiftSummary, stepperText, transposeStepper } from "@/lib/transpose-control.mjs";
+import { readGuideDismissed, shouldAutoOpenGuide, writeGuideDismissed } from "@/lib/guide-visibility.mjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const RENDER_CACHE_LIMIT = 5;
 // Same breakpoint as styles/globals.css; everything mobile-only keys off it.
 const MOBILE_QUERY = "(max-width: 640px)";
-const DESKTOP_SHIFT_LIMIT = 7;
 
 const prettyKey = (key: string | null) => (key ?? "").replace(/^([A-G])b/, "$1\u266D").replace("#", "\u266F");
 
@@ -116,11 +117,10 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
-  const [guideStep, setGuideStep] = useState(0);
+  const [logoIntroReady, setLogoIntroReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const guideDialogRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const mobileImgRef = useRef<HTMLImageElement>(null);
   // Only the mobile result board mounts its own GuitarFretboard: two fretboards
@@ -157,35 +157,27 @@ export default function Home() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [menuOpen]);
 
+  // First visit: open the guide once on the home page until "Don't show again".
+  // Storage is read only after mount, so server and first client render match.
   useEffect(() => {
-    if (!guideOpen) return;
-    const previousFocus = document.activeElement as HTMLElement | null;
-    const firstButton = guideDialogRef.current?.querySelector<HTMLButtonElement>('button');
-    firstButton?.focus();
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setGuideOpen(false);
+    const stored = readGuideDismissed(() => window.localStorage);
+    if (shouldAutoOpenGuide({ storedValue: stored, pathname: window.location.pathname, hasFile: false })) {
+      setGuideOpen(true);
+    } else {
+      setLogoIntroReady(true);
     }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      previousFocus?.focus();
-    };
-  }, [guideOpen]);
+  }, []);
 
-  const trapGuideFocus = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== 'Tab') return;
-    const buttons = guideDialogRef.current?.querySelectorAll<HTMLButtonElement>('button');
-    if (!buttons?.length) return;
-    const first = buttons[0];
-    const last = buttons[buttons.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
+  const closeGuide = useCallback(() => {
+    setGuideOpen(false);
+    // The wordmark's first pluck waits until an auto-opened guide is gone.
+    setLogoIntroReady(true);
+  }, []);
+
+  const dismissGuideForever = useCallback(() => {
+    writeGuideDismissed(() => window.localStorage);
+    closeGuide();
+  }, [closeGuide]);
 
   const capoFret = semitoneShift < 0 ? Math.abs(semitoneShift) : null;
   const semitones = semitoneShift;
@@ -598,7 +590,7 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const applySemitoneShift = async (value: number, limit: number = DESKTOP_SHIFT_LIMIT) => {
+  const applySemitoneShift = async (value: number, limit: number = SHIFT_LIMIT) => {
     const next = Math.max(-limit, Math.min(limit, value));
     if (next === semitoneShift || reRendering || detecting) return;
     const versionAtStart = editVersionRef.current;
@@ -736,7 +728,8 @@ export default function Home() {
   // Mobile result board (≤640px). One state: `semitones`.
   const chosen = Boolean(detectionId) && semitones !== 0;
   const mobileSheetSrc = chosen && activeResult && !showOriginal ? activeResult : originalImageUrl;
-  const step = mobileStepper(semitones);
+  const step = transposeStepper(semitones);
+  const stepText = stepperText(step, t);
   const summary = shiftSummary(semitones);
   const stepBusy = !detectionId || detecting || reRendering;
 
@@ -773,16 +766,7 @@ export default function Home() {
                 <line x1="3" y1="18" x2="21" y2="18" />
               </svg>
             </button>
-            <svg viewBox="0 0 36 36" width="28" height="28">
-              <circle cx="18" cy="18" r="17" fill="#3a4847" />
-              <rect x="11" y="12" width="14" height="2.5" rx="1.2" fill="#e05d00" />
-              <rect x="11" y="16" width="14" height="2.5" rx="1.2" fill="#e05d00" opacity="0.7" />
-              <rect x="11" y="20" width="14" height="2.5" rx="1.2" fill="#e05d00" opacity="0.4" />
-              <rect x="21" y="10" width="3" height="16" rx="1.5" fill="white" opacity="0.9" />
-            </svg>
-            <span style={{ fontWeight: 800, fontSize: "0.96rem", color: "#3a4847", letterSpacing: "-0.01em", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-              Capo<span style={{ color: "#9c3d00" }}>matic</span>
-            </span>
+            <Wordmark height={22} introReady={logoIntroReady} />
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <LangToggle />
@@ -802,7 +786,7 @@ export default function Home() {
               <svg width="18" height="12" viewBox="0 0 18 12" fill="none" aria-hidden="true"><path d="M0 1h18M0 6h18M0 11h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
             </button>
           )}
-          <MobileWordmark />
+          <Wordmark introReady={logoIntroReady} />
           <span className="m-spacer" />
           {file ? (
             <button type="button" className="m-icon-btn" onClick={() => fileInputRef.current?.click()} aria-label={t.mUploadAnother}>
@@ -821,9 +805,7 @@ export default function Home() {
         <div className={`hamburger-menu${menuOpen ? " open" : ""}`} ref={menuRef}>
           {/* Panel header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 52, borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
-            <span style={{ fontWeight: 800, fontSize: "0.96rem", color: "#1a1a2e", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-              Capo<span style={{ color: "#9c3d00" }}>matic</span>
-            </span>
+            <Wordmark height={20} introReady={false} />
             <button onClick={() => setMenuOpen(false)} aria-label={t.closeMenu} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" strokeWidth="2" strokeLinecap="round">
                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -837,7 +819,7 @@ export default function Home() {
               {t.myJobs}
             </Link>
             <button
-              onClick={() => { setMenuOpen(false); setGuideStep(0); setGuideOpen(true); }}
+              onClick={() => { setMenuOpen(false); setGuideOpen(true); }}
               style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: "14px 24px", fontSize: "0.9rem", fontWeight: 600, color: "#1a1a2e" }}>
               {t.guide}
             </button>
@@ -1051,34 +1033,35 @@ export default function Home() {
                   />
                 )}
               </div>
-              <div className="m-stepper">
-                <button
-                  type="button"
-                  className="m-sq"
-                  onClick={() => void applySemitoneShift(step.minus.next, SHIFT_LIMIT)}
-                  disabled={stepBusy || step.minus.disabled}
-                  aria-label={step.minus.action === "capoDown" ? t.mCapoDown : t.mKeyUpStep}
-                >−</button>
-                <div className="m-val" aria-live="polite">
-                  <small>
-                    {step.label.kind === "capo" ? t.capoPosition : step.label.kind === "keyUp" ? t.mKeyUpNoCapo : t.mOutOfRangeDown}
-                  </small>
-                  <b>{step.label.kind === "capo" ? step.label.capo : t.mSemitoneValue(step.label.semitones)}</b>
+              {/* Capo stepper and display mode share one row to keep the board short. */}
+              <div className="m-controls">
+                <div className="m-stepper">
+                  <button
+                    type="button"
+                    className="m-sq"
+                    onClick={() => void applySemitoneShift(step.minus.next, SHIFT_LIMIT)}
+                    disabled={stepBusy || step.minus.disabled}
+                    aria-label={stepText.minusLabel}
+                  >−</button>
+                  <div className="m-val" aria-live="polite">
+                    <small>{stepText.caption}</small>
+                    <b>{stepText.value}</b>
+                  </div>
+                  <button
+                    type="button"
+                    className="m-sq"
+                    onClick={() => void applySemitoneShift(step.plus.next, SHIFT_LIMIT)}
+                    disabled={stepBusy || step.plus.disabled}
+                    aria-label={stepText.plusLabel}
+                  >+</button>
                 </div>
-                <button
-                  type="button"
-                  className="m-sq"
-                  onClick={() => void applySemitoneShift(step.plus.next, SHIFT_LIMIT)}
-                  disabled={stepBusy || step.plus.disabled}
-                  aria-label={step.plus.action === "capoUp" ? t.mCapoUp : t.mKeyDownStep}
-                >+</button>
-              </div>
-              <div className="m-seg" role="group" aria-label={t.mDisplayMode}>
-                {(["replace", "above"] as const).map(tab => (
-                  <button key={tab} type="button" aria-pressed={activeTab === tab} disabled={!chosen} onClick={() => handleResultTabSelect(tab)}>
-                    {tab === "replace" ? t.replace : t.above}
-                  </button>
-                ))}
+                <div className="m-seg" role="group" aria-label={t.mDisplayMode}>
+                  {(["replace", "above"] as const).map(tab => (
+                    <button key={tab} type="button" aria-pressed={activeTab === tab} disabled={!chosen} onClick={() => handleResultTabSelect(tab)}>
+                      {tab === "replace" ? t.replace : t.above}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="m-acts">
                 <button type="button" className="m-btn m-btn-ghost" disabled={!chosen} onClick={() => setShowOriginal(v => !v)}>
@@ -1102,39 +1085,39 @@ export default function Home() {
         <div className="transpose-selector d-only" style={{ maxWidth: 360, margin: "16px auto 0", padding: "0 20px" }}>
           <div className="transpose-panel" style={{ background: "rgba(255,255,255,0.55)", borderRadius: 16, padding: 12, border: "1px solid rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", display: "grid", gridTemplateColumns: "52px 1fr 52px", alignItems: "center", gap: 10 }}>
             <button
-              onClick={() => applySemitoneShift(semitones - 1)}
-              disabled={!detectionId || detecting || reRendering || semitones <= -7}
-              aria-label={t.transposeDown}
+              onClick={() => applySemitoneShift(step.minus.next)}
+              disabled={!detectionId || detecting || reRendering || step.minus.disabled}
+              aria-label={stepText.minusLabel}
               style={{
                 height: 44, borderRadius: 12,
                 border: "1.5px solid rgba(0,0,0,0.1)",
                 background: semitones < 0 ? "linear-gradient(135deg, #a34200, #7f3000)" : "rgba(255,255,255,0.75)",
                 color: semitones < 0 ? "white" : "#3a4847",
                 fontSize: "1.35rem", fontWeight: 900,
-                cursor: detectionId && !detecting && !reRendering && semitones > -7 ? "pointer" : "not-allowed",
-                opacity: detectionId && !detecting && !reRendering && semitones > -7 ? 1 : 0.45,
+                cursor: detectionId && !detecting && !reRendering && !step.minus.disabled ? "pointer" : "not-allowed",
+                opacity: detectionId && !detecting && !reRendering && !step.minus.disabled ? 1 : 0.45,
               }}
             >-</button>
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "0.68rem", fontWeight: 800, color: "#695c42", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                {t.capoPosition}
+                {stepText.caption}
               </div>
               <div style={{ marginTop: 3, fontSize: "1.05rem", fontWeight: 900, color: "#1a1a2e" }}>
-                {rendering ? t.rendering : renderUpdating ? t.updating : semitones > 0 ? `+${semitones}` : semitones}
+                {rendering ? t.rendering : renderUpdating ? t.updating : stepText.value}
               </div>
             </div>
             <button
-              onClick={() => applySemitoneShift(semitones + 1)}
-              disabled={!detectionId || detecting || reRendering || semitones >= 7}
-              aria-label={t.transposeUp}
+              onClick={() => applySemitoneShift(step.plus.next)}
+              disabled={!detectionId || detecting || reRendering || step.plus.disabled}
+              aria-label={stepText.plusLabel}
               style={{
                 height: 44, borderRadius: 12,
                 border: "1.5px solid rgba(0,0,0,0.1)",
                 background: semitones > 0 ? "linear-gradient(135deg, #0b4ea2, #093b7a)" : "rgba(255,255,255,0.75)",
                 color: semitones > 0 ? "white" : "#3a4847",
                 fontSize: "1.35rem", fontWeight: 900,
-                cursor: detectionId && !detecting && !reRendering && semitones < 7 ? "pointer" : "not-allowed",
-                opacity: detectionId && !detecting && !reRendering && semitones < 7 ? 1 : 0.45,
+                cursor: detectionId && !detecting && !reRendering && !step.plus.disabled ? "pointer" : "not-allowed",
+                opacity: detectionId && !detecting && !reRendering && !step.plus.disabled ? 1 : 0.45,
               }}
             >+</button>
           </div>
@@ -1366,9 +1349,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer style={{ borderTop: "1px solid rgba(0,0,0,0.06)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-          <span style={{ fontSize: "0.75rem", color: "#675d4a", fontWeight: 700, fontStyle: "italic", fontFamily: "Georgia, serif" }}>
-            Capo<span style={{ color: "#9c3d00" }}>matic</span>
-          </span>
+          <Wordmark height={15} introReady={false} />
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <span style={{ fontSize: "0.7rem", color: "#666", fontWeight: 500 }}>{t.footerTagline}</span>
             <Link href="/privacy" style={{ fontSize: "0.7rem", color: "#665e54" }}>{t.privacy}</Link>
@@ -1378,50 +1359,13 @@ export default function Home() {
 
         <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
 
-        {/* Guide modal */}
-        {guideOpen && (() => {
-          const steps = [
-            { icon: "\uD834\uDD1E", label: t.featureUploadLabel, desc: t.featureUploadDesc },
-            { icon: "\u22AB", label: t.featureCapoLabel, desc: t.featureCapoDesc },
-            { icon: "\u266A", label: t.featureDownloadLabel, desc: t.featureDownloadDesc },
-          ];
-          const step = steps[guideStep];
-          const isLast = guideStep === steps.length - 1;
-          return (
-            <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)" }}
-              onClick={() => setGuideOpen(false)}>
-              <div ref={guideDialogRef} role="dialog" aria-modal="true" aria-labelledby="guide-title" onKeyDown={trapGuideFocus}
-                style={{ background: "white", borderRadius: 20, width: "min(380px, 90vw)", padding: "40px 32px 28px", textAlign: "center", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}
-                onClick={e => e.stopPropagation()}>
-                {/* Icon */}
-                <div aria-hidden="true" style={{ fontSize: "3rem", marginBottom: 20, color: "#9c3d00", lineHeight: 1 }}>{step.icon}</div>
-                {/* Title */}
-                <h2 id="guide-title" style={{ margin: "0 0 10px", fontSize: "1.3rem", fontWeight: 800, color: "#1a1a2e" }}>{step.label}</h2>
-                {/* Description */}
-                <p style={{ margin: "0 0 28px", fontSize: "0.88rem", color: "#666", lineHeight: 1.5 }}>{step.desc}</p>
-                {/* Dot indicators */}
-                <div aria-hidden="true" style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 28 }}>
-                  {steps.map((_, i) => (
-                    <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: i === guideStep ? "#e05d00" : "#e8ddd0", transition: "background 0.2s" }} />
-                  ))}
-                </div>
-                {/* Buttons */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
-                  <button onClick={() => setGuideOpen(false)}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: "12px 28px", fontSize: "0.9rem", fontWeight: 600, color: "#595959" }}>
-                    {t.skip}
-                  </button>
-                  <button onClick={() => { if (isLast) setGuideOpen(false); else setGuideStep(guideStep + 1); }}
-                    style={{ background: "#a34200", color: "white", border: "none", cursor: "pointer", borderRadius: 12, padding: "12px 48px", fontSize: "0.95rem", fontWeight: 700, boxShadow: "0 4px 14px rgba(163,66,0,0.35)", transition: "all 0.2s" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "#7f3000")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "#a34200")}>
-                    {isLast ? t.done : t.next}
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
+        {/* Guide modal: one demo video, its text follows the scenes */}
+        {guideOpen && (
+          <GuideModal
+            onClose={closeGuide}
+            onDismissForever={dismissGuideForever}
+          />
+        )}
 
         {saveOverlayUrl && (
           <div
