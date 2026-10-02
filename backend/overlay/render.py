@@ -17,6 +17,8 @@ import pathlib
 import statistics
 from functools import lru_cache
 
+import re
+
 import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -294,6 +296,56 @@ def _shorten_chord_display(transposed: str) -> tuple[str, str]:
     return text, ""
 
 
+# Accidentals drawn as music symbols. Only where they follow the note letter of
+# a root (start of the text) or a slash bass; extension alterations such as
+# C7(b9) or G7#5 stay ASCII so "b" is never read as a root.
+_ACCIDENTAL_SYMBOLS = {"b": "\u266d", "#": "\u266f"}  # ♭, ♯
+_CHORD_ACCIDENTAL_RE = re.compile(r"(^|/)([A-G])([b#])")
+# Header lines: key names stand alone ("D -> Bb (-4 semitones)", "Key: Eb").
+_KEY_ACCIDENTAL_RE = re.compile(r"(?<![A-Za-z])([A-G])([b#])(?![A-Za-z])")
+_NO_GLYPH_PROBE = "\U0010fffd"  # a private-use codepoint no font draws
+
+
+@lru_cache(maxsize=256)
+def _has_accidental_glyphs(font: ImageFont.ImageFont) -> bool:
+    """True when *font* draws real glyphs for both ♭ and ♯ (not a missing-glyph box)."""
+    try:
+        missing = font.getmask(_NO_GLYPH_PROBE)
+        missing_sig = (missing.size, bytes(missing))
+        for symbol in _ACCIDENTAL_SYMBOLS.values():
+            mask = font.getmask(symbol)
+            if mask.size == (0, 0) or (mask.size, bytes(mask)) == missing_sig:
+                return False
+        return True
+    except Exception:
+        return False
+
+
+def _symbolize_chord(text: str, font: ImageFont.ImageFont) -> str:
+    """"Bb" -> "B♭", "G/F#" -> "G/F♯" when *font* has the glyphs; otherwise unchanged."""
+    if not _has_accidental_glyphs(font):
+        return text
+    return _CHORD_ACCIDENTAL_RE.sub(lambda m: m.group(1) + m.group(2) + _ACCIDENTAL_SYMBOLS[m.group(3)], text)
+
+
+def _symbolize_keys(text: str, font: ImageFont.ImageFont) -> str:
+    """Key names in a header line ("Bb", "Eb") as "B♭", "E♭" when *font* has the glyphs."""
+    if not _has_accidental_glyphs(font):
+        return text
+    return _KEY_ACCIDENTAL_RE.sub(lambda m: m.group(1) + _ACCIDENTAL_SYMBOLS[m.group(2)], text)
+
+
+def _display_parts(
+    transposed: str,
+    font: ImageFont.ImageFont,
+    small_font: ImageFont.ImageFont,
+) -> tuple[str, str]:
+    """The (main, small suffix) text exactly as drawn, accidental symbols included."""
+    main, suffix = _shorten_chord_display(transposed)
+    # A slash bass can sit in the small suffix ("Cdim/Eb" -> "C" + "dim/E♭").
+    return _symbolize_chord(main, font), _symbolize_chord(suffix, small_font)
+
+
 @lru_cache(maxsize=2048)
 def _text_width(font: ImageFont.ImageFont, text: str) -> float:
     """Return the horizontal pixel width of *text* rendered with *font*."""
@@ -322,7 +374,7 @@ def _chord_display_width(
     small_font: ImageFont.ImageFont,
 ) -> float:
     """Return the total rendered width of a chord after shortening."""
-    main, suffix = _shorten_chord_display(transposed)
+    main, suffix = _display_parts(transposed, font, small_font)
     w = _text_width(font, main)
     if suffix:
         w += _text_width(small_font, suffix)
@@ -334,7 +386,7 @@ def _chord_display_height(
     font: ImageFont.ImageFont,
     small_font: ImageFont.ImageFont,
 ) -> int:
-    main, suffix = _shorten_chord_display(transposed)
+    main, suffix = _display_parts(transposed, font, small_font)
     heights = [_text_height(font, main)]
     if suffix:
         heights.append(_text_height(small_font, suffix))
@@ -390,7 +442,7 @@ def _draw_chord_text(
     The main part is drawn at *font* size, anchored to the exact left-top
     position provided by the caller.
     """
-    main, suffix = _shorten_chord_display(transposed)
+    main, suffix = _display_parts(transposed, font, small_font)
     _draw_text_left_top(draw, (x, y), main, fill=fill, font=font)
     main_w = _text_width(font, main)
 
@@ -872,6 +924,7 @@ def _draw_info_header(
         lines.insert(1, "")  # blank line gap between key info and capo
 
     header_font = _load_font(27)
+    lines = [_symbolize_keys(line, header_font) for line in lines]
 
     # Measure text block size.
     line_h = int(font_size * 0.65) + 4
