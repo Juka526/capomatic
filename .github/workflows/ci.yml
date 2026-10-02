@@ -56,7 +56,7 @@ jobs:
         run: >-
           docker run --rm capomatic-v1-ci python -c
           "from backend.overlay.render import _load_font, _has_accidental_glyphs as g;
-          [print(f'{name} size {size}: {getattr(f, \"path\", \"<Pillow built-in font>\")} -> \u266d/\u266f glyphs: {g(f)}')
+          [print(f'{name} size {size}: {f.path if isinstance(getattr(f, \"path\", None), str) else \"<Pillow built-in font>\"} -> \u266d/\u266f glyphs: {g(f)}')
           for name, bold in (('normal', False), ('bold', True))
           for size in (10, 16, 27)
           for f in [_load_font(size, bold=bold)]]"
