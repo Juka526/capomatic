@@ -118,8 +118,6 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [logoIntroReady, setLogoIntroReady] = useState(false);
-  const footerRef = useRef<HTMLElement>(null);
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -158,46 +156,6 @@ export default function Home() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [menuOpen]);
-
-  // The pinned footer wraps on narrow screens: publish its real height so page
-  // content and full-height screens stop above it (0 while it is hidden).
-  useEffect(() => {
-    const footer = footerRef.current;
-    if (!footer) return;
-    const root = document.documentElement;
-    const observer = new ResizeObserver(() => {
-      root.style.setProperty("--footer-h", `${footer.getBoundingClientRect().height}px`);
-    });
-    observer.observe(footer);
-    return () => {
-      observer.disconnect();
-      root.style.removeProperty("--footer-h");
-    };
-  }, []);
-
-  // Hide the pinned footer while the on-screen keyboard is up (a text field is
-  // focused and the visual viewport has shrunk), so it never covers the input.
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-    let fullHeight = viewport.height;
-    let width = viewport.width;
-    const update = () => {
-      if (viewport.width !== width) { width = viewport.width; fullHeight = viewport.height; } // rotated
-      fullHeight = Math.max(fullHeight, viewport.height);
-      const el = document.activeElement;
-      const typing = el instanceof HTMLTextAreaElement || (el instanceof HTMLInputElement && !["file", "range", "checkbox", "radio", "button"].includes(el.type));
-      setKeyboardOpen(typing && viewport.height < fullHeight * 0.8);
-    };
-    viewport.addEventListener("resize", update);
-    document.addEventListener("focusin", update);
-    document.addEventListener("focusout", update);
-    return () => {
-      viewport.removeEventListener("resize", update);
-      document.removeEventListener("focusin", update);
-      document.removeEventListener("focusout", update);
-    };
-  }, []);
 
   // First visit: open the guide once on the home page until "Don't show again".
   // Storage is read only after mount, so server and first client render match.
@@ -783,616 +741,620 @@ export default function Home() {
         <meta name="description" content="Transpose chord sheets easily" />
       </Head>
 
-      <div role="main" className="app-root with-bars" style={{ minHeight: "100vh", backgroundColor: "#F5EDD8", fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: "hidden" }}>
+      <div role="main" className="app-root with-bars page-col" style={{ backgroundColor: "#F5EDD8", fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: "hidden" }}>
+        {/* Everything above the footer, so the footer sits at the natural bottom. */}
+        <div className="page-main">
 
-        {/* Nav */}
-        <nav className="d-only fixed-top" style={{
-          zIndex: 100,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "env(safe-area-inset-top, 0px) 24px 0", height: "calc(52px + env(safe-area-inset-top, 0px))",
-          background: "rgba(255, 253, 247, 0.95)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "1px solid rgba(0,0,0,0.06)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {/* Hamburger */}
-            <button
-              onClick={() => setMenuOpen(v => !v)}
-              aria-label={t.guide}
-              aria-expanded={menuOpen}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3a4847" strokeWidth="2" strokeLinecap="round">
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
-            <Wordmark height={22} introReady={logoIntroReady} />
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <LangToggle />
-            <LoginButton />
-          </div>
-        </nav>
-
-
-        {/* Mobile top bar (≤640px) */}
-        <nav className="m-only m-nav fixed-top" data-screen={file ? "result" : "home"}>
-          {file ? (
-            <button type="button" className="m-icon-btn" onClick={clearFile} aria-label={t.mBack}>
-              <svg width="17" height="14" viewBox="0 0 16 14" fill="none" aria-hidden="true"><path d="M15 7H1m0 0l5.5-5.5M1 7l5.5 5.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
-            </button>
-          ) : (
-            <button type="button" className="m-icon-btn m-menu" onClick={() => setMenuOpen(v => !v)} aria-label={t.mOpenMenu} aria-expanded={menuOpen}>
-              <svg width="18" height="12" viewBox="0 0 18 12" fill="none" aria-hidden="true"><path d="M0 1h18M0 6h18M0 11h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
-            </button>
-          )}
-          <Wordmark introReady={logoIntroReady} />
-          <span className="m-spacer" />
-          {file ? (
-            <button type="button" className="m-icon-btn" onClick={() => fileInputRef.current?.click()} aria-label={t.mUploadAnother}>
-              <svg width="18" height="18" viewBox="0 0 17 17" fill="none" aria-hidden="true"><path d="M8.5 12V3m0 0L4.8 6.7M8.5 3l3.7 3.7M2 12.5v1A1.5 1.5 0 003.5 15h10a1.5 1.5 0 001.5-1.5v-1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
-            </button>
-          ) : (
-            <div className="m-nav-right">
+          {/* Nav */}
+          <nav className="d-only fixed-top" style={{
+            zIndex: 100,
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "env(safe-area-inset-top, 0px) 24px 0", height: "calc(52px + env(safe-area-inset-top, 0px))",
+            background: "rgba(255, 253, 247, 0.95)",
+            backdropFilter: "blur(12px)",
+            borderBottom: "1px solid rgba(0,0,0,0.06)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {/* Hamburger */}
+              <button
+                onClick={() => setMenuOpen(v => !v)}
+                aria-label={t.guide}
+                aria-expanded={menuOpen}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3a4847" strokeWidth="2" strokeLinecap="round">
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
+              <Wordmark height={22} introReady={logoIntroReady} />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <LangToggle />
               <LoginButton />
             </div>
-          )}
-        </nav>
-
-        {/* Hamburger backdrop + side panel */}
-        <div className={`hamburger-backdrop${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
-        <div className={`hamburger-menu${menuOpen ? " open" : ""}`} ref={menuRef}>
-          {/* Panel header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 52, borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
-            <Wordmark height={20} introReady={false} />
-            <button onClick={() => setMenuOpen(false)} aria-label={t.closeMenu} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" strokeWidth="2" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
-          {/* Links */}
-          <nav style={{ padding: "8px 0" }}>
-            <Link href="/history" onClick={() => setMenuOpen(false)}
-              style={{ display: "block", padding: "14px 24px", fontSize: "0.9rem", fontWeight: 600, color: "#1a1a2e", textDecoration: "none" }}>
-              {t.myJobs}
-            </Link>
-            <button
-              onClick={() => { setMenuOpen(false); setGuideOpen(true); }}
-              style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: "14px 24px", fontSize: "0.9rem", fontWeight: 600, color: "#1a1a2e" }}>
-              {t.guide}
-            </button>
           </nav>
-        </div>
 
-        {/* Upload-first hero */}
-        {!file && (
-          <section className="upload-hero d-only" style={{
-            maxWidth: 760,
-            margin: "0 auto",
-            padding: "46px 20px 22px",
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr)",
-            justifyItems: "center",
-            textAlign: "center",
-          }}>
-            <h1 className={lang === "ko" ? "upload-hero-title upload-hero-title-bilingual" : "upload-hero-title"} style={{ maxWidth: 680, margin: "0 0 20px", fontSize: "clamp(2.45rem, 7vw, 4.1rem)", lineHeight: 1, fontWeight: 900, color: "#171923", letterSpacing: 0 }}>
-              {lang === "ko" ? (
-                <>
-                  <span className="upload-hero-title-en">전조, 이제 쉽게 끝</span>
-                  <span className="upload-hero-title-ko">악보 사진을 올려보세요</span>
-                </>
-              ) : t.heroHeadline}
-            </h1>
-            <button
-              className="primary-upload-cta"
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 10,
-                background: "linear-gradient(135deg, #a34200, #7f3000)",
-                border: "none", cursor: "pointer",
-                borderRadius: 12, padding: "15px 24px",
-                color: "white", fontSize: "0.98rem", fontWeight: 900,
-                boxShadow: "0 10px 28px rgba(224,93,0,0.28)",
-                transition: "transform 0.18s ease, box-shadow 0.18s ease",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 14px 34px rgba(224,93,0,0.34)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 10px 28px rgba(224,93,0,0.28)"; }}
-            >
-              <Upload size={20} color="white" strokeWidth={2.4} />
-              {t.heroPrimaryCta}
-              <ArrowRight size={18} color="white" strokeWidth={2.4} />
-            </button>
-            {error && (
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 14, color: "#d4183d", fontSize: "0.78rem", fontWeight: 600 }}>
-                <AlertCircle size={13} />
-                {error}
+
+          {/* Mobile top bar (≤640px) */}
+          <nav className="m-only m-nav fixed-top" data-screen={file ? "result" : "home"}>
+            {file ? (
+              <button type="button" className="m-icon-btn" onClick={clearFile} aria-label={t.mBack}>
+                <svg width="17" height="14" viewBox="0 0 16 14" fill="none" aria-hidden="true"><path d="M15 7H1m0 0l5.5-5.5M1 7l5.5 5.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+              </button>
+            ) : (
+              <button type="button" className="m-icon-btn m-menu" onClick={() => setMenuOpen(v => !v)} aria-label={t.mOpenMenu} aria-expanded={menuOpen}>
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="none" aria-hidden="true"><path d="M0 1h18M0 6h18M0 11h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+              </button>
+            )}
+            <Wordmark introReady={logoIntroReady} />
+            <span className="m-spacer" />
+            {file ? (
+              <button type="button" className="m-icon-btn" onClick={() => fileInputRef.current?.click()} aria-label={t.mUploadAnother}>
+                <svg width="18" height="18" viewBox="0 0 17 17" fill="none" aria-hidden="true"><path d="M8.5 12V3m0 0L4.8 6.7M8.5 3l3.7 3.7M2 12.5v1A1.5 1.5 0 003.5 15h10a1.5 1.5 0 001.5-1.5v-1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+              </button>
+            ) : (
+              <div className="m-nav-right">
+                <LangToggle />
+                <LoginButton />
               </div>
             )}
-          </section>
-        )}
+          </nav>
 
-
-        {/* Mobile home (≤640px): one left edge for menu glyph, copy and upload card */}
-        {!file && (
-          <section className="m-only m-home">
-            <h1 className="m-hero">
-              {lang === "ko" && <span className="m-kicker">전조, 이제 쉽게 끝</span>}
-              <span className="m-headline">{lang === "ko" ? "악보 사진을 올려보세요" : t.heroHeadline}</span>
-            </h1>
-            <div className="m-dropwrap">
-              <button type="button" className="m-drop" onClick={() => fileInputRef.current?.click()}>
-                <span className="m-ruled" aria-hidden="true" />
-                <span className="m-drop-mid">
-                  <span className="m-cta">
-                    <svg width="21" height="21" viewBox="0 0 19 19" fill="none" aria-hidden="true"><path d="M9.5 13.5V3m0 0L5.4 7.1M9.5 3l4.1 4.1M2.5 13v2A1.5 1.5 0 004 16.5h11a1.5 1.5 0 001.5-1.5v-2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
-                    {t.heroPrimaryCta}
-                  </span>
-                  <span className="m-sub">{t.mUploadLimits}</span>
-                </span>
+          {/* Hamburger backdrop + side panel */}
+          <div className={`hamburger-backdrop${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
+          <div className={`hamburger-menu${menuOpen ? " open" : ""}`} ref={menuRef}>
+            {/* Panel header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 52, borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+              <Wordmark height={20} introReady={false} />
+              <button onClick={() => setMenuOpen(false)} aria-label={t.closeMenu} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" strokeWidth="2" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
-            {error && (
-              <p className="m-home-error" role="alert"><AlertCircle size={13} aria-hidden="true" /> {error}</p>
-            )}
-          </section>
-        )}
-
-        {file && (
-          <div className="active-title-wrap d-only" style={{ textAlign: "center", padding: "30px 24px 0" }}>
-            <h1 className="active-title" style={{ margin: "0 0 6px", fontSize: "clamp(1.8rem, 5vw, 2.5rem)", fontWeight: 900, color: "#1a1a2e", letterSpacing: 0 }}>
-              {t.subtitle}
-            </h1>
+            {/* Links */}
+            <nav style={{ padding: "8px 0" }}>
+              <Link href="/history" onClick={() => setMenuOpen(false)}
+                style={{ display: "block", padding: "14px 24px", fontSize: "0.9rem", fontWeight: 600, color: "#1a1a2e", textDecoration: "none" }}>
+                {t.myJobs}
+              </Link>
+              <button
+                onClick={() => { setMenuOpen(false); setGuideOpen(true); }}
+                style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: "14px 24px", fontSize: "0.9rem", fontWeight: 600, color: "#1a1a2e" }}>
+                {t.guide}
+              </button>
+            </nav>
           </div>
-        )}
 
-        {/* Active info bar — shown once a file is loaded */}
-        {file && (
-          <div className="active-info-bar d-only" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 20px 16px", gap: 10 }}>
-            {detecting && (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, width: 260 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#9c3d00", fontSize: "0.8rem", fontWeight: 600 }}>
-                  <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
-                  {t.detectingChords}
-                </div>
-                <div style={{ width: "100%", height: 4, background: "rgba(0,0,0,0.1)", borderRadius: 2, overflow: "hidden" }}>
-                  <div style={{ width: `${detectProgress}%`, height: "100%", background: "linear-gradient(90deg,#e05d00,#c84b00)", borderRadius: 2, transition: "width 0.3s ease-out" }} />
-                </div>
-                <span style={{ fontSize: "0.7rem", color: "#646464" }}>{(detectElapsed / 1000).toFixed(1)}s</span>
-              </div>
-            )}
-
-            {!detecting && detectionId && originalKey && (
-              <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, fontSize: "0.8rem", justifyContent: "center" }}>
-                <span style={{ color: "#28c45e", fontWeight: 700 }}>✓</span>
-                <span style={{ color: "#666" }}>{t.detectedKey}</span>
-                <span style={{ fontWeight: 700, color: "#1a1a2e", background: "rgba(26,26,46,0.07)", padding: "2px 10px", borderRadius: 20 }}>
-                  {originalKey}
-                </span>
-                {semitones !== 0 && targetKey && (
+          {/* Upload-first hero */}
+          {!file && (
+            <section className="upload-hero d-only" style={{
+              maxWidth: 760,
+              margin: "0 auto",
+              padding: "46px 20px 22px",
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1fr)",
+              justifyItems: "center",
+              textAlign: "center",
+            }}>
+              <h1 className={lang === "ko" ? "upload-hero-title upload-hero-title-bilingual" : "upload-hero-title"} style={{ maxWidth: 680, margin: "0 0 20px", fontSize: "clamp(2.45rem, 7vw, 4.1rem)", lineHeight: 1, fontWeight: 900, color: "#171923", letterSpacing: 0 }}>
+                {lang === "ko" ? (
                   <>
-                    <span style={{ color: "#ccc" }}>→</span>
-                    <span style={{ fontWeight: 700, color: "#9c3d00", background: "rgba(163,66,0,0.08)", padding: "2px 10px", borderRadius: 20 }}>
-                      {targetKey}
-                    </span>
-                    {semitones < 0 ? (
-                      <span style={{ fontSize: "0.72rem", color: "#646464", fontWeight: 600 }}>
-                        {t.capo} {Math.abs(semitones)}
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: "0.72rem", color: "#646464", fontWeight: 600 }}>
-                        {t.transposeUpInfo(semitones)}
-                      </span>
-                    )}
+                    <span className="upload-hero-title-en">전조, 이제 쉽게 끝</span>
+                    <span className="upload-hero-title-ko">악보 사진을 올려보세요</span>
                   </>
-                )}
-              </div>
-            )}
+                ) : t.heroHeadline}
+              </h1>
+              <button
+                className="primary-upload-cta"
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 10,
+                  background: "linear-gradient(135deg, #a34200, #7f3000)",
+                  border: "none", cursor: "pointer",
+                  borderRadius: 12, padding: "15px 24px",
+                  color: "white", fontSize: "0.98rem", fontWeight: 900,
+                  boxShadow: "0 10px 28px rgba(224,93,0,0.28)",
+                  transition: "transform 0.18s ease, box-shadow 0.18s ease",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 14px 34px rgba(224,93,0,0.34)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 10px 28px rgba(224,93,0,0.28)"; }}
+              >
+                <Upload size={20} color="white" strokeWidth={2.4} />
+                {t.heroPrimaryCta}
+                <ArrowRight size={18} color="white" strokeWidth={2.4} />
+              </button>
+              {error && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 14, color: "#d4183d", fontSize: "0.78rem", fontWeight: 600 }}>
+                  <AlertCircle size={13} />
+                  {error}
+                </div>
+              )}
+            </section>
+          )}
 
-            {!detecting && (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 8 }}>
-                <button
-                  onClick={clearFile}
-                  style={{ background: "none", border: "1.5px solid rgba(0,0,0,0.15)", borderRadius: 20, padding: "5px 14px", fontSize: "0.75rem", fontWeight: 700, color: "#595959", cursor: "pointer", letterSpacing: "0.04em" }}
-                >
-                  {t.changeSheet}
+
+          {/* Mobile home (≤640px): one left edge for menu glyph, copy and upload card */}
+          {!file && (
+            <section className="m-only m-home">
+              <h1 className="m-hero">
+                {lang === "ko" && <span className="m-kicker">전조, 이제 쉽게 끝</span>}
+                <span className="m-headline">{lang === "ko" ? "악보 사진을 올려보세요" : t.heroHeadline}</span>
+              </h1>
+              <div className="m-dropwrap">
+                <button type="button" className="m-drop" onClick={() => fileInputRef.current?.click()}>
+                  <span className="m-ruled" aria-hidden="true" />
+                  <span className="m-drop-mid">
+                    <span className="m-cta">
+                      <svg width="21" height="21" viewBox="0 0 19 19" fill="none" aria-hidden="true"><path d="M9.5 13.5V3m0 0L5.4 7.1M9.5 3l4.1 4.1M2.5 13v2A1.5 1.5 0 004 16.5h11a1.5 1.5 0 001.5-1.5v-2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                      {t.heroPrimaryCta}
+                    </span>
+                    <span className="m-sub">{t.mUploadLimits}</span>
+                  </span>
                 </button>
               </div>
-            )}
+              {error && (
+                <p className="m-home-error" role="alert"><AlertCircle size={13} aria-hidden="true" /> {error}</p>
+              )}
+            </section>
+          )}
 
-            {error && (
-              <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#d4183d", fontSize: "0.78rem", fontWeight: 600 }}>
-                <AlertCircle size={13} />
-                {error}
+          {file && (
+            <div className="active-title-wrap d-only" style={{ textAlign: "center", padding: "30px 24px 0" }}>
+              <h1 className="active-title" style={{ margin: "0 0 6px", fontSize: "clamp(1.8rem, 5vw, 2.5rem)", fontWeight: 900, color: "#1a1a2e", letterSpacing: 0 }}>
+                {t.subtitle}
+              </h1>
+            </div>
+          )}
+
+          {/* Active info bar — shown once a file is loaded */}
+          {file && (
+            <div className="active-info-bar d-only" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 20px 16px", gap: 10 }}>
+              {detecting && (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, width: 260 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#9c3d00", fontSize: "0.8rem", fontWeight: 600 }}>
+                    <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
+                    {t.detectingChords}
+                  </div>
+                  <div style={{ width: "100%", height: 4, background: "rgba(0,0,0,0.1)", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ width: `${detectProgress}%`, height: "100%", background: "linear-gradient(90deg,#e05d00,#c84b00)", borderRadius: 2, transition: "width 0.3s ease-out" }} />
+                  </div>
+                  <span style={{ fontSize: "0.7rem", color: "#646464" }}>{(detectElapsed / 1000).toFixed(1)}s</span>
+                </div>
+              )}
+
+              {!detecting && detectionId && originalKey && (
+                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, fontSize: "0.8rem", justifyContent: "center" }}>
+                  <span style={{ color: "#28c45e", fontWeight: 700 }}>✓</span>
+                  <span style={{ color: "#666" }}>{t.detectedKey}</span>
+                  <span style={{ fontWeight: 700, color: "#1a1a2e", background: "rgba(26,26,46,0.07)", padding: "2px 10px", borderRadius: 20 }}>
+                    {originalKey}
+                  </span>
+                  {semitones !== 0 && targetKey && (
+                    <>
+                      <span style={{ color: "#ccc" }}>→</span>
+                      <span style={{ fontWeight: 700, color: "#9c3d00", background: "rgba(163,66,0,0.08)", padding: "2px 10px", borderRadius: 20 }}>
+                        {targetKey}
+                      </span>
+                      {semitones < 0 ? (
+                        <span style={{ fontSize: "0.72rem", color: "#646464", fontWeight: 600 }}>
+                          {t.capo} {Math.abs(semitones)}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: "0.72rem", color: "#646464", fontWeight: 600 }}>
+                          {t.transposeUpInfo(semitones)}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              {!detecting && (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 8 }}>
+                  <button
+                    onClick={clearFile}
+                    style={{ background: "none", border: "1.5px solid rgba(0,0,0,0.15)", borderRadius: 20, padding: "5px 14px", fontSize: "0.75rem", fontWeight: 700, color: "#595959", cursor: "pointer", letterSpacing: "0.04em" }}
+                  >
+                    {t.changeSheet}
+                  </button>
+                </div>
+              )}
+
+              {error && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#d4183d", fontSize: "0.78rem", fontWeight: 600 }}>
+                  <AlertCircle size={13} />
+                  {error}
+                </div>
+              )}
+            </div>
+          )}
+
+
+          {/* Mobile result (≤640px): the sheet on top, the board pinned to the bottom */}
+          {file && (
+            <div className="m-only m-result">
+              <div className="m-sheet">
+                <div className="m-page">
+                  {mobileSheetSrc && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      ref={mobileImgRef}
+                      src={mobileSheetSrc}
+                      alt={mobileSheetSrc === originalImageUrl ? t.originalSheetAlt : t.renderedSheetAlt(activeTab)}
+                      style={{ cursor: addModeActive && !showOriginal ? "crosshair" : "default" }}
+                      onLoad={e => setImgNaturalSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
+                      onClick={handleImageClick}
+                      onMouseMove={handleImageMouseMove}
+                      onMouseLeave={handleImageMouseLeave}
+                      onTouchMove={handleImageTouchMove}
+                      onTouchEnd={handleImageTouchEnd}
+                    />
+                  )}
+                  {chosen && addModeOverlays}
+                  {detecting && <div className="m-scan" aria-hidden="true" />}
+                </div>
               </div>
-            )}
-          </div>
-        )}
-
-
-        {/* Mobile result (≤640px): the sheet on top, the board pinned to the bottom */}
-        {file && (
-          <div className="m-only m-result">
-            <div className="m-sheet">
-              <div className="m-page">
-                {mobileSheetSrc && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    ref={mobileImgRef}
-                    src={mobileSheetSrc}
-                    alt={mobileSheetSrc === originalImageUrl ? t.originalSheetAlt : t.renderedSheetAlt(activeTab)}
-                    style={{ cursor: addModeActive && !showOriginal ? "crosshair" : "default" }}
-                    onLoad={e => setImgNaturalSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
-                    onClick={handleImageClick}
-                    onMouseMove={handleImageMouseMove}
-                    onMouseLeave={handleImageMouseLeave}
-                    onTouchMove={handleImageTouchMove}
-                    onTouchEnd={handleImageTouchEnd}
-                  />
-                )}
-                {chosen && addModeOverlays}
-                {detecting && <div className="m-scan" aria-hidden="true" />}
+              <div className="m-board">
+                <div className="m-bhead" aria-live="polite">
+                  {detecting ? (
+                    <>
+                      <span className="m-spin" aria-hidden="true" />
+                      <span className="m-muted">{t.mReadingSheet}</span>
+                    </>
+                  ) : !detectionId ? (
+                    error ? <span className="m-err"><AlertCircle size={13} aria-hidden="true" /> {error}</span> : null
+                  ) : semitones === 0 ? (
+                    <>
+                      <span className="m-ok" aria-hidden="true">✓</span>
+                      <span className="m-muted">{t.mDetectedKey}</span>
+                      {originalKey && <span className="m-pill">{prettyKey(originalKey)}</span>}
+                      <span className="m-muted m-right m-small">{t.mPickCapo}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="m-ok" aria-hidden="true">✓</span>
+                      <span className="m-pill">{prettyKey(originalKey)}</span>
+                      <span className="m-arrow" aria-hidden="true">→</span>
+                      <span className="m-pill m-to">{prettyKey(targetKey)}</span>
+                      {(rendering || renderUpdating) && <span className="m-spin m-spin-sm" aria-hidden="true" />}
+                      <span className="m-muted m-right">
+                        {summary.kind === "capo" ? t.mCapoN(summary.capo) : t.mShiftSemitones(summary.semitones)}
+                      </span>
+                    </>
+                  )}
+                </div>
+                {error && detectionId && <p className="m-board-error" role="alert">{error}</p>}
+                <div className="m-fretbox">
+                  {isMobile && (
+                    <GuitarFretboard
+                      capoFret={step.capo || null}
+                      onFretSelect={detectionId && !detecting ? handleFretSelect : undefined}
+                    />
+                  )}
+                </div>
+                {/* Capo stepper and display mode share one row to keep the board short. */}
+                <div className="m-controls">
+                  <div className="m-stepper">
+                    <button
+                      type="button"
+                      className="m-sq"
+                      onClick={() => void applySemitoneShift(step.minus.next, SHIFT_LIMIT)}
+                      disabled={stepBusy || step.minus.disabled}
+                      aria-label={stepText.minusLabel}
+                    >−</button>
+                    <div className="m-val" aria-live="polite">
+                      <small>{stepText.caption}</small>
+                      <b>{stepText.value}</b>
+                    </div>
+                    <button
+                      type="button"
+                      className="m-sq"
+                      onClick={() => void applySemitoneShift(step.plus.next, SHIFT_LIMIT)}
+                      disabled={stepBusy || step.plus.disabled}
+                      aria-label={stepText.plusLabel}
+                    >+</button>
+                  </div>
+                  <div className="m-seg" role="group" aria-label={t.mDisplayMode}>
+                    {(["replace", "above"] as const).map(tab => (
+                      <button key={tab} type="button" aria-pressed={activeTab === tab} disabled={!chosen} onClick={() => handleResultTabSelect(tab)}>
+                        {tab === "replace" ? t.replace : t.above}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="m-acts">
+                  <button type="button" className="m-btn m-btn-ghost" disabled={!chosen} onClick={() => setShowOriginal(v => !v)}>
+                    {showOriginal ? t.viewRendered : t.viewOriginal}
+                  </button>
+                  <button type="button" className="m-btn m-btn-primary" disabled={!chosen || showOriginal || !activeResult} onClick={handleDownload}>
+                    <svg width="16" height="16" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M7.5 1v9m0 0L4 6.6M7.5 10L11 6.6M1.5 11v1.5A1.5 1.5 0 003 14h9a1.5 1.5 0 001.5-1.5V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                    {t.downloadPng}
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="m-board">
-              <div className="m-bhead" aria-live="polite">
-                {detecting ? (
-                  <>
-                    <span className="m-spin" aria-hidden="true" />
-                    <span className="m-muted">{t.mReadingSheet}</span>
-                  </>
-                ) : !detectionId ? (
-                  error ? <span className="m-err"><AlertCircle size={13} aria-hidden="true" /> {error}</span> : null
-                ) : semitones === 0 ? (
-                  <>
-                    <span className="m-ok" aria-hidden="true">✓</span>
-                    <span className="m-muted">{t.mDetectedKey}</span>
-                    {originalKey && <span className="m-pill">{prettyKey(originalKey)}</span>}
-                    <span className="m-muted m-right m-small">{t.mPickCapo}</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="m-ok" aria-hidden="true">✓</span>
-                    <span className="m-pill">{prettyKey(originalKey)}</span>
-                    <span className="m-arrow" aria-hidden="true">→</span>
-                    <span className="m-pill m-to">{prettyKey(targetKey)}</span>
-                    {(rendering || renderUpdating) && <span className="m-spin m-spin-sm" aria-hidden="true" />}
-                    <span className="m-muted m-right">
-                      {summary.kind === "capo" ? t.mCapoN(summary.capo) : t.mShiftSemitones(summary.semitones)}
-                    </span>
-                  </>
-                )}
-              </div>
-              {error && detectionId && <p className="m-board-error" role="alert">{error}</p>}
-              <div className="m-fretbox">
-                {isMobile && (
-                  <GuitarFretboard
-                    capoFret={step.capo || null}
-                    onFretSelect={detectionId && !detecting ? handleFretSelect : undefined}
-                  />
-                )}
-              </div>
-              {/* Capo stepper and display mode share one row to keep the board short. */}
-              <div className="m-controls">
-                <div className="m-stepper">
-                  <button
-                    type="button"
-                    className="m-sq"
-                    onClick={() => void applySemitoneShift(step.minus.next, SHIFT_LIMIT)}
-                    disabled={stepBusy || step.minus.disabled}
-                    aria-label={stepText.minusLabel}
-                  >−</button>
-                  <div className="m-val" aria-live="polite">
-                    <small>{stepText.caption}</small>
-                    <b>{stepText.value}</b>
-                  </div>
-                  <button
-                    type="button"
-                    className="m-sq"
-                    onClick={() => void applySemitoneShift(step.plus.next, SHIFT_LIMIT)}
-                    disabled={stepBusy || step.plus.disabled}
-                    aria-label={stepText.plusLabel}
-                  >+</button>
+          )}
+
+          {/* Fretboard section — full width, no card, responsive padding via CSS */}
+          <section className="fretboard-section d-only">
+            <GuitarFretboard capoFret={capoFret} onFretSelect={detectionId && !detecting ? handleFretSelect : undefined} />
+          </section>
+
+          {/* Semitone selector */}
+          <div className="transpose-selector d-only" style={{ maxWidth: 360, margin: "16px auto 0", padding: "0 20px" }}>
+            <div className="transpose-panel" style={{ background: "rgba(255,255,255,0.55)", borderRadius: 16, padding: 12, border: "1px solid rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", display: "grid", gridTemplateColumns: "52px 1fr 52px", alignItems: "center", gap: 10 }}>
+              <button
+                onClick={() => applySemitoneShift(step.minus.next)}
+                disabled={!detectionId || detecting || reRendering || step.minus.disabled}
+                aria-label={stepText.minusLabel}
+                style={{
+                  height: 44, borderRadius: 12,
+                  border: "1.5px solid rgba(0,0,0,0.1)",
+                  background: semitones < 0 ? "linear-gradient(135deg, #a34200, #7f3000)" : "rgba(255,255,255,0.75)",
+                  color: semitones < 0 ? "white" : "#3a4847",
+                  fontSize: "1.35rem", fontWeight: 900,
+                  cursor: detectionId && !detecting && !reRendering && !step.minus.disabled ? "pointer" : "not-allowed",
+                  opacity: detectionId && !detecting && !reRendering && !step.minus.disabled ? 1 : 0.45,
+                }}
+              >-</button>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "0.68rem", fontWeight: 800, color: "#695c42", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  {stepText.caption}
                 </div>
-                <div className="m-seg" role="group" aria-label={t.mDisplayMode}>
+                <div style={{ marginTop: 3, fontSize: "1.05rem", fontWeight: 900, color: "#1a1a2e" }}>
+                  {rendering ? t.rendering : renderUpdating ? t.updating : stepText.value}
+                </div>
+              </div>
+              <button
+                onClick={() => applySemitoneShift(step.plus.next)}
+                disabled={!detectionId || detecting || reRendering || step.plus.disabled}
+                aria-label={stepText.plusLabel}
+                style={{
+                  height: 44, borderRadius: 12,
+                  border: "1.5px solid rgba(0,0,0,0.1)",
+                  background: semitones > 0 ? "linear-gradient(135deg, #0b4ea2, #093b7a)" : "rgba(255,255,255,0.75)",
+                  color: semitones > 0 ? "white" : "#3a4847",
+                  fontSize: "1.35rem", fontWeight: 900,
+                  cursor: detectionId && !detecting && !reRendering && !step.plus.disabled ? "pointer" : "not-allowed",
+                  opacity: detectionId && !detecting && !reRendering && !step.plus.disabled ? 1 : 0.45,
+                }}
+              >+</button>
+            </div>
+          </div>
+
+          {/* Result section */}
+          {(replaceResult || aboveResult) && (
+            <div ref={resultRef} className="result-wrap" style={{ maxWidth: 720, margin: "32px auto 48px", padding: "0 20px" }}>
+              <div className="result-card" style={{ background: "rgba(230, 226, 219, 0.5)", borderRadius: 18, padding: "20px 20px 20px", border: "1px solid rgba(0,0,0,0.05)" }}>
+                {/* Replace / Above toggle */}
+                <div className="d-only" style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(0,0,0,0.04)", borderRadius: 10, padding: 4 }}>
                   {(["replace", "above"] as const).map(tab => (
-                    <button key={tab} type="button" aria-pressed={activeTab === tab} disabled={!chosen} onClick={() => handleResultTabSelect(tab)}>
+                    <button
+                      key={tab}
+                      onClick={() => handleResultTabSelect(tab)}
+                      style={{
+                        flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
+                        borderRadius: 8,
+                        background: activeTab === tab ? "white" : "transparent",
+                        color: activeTab === tab ? "#3a4847" : "#666",
+                        fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
+                        boxShadow: activeTab === tab ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+                        transition: "all 0.18s",
+                      }}
+                    >
                       {tab === "replace" ? t.replace : t.above}
                     </button>
                   ))}
                 </div>
-              </div>
-              <div className="m-acts">
-                <button type="button" className="m-btn m-btn-ghost" disabled={!chosen} onClick={() => setShowOriginal(v => !v)}>
+                <button
+                  className="d-only"
+                  onClick={() => setShowOriginal(v => !v)}
+                  disabled={!originalImageUrl}
+                  style={{
+                    width: "100%", marginBottom: 12, padding: "9px 0", borderRadius: 10,
+                    border: "1.5px solid rgba(0,0,0,0.12)",
+                    background: showOriginal ? "#1a1a2e" : "rgba(255,255,255,0.72)",
+                    color: showOriginal ? "white" : "#3a4847",
+                    fontSize: "0.78rem", fontWeight: 900, cursor: originalImageUrl ? "pointer" : "not-allowed",
+                  }}
+                >
                   {showOriginal ? t.viewRendered : t.viewOriginal}
                 </button>
-                <button type="button" className="m-btn m-btn-primary" disabled={!chosen || showOriginal || !activeResult} onClick={handleDownload}>
-                  <svg width="16" height="16" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M7.5 1v9m0 0L4 6.6M7.5 10L11 6.6M1.5 11v1.5A1.5 1.5 0 003 14h9a1.5 1.5 0 001.5-1.5V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                {/* Sheet image */}
+                <div className="d-only" style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "white" }}>
+                  {previewSrc && (
+                    <img
+                      ref={imgRef}
+                      src={previewSrc}
+                      alt={showOriginal ? t.originalSheetAlt : t.renderedSheetAlt(activeTab)}
+                      style={{ width: "100%", display: "block", cursor: addModeActive && !showOriginal ? "crosshair" : "default" }}
+                      onLoad={e => setImgNaturalSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
+                      onClick={handleImageClick}
+                      onMouseMove={handleImageMouseMove}
+                      onMouseLeave={handleImageMouseLeave}
+                      onTouchMove={handleImageTouchMove}
+                      onTouchEnd={handleImageTouchEnd}
+                    />
+                  )}
+                  {addModeOverlays}
+                </div>
+
+                {/* Chord position modal */}
+                {pendingPosition && (
+                  <div style={{
+                    position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+                    background: "white", borderRadius: 12, padding: "20px 24px",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.25)", zIndex: 1000, minWidth: 260,
+                  }}>
+                    <p style={{ margin: "0 0 12px", fontSize: "0.85rem", fontWeight: 700, color: "#1a1a2e" }}>{t.addChordAtPositionTitle}</p>
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder={t.chordPlaceholderDm7}
+                      value={pendingChordText}
+                      onChange={e => setPendingChordText(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") confirmPositionedChord();
+                        if (e.key === "Escape") { setPendingPosition(null); setPendingChordText(""); }
+                      }}
+                      style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1.5px solid #e05d00", fontSize: "0.9rem", fontWeight: 700, outline: "none", boxSizing: "border-box" }}
+                    />
+                    <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "flex-end" }}>
+                      <button
+                        onClick={() => { setPendingPosition(null); setPendingChordText(""); }}
+                        style={{ background: "none", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 8, padding: "7px 16px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", color: "#666" }}
+                      >{t.cancel}</button>
+                      <button
+                        onClick={confirmPositionedChord}
+                        disabled={!pendingChordText.trim()}
+                        style={{ background: "linear-gradient(135deg,#a34200,#7f3000)", border: "none", borderRadius: 8, padding: "7px 16px", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", color: "white", opacity: pendingChordText.trim() ? 1 : 0.5 }}
+                      >{t.add}</button>
+                    </div>
+                  </div>
+                )}
+                {/* Download */}
+                <button
+                  className="d-only"
+                  onClick={handleDownload}
+                  disabled={showOriginal}
+                  style={{
+                    width: "100%", marginTop: 16, padding: "12px 0", borderRadius: 10, border: "none",
+                    background: showOriginal ? "linear-gradient(135deg, #aaa, #999)" : "linear-gradient(135deg, #1a9e50, #158040)",
+                    color: "white", fontSize: "0.85rem", fontWeight: 700, cursor: showOriginal ? "not-allowed" : "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                    boxShadow: showOriginal ? "none" : "0 3px 12px rgba(21,128,64,0.25)", transition: "all 0.18s",
+                  }}
+                >
+                  <Download size={15} />
                   {t.downloadPng}
                 </button>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Fretboard section — full width, no card, responsive padding via CSS */}
-        <section className="fretboard-section d-only">
-          <GuitarFretboard capoFret={capoFret} onFretSelect={detectionId && !detecting ? handleFretSelect : undefined} />
-        </section>
+                {/* Chord editor */}
+                {!showOriginal && editableChords.length > 0 && (
+                  <div className="chord-editor" style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(0,0,0,0.07)" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                      <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#695c42", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                        {t.detectedChords}
+                      </span>
+                      {JSON.stringify(editableChords) !== JSON.stringify(detectedChords) && (
+                        <button
+                          onClick={() => { setEditableChords(detectedChords); setEditingIdx(null); setAddingChord(false); }}
+                          style={{ background: "none", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 20, padding: "3px 12px", fontSize: "0.7rem", fontWeight: 700, color: "#595959", cursor: "pointer" }}
+                        >
+                          {t.reset}
+                        </button>
+                      )}
+                    </div>
 
-        {/* Semitone selector */}
-        <div className="transpose-selector d-only" style={{ maxWidth: 360, margin: "16px auto 0", padding: "0 20px" }}>
-          <div className="transpose-panel" style={{ background: "rgba(255,255,255,0.55)", borderRadius: 16, padding: 12, border: "1px solid rgba(255,255,255,0.8)", backdropFilter: "blur(8px)", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", display: "grid", gridTemplateColumns: "52px 1fr 52px", alignItems: "center", gap: 10 }}>
-            <button
-              onClick={() => applySemitoneShift(step.minus.next)}
-              disabled={!detectionId || detecting || reRendering || step.minus.disabled}
-              aria-label={stepText.minusLabel}
-              style={{
-                height: 44, borderRadius: 12,
-                border: "1.5px solid rgba(0,0,0,0.1)",
-                background: semitones < 0 ? "linear-gradient(135deg, #a34200, #7f3000)" : "rgba(255,255,255,0.75)",
-                color: semitones < 0 ? "white" : "#3a4847",
-                fontSize: "1.35rem", fontWeight: 900,
-                cursor: detectionId && !detecting && !reRendering && !step.minus.disabled ? "pointer" : "not-allowed",
-                opacity: detectionId && !detecting && !reRendering && !step.minus.disabled ? 1 : 0.45,
-              }}
-            >-</button>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "0.68rem", fontWeight: 800, color: "#695c42", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                {stepText.caption}
-              </div>
-              <div style={{ marginTop: 3, fontSize: "1.05rem", fontWeight: 900, color: "#1a1a2e" }}>
-                {rendering ? t.rendering : renderUpdating ? t.updating : stepText.value}
-              </div>
-            </div>
-            <button
-              onClick={() => applySemitoneShift(step.plus.next)}
-              disabled={!detectionId || detecting || reRendering || step.plus.disabled}
-              aria-label={stepText.plusLabel}
-              style={{
-                height: 44, borderRadius: 12,
-                border: "1.5px solid rgba(0,0,0,0.1)",
-                background: semitones > 0 ? "linear-gradient(135deg, #0b4ea2, #093b7a)" : "rgba(255,255,255,0.75)",
-                color: semitones > 0 ? "white" : "#3a4847",
-                fontSize: "1.35rem", fontWeight: 900,
-                cursor: detectionId && !detecting && !reRendering && !step.plus.disabled ? "pointer" : "not-allowed",
-                opacity: detectionId && !detecting && !reRendering && !step.plus.disabled ? 1 : 0.45,
-              }}
-            >+</button>
-          </div>
-        </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                      {editableChords.map((chord, i) => (
+                        editingIdx === i ? (
+                          <input
+                            key={i}
+                            autoFocus
+                            defaultValue={chord.text}
+                            onBlur={e => {
+                              const v = e.target.value.trim();
+                              if (v) setEditableChords(prev => prev.map((c, j) => j === i ? { ...c, text: v } : c));
+                              setEditingIdx(null);
+                            }}
+                            onKeyDown={e => {
+                              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                              if (e.key === "Escape") setEditingIdx(null);
+                            }}
+                            style={{ width: 72, padding: "4px 8px", borderRadius: 20, border: "1.5px solid #e05d00", fontSize: "0.8rem", fontWeight: 700, outline: "none", textAlign: "center" }}
+                          />
+                        ) : (
+                          <span
+                            key={i}
+                            onClick={() => setEditingIdx(i)}
+                            style={{ display: "inline-flex", alignItems: "center", gap: 3, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 20, padding: "4px 6px 4px 10px", fontSize: "0.8rem", fontWeight: 700, color: "#1a1a2e", cursor: "pointer", userSelect: "none" }}
+                          >
+                            {chord.text}
+                            <button
+                              onClick={e => { e.stopPropagation(); setEditableChords(prev => prev.filter((_, j) => j !== i)); if (editingIdx === i) setEditingIdx(null); }}
+                              aria-label={t.removeChord(chord.text)}
+                              style={{ background: "none", border: "none", cursor: "pointer", padding: "0 2px", color: "#bbb", fontSize: "0.7rem", lineHeight: 1 }}
+                            >✕</button>
+                          </span>
+                        )
+                      ))}
 
-        {/* Result section */}
-        {(replaceResult || aboveResult) && (
-          <div ref={resultRef} className="result-wrap" style={{ maxWidth: 720, margin: "32px auto 48px", padding: "0 20px" }}>
-            <div className="result-card" style={{ background: "rgba(230, 226, 219, 0.5)", borderRadius: 18, padding: "20px 20px 20px", border: "1px solid rgba(0,0,0,0.05)" }}>
-              {/* Replace / Above toggle */}
-              <div className="d-only" style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(0,0,0,0.04)", borderRadius: 10, padding: 4 }}>
-                {(["replace", "above"] as const).map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => handleResultTabSelect(tab)}
-                    style={{
-                      flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
-                      borderRadius: 8,
-                      background: activeTab === tab ? "white" : "transparent",
-                      color: activeTab === tab ? "#3a4847" : "#666",
-                      fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
-                      boxShadow: activeTab === tab ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
-                      transition: "all 0.18s",
-                    }}
-                  >
-                    {tab === "replace" ? t.replace : t.above}
-                  </button>
-                ))}
-              </div>
-              <button
-                className="d-only"
-                onClick={() => setShowOriginal(v => !v)}
-                disabled={!originalImageUrl}
-                style={{
-                  width: "100%", marginBottom: 12, padding: "9px 0", borderRadius: 10,
-                  border: "1.5px solid rgba(0,0,0,0.12)",
-                  background: showOriginal ? "#1a1a2e" : "rgba(255,255,255,0.72)",
-                  color: showOriginal ? "white" : "#3a4847",
-                  fontSize: "0.78rem", fontWeight: 900, cursor: originalImageUrl ? "pointer" : "not-allowed",
-                }}
-              >
-                {showOriginal ? t.viewRendered : t.viewOriginal}
-              </button>
-              {/* Sheet image */}
-              <div className="d-only" style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "white" }}>
-                {previewSrc && (
-                  <img
-                    ref={imgRef}
-                    src={previewSrc}
-                    alt={showOriginal ? t.originalSheetAlt : t.renderedSheetAlt(activeTab)}
-                    style={{ width: "100%", display: "block", cursor: addModeActive && !showOriginal ? "crosshair" : "default" }}
-                    onLoad={e => setImgNaturalSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
-                    onClick={handleImageClick}
-                    onMouseMove={handleImageMouseMove}
-                    onMouseLeave={handleImageMouseLeave}
-                    onTouchMove={handleImageTouchMove}
-                    onTouchEnd={handleImageTouchEnd}
-                  />
-                )}
-                {addModeOverlays}
-              </div>
-
-              {/* Chord position modal */}
-              {pendingPosition && (
-                <div style={{
-                  position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
-                  background: "white", borderRadius: 12, padding: "20px 24px",
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.25)", zIndex: 1000, minWidth: 260,
-                }}>
-                  <p style={{ margin: "0 0 12px", fontSize: "0.85rem", fontWeight: 700, color: "#1a1a2e" }}>{t.addChordAtPositionTitle}</p>
-                  <input
-                    autoFocus
-                    type="text"
-                    placeholder={t.chordPlaceholderDm7}
-                    value={pendingChordText}
-                    onChange={e => setPendingChordText(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === "Enter") confirmPositionedChord();
-                      if (e.key === "Escape") { setPendingPosition(null); setPendingChordText(""); }
-                    }}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1.5px solid #e05d00", fontSize: "0.9rem", fontWeight: 700, outline: "none", boxSizing: "border-box" }}
-                  />
-                  <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "flex-end" }}>
-                    <button
-                      onClick={() => { setPendingPosition(null); setPendingChordText(""); }}
-                      style={{ background: "none", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 8, padding: "7px 16px", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", color: "#666" }}
-                    >{t.cancel}</button>
-                    <button
-                      onClick={confirmPositionedChord}
-                      disabled={!pendingChordText.trim()}
-                      style={{ background: "linear-gradient(135deg,#a34200,#7f3000)", border: "none", borderRadius: 8, padding: "7px 16px", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer", color: "white", opacity: pendingChordText.trim() ? 1 : 0.5 }}
-                    >{t.add}</button>
-                  </div>
-                </div>
-              )}
-              {/* Download */}
-              <button
-                className="d-only"
-                onClick={handleDownload}
-                disabled={showOriginal}
-                style={{
-                  width: "100%", marginTop: 16, padding: "12px 0", borderRadius: 10, border: "none",
-                  background: showOriginal ? "linear-gradient(135deg, #aaa, #999)" : "linear-gradient(135deg, #1a9e50, #158040)",
-                  color: "white", fontSize: "0.85rem", fontWeight: 700, cursor: showOriginal ? "not-allowed" : "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-                  boxShadow: showOriginal ? "none" : "0 3px 12px rgba(21,128,64,0.25)", transition: "all 0.18s",
-                }}
-              >
-                <Download size={15} />
-                {t.downloadPng}
-              </button>
-
-              {/* Chord editor */}
-              {!showOriginal && editableChords.length > 0 && (
-                <div className="chord-editor" style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(0,0,0,0.07)" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                    <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#695c42", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                      {t.detectedChords}
-                    </span>
-                    {JSON.stringify(editableChords) !== JSON.stringify(detectedChords) && (
-                      <button
-                        onClick={() => { setEditableChords(detectedChords); setEditingIdx(null); setAddingChord(false); }}
-                        style={{ background: "none", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 20, padding: "3px 12px", fontSize: "0.7rem", fontWeight: 700, color: "#595959", cursor: "pointer" }}
-                      >
-                        {t.reset}
-                      </button>
-                    )}
-                  </div>
-
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-                    {editableChords.map((chord, i) => (
-                      editingIdx === i ? (
+                      {addingChord ? (
                         <input
-                          key={i}
                           autoFocus
-                          defaultValue={chord.text}
-                          onBlur={e => {
-                            const v = e.target.value.trim();
-                            if (v) setEditableChords(prev => prev.map((c, j) => j === i ? { ...c, text: v } : c));
-                            setEditingIdx(null);
-                          }}
+                          value={addInput}
+                          onChange={e => setAddInput(e.target.value)}
+                          placeholder={t.chordPlaceholderAm7}
+                          onBlur={() => { setAddingChord(false); setAddInput(""); }}
                           onKeyDown={e => {
-                            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                            if (e.key === "Escape") setEditingIdx(null);
+                            if (e.key === "Enter") {
+                              const v = addInput.trim();
+                              if (v) setEditableChords(prev => [...prev, { text: v, bbox: null }]);
+                              setAddingChord(false);
+                              setAddInput("");
+                            }
+                            if (e.key === "Escape") { setAddingChord(false); setAddInput(""); }
                           }}
-                          style={{ width: 72, padding: "4px 8px", borderRadius: 20, border: "1.5px solid #e05d00", fontSize: "0.8rem", fontWeight: 700, outline: "none", textAlign: "center" }}
+                          style={{ width: 84, padding: "4px 10px", borderRadius: 20, border: "1.5px solid #e05d00", fontSize: "0.8rem", fontWeight: 700, outline: "none" }}
                         />
                       ) : (
-                        <span
-                          key={i}
-                          onClick={() => setEditingIdx(i)}
-                          style={{ display: "inline-flex", alignItems: "center", gap: 3, background: "rgba(255,255,255,0.85)", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 20, padding: "4px 6px 4px 10px", fontSize: "0.8rem", fontWeight: 700, color: "#1a1a2e", cursor: "pointer", userSelect: "none" }}
+                        <button
+                          onClick={() => setAddingChord(true)}
+                          style={{ background: "none", border: "1.5px dashed rgba(0,0,0,0.18)", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700, color: "#646464", cursor: "pointer" }}
                         >
-                          {chord.text}
-                          <button
-                            onClick={e => { e.stopPropagation(); setEditableChords(prev => prev.filter((_, j) => j !== i)); if (editingIdx === i) setEditingIdx(null); }}
-                            aria-label={t.removeChord(chord.text)}
-                            style={{ background: "none", border: "none", cursor: "pointer", padding: "0 2px", color: "#bbb", fontSize: "0.7rem", lineHeight: 1 }}
-                          >✕</button>
-                        </span>
-                      )
-                    ))}
+                          {t.addChord}
+                        </button>
+                      )}
+                      {!addingChord && (
+                        <button
+                          onClick={() => setAddModeActive(true)}
+                          style={{ background: "none", border: "1.5px dashed rgba(156,61,0,0.5)", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700, color: "#9c3d00", cursor: "pointer" }}
+                        >
+                          {t.addChordAtPosition}
+                        </button>
+                      )}
+                    </div>
 
-                    {addingChord ? (
-                      <input
-                        autoFocus
-                        value={addInput}
-                        onChange={e => setAddInput(e.target.value)}
-                        placeholder={t.chordPlaceholderAm7}
-                        onBlur={() => { setAddingChord(false); setAddInput(""); }}
-                        onKeyDown={e => {
-                          if (e.key === "Enter") {
-                            const v = addInput.trim();
-                            if (v) setEditableChords(prev => [...prev, { text: v, bbox: null }]);
-                            setAddingChord(false);
-                            setAddInput("");
-                          }
-                          if (e.key === "Escape") { setAddingChord(false); setAddInput(""); }
-                        }}
-                        style={{ width: 84, padding: "4px 10px", borderRadius: 20, border: "1.5px solid #e05d00", fontSize: "0.8rem", fontWeight: 700, outline: "none" }}
-                      />
-                    ) : (
-                      <button
-                        onClick={() => setAddingChord(true)}
-                        style={{ background: "none", border: "1.5px dashed rgba(0,0,0,0.18)", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700, color: "#646464", cursor: "pointer" }}
-                      >
-                        {t.addChord}
-                      </button>
+                    {editableChords.some(c => c.bbox === null) && (
+                      <p style={{ margin: "8px 0 0", fontSize: "0.7rem", color: "#9c3d00", fontWeight: 600 }}>
+                        {t.unpositionedChords}
+                      </p>
                     )}
-                    {!addingChord && (
+
+                    {JSON.stringify(editableChords) !== JSON.stringify(detectedChords) && (
                       <button
-                        onClick={() => setAddModeActive(true)}
-                        style={{ background: "none", border: "1.5px dashed rgba(156,61,0,0.5)", borderRadius: 20, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700, color: "#9c3d00", cursor: "pointer" }}
+                        onClick={handleReRender}
+                        disabled={reRendering}
+                        style={{
+                          marginTop: 12, width: "100%", padding: "11px 0", borderRadius: 10, border: "none",
+                          background: reRendering ? "linear-gradient(135deg,#aaa,#999)" : "linear-gradient(135deg,#3a4847,#2a3837)",
+                          color: "white", fontSize: "0.85rem", fontWeight: 700,
+                          cursor: reRendering ? "not-allowed" : "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                          transition: "all 0.2s",
+                        }}
                       >
-                        {t.addChordAtPosition}
+                        {reRendering
+                          ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> {t.reRendering}</>
+                          : t.reRenderWithEdits}
                       </button>
                     )}
                   </div>
-
-                  {editableChords.some(c => c.bbox === null) && (
-                    <p style={{ margin: "8px 0 0", fontSize: "0.7rem", color: "#9c3d00", fontWeight: 600 }}>
-                      {t.unpositionedChords}
-                    </p>
-                  )}
-
-                  {JSON.stringify(editableChords) !== JSON.stringify(detectedChords) && (
-                    <button
-                      onClick={handleReRender}
-                      disabled={reRendering}
-                      style={{
-                        marginTop: 12, width: "100%", padding: "11px 0", borderRadius: 10, border: "none",
-                        background: reRendering ? "linear-gradient(135deg,#aaa,#999)" : "linear-gradient(135deg,#3a4847,#2a3837)",
-                        color: "white", fontSize: "0.85rem", fontWeight: 700,
-                        cursor: reRendering ? "not-allowed" : "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                        transition: "all 0.2s",
-                      }}
-                    >
-                      {reRendering
-                        ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> {t.reRendering}</>
-                        : t.reRenderWithEdits}
-                    </button>
-                  )}
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
 
-        {/* Footer */}
-        {/* Footer: pinned to the bottom of the screen (see .site-footer) */}
-        <footer ref={footerRef} className={keyboardOpen ? "site-footer keyboard-open" : "site-footer"}>
+          {/* Footer */}
+        </div>
+
+        {/* Footer: at the natural bottom of the page (see .page-col) */}
+        <footer className="site-footer">
           <Wordmark height={15} introReady={false} />
           <div className="site-footer-links">
             <span className="site-footer-tagline">{t.footerTagline}</span>
