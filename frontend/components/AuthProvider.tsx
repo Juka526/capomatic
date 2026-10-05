@@ -27,10 +27,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuth, setIsAuth] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(process.env.NEXT_PUBLIC_APP_TARGET !== 'toss');
 
   useEffect(() => {
-    initializeAuth();
+    if (process.env.NEXT_PUBLIC_APP_TARGET !== 'toss') initializeAuth();
   }, []);
 
   async function initializeAuth() {

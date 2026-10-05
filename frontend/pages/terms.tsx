@@ -1,9 +1,11 @@
 import LegalPage from '@/components/LegalPage';
 
+const isToss = process.env.NEXT_PUBLIC_APP_TARGET === 'toss';
+
 const sections = {
   ko: [
     { heading: '서비스', paragraphs: [
-      'Capomatic은 PNG·JPEG 코드 악보에서 코드를 감지하고 전조·카포 조정 결과 이미지를 만드는 도구입니다. 로그인과 브라우저별 작업 기록을 제공하지만, V1에는 관리자 기능이나 유료 GPT 보정이 포함되지 않습니다.',
+      isToss ? 'Capomatic은 PNG·JPEG 코드 악보에서 코드를 감지하고 전조·카포 조정 결과 이미지를 만드는 도구입니다. 토스 미니앱은 로그인 없이 이용할 수 있으며 작업 기록을 저장하지 않습니다.' : 'Capomatic은 PNG·JPEG 코드 악보에서 코드를 감지하고 전조·카포 조정 결과 이미지를 만드는 도구입니다. 로그인과 브라우저별 작업 기록을 제공하지만, V1에는 관리자 기능이나 유료 GPT 보정이 포함되지 않습니다.',
     ] },
     { heading: '정확도와 사용 책임', paragraphs: [
       'OCR과 자동 전조 결과에는 누락이나 오인식이 있을 수 있습니다. 공연, 예배 또는 배포 전에 사용자가 코드와 결과 악보를 직접 확인해야 합니다. 서비스는 음악적·법률적 판단을 대신하지 않습니다.',
@@ -17,7 +19,7 @@ const sections = {
   ],
   en: [
     { heading: 'The service', paragraphs: [
-      'Capomatic detects chords in PNG or JPEG chord sheets and creates transposed or capo-adjusted result images. It provides login and browser-specific job history. Administrator features and paid GPT refinement are not part of V1.',
+      isToss ? 'Capomatic detects chords in PNG or JPEG chord sheets and creates transposed or capo-adjusted result images. The Toss mini app works without login and does not save job history.' : 'Capomatic detects chords in PNG or JPEG chord sheets and creates transposed or capo-adjusted result images. It provides login and browser-specific job history. Administrator features and paid GPT refinement are not part of V1.',
     ] },
     { heading: 'Accuracy and responsibility', paragraphs: [
       'OCR and automatic transpose results may contain omissions or recognition errors. You must check the chords and result sheet before a performance, worship service, or distribution. Capomatic does not replace musical or legal judgment.',

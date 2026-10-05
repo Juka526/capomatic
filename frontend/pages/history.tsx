@@ -7,6 +7,7 @@ import { useLang, LangToggle } from '@/components/LangProvider';
 import { Wordmark } from '@/components/Wordmark';
 import Link from 'next/link';
 import Head from 'next/head';
+import NotFoundPage from './404';
 import { parseJobHistory, type JobHistoryEntry } from '@/lib/job-history.mjs';
 
 function HistoryContent() {
@@ -149,5 +150,13 @@ function HistoryContent() {
 }
 
 export default function HistoryPage() {
+  if (process.env.NEXT_PUBLIC_APP_TARGET === 'toss') return <NotFoundPage />;
   return <HistoryContent />;
+}
+
+// Block direct links as well as hiding the menu in the Toss export.
+export function getStaticProps() {
+  return process.env.NEXT_PUBLIC_APP_TARGET === 'toss'
+    ? { notFound: true }
+    : { props: {} };
 }
