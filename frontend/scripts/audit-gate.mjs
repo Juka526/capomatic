@@ -12,7 +12,25 @@ import { pathToFileURL } from "node:url";
 
 const FAIL_LEVELS = new Set(["high", "critical"]);
 
-export const EXCEPTIONS = [];
+export const EXCEPTIONS = [
+  {
+    // braces: stack-exhaustion DoS through deeply nested brace patterns. No
+    // patched braces release exists; the only fix offered is Tailwind 4, a
+    // breaking migration. Exposure: tailwindcss is a build-time devDependency
+    // that only expands glob patterns from our own config (tailwind.config's
+    // `content` paths); no user input reaches braces, and none of it ships to
+    // browsers. Review on 2026-12-01, or remove as soon as a patched braces (or
+    // a Tailwind release without this chain) is available.
+    id: "GHSA-vfj7-8cjw-p6xm",
+    package: "braces",
+    review: "2026-12-01",
+    paths: [
+      "tailwindcss>chokidar>braces",
+      "tailwindcss>micromatch>braces",
+      "tailwindcss>fast-glob>micromatch>braces",
+    ],
+  },
+];
 
 const advisoryId = (url = "") => url.match(/GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}/i)?.[0] ?? url;
 
