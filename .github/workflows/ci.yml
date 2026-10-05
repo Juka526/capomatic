@@ -44,7 +44,6 @@ jobs:
       - name: Validate the guest-only Toss export and local bundle
         run: npm run check:toss
         env:
-          AIT_APP_NAME: capomatic-ci
           NEXT_PUBLIC_AUTH0_DOMAIN: should-not-load.auth0.com
           NEXT_PUBLIC_AUTH0_CLIENT_ID: toss-build-test
 

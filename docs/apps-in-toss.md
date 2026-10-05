@@ -9,12 +9,12 @@ Use Node.js 24 or newer. From `frontend/`:
 ```sh
 npm ci
 npm run check
-AIT_APP_NAME=capomatic-local npm run check:toss
+npm run check:toss
 ```
 
-`check:toss` runs `npm run check` with the Toss target, audits the static export, and packages it with `ait build`. For subsequent packaging, use `AIT_APP_NAME='<existing-console-app-name>' npm run build:toss`. Next exports to `out/`; `apps-in-toss.config.ts` uses that folder as `webBundleDir`. `.ait` files and `out/` are ignored by git. These commands do not upload or release anything.
+`check:toss` runs `npm run check` with the Toss target, audits the static export, and packages it with `ait build`. For subsequent packaging, use `npm run build:toss`. Next exports to `out/`; `apps-in-toss.config.ts` uses that folder as `webBundleDir`. `.ait` files and `out/` are ignored by git. These commands do not upload or release anything.
 
-The console app name is unconfirmed; obtain it from the existing app’s information page in the Apps in Toss console. `capomatic-local` is only a local verification name, and CI uses `capomatic-ci`. Neither represents a registered app. Use the existing app name before producing an upload candidate; do not create a second app. `AIT_APP_NAME` must be supplied in the shell environment; the CLI config does not load Next's `.env.local`.
+The user confirmed the existing console app name as `capomatic`. Its canonical value is in `frontend/apps-in-toss.config.ts`; local and CI builds both produce `frontend/capomatic.ait`. Do not create a second app.
 
 `npm run dev:toss` starts the Next webpack development server with official AIT Devtools. Its navigation and file APIs are mocks. Production bundles exclude the devtools.
 
@@ -31,19 +31,19 @@ Result images use SDK `File.saveBase64`. The existing browser file picker suppli
 The default Toss API is `https://juka526-capomatic.hf.space`; override it with HTTPS-only `NEXT_PUBLIC_API_URL` at build time. After the user explicitly approves an HF CORS change, use the confirmed existing console app name to append these entries to the HF Space's existing `CORS_ORIGINS`, preserving its current entries:
 
 ```text
-https://<appName>.apps.tossmini.com
-https://<appName>.private-apps.tossmini.com
+https://capomatic.apps.tossmini.com
+https://capomatic.private-apps.tossmini.com
 ```
 
 Do not change the HF Space, create a console app, upload a bundle, or submit review without the user's explicit confirmation. Code changes go through a branch and PR; never push or merge directly to `main`.
 
-To unlock device QA, first confirm the existing app name and ask the user to approve a specific bundle upload and the two CORS additions.
+To unlock device QA, ask the user to approve uploading `frontend/capomatic.ait` to the existing `capomatic` app and adding the two CORS origins above.
 
 Before review, verify home/deep links, native and Android back buttons, light mode, guide controls, image selection, OCR, transposition, file saving, support, and privacy/terms in the actual Toss app. Without approved CORS changes, OCR calls from Toss origins may fail. No mTLS setup is needed for this guest-only client calling its own backend; it does not call Toss server APIs.
 
 ## Verification status
 
-On 2026-10-06, the ordinary web and Toss `npm run check` flows passed 60 tests and TypeScript/build checks. The Toss check also passed the export audit and produced a local `capomatic-local.ait` bundle. Fake Auth0 environment variables were set during the Toss check to confirm they do not enable external login. The existing npm security gate passed with its existing Tailwind/braces exception.
+On 2026-10-06, the ordinary web and Toss `npm run check` flows passed 60 tests and TypeScript/build checks. The Toss check also passed the export audit and produced the upload candidate `frontend/capomatic.ait` using the confirmed app name. Fake Auth0 environment variables were also used in the earlier Toss check to confirm they do not enable external login. The existing npm security gate passed with its existing Tailwind/braces exception.
 
 HTTP checks against the Toss development server returned 200 for `/` and `/privacy/`, and 404 for `/history/`. Browser interaction could not be tested because the browser automation connection failed. Native back behavior, photo selection, actual image saving, OCR from Toss origins, and customer support remain device/console checks. No HF configuration, console app, uploaded bundle, or review submission was changed.
 
