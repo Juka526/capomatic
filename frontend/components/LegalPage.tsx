@@ -19,8 +19,8 @@ export default function LegalPage({ title, sections }: LegalPageProps) {
         <title>{activeTitle} - Capomatic</title>
         <meta name="robots" content="index,follow" />
       </Head>
-      <div style={{ minHeight: '100vh', background: '#F5EDD8', color: '#252525' }}>
-        <nav style={{ height: 52, padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
+      <div className="with-bars" style={{ minHeight: '100vh', background: '#F5EDD8', color: '#252525' }}>
+        <nav className="fixed-top" style={{ zIndex: 100, height: 'calc(52px + env(safe-area-inset-top, 0px))', padding: 'env(safe-area-inset-top, 0px) 20px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F5EDD8', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
           <Link href="/" style={{ display: 'flex', textDecoration: 'none' }}><Wordmark height={22} /></Link>
           <LangToggle />
         </nav>

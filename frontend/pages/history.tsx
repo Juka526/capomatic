@@ -32,9 +32,9 @@ function HistoryContent() {
     <>
       <Head><title>{t.historyTitle} - Capomatic</title><link rel="icon" href="/favicon.svg" type="image/svg+xml" /></Head>
 
-      <div style={{ minHeight: '100vh', backgroundColor: '#F5EDD8', fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: 'hidden' }}>
+      <div className="with-bars" style={{ minHeight: '100vh', backgroundColor: '#F5EDD8', fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: 'hidden' }}>
 
-        <nav className="history-nav">
+        <nav className="history-nav fixed-top">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', flexShrink: 0 }}>
               <Wordmark height={22} />
@@ -94,16 +94,16 @@ function HistoryContent() {
 
       <style>{`
         .history-nav {
-          position: sticky; top: 0; z-index: 100;
+          z-index: 100;
           display: flex; align-items: center; justify-content: space-between;
-          padding: 0 16px; height: 52px;
+          padding: env(safe-area-inset-top, 0px) 16px 0; height: calc(52px + env(safe-area-inset-top, 0px));
           background: rgba(245, 237, 216, 0.95);
           backdrop-filter: blur(12px);
           border-bottom: 1px solid rgba(0,0,0,0.07);
           overflow: hidden;
         }
         @media (min-width: 640px) {
-          .history-nav { padding: 0 24px; }
+          .history-nav { padding-left: 24px; padding-right: 24px; }
         }
 
         .history-username {

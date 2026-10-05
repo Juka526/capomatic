@@ -118,6 +118,8 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [logoIntroReady, setLogoIntroReady] = useState(false);
+  const footerRef = useRef<HTMLElement>(null);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -156,6 +158,46 @@ export default function Home() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [menuOpen]);
+
+  // The pinned footer wraps on narrow screens: publish its real height so page
+  // content and full-height screens stop above it (0 while it is hidden).
+  useEffect(() => {
+    const footer = footerRef.current;
+    if (!footer) return;
+    const root = document.documentElement;
+    const observer = new ResizeObserver(() => {
+      root.style.setProperty("--footer-h", `${footer.getBoundingClientRect().height}px`);
+    });
+    observer.observe(footer);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--footer-h");
+    };
+  }, []);
+
+  // Hide the pinned footer while the on-screen keyboard is up (a text field is
+  // focused and the visual viewport has shrunk), so it never covers the input.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    let fullHeight = viewport.height;
+    let width = viewport.width;
+    const update = () => {
+      if (viewport.width !== width) { width = viewport.width; fullHeight = viewport.height; } // rotated
+      fullHeight = Math.max(fullHeight, viewport.height);
+      const el = document.activeElement;
+      const typing = el instanceof HTMLTextAreaElement || (el instanceof HTMLInputElement && !["file", "range", "checkbox", "radio", "button"].includes(el.type));
+      setKeyboardOpen(typing && viewport.height < fullHeight * 0.8);
+    };
+    viewport.addEventListener("resize", update);
+    document.addEventListener("focusin", update);
+    document.addEventListener("focusout", update);
+    return () => {
+      viewport.removeEventListener("resize", update);
+      document.removeEventListener("focusin", update);
+      document.removeEventListener("focusout", update);
+    };
+  }, []);
 
   // First visit: open the guide once on the home page until "Don't show again".
   // Storage is read only after mount, so server and first client render match.
@@ -741,13 +783,13 @@ export default function Home() {
         <meta name="description" content="Transpose chord sheets easily" />
       </Head>
 
-      <div role="main" className="app-root" style={{ minHeight: "100vh", backgroundColor: "#F5EDD8", fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: "hidden" }}>
+      <div role="main" className="app-root with-bars" style={{ minHeight: "100vh", backgroundColor: "#F5EDD8", fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif", overflowX: "hidden" }}>
 
         {/* Nav */}
-        <nav className="d-only" style={{
-          position: "sticky", top: 0, zIndex: 100,
+        <nav className="d-only fixed-top" style={{
+          zIndex: 100,
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "0 24px", height: 52,
+          padding: "env(safe-area-inset-top, 0px) 24px 0", height: "calc(52px + env(safe-area-inset-top, 0px))",
           background: "rgba(255, 253, 247, 0.95)",
           backdropFilter: "blur(12px)",
           borderBottom: "1px solid rgba(0,0,0,0.06)",
@@ -776,7 +818,7 @@ export default function Home() {
 
 
         {/* Mobile top bar (≤640px) */}
-        <nav className="m-only m-nav" data-screen={file ? "result" : "home"}>
+        <nav className="m-only m-nav fixed-top" data-screen={file ? "result" : "home"}>
           {file ? (
             <button type="button" className="m-icon-btn" onClick={clearFile} aria-label={t.mBack}>
               <svg width="17" height="14" viewBox="0 0 16 14" fill="none" aria-hidden="true"><path d="M15 7H1m0 0l5.5-5.5M1 7l5.5 5.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
@@ -1349,12 +1391,13 @@ export default function Home() {
 
 
         {/* Footer */}
-        <footer style={{ borderTop: "1px solid rgba(0,0,0,0.06)", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+        {/* Footer: pinned to the bottom of the screen (see .site-footer) */}
+        <footer ref={footerRef} className={keyboardOpen ? "site-footer keyboard-open" : "site-footer"}>
           <Wordmark height={15} introReady={false} />
-          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <span style={{ fontSize: "0.7rem", color: "#666", fontWeight: 500 }}>{t.footerTagline}</span>
-            <Link href="/privacy" style={{ fontSize: "0.7rem", color: "#665e54" }}>{t.privacy}</Link>
-            <Link href="/terms" style={{ fontSize: "0.7rem", color: "#665e54" }}>{t.terms}</Link>
+          <div className="site-footer-links">
+            <span className="site-footer-tagline">{t.footerTagline}</span>
+            <Link href="/privacy" className="site-footer-link">{t.privacy}</Link>
+            <Link href="/terms" className="site-footer-link">{t.terms}</Link>
           </div>
         </footer>
 
