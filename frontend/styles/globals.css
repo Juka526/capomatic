@@ -10,34 +10,32 @@ html, body {
 }
 
 /* ------------------------------------------------------------------ */
-/* Pinned bars. Every top bar is position: fixed (.fixed-top) and the  */
-/* home page's footer is fixed to the bottom (.site-footer): sticky    */
-/* bars moved with the page during iOS rubber-band overscroll. Content */
-/* reserves their height through these variables; --footer-h is the   */
-/* footer's measured height (it wraps on narrow screens), 0 elsewhere. */
+/* Pinned top bars. Every top bar is position: fixed (.fixed-top):     */
+/* sticky bars moved with the page during iOS rubber-band overscroll.  */
+/* Content reserves the bar's height through --topbar-h.               */
+/* The home page footer is NOT pinned: it sits at the natural bottom   */
+/* (sticky-footer layout, .page-col): at the window's bottom edge when */
+/* content is short, right after the content when it is long.          */
 /* ------------------------------------------------------------------ */
 :root {
   --topbar-h: calc(52px + env(safe-area-inset-top, 0px));
-  --footer-h: 0px;
+  --footer-h: 0px; /* the mobile footer's height, used by the mobile home screen */
 }
 html {
-  /* scrollIntoView and anchor jumps stop clear of the bars. */
+  /* scrollIntoView and anchor jumps stop clear of the top bar. */
   scroll-padding-top: var(--topbar-h);
-  scroll-padding-bottom: var(--footer-h);
 }
 .fixed-top { position: fixed; top: 0; left: 0; right: 0; }
-.with-bars { padding-top: var(--topbar-h); padding-bottom: var(--footer-h); }
+.with-bars { padding-top: var(--topbar-h); }
+.page-col { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+/* One block above the footer; its children keep their normal block layout. */
+.page-main { flex: 1 0 auto; }
 .site-footer {
-  position: fixed; left: 0; right: 0; bottom: 0;
-  /* Below the hamburger backdrop (98) and panel (99); dialogs (300+) cover it. */
-  z-index: 96;
+  flex: none;
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
   padding: 18px 24px calc(18px + env(safe-area-inset-bottom, 0px));
-  background: #F5EDD8;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
-/* Hidden while the on-screen keyboard is open, so it never floats over an input. */
-.site-footer.keyboard-open { display: none; }
 .site-footer-links { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .site-footer-tagline { font-size: 0.7rem; color: #666; font-weight: 500; }
 .site-footer-link { font-size: 0.7rem; color: #665e54; }
@@ -307,7 +305,7 @@ html {
   /* Result */
   /* Result: the sheet scrolls in its own area above the board, so the board
      never covers it. The chord editor follows below (page scroll). */
-  .m-result { display: flex; flex-direction: column; height: calc(100dvh - var(--topbar-h) - var(--footer-h)); }
+  .m-result { display: flex; flex-direction: column; height: calc(100dvh - var(--topbar-h)); }
   .m-sheet { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 10px 14px 8px; }
   .m-page { position: relative; overflow: hidden; background: #fff; border: 1px solid rgba(26, 26, 46, 0.13); border-radius: 12px; }
   .m-page img { display: block; width: 100%; height: auto; }
@@ -503,9 +501,12 @@ html {
   .guide-dots span, .guide-controls { transition: none; }
 }
 
-/* Compact pinned footer on phones: one row, no tagline, 44px tap targets. */
+/* Compact footer on phones: one 44px row (wordmark, privacy, terms; no tagline).
+   The home screen shrinks by its height so it shows on the first screen. */
 @media (max-width: 640px) {
+  :root:has(.site-footer) { --footer-h: calc(44px + env(safe-area-inset-bottom, 0px)); }
   .site-footer {
+    height: var(--footer-h);
     flex-wrap: nowrap; gap: 12px;
     padding: 0 16px env(safe-area-inset-bottom, 0px);
     background: #FFFDF7;
