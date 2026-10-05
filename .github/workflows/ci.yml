@@ -36,7 +36,10 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-      - run: npm audit --audit-level=high
+      # npm audit over all dependencies (dev included), failing on high/critical
+      # except the narrowly scoped exceptions listed in scripts/audit-gate.mjs.
+      - name: npm audit (high/critical, with listed exceptions)
+        run: node scripts/audit-gate.mjs
       - run: npm run check
 
   docker:
