@@ -5,7 +5,42 @@
 /* Set overscroll/rubber-band background to match app color */
 html, body {
   background-color: #F5EDD8;
+  /* The page itself never bounces; inner scrollers (.m-sheet) keep their own. */
+  overscroll-behavior: none;
 }
+
+/* ------------------------------------------------------------------ */
+/* Pinned bars. Every top bar is position: fixed (.fixed-top) and the  */
+/* home page's footer is fixed to the bottom (.site-footer): sticky    */
+/* bars moved with the page during iOS rubber-band overscroll. Content */
+/* reserves their height through these variables; --footer-h is the   */
+/* footer's measured height (it wraps on narrow screens), 0 elsewhere. */
+/* ------------------------------------------------------------------ */
+:root {
+  --topbar-h: calc(52px + env(safe-area-inset-top, 0px));
+  --footer-h: 0px;
+}
+html {
+  /* scrollIntoView and anchor jumps stop clear of the bars. */
+  scroll-padding-top: var(--topbar-h);
+  scroll-padding-bottom: var(--footer-h);
+}
+.fixed-top { position: fixed; top: 0; left: 0; right: 0; }
+.with-bars { padding-top: var(--topbar-h); padding-bottom: var(--footer-h); }
+.site-footer {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  /* Below the hamburger backdrop (98) and panel (99); dialogs (300+) cover it. */
+  z-index: 96;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  padding: 18px 24px calc(18px + env(safe-area-inset-bottom, 0px));
+  background: #F5EDD8;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+/* Hidden while the on-screen keyboard is open, so it never floats over an input. */
+.site-footer.keyboard-open { display: none; }
+.site-footer-links { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.site-footer-tagline { font-size: 0.7rem; color: #666; font-weight: 500; }
+.site-footer-link { font-size: 0.7rem; color: #665e54; }
 
 :where(a, button, input, [role="button"]):focus-visible {
   outline: 3px solid #0b6bcb !important;
@@ -210,16 +245,17 @@ html, body {
   .d-only { display: none !important; }
 
   html, body, .app-root { background-color: #EDE2C4 !important; }
-  /* overflow-x: hidden turns the root into a scroll container and breaks the
-     sticky top bar; clip hides overflow without that. */
   .app-root { overflow-x: clip !important; }
+  /* The home page's mobile top bar is 56px. */
+  :root:has(.m-nav) { --topbar-h: calc(56px + env(safe-area-inset-top, 0px)); }
 
-  /* Top bar */
+  /* Top bar (fixed via .fixed-top) */
   .m-nav {
     /* Below the menu backdrop (98) and panel (99) so the panel's close button shows. */
-    position: sticky; top: 0; z-index: 97;
+    z-index: 97;
     display: flex; align-items: center; gap: 11px;
-    height: 56px; padding: 0 16px;
+    height: calc(56px + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) 16px 0;
     background: #FFFDF7;
     border-bottom: 1px solid rgba(26, 26, 46, 0.13);
   }
@@ -237,7 +273,7 @@ html, body {
   .m-icon-btn:active { background: rgba(26, 26, 46, 0.06); color: #1a1a2e; }
 
   /* Home */
-  .m-home { display: flex; flex-direction: column; min-height: calc(100dvh - 56px); }
+  .m-home { display: flex; flex-direction: column; min-height: calc(100dvh - var(--topbar-h) - var(--footer-h)); }
   .m-hero { margin: 0; padding: 26px 20px 0; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; text-align: left; }
   .m-kicker { display: block; font-size: 1.06rem; font-weight: 800; color: #5d625f; letter-spacing: -0.01em; }
   .m-headline { display: block; font-size: 1.8rem; font-weight: 800; color: #171923; letter-spacing: -0.02em; line-height: 1.2; text-wrap: balance; }
@@ -271,7 +307,7 @@ html, body {
   /* Result */
   /* Result: the sheet scrolls in its own area above the board, so the board
      never covers it. The chord editor follows below (page scroll). */
-  .m-result { display: flex; flex-direction: column; height: calc(100dvh - 56px); }
+  .m-result { display: flex; flex-direction: column; height: calc(100dvh - var(--topbar-h) - var(--footer-h)); }
   .m-sheet { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 10px 14px 8px; }
   .m-page { position: relative; overflow: hidden; background: #fff; border: 1px solid rgba(26, 26, 46, 0.13); border-radius: 12px; }
   .m-page img { display: block; width: 100%; height: auto; }
@@ -465,4 +501,18 @@ html, body {
 .guide-dismiss { text-decoration: underline; text-underline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
   .guide-dots span, .guide-controls { transition: none; }
+}
+
+/* Compact pinned footer on phones: one row, no tagline, 44px tap targets. */
+@media (max-width: 640px) {
+  .site-footer {
+    flex-wrap: nowrap; gap: 12px;
+    padding: 0 16px env(safe-area-inset-bottom, 0px);
+    background: #FFFDF7;
+    /* A shadow line instead of a border keeps the bar at exactly 44px. */
+    border-top: 0; box-shadow: 0 -1px 0 rgba(26, 26, 46, 0.13);
+  }
+  .site-footer-tagline { display: none; }
+  .site-footer-links { flex-wrap: nowrap; gap: 4px; }
+  .site-footer-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; font-size: 0.74rem; }
 }
