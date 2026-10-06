@@ -28,24 +28,33 @@ Result images use SDK `File.saveBase64`. The existing browser file picker suppli
 
 ## Backend and approval boundary
 
-The default Toss API is `https://juka526-capomatic.hf.space`; override it with HTTPS-only `NEXT_PUBLIC_API_URL` at build time. After the user explicitly approves an HF CORS change, use the confirmed existing console app name to append these entries to the HF Space's existing `CORS_ORIGINS`, preserving its current entries:
+The default Toss API is `https://juka526-capomatic.hf.space`; override it with HTTPS-only `NEXT_PUBLIC_API_URL` at build time.
+
+The user approved the CORS additions and uploading the existing `frontend/capomatic.ait` test bundle to `capomatic`. The HF Space now has these `CORS_ORIGINS`, preserving the existing web origin:
 
 ```text
+https://capomatic.vercel.app
 https://capomatic.apps.tossmini.com
 https://capomatic.private-apps.tossmini.com
 ```
 
-Do not change the HF Space, create a console app, upload a bundle, or submit review without the user's explicit confirmation. Code changes go through a branch and PR; never push or merge directly to `main`.
+All three origins returned HTTP 200 with matching `Access-Control-Allow-Origin` headers for POST preflight to `/detect`; `/health` returned HTTP 200 and `status: ok` after the update.
 
-To unlock device QA, ask the user to approve uploading `frontend/capomatic.ait` to the existing `capomatic` app and adding the two CORS origins above.
+The approved test upload is pending deployment credentials. No token is registered in `~/.ait/credentials`, and browser automation cannot connect. After the user locally registers an existing console API key with `npx ait token add`, upload from `frontend/` with the explicit file path:
 
-Before review, verify home/deep links, native and Android back buttons, light mode, guide controls, image selection, OCR, transposition, file saving, support, and privacy/terms in the actual Toss app. Without approved CORS changes, OCR calls from Toss origins may fail. No mTLS setup is needed for this guest-only client calling its own backend; it does not call Toss server APIs.
+```sh
+npx ait deploy --location ./capomatic.ait -m 'Guest-only Capomatic test bundle'
+```
+
+Use the explicit path because an older local verification bundle also exists. The approved artifact has SHA-256 `c5aa25d3b0c356528451fd1a63e602a967075d95ceb79b597ae39f610e4638ff` and deployment ID `01a10e2f-8980-7996-a49b-4c07cd68d320`. Do not rebuild it merely to retry authentication. The test upload is already authorized; review submission and creating another app are not authorized. Code changes go through the existing branch and PR; never push or merge directly to `main`.
+
+Before review, verify home/deep links, native and Android back buttons, light mode, guide controls, image selection, OCR, transposition, file saving, support, and privacy/terms in the actual Toss app. No mTLS setup is needed for this guest-only client calling its own backend; it does not call Toss server APIs.
 
 ## Verification status
 
 On 2026-10-06, the ordinary web and Toss `npm run check` flows passed 60 tests and TypeScript/build checks. The Toss check also passed the export audit and produced the upload candidate `frontend/capomatic.ait` using the confirmed app name. Fake Auth0 environment variables were also used in the earlier Toss check to confirm they do not enable external login. The existing npm security gate passed with its existing Tailwind/braces exception.
 
-HTTP checks against the Toss development server returned 200 for `/` and `/privacy/`, and 404 for `/history/`. Browser interaction could not be tested because the browser automation connection failed. Native back behavior, photo selection, actual image saving, OCR from Toss origins, and customer support remain device/console checks. No HF configuration, console app, uploaded bundle, or review submission was changed.
+HTTP checks against the Toss development server returned 200 for `/` and `/privacy/`, and 404 for `/history/`. Browser interaction could not be tested because the browser automation connection failed. Native back behavior, photo selection, actual image saving, OCR from Toss origins, and customer support remain device/console checks. The approved HF CORS update is complete. No console app was created, no bundle was uploaded, and no review was submitted.
 
 ## References
 
