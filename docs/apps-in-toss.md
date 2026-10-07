@@ -42,17 +42,17 @@ https://capomatic.private-apps.tossmini.com
 
 All three origins returned HTTP 200 with matching `Access-Control-Allow-Origin` headers for POST preflight to `/detect`; `/health` returned HTTP 200 and `status: ok` after the update.
 
-The approved test bundle was uploaded to the existing `capomatic` app on 2026-10-07. The CLI completed successfully, and a separate server status read returned `SUCCESS` with `reviewStatus: CREATED`. Review has not been submitted.
+The latest approved test bundle, which removes manual chord editing from Toss, was uploaded to the existing `capomatic` app on 2026-10-07. The CLI completed successfully, and a separate server status read returned `SUCCESS` with `reviewStatus: CREATED`. Review has not been submitted.
 
-Test scheme:
+Current test scheme:
 
 ```text
-intoss-private://capomatic?_deploymentId=01a10e2f-8980-7996-a49b-4c07cd68d320&host=appsInTossHost
+intoss-private://capomatic?_deploymentId=01a11510-ac6f-7182-a995-12670acbdfac&host=appsInTossHost
 ```
 
-The uploaded artifact is archived locally as `frontend/capomatic-01a10e2f-8980-7996-a49b-4c07cd68d320.ait`, SHA-256 `c5aa25d3b0c356528451fd1a63e602a967075d95ceb79b597ae39f610e4638ff`, deployment ID `01a10e2f-8980-7996-a49b-4c07cd68d320`. It was uploaded with an explicit path because an older local verification bundle also exists. The next step is device testing with the console test QR or this scheme. Review submission and creating another app are not authorized. Code changes go through the existing branch and PR; never push or merge directly to `main`.
+The uploaded artifact is `frontend/capomatic.ait`, SHA-256 `133f744cce48daea67675e42de8ad8d7b8ecf01e0537cf57b310e4cd9c735f3b`, deployment ID `01a11510-ac6f-7182-a995-12670acbdfac`. Use this deployment's console test QR; the earlier deployment (`01a10e2f-8980-7996-a49b-4c07cd68d320`) still contains the editor. Its bundle is archived locally as `frontend/capomatic-01a10e2f-8980-7996-a49b-4c07cd68d320.ait`.
 
-The current `frontend/capomatic.ait` candidate removes the chord editor from the Toss build. Its deployment ID is `01a11510-ac6f-7182-a995-12670acbdfac` and SHA-256 is `133f744cce48daea67675e42de8ad8d7b8ecf01e0537cf57b310e4cd9c735f3b`. It has not been uploaded; obtain the user's confirmation before uploading this changed bundle. The existing test scheme above still opens the earlier version with chord editing.
+The next step is device testing. Review submission and creating another app are not authorized. Code changes go through the existing branch and PR; never push or merge directly to `main`.
 
 Before review, verify home/deep links, native and Android back buttons, light mode, guide controls, image selection, OCR, transposition, file saving, support, and privacy/terms in the actual Toss app. No mTLS setup is needed for this guest-only client calling its own backend; it does not call Toss server APIs.
 
