@@ -183,6 +183,30 @@ class TestApplyDirectionFilter:
 
         assert [item["text"] for item in result] == ["C", "C7", "Fm7", "Gm7"]
 
+    def test_keeps_margin_chord_that_leads_a_chord_row(self):
+        # 무릎: the first chord of every row sits inside the left 10% margin.
+        raw_items = [
+            {"raw_text": "C", "confidence": 1.0, "bbox": [46, 315, 60, 332]},
+            {"raw_text": "G", "confidence": 1.0, "bbox": [140, 315, 156, 332]},
+            {"raw_text": "Gm", "confidence": 1.0, "bbox": [250, 315, 275, 332]},
+        ]
+
+        result = _apply_direction_filter(raw_items, image_width=800)
+
+        assert [item["text"] for item in result] == ["C", "G", "Gm"]
+
+    def test_drops_chord_misread_among_unreadable_lyric_boxes(self):
+        raw_items = [
+            {"raw_text": "F", "confidence": 0.845, "bbox": [46, 494, 64, 513]},
+            {"raw_text": "", "confidence": 0.0, "bbox": [131, 495, 152, 512]},
+            {"raw_text": "", "confidence": 0.0, "bbox": [153, 494, 198, 512]},
+            {"raw_text": "F", "confidence": 1.0, "bbox": [46, 527, 63, 546]},
+        ]
+
+        result = _apply_direction_filter(raw_items, image_width=800)
+
+        assert [item["bbox"][1] for item in result] == [527]
+
     def test_filters_bare_root_near_direction(self):
         raw_items = [
             {"raw_text": "D", "confidence": 0.9, "bbox": [100, 50, 120, 70]},

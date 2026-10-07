@@ -164,6 +164,20 @@ class TestDetectStaffSystems:
         assert len(systems) == 4
         assert any(abs(top - 140) <= 3 for top, _ in systems)
 
+    def test_detects_faint_gray_staff_lines(self):
+        # Low-resolution exports draw staff lines in light gray; dark notes
+        # pull Otsu's threshold below them, so only the paper-based retry
+        # sees the staves.
+        img = _white(360, 500)
+        for top in (60, 140, 220, 300):
+            for y in (top, top + 6, top + 12, top + 18, top + 24):
+                img[y, 20:480] = 200
+            img[top - 30:top - 10, 40:460:20] = 0
+
+        systems = detect_staff_systems(img)
+
+        assert [top for top, _ in systems] == [60, 140, 220, 300]
+
     def test_fixture_moment_life_detects_all_staff_systems(self):
         from PIL import Image
 
