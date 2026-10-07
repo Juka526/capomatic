@@ -195,6 +195,7 @@ def _split_multi_token(raw_text: str, item: dict) -> list[dict]:
 
 _LYRIC_CHAR_RE = re.compile(r"[\u3131-\u318e\uac00-\ud7a3\u4e00-\u9fff]")
 _LYRIC_LINE_MIN_TOKENS = 2
+_CHORD_ROW_MIN_NEIGHBOURS = 2
 
 
 def _same_text_line(a: list[int], b: list[int]) -> bool:
@@ -205,6 +206,20 @@ def _same_text_line(a: list[int], b: list[int]) -> bool:
     """
     centre_a, centre_b = (a[1] + a[3]) / 2, (b[1] + b[3]) / 2
     return b[1] <= centre_a <= b[3] and a[1] <= centre_b <= a[3]
+
+
+def _leads_chord_row(item: dict, chord_like: list[dict]) -> bool:
+    """True when *item* sits on a text line with several other chord-like tokens.
+
+    A margin "C" or "B" is a section label on a lyric line but the first
+    chord of the row when the rest of the row's chords sit beside it.  One
+    stray chord-like misread on a lyric line is not enough to call it a row.
+    """
+    neighbours = sum(
+        other is not item and _same_text_line(item["bbox"], other["bbox"])
+        for other in chord_like
+    )
+    return neighbours >= _CHORD_ROW_MIN_NEIGHBOURS
 
 
 def _apply_direction_filter(
@@ -232,11 +247,18 @@ def _apply_direction_filter(
         if _is_direction_token(item["raw_text"])
     ]
 
+    chord_like = [
+        item for item in raw_items
+        if is_chord_candidate(normalize_chord_text(item["raw_text"]))
+    ]
+
     chords: list[dict] = []
     for item in raw_items:
         raw_text = item["raw_text"]
 
-        if is_section_marker(raw_text, item.get("bbox"), image_width):
+        if is_section_marker(raw_text, item.get("bbox"), image_width) and not (
+            item in chord_like and _leads_chord_row(item, chord_like)
+        ):
             continue
 
         section_chord = _extract_section_suffix_chord(raw_text, item)
@@ -285,9 +307,11 @@ def _apply_direction_filter(
 
     # Korean lyrics are often misread as Hangul/CJK fragments; a Latin letter
     # sharing a text line with several of them is part of the lyric, not a
-    # chord (e.g. "A" or "A 2" amid misread syllables).
+    # chord (e.g. "A" or "A 2" amid misread syllables).  Thin lyric fonts can
+    # also come back as boxes the recogniser could not read at all.
     lyric_bboxes = [
-        item["bbox"] for item in raw_items if _LYRIC_CHAR_RE.search(item["raw_text"])
+        item["bbox"] for item in raw_items
+        if _LYRIC_CHAR_RE.search(item["raw_text"]) or not item["raw_text"].strip()
     ]
     return [
         chord for chord in chords
