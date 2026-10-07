@@ -709,7 +709,7 @@ export default function Home() {
   const previewSrc = showOriginal ? originalImageUrl : activeResult;
 
   // Shared by the desktop result card and the mobile sheet.
-  const addModeOverlays = (
+  const addModeOverlays = !IS_TOSS && (
     <>
       {/* Ghost bbox preview — snaps to nearest detected chord row */}
       {!showOriginal && addModeActive && snapRow && hoverImgPos && imgNaturalSize && (
@@ -1012,11 +1012,11 @@ export default function Home() {
                       alt={mobileSheetSrc === originalImageUrl ? t.originalSheetAlt : t.renderedSheetAlt(activeTab)}
                       style={{ cursor: addModeActive && !showOriginal ? "crosshair" : "default" }}
                       onLoad={e => setImgNaturalSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
-                      onClick={handleImageClick}
-                      onMouseMove={handleImageMouseMove}
-                      onMouseLeave={handleImageMouseLeave}
-                      onTouchMove={handleImageTouchMove}
-                      onTouchEnd={handleImageTouchEnd}
+                      onClick={IS_TOSS ? undefined : handleImageClick}
+                      onMouseMove={IS_TOSS ? undefined : handleImageMouseMove}
+                      onMouseLeave={IS_TOSS ? undefined : handleImageMouseLeave}
+                      onTouchMove={IS_TOSS ? undefined : handleImageTouchMove}
+                      onTouchEnd={IS_TOSS ? undefined : handleImageTouchEnd}
                     />
                   )}
                   {chosen && addModeOverlays}
@@ -1198,18 +1198,18 @@ export default function Home() {
                       alt={showOriginal ? t.originalSheetAlt : t.renderedSheetAlt(activeTab)}
                       style={{ width: "100%", display: "block", cursor: addModeActive && !showOriginal ? "crosshair" : "default" }}
                       onLoad={e => setImgNaturalSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
-                      onClick={handleImageClick}
-                      onMouseMove={handleImageMouseMove}
-                      onMouseLeave={handleImageMouseLeave}
-                      onTouchMove={handleImageTouchMove}
-                      onTouchEnd={handleImageTouchEnd}
+                      onClick={IS_TOSS ? undefined : handleImageClick}
+                      onMouseMove={IS_TOSS ? undefined : handleImageMouseMove}
+                      onMouseLeave={IS_TOSS ? undefined : handleImageMouseLeave}
+                      onTouchMove={IS_TOSS ? undefined : handleImageTouchMove}
+                      onTouchEnd={IS_TOSS ? undefined : handleImageTouchEnd}
                     />
                   )}
                   {addModeOverlays}
                 </div>
 
                 {/* Chord position modal */}
-                {pendingPosition && (
+                {!IS_TOSS && pendingPosition && (
                   <div style={{
                     position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
                     background: "white", borderRadius: 12, padding: "20px 24px",
@@ -1259,7 +1259,7 @@ export default function Home() {
                 </button>
 
                 {/* Chord editor */}
-                {!showOriginal && editableChords.length > 0 && (
+                {!IS_TOSS && !showOriginal && editableChords.length > 0 && (
                   <div className="chord-editor" style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(0,0,0,0.07)" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                       <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#695c42", letterSpacing: "0.1em", textTransform: "uppercase" }}>

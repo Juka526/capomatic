@@ -24,5 +24,6 @@ for (const path of files.filter(path => path.endsWith('.js'))) {
   assert.doesNotMatch(js, /auth0-spa-js|auth0\.com|oauth\/token|authorize\?/, `${path}: Auth0 code`);
   assert.doesNotMatch(js, /\beval\s*\(|\bnew\s+Function\s*\(/, `${path}: dynamic code execution`);
   assert.doesNotMatch(js, /ait-devtools-panel|data-ait-devtools/, `${path}: development tools`);
+  assert.doesNotMatch(js, /chord-editor/, `${path}: chord editing UI`);
 }
-console.log(`Toss export checked: ${files.length} files; no Auth0, external page links, history HTML, or eval calls.`);
+console.log(`Toss export checked: ${files.length} files; no Auth0, external page links, history HTML, chord editing UI, or eval calls.`);
