@@ -50,7 +50,9 @@ Current test scheme:
 intoss-private://capomatic?_deploymentId=01a11510-ac6f-7182-a995-12670acbdfac&host=appsInTossHost
 ```
 
-The uploaded artifact is `frontend/capomatic.ait`, SHA-256 `133f744cce48daea67675e42de8ad8d7b8ecf01e0537cf57b310e4cd9c735f3b`, deployment ID `01a11510-ac6f-7182-a995-12670acbdfac`. Use this deployment's console test QR; the earlier deployment (`01a10e2f-8980-7996-a49b-4c07cd68d320`) still contains the editor. Its bundle is archived locally as `frontend/capomatic-01a10e2f-8980-7996-a49b-4c07cd68d320.ait`.
+The uploaded artifact is archived as `frontend/capomatic-01a11510-ac6f-7182-a995-12670acbdfac.ait`, SHA-256 `133f744cce48daea67675e42de8ad8d7b8ecf01e0537cf57b310e4cd9c735f3b`, deployment ID `01a11510-ac6f-7182-a995-12670acbdfac`. Use this deployment's console test QR; the earlier deployment (`01a10e2f-8980-7996-a49b-4c07cd68d320`) still contains the editor. Its bundle is archived locally as `frontend/capomatic-01a10e2f-8980-7996-a49b-4c07cd68d320.ait`.
+
+The current `frontend/capomatic.ait` candidate also hides the empty result-card wrapper on Toss mobile, removing its background, border, padding, and margin. Its deployment ID is `01a11516-9fa1-7cc7-acc6-828a88264cbb` and SHA-256 is `69b91757588b41ad5c73b4742766adafa61865362231ff16de3c609a16839c14`. `npm run check:toss` passed (60 tests, TypeScript, static build, export audit, and packaging). This candidate is not uploaded and awaits user confirmation. The current test QR still opens the version with the empty card.
 
 The next step is device testing. Review submission and creating another app are not authorized. Code changes go through the existing branch and PR; never push or merge directly to `main`.
 

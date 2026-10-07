@@ -1153,7 +1153,7 @@ export default function Home() {
 
           {/* Result section */}
           {(replaceResult || aboveResult) && (
-            <div ref={resultRef} className="result-wrap" style={{ maxWidth: 720, margin: "32px auto 48px", padding: "0 20px" }}>
+            <div ref={resultRef} className={IS_TOSS ? "result-wrap d-only" : "result-wrap"} style={{ maxWidth: 720, margin: "32px auto 48px", padding: "0 20px" }}>
               <div className="result-card" style={{ background: "rgba(230, 226, 219, 0.5)", borderRadius: 18, padding: "20px 20px 20px", border: "1px solid rgba(0,0,0,0.05)" }}>
                 {/* Replace / Above toggle */}
                 <div className="d-only" style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(0,0,0,0.04)", borderRadius: 10, padding: 4 }}>
