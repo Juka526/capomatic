@@ -40,13 +40,15 @@ https://capomatic.private-apps.tossmini.com
 
 All three origins returned HTTP 200 with matching `Access-Control-Allow-Origin` headers for POST preflight to `/detect`; `/health` returned HTTP 200 and `status: ok` after the update.
 
-The approved test upload is pending deployment credentials. No token is registered in `~/.ait/credentials`, and browser automation cannot connect. After the user locally registers an existing console API key with `npx ait token add`, upload from `frontend/` with the explicit file path:
+The approved test bundle was uploaded to the existing `capomatic` app on 2026-10-07. The CLI completed successfully, and a separate server status read returned `SUCCESS` with `reviewStatus: CREATED`. Review has not been submitted.
 
-```sh
-npx ait deploy --location ./capomatic.ait -m 'Guest-only Capomatic test bundle'
+Test scheme:
+
+```text
+intoss-private://capomatic?_deploymentId=01a10e2f-8980-7996-a49b-4c07cd68d320&host=appsInTossHost
 ```
 
-Use the explicit path because an older local verification bundle also exists. The approved artifact has SHA-256 `c5aa25d3b0c356528451fd1a63e602a967075d95ceb79b597ae39f610e4638ff` and deployment ID `01a10e2f-8980-7996-a49b-4c07cd68d320`. Do not rebuild it merely to retry authentication. The test upload is already authorized; review submission and creating another app are not authorized. Code changes go through the existing branch and PR; never push or merge directly to `main`.
+The uploaded artifact is `frontend/capomatic.ait`, SHA-256 `c5aa25d3b0c356528451fd1a63e602a967075d95ceb79b597ae39f610e4638ff`, deployment ID `01a10e2f-8980-7996-a49b-4c07cd68d320`. It was uploaded with an explicit path because an older local verification bundle also exists. The next step is device testing with the console test QR or this scheme. Review submission and creating another app are not authorized. Code changes go through the existing branch and PR; never push or merge directly to `main`.
 
 Before review, verify home/deep links, native and Android back buttons, light mode, guide controls, image selection, OCR, transposition, file saving, support, and privacy/terms in the actual Toss app. No mTLS setup is needed for this guest-only client calling its own backend; it does not call Toss server APIs.
 
@@ -54,7 +56,7 @@ Before review, verify home/deep links, native and Android back buttons, light mo
 
 On 2026-10-06, the ordinary web and Toss `npm run check` flows passed 60 tests and TypeScript/build checks. The Toss check also passed the export audit and produced the upload candidate `frontend/capomatic.ait` using the confirmed app name. Fake Auth0 environment variables were also used in the earlier Toss check to confirm they do not enable external login. The existing npm security gate passed with its existing Tailwind/braces exception.
 
-HTTP checks against the Toss development server returned 200 for `/` and `/privacy/`, and 404 for `/history/`. Browser interaction could not be tested because the browser automation connection failed. Native back behavior, photo selection, actual image saving, OCR from Toss origins, and customer support remain device/console checks. The approved HF CORS update is complete. No console app was created, no bundle was uploaded, and no review was submitted.
+HTTP checks against the Toss development server returned 200 for `/` and `/privacy/`, and 404 for `/history/`. Browser interaction could not be tested because the browser automation connection failed. Native back behavior, photo selection, actual image saving, OCR from Toss origins, and customer support remain device/console checks. The approved HF CORS update and test bundle upload are complete. No console app was created and no review was submitted.
 
 ## References
 
