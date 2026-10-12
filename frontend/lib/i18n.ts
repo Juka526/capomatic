@@ -86,36 +86,12 @@ export const translations = {
     done: '완료',
     dontShowAgain: '다시 보지 않기',
     guideStepOf: (n: number, total: number) => `${n} / ${total}`,
-    playGuideVideo: '영상 재생',
-    pauseGuideVideo: '영상 일시정지',
     previous: '이전',
-    guideSeek: '영상 위치',
-    viewLarger: '영상 크게 보기',
-    closeLargeVideo: '크게 보기 닫기',
     guideGoToStep: (n: number) => `${n}단계로 이동`,
-    guideVideoMobile: '휴대폰에서 악보를 올려 키를 찾고, 카포를 고르고, 교체와 위에 보기를 바꾸고, 코드를 고친 뒤 PNG로 저장하는 전체 시연 영상',
-    guideVideoDesktop: '컴퓨터에서 악보를 올려 키를 찾고, 카포를 고르고, 교체와 위에 보기를 바꾸고, 코드를 고친 뒤 PNG로 내려받는 전체 시연 영상',
     guideSteps: [
-      {
-        title: '악보 올리기',
-        desc: '코드 악보 사진을 올리면 키를 자동으로 찾아요.',
-      },
-      {
-        title: '카포 고르기',
-        desc: '프렛을 누르거나 +/−로 카포를 옮기면 코드가 바로 바뀌어요.',
-      },
-      {
-        title: '교체 / 위에',
-        desc: '원래 코드를 덮어쓰거나, 위에 따로 적어 비교할 수 있어요.',
-      },
-      {
-        title: '코드 고치기',
-        desc: '잘못 읽힌 코드는 눌러서 고치거나 지울 수 있어요.',
-      },
-      {
-        title: 'PNG 저장',
-        desc: "바뀐 악보를 이미지로 저장해요. 아이폰은 공유 메뉴에서 '이미지 저장'을 고르세요.",
-      },
+      { title: '악보 업로드', desc: 'PNG 또는 JPG 코드 악보 이미지를 업로드하세요' },
+      { title: '카포 선택', desc: '프렛보드에서 원하는 프렛을 선택하세요' },
+      { title: '다운로드', desc: '변환된 악보를 PNG 이미지로 받으세요' },
     ],
 
     // Footer
@@ -247,36 +223,12 @@ export const translations = {
     done: 'Done',
     dontShowAgain: "Don't show again",
     guideStepOf: (n: number, total: number) => `${n} / ${total}`,
-    playGuideVideo: 'Play video',
-    pauseGuideVideo: 'Pause video',
     previous: 'Back',
-    guideSeek: 'Video position',
-    viewLarger: 'View larger',
-    closeLargeVideo: 'Close larger view',
     guideGoToStep: (n: number) => `Go to step ${n}`,
-    guideVideoMobile: 'A full demo on a phone: upload a sheet and get its key, pick a capo, switch between Replace and Above, fix a chord, and save it as a PNG',
-    guideVideoDesktop: 'A full demo on a computer: upload a sheet and get its key, pick a capo, switch between Replace and Above, fix a chord, and download it as a PNG',
     guideSteps: [
-      {
-        title: 'Upload a sheet',
-        desc: 'Upload a photo of a chord sheet and the key is found automatically.',
-      },
-      {
-        title: 'Pick a capo',
-        desc: 'Tap a fret or use + / − to move the capo, and the chords change right away.',
-      },
-      {
-        title: 'Replace / Above',
-        desc: 'Overwrite the original chords, or write the new ones above them to compare.',
-      },
-      {
-        title: 'Fix a chord',
-        desc: 'Tap a misread chord to fix it, or remove it.',
-      },
-      {
-        title: 'Save as PNG',
-        desc: "Save the transposed sheet as an image. On iPhone, choose 'Save Image' in the share menu.",
-      },
+      { title: 'Upload Sheet', desc: 'Upload a PNG or JPG chord sheet image' },
+      { title: 'Select Capo', desc: 'Pick a fret on the fretboard or use the buttons' },
+      { title: 'Download', desc: 'Get your transposed sheet as a PNG image' },
     ],
 
     // Footer
