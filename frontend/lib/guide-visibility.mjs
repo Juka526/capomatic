@@ -1,7 +1,6 @@
 // First-visit guide: shown automatically on the home page until the user picks
 // "Don't show again". Skipping, closing and finishing do not store anything.
 export const GUIDE_DISMISSED_KEY = 'tc-guide-dismissed';
-export const GUIDE_STEP_COUNT = 5;
 
 /** Whether the home page should open the guide on its own. */
 export function shouldAutoOpenGuide({ storedValue, pathname, hasFile }) {
@@ -30,10 +29,4 @@ export function writeGuideDismissed(getStorage) {
   } catch {
     return false;
   }
-}
-
-/** Video files for one step; `device` is fixed when the modal opens. */
-export function guideMedia(device, lang) {
-  const base = `/guide/${device}/${lang === 'en' ? 'en' : 'ko'}/guide`;
-  return { mp4: `${base}.mp4`, poster: `${base}.jpg`, chapters: `${base}.chapters.json` };
 }

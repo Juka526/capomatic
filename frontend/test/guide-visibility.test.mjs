@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  GUIDE_DISMISSED_KEY, guideMedia, readGuideDismissed, shouldAutoOpenGuide, writeGuideDismissed,
+  GUIDE_DISMISSED_KEY, readGuideDismissed, shouldAutoOpenGuide, writeGuideDismissed,
 } from '../lib/guide-visibility.mjs';
 
 const memory = (initial = {}) => {
@@ -38,12 +38,4 @@ test('writing stores "1" under the guide key and reads back as dismissed', () =>
   assert.equal(writeGuideDismissed(() => store), true);
   assert.equal(store.data[GUIDE_DISMISSED_KEY], '1');
   assert.equal(shouldAutoOpenGuide({ storedValue: readGuideDismissed(() => store), pathname: '/', hasFile: false }), false);
-});
-
-test('one video, poster and chapter file per device and language', () => {
-  assert.deepEqual(guideMedia('mobile', 'ko'), {
-    mp4: '/guide/mobile/ko/guide.mp4', poster: '/guide/mobile/ko/guide.jpg', chapters: '/guide/mobile/ko/guide.chapters.json',
-  });
-  assert.equal(guideMedia('desktop', 'en').mp4, '/guide/desktop/en/guide.mp4');
-  assert.equal(guideMedia('desktop', 'fr').mp4, '/guide/desktop/ko/guide.mp4');
 });
