@@ -7,6 +7,7 @@ import { useLang, LangToggle } from "@/components/LangProvider";
 import { GuitarFretboard } from "@/components/GuitarFretboard";
 import { Wordmark } from "@/components/Wordmark";
 import { GuideModal } from "@/components/GuideModal";
+import { useTossBack } from "@/lib/toss";
 import { translations } from "@/lib/i18n";
 import { computeTargetKey } from "@/lib/target-key.mjs";
 import { pngDownloadName } from "@/lib/download-name.mjs";
@@ -15,6 +16,7 @@ import { prependJobHistory } from "@/lib/job-history.mjs";
 import { SHIFT_LIMIT, shiftSummary, stepperText, transposeStepper } from "@/lib/transpose-control.mjs";
 import { readGuideDismissed, shouldAutoOpenGuide, writeGuideDismissed } from "@/lib/guide-visibility.mjs";
 
+const IS_TOSS = process.env.NEXT_PUBLIC_APP_TARGET === "toss";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const RENDER_CACHE_LIMIT = 5;
@@ -160,6 +162,7 @@ export default function Home() {
   // First visit: open the guide once on the home page until "Don't show again".
   // Storage is read only after mount, so server and first client render match.
   useEffect(() => {
+    if (IS_TOSS) { setLogoIntroReady(true); return; }
     const stored = readGuideDismissed(() => window.localStorage);
     if (shouldAutoOpenGuide({ storedValue: stored, pathname: window.location.pathname, hasFile: false })) {
       setGuideOpen(true);
@@ -427,6 +430,7 @@ export default function Home() {
   };
 
   const saveToLocalHistory = (title: string, origKey: string | null, tgtKey: string | null, semi: number) => {
+    if (IS_TOSS) return;
     try {
       const entry = {
         id: crypto.randomUUID(),
@@ -531,6 +535,12 @@ export default function Home() {
     if (showOriginal) return;
     if (!activeResult) return;
     const filename = pngDownloadName(activeTab, file?.name);
+    if (IS_TOSS) {
+      void import('@apps-in-toss/web-framework').then(async ({ File: TossFile }) => {
+        await TossFile.saveBase64({ data: activeResult.split(',')[1], fileName: filename, mimeType: 'image/png' });
+      }).catch(() => setError(lang === 'ko' ? '이미지를 저장하지 못했어요. 다시 시도해 주세요.' : 'Could not save the image. Please try again.'));
+      return;
+    }
     // Decoded synchronously so navigator.share still has the tap's user activation.
     const blob = dataUrlToBlob(activeResult);
     const pngFile = new File([blob], filename, { type: "image/png" });
@@ -589,6 +599,14 @@ export default function Home() {
     if (fileInputRef.current) fileInputRef.current.value = "";
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  useTossBack(() => {
+    if (saveOverlayUrl) { closeSaveOverlay(); return true; }
+    if (guideOpen) { closeGuide(); return true; }
+    if (menuOpen) { setMenuOpen(false); return true; }
+    if (file) { clearFile(); return true; }
+    return false;
+  });
 
   const applySemitoneShift = async (value: number, limit: number = SHIFT_LIMIT) => {
     const next = Math.max(-limit, Math.min(limit, value));
@@ -691,7 +709,7 @@ export default function Home() {
   const previewSrc = showOriginal ? originalImageUrl : activeResult;
 
   // Shared by the desktop result card and the mobile sheet.
-  const addModeOverlays = (
+  const addModeOverlays = !IS_TOSS && (
     <>
       {/* Ghost bbox preview — snaps to nearest detected chord row */}
       {!showOriginal && addModeActive && snapRow && hoverImgPos && imgNaturalSize && (
@@ -745,6 +763,12 @@ export default function Home() {
         {/* Everything above the footer, so the footer sits at the natural bottom. */}
         <div className="page-main">
 
+          {IS_TOSS && <div className="toss-toolbar">
+            <button type="button" onClick={() => setGuideOpen(true)}>{t.guide}</button>
+            {file && <button type="button" onClick={() => fileInputRef.current?.click()}>{t.mUploadAnother}</button>}
+            <LangToggle />
+          </div>}
+          {!IS_TOSS && <>
           {/* Nav */}
           <nav className="d-only fixed-top" style={{
             zIndex: 100,
@@ -802,6 +826,8 @@ export default function Home() {
             )}
           </nav>
 
+          </>}
+
           {/* Hamburger backdrop + side panel */}
           <div className={`hamburger-backdrop${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen(false)} />
           <div className={`hamburger-menu${menuOpen ? " open" : ""}`} ref={menuRef}>
@@ -816,10 +842,10 @@ export default function Home() {
             </div>
             {/* Links */}
             <nav style={{ padding: "8px 0" }}>
-              <Link href="/history" onClick={() => setMenuOpen(false)}
+              {!IS_TOSS && <Link href="/history" onClick={() => setMenuOpen(false)}
                 style={{ display: "block", padding: "14px 24px", fontSize: "0.9rem", fontWeight: 600, color: "#1a1a2e", textDecoration: "none" }}>
                 {t.myJobs}
-              </Link>
+              </Link>}
               <button
                 onClick={() => { setMenuOpen(false); setGuideOpen(true); }}
                 style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: "14px 24px", fontSize: "0.9rem", fontWeight: 600, color: "#1a1a2e" }}>
@@ -986,11 +1012,11 @@ export default function Home() {
                       alt={mobileSheetSrc === originalImageUrl ? t.originalSheetAlt : t.renderedSheetAlt(activeTab)}
                       style={{ cursor: addModeActive && !showOriginal ? "crosshair" : "default" }}
                       onLoad={e => setImgNaturalSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
-                      onClick={handleImageClick}
-                      onMouseMove={handleImageMouseMove}
-                      onMouseLeave={handleImageMouseLeave}
-                      onTouchMove={handleImageTouchMove}
-                      onTouchEnd={handleImageTouchEnd}
+                      onClick={IS_TOSS ? undefined : handleImageClick}
+                      onMouseMove={IS_TOSS ? undefined : handleImageMouseMove}
+                      onMouseLeave={IS_TOSS ? undefined : handleImageMouseLeave}
+                      onTouchMove={IS_TOSS ? undefined : handleImageTouchMove}
+                      onTouchEnd={IS_TOSS ? undefined : handleImageTouchEnd}
                     />
                   )}
                   {chosen && addModeOverlays}
@@ -1127,7 +1153,7 @@ export default function Home() {
 
           {/* Result section */}
           {(replaceResult || aboveResult) && (
-            <div ref={resultRef} className="result-wrap" style={{ maxWidth: 720, margin: "32px auto 48px", padding: "0 20px" }}>
+            <div ref={resultRef} className={IS_TOSS ? "result-wrap d-only" : "result-wrap"} style={{ maxWidth: 720, margin: "32px auto 48px", padding: "0 20px" }}>
               <div className="result-card" style={{ background: "rgba(230, 226, 219, 0.5)", borderRadius: 18, padding: "20px 20px 20px", border: "1px solid rgba(0,0,0,0.05)" }}>
                 {/* Replace / Above toggle */}
                 <div className="d-only" style={{ display: "flex", gap: 6, marginBottom: 16, background: "rgba(0,0,0,0.04)", borderRadius: 10, padding: 4 }}>
@@ -1172,18 +1198,18 @@ export default function Home() {
                       alt={showOriginal ? t.originalSheetAlt : t.renderedSheetAlt(activeTab)}
                       style={{ width: "100%", display: "block", cursor: addModeActive && !showOriginal ? "crosshair" : "default" }}
                       onLoad={e => setImgNaturalSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
-                      onClick={handleImageClick}
-                      onMouseMove={handleImageMouseMove}
-                      onMouseLeave={handleImageMouseLeave}
-                      onTouchMove={handleImageTouchMove}
-                      onTouchEnd={handleImageTouchEnd}
+                      onClick={IS_TOSS ? undefined : handleImageClick}
+                      onMouseMove={IS_TOSS ? undefined : handleImageMouseMove}
+                      onMouseLeave={IS_TOSS ? undefined : handleImageMouseLeave}
+                      onTouchMove={IS_TOSS ? undefined : handleImageTouchMove}
+                      onTouchEnd={IS_TOSS ? undefined : handleImageTouchEnd}
                     />
                   )}
                   {addModeOverlays}
                 </div>
 
                 {/* Chord position modal */}
-                {pendingPosition && (
+                {!IS_TOSS && pendingPosition && (
                   <div style={{
                     position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
                     background: "white", borderRadius: 12, padding: "20px 24px",
@@ -1233,7 +1259,7 @@ export default function Home() {
                 </button>
 
                 {/* Chord editor */}
-                {!showOriginal && editableChords.length > 0 && (
+                {!IS_TOSS && !showOriginal && editableChords.length > 0 && (
                   <div className="chord-editor" style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(0,0,0,0.07)" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                       <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "#695c42", letterSpacing: "0.1em", textTransform: "uppercase" }}>

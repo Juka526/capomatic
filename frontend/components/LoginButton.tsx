@@ -25,6 +25,8 @@ export default function LoginButton() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
+  if (process.env.NEXT_PUBLIC_APP_TARGET === 'toss') return null;
+
   if (isLoading) {
     return <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#e0dcd0' }} />;
   }

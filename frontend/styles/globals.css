@@ -432,3 +432,17 @@ html {
   .site-footer-links { flex-wrap: nowrap; gap: 4px; }
   .site-footer-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; font-size: 0.74rem; }
 }
+
+/* The SDK owns navigation; this toolbar contains only page actions. */
+html[data-app-target="toss"] {
+  color-scheme: only light;
+  --topbar-h: 0px;
+}
+.toss-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+}
+.toss-toolbar button { font-size: 0.85rem; color: #665e54; }

@@ -1,3 +1,5 @@
+import { useRouter } from 'next/router';
+import { useTossBack } from '@/lib/toss';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useLang, LangToggle } from '@/components/LangProvider';
@@ -11,22 +13,25 @@ interface LegalPageProps {
 }
 
 export default function LegalPage({ title, sections }: LegalPageProps) {
+  const isToss = process.env.NEXT_PUBLIC_APP_TARGET === 'toss';
+  const router = useRouter();
+  useTossBack(() => { void router.replace('/'); return true; });
   const { lang } = useLang();
   const activeTitle = title[lang];
   return (
     <>
       <Head>
-        <title>{activeTitle} - Capomatic</title>
+        <title>{`${activeTitle} - Capomatic`}</title>
         <meta name="robots" content="index,follow" />
       </Head>
       <div className="with-bars" style={{ minHeight: '100vh', background: '#F5EDD8', color: '#252525' }}>
-        <nav className="fixed-top" style={{ zIndex: 100, height: 'calc(52px + env(safe-area-inset-top, 0px))', padding: 'env(safe-area-inset-top, 0px) 20px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F5EDD8', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
+        {isToss ? <div className="toss-toolbar"><LangToggle /></div> : <nav className="fixed-top" style={{ zIndex: 100, height: 'calc(52px + env(safe-area-inset-top, 0px))', padding: 'env(safe-area-inset-top, 0px) 20px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F5EDD8', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
           <Link href="/" style={{ display: 'flex', textDecoration: 'none' }}><Wordmark height={22} /></Link>
           <LangToggle />
-        </nav>
+        </nav>}
         <main style={{ maxWidth: 760, margin: '0 auto', padding: '40px 20px 64px', lineHeight: 1.7 }}>
           <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(1.8rem, 6vw, 2.6rem)' }}>{activeTitle}</h1>
-          <p style={{ margin: '0 0 36px', color: '#665e54', fontSize: '0.85rem' }}>2026-09-16</p>
+          <p style={{ margin: '0 0 36px', color: '#665e54', fontSize: '0.85rem' }}>{isToss ? '2026-10-06' : '2026-09-16'}</p>
           {sections[lang].map((section) => (
             <section key={section.heading} style={{ marginBottom: 28 }}>
               <h2 style={{ fontSize: '1.08rem', marginBottom: 8 }}>{section.heading}</h2>
@@ -35,6 +40,7 @@ export default function LegalPage({ title, sections }: LegalPageProps) {
               ))}
             </section>
           ))}
+          {!isToss && <>
           <p style={{ marginTop: 32, fontSize: '0.9rem' }}>
             <a
               href="https://github.com/Juka526/capomatic/issues"
@@ -48,6 +54,8 @@ export default function LegalPage({ title, sections }: LegalPageProps) {
           <p style={{ marginTop: 40 }}>
             <Link href="/" style={{ color: '#b44a00', fontWeight: 700 }}>← Capomatic</Link>
           </p>
+          </>}
+          {isToss && <p>{lang === 'ko' ? '문의는 상단 더보기 메뉴의 문의하기를 이용해 주세요.' : 'For support, use Contact in the top More menu.'}</p>}
         </main>
       </div>
     </>

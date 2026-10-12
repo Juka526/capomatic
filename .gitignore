@@ -18,3 +18,7 @@ fixtures/images/*
 output.png
 outputs/
 tmp/
+
+# Apps in Toss static export and local bundle artifacts
+frontend/out/
+*.ait

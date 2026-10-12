@@ -3,15 +3,15 @@
  * Handles authentication, token management, and user info.
  * When Auth0 env vars are absent (local dev), all auth functions are no-ops.
  */
-import { Auth0Client } from '@auth0/auth0-spa-js';
+import type { Auth0Client } from '@auth0/auth0-spa-js';
 import { normalizeReturnTo } from './safe-return-to.mjs';
 
 const _domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN;
 const _clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID;
 
 // Initialize Auth0 client only when env vars are present.
-export const auth0Client: Auth0Client | null = (_domain && _clientId)
-  ? new Auth0Client({
+export const auth0Client: Auth0Client | null = (process.env.NEXT_PUBLIC_APP_TARGET !== 'toss' && _domain && _clientId)
+  ? new (require('@auth0/auth0-spa-js').Auth0Client)({
       domain: _domain,
       clientId: _clientId,
       authorizationParams: {
