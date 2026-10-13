@@ -431,4 +431,6 @@ html {
   .site-footer-tagline { display: none; }
   .site-footer-links { flex-wrap: nowrap; gap: 4px; }
   .site-footer-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; font-size: 0.74rem; }
+  /* The optional support link moves into the menu, styled like the footer links. */
+  .support-menu-link { display: flex; align-items: center; min-height: 44px; padding: 0 24px; font-size: 0.74rem; color: #665e54; }
 }
