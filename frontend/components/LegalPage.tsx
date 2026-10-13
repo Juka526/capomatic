@@ -8,9 +8,10 @@ type Section = { heading: string; paragraphs: string[] };
 interface LegalPageProps {
   title: { ko: string; en: string };
   sections: { ko: Section[]; en: Section[] };
+  updated?: string;
 }
 
-export default function LegalPage({ title, sections }: LegalPageProps) {
+export default function LegalPage({ title, sections, updated = '2026-09-16' }: LegalPageProps) {
   const { lang } = useLang();
   const activeTitle = title[lang];
   return (
@@ -26,7 +27,7 @@ export default function LegalPage({ title, sections }: LegalPageProps) {
         </nav>
         <main style={{ maxWidth: 760, margin: '0 auto', padding: '40px 20px 64px', lineHeight: 1.7 }}>
           <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(1.8rem, 6vw, 2.6rem)' }}>{activeTitle}</h1>
-          <p style={{ margin: '0 0 36px', color: '#665e54', fontSize: '0.85rem' }}>2026-09-16</p>
+          <p style={{ margin: '0 0 36px', color: '#665e54', fontSize: '0.85rem' }}>{updated}</p>
           {sections[lang].map((section) => (
             <section key={section.heading} style={{ marginBottom: 28 }}>
               <h2 style={{ fontSize: '1.08rem', marginBottom: 8 }}>{section.heading}</h2>
