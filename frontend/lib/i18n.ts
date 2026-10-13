@@ -100,6 +100,12 @@ export const translations = {
     terms: '이용약관',
     support: '☕ 개발자에게 커피 한 잔',
     supportAria: '개발자에게 커피 한 잔 (새 탭에서 열림)',
+    supportQrAria: '개발자에게 커피 한 잔 (QR 코드 보기)',
+    supportQrLabel: '송금 링크 QR 코드',
+    supportQrHelp: '휴대폰 카메라로 QR을 찍으면 송금 화면이 열려요',
+    supportOpenHere: '이 기기에서 링크 열기',
+    supportOpenHereAria: '이 기기에서 링크 열기 (새 탭에서 열림)',
+    supportClose: '닫기',
 
     // History
     historyTitle: '내 작업',
@@ -239,6 +245,12 @@ export const translations = {
     terms: 'Terms',
     support: '☕ Buy the developer a coffee',
     supportAria: 'Buy the developer a coffee (opens in a new tab)',
+    supportQrAria: 'Buy the developer a coffee (show QR code)',
+    supportQrLabel: 'QR code for the transfer link',
+    supportQrHelp: 'Scan with your phone camera to open the transfer page',
+    supportOpenHere: 'Open the link on this device',
+    supportOpenHereAria: 'Open the link on this device (opens in a new tab)',
+    supportClose: 'Close',
 
     // History
     historyTitle: 'My Jobs',

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
 import { Upload, Download, Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import Head from "next/head";
 import Link from "next/link";
@@ -18,6 +18,7 @@ import { supportUrl } from "@/lib/support-link.mjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const SUPPORT_URL = supportUrl(process.env.NEXT_PUBLIC_SUPPORT_URL, process.env.NEXT_PUBLIC_APP_TARGET);
+const SupportModal = lazy(() => import('@/components/SupportModal'));
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const RENDER_CACHE_LIMIT = 5;
 // Same breakpoint as styles/globals.css; everything mobile-only keys off it.
@@ -119,6 +120,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const supportButtonRef = useRef<HTMLButtonElement>(null);
   const [logoIntroReady, setLogoIntroReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
@@ -1370,13 +1373,20 @@ export default function Home() {
             <Link href="/privacy" className="site-footer-link">{t.privacy}</Link>
             <Link href="/terms" className="site-footer-link">{t.terms}</Link>
             {SUPPORT_URL && (
-              <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" aria-label={t.supportAria}
-                className="site-footer-link support-link d-only">
+              <button ref={supportButtonRef} type="button" onClick={() => setSupportOpen(true)}
+                aria-haspopup="dialog" aria-expanded={supportOpen} aria-label={t.supportQrAria}
+                className="site-footer-link support-link support-footer-button d-only">
                 {t.support}
-              </a>
+              </button>
             )}
           </div>
         </footer>
+
+        {SUPPORT_URL && supportOpen && (
+          <Suspense fallback={null}>
+            <SupportModal url={SUPPORT_URL} onClose={() => setSupportOpen(false)} triggerRef={supportButtonRef} />
+          </Suspense>
+        )}
 
         <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
 
