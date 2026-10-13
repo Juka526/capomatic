@@ -39,6 +39,8 @@ html {
 .site-footer-links { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .site-footer-tagline { font-size: 0.7rem; color: #666; font-weight: 500; }
 .site-footer-link { font-size: 0.7rem; color: #665e54; }
+/* 표준지침 제20조: the privacy policy link must stand out from the other notices. */
+.privacy-link { font-weight: 700; }
 .support-footer-button { padding: 0; border: 0; background: none; font-family: inherit; line-height: inherit; cursor: pointer; }
 
 .support-backdrop {

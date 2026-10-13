@@ -96,7 +96,7 @@ export const translations = {
 
     // Footer
     footerTagline: '코드 악보 변환기 & 카포 도구',
-    privacy: '개인정보 처리 안내',
+    privacy: '개인정보 처리방침',
     terms: '이용약관',
     support: '☕ 개발자에게 커피 한 잔',
     supportAria: '개발자에게 커피 한 잔 (새 탭에서 열림)',
@@ -241,7 +241,7 @@ export const translations = {
 
     // Footer
     footerTagline: 'Chord Sheet Transposer & Capo Tool',
-    privacy: 'Privacy',
+    privacy: 'Privacy Policy',
     terms: 'Terms',
     support: '☕ Buy the developer a coffee',
     supportAria: 'Buy the developer a coffee (opens in a new tab)',
