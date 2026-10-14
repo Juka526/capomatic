@@ -1370,7 +1370,7 @@ export default function Home() {
           <Wordmark height={15} introReady={false} />
           <div className="site-footer-links">
             <span className="site-footer-tagline">{t.footerTagline}</span>
-            <Link href="/privacy" className="site-footer-link">{t.privacy}</Link>
+            <Link href="/privacy" className="site-footer-link privacy-link">{t.privacy}</Link>
             <Link href="/terms" className="site-footer-link">{t.terms}</Link>
             {SUPPORT_URL && (
               <button ref={supportButtonRef} type="button" onClick={() => setSupportOpen(true)}
