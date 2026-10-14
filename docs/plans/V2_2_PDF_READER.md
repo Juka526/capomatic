@@ -1,6 +1,6 @@
 # V2-2: PDF transposition and tablet reader
 
-Status: PLAN ONLY; development and release are not approved. Issue: [#56](https://github.com/Juka526/capomatic/issues/56). Base: `3929ed86a96d156377649c55714a45eb9c23d719` (`origin/main`, 2026-10-14).
+Status: PLAN APPROVED (owner: "모든 작업 승인", 2026-10-14). P1 core is implemented and independently tested; later slices are underway. Release/deployment remains unapproved. Issue: [#56](https://github.com/Juka526/capomatic/issues/56). Base: `3929ed86a96d156377649c55714a45eb9c23d719` (`origin/main`, 2026-10-14).
 
 Understood as: transpose chord symbols across a PDF, let the user choose file/song/page scope, export a PDF, and add a separate tablet reader with device-local handwriting and optional on-device wink navigation. Melody transposition belongs to cm3 and must not be implied by this feature.
 
@@ -156,3 +156,7 @@ Independent reviewer: `cm2-test`, Claude Opus 5.5, through Herdr Roundtrip. Fina
 | CI | SKIPPED by plan-only `[skip ci]`; current smoke fixture is refused material. Required implementation checks remain pending. |
 
 Recovery command: `herdr agent read cm2-test --source recent-unwrapped --lines 240`. Result: matching final return markers, no remaining publication blockers, and explicit NOT RUN limitations. Review sources and package LICENSE URLs are listed above.
+
+Approved P1 evidence: [V2_2_P1_REPORT.md](V2_2_P1_REPORT.md). Flattened export preserves effective displayed size/orientation with `/Rotate=0`; it streams lossless RGB pages with every append bounded.
+
+Additional R2 source check (2026-10-14): the [official BlazeFace short-range model card](https://storage.googleapis.com/mediapipe-assets/MediaPipe%20BlazeFace%20Model%20Card%20%28Short%20Range%29.pdf) states Apache-2.0; verify its relationship to the exact task-bundle bytes before clearing the bundle. The [official MediaPipe privacy notice](https://developers.google.com/edge/mediapipe/solutions/tasks#mediapipe_tasks_privacy_notice) distinguishes device-local inputs from performance/utilization metrics sent to Google. Thus self-hosting assets alone does not establish zero SDK telemetry. The [upstream maintainer discussion](https://github.com/google-ai-edge/mediapipe/issues/6306) permits blocking telemetry destinations; exact 1.0.1 behavior and bundled notices remain entry checks. Require an enforced no-external-telemetry runtime boundary and T5-calibrated network tests, or keep wink on HOLD. If metrics were ever permitted instead, privacy §§2, 8 and 9 would need a separately approved recipient/data/transfer review before activation. No new consent or external telemetry flow is authorized by default. Owner has iPadOS 18.1 for later physical-device testing; current/prior supported-major coverage remains pending.
