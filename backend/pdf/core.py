@@ -176,7 +176,7 @@ def export_raster_pdf(pages: Iterable[tuple[PageInfo, Image.Image]]) -> bytes:
     if isinstance(pages, Sized) and not 0 < len(pages) <= MAX_PAGES:
         raise PdfError("pdf_bad_page_count")
     out = io.BytesIO()
-    out.write(b"%PDF-1.4\n")
+    _put(out, b"%PDF-1.4\n")
     offsets: dict[int, int] = {}
     it = iter(pages)
     try:
@@ -198,11 +198,10 @@ def export_raster_pdf(pages: Iterable[tuple[PageInfo, Image.Image]]) -> bytes:
     _write_obj(out, offsets, 1, b"<</Type/Catalog/Pages 2 0 R>>")
     xref = out.tell()
     size = 3 + 3 * n
-    out.write(f"xref\n0 {size}\n0000000000 65535 f \n".encode())
+    _put(out, f"xref\n0 {size}\n0000000000 65535 f \n".encode())
     for i in range(1, size):
-        out.write(f"{offsets[i]:010d} 00000 n \n".encode())
-    out.write(f"trailer<</Size {size}/Root 1 0 R>>\nstartxref\n{xref}\n%%EOF\n".encode())
-    _check_budget(out.tell())
+        _put(out, f"{offsets[i]:010d} 00000 n \n".encode())
+    _put(out, f"trailer<</Size {size}/Root 1 0 R>>\nstartxref\n{xref}\n%%EOF\n".encode())
     return out.getvalue()
 
 
@@ -211,13 +210,19 @@ def _check_budget(size: int) -> None:
         raise PdfError("pdf_result_too_large")
 
 
+def _put(out: io.BytesIO, data: bytes) -> None:
+    """The only way bytes enter the output: refuse before the write, not after."""
+    _check_budget(out.tell() + len(data))
+    out.write(data)
+
+
 def _num(x: float) -> str:
     return f"{x:.6f}".rstrip("0").rstrip(".")
 
 
 def _write_obj(out: io.BytesIO, offsets: dict[int, int], num: int, body: bytes) -> None:
     offsets[num] = out.tell()
-    out.write(b"%d 0 obj\n%s\nendobj\n" % (num, body))
+    _put(out, b"%d 0 obj\n%s\nendobj\n" % (num, body))
 
 
 def _write_page(out: io.BytesIO, offsets: dict[int, int], n: int, info: PageInfo, img: Image.Image) -> None:
@@ -247,8 +252,8 @@ def _write_page(out: io.BytesIO, offsets: dict[int, int], n: int, info: PageInfo
     cs = f"q {w} 0 0 {h} 0 0 cm /Im0 Do Q".encode()
     _write_obj(out, offsets, content, b"<</Length %d>>\nstream\n%s\nendstream" % (len(cs), cs))
     offsets[image] = out.tell()
-    out.write((f"{image} 0 obj\n<</Type/XObject/Subtype/Image/Width {img.width}/Height {img.height}"
+    _put(out, (f"{image} 0 obj\n<</Type/XObject/Subtype/Image/Width {img.width}/Height {img.height}"
                f"/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/FlateDecode/Length {size}>>\nstream\n").encode())
     for c in chunks:
-        out.write(c)
-    out.write(b"\nendstream\nendobj\n")
+        _put(out, c)
+    _put(out, b"\nendstream\nendobj\n")
