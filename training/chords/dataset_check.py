@@ -35,6 +35,7 @@ TRUTH_ROOTS = ("data/chord-ocr/",)
 FONT_ROOTS = ("training/chords/fonts/",)
 STR_KEYS = ("id", "path", "sha256", "split", "kind", "family", "source", "license", "rights_holder",
             "composer", "allowable_use")
+MAX_PAGE_PIXELS = 50_000_000  # same bound as the API upload limit
 SHA_RE = re.compile(r"[0-9a-f]{64}")
 
 
@@ -78,12 +79,16 @@ def _file(rel: object, want: object, roots: tuple[str, ...], errs: list[str], ct
 
 
 def _image_size(p: Path) -> tuple[int, int] | None:
-    try:
-        from PIL import Image  # noqa: PLC0415
+    """Fully decode the page (header-only is not enough); None on any failure."""
+    from PIL import Image  # noqa: PLC0415
 
+    try:
         with Image.open(io.BytesIO(p.read_bytes())) as im:
+            if im.width < 1 or im.height < 1 or im.width * im.height > MAX_PAGE_PIXELS:
+                return None  # bound checked before pixel allocation
+            im.load()
             return im.size
-    except Exception:  # noqa: BLE001  ponytail: undecodable bytes skip the bounds check (tests use stub pages); real pages must decode in the label tool
+    except (OSError, ValueError, SyntaxError, Image.DecompressionBombError):  # incl. UnidentifiedImageError, truncated data
         return None
 
 
@@ -118,10 +123,13 @@ def _truth(item: dict, page: Path, authors: set, errs: list[str], ctx: str) -> t
         errs.append(f"E_TRUTH_SHAPE {ctx}")
         return None
     size = _image_size(page)
+    if size is None:
+        errs.append(f"E_IMAGE {ctx}")
+        return None
     last = -math.inf
     for sy in systems:  # sorted, non-overlapping vertical extents
         y0, y1 = (sy.get("y0"), sy.get("y1")) if isinstance(sy, dict) else (None, None)
-        if not (_num(y0) and _num(y1) and 0 <= y0 < y1 and y0 >= last and (size is None or y1 <= size[1])):
+        if not (_num(y0) and _num(y1) and 0 <= y0 < y1 and y0 >= last and y1 <= size[1]):
             errs.append(f"E_SYSTEM {ctx}")
             break
         last = y1
@@ -130,7 +138,7 @@ def _truth(item: dict, page: Path, authors: set, errs: list[str], ctx: str) -> t
         b = c.get("bbox") if isinstance(c, dict) else None
         good = (isinstance(c, dict) and isinstance(c.get("text"), str) and c["text"].strip()
                 and isinstance(b, list) and len(b) == 4 and all(_num(v) for v in b)
-                and 0 <= b[0] < b[2] and 0 <= b[1] < b[3] and (size is None or (b[2] <= size[0] and b[3] <= size[1]))
+                and 0 <= b[0] < b[2] and 0 <= b[1] < b[3] and b[2] <= size[0] and b[3] <= size[1]
                 and _int(c.get("system")) and 0 <= c["system"] < len(systems))
         key = (c["text"], tuple(b), c["system"]) if good else None
         if not good or key in seen:
@@ -244,10 +252,12 @@ def selftest() -> None:
     import shutil
     import tempfile
 
+    from PIL import Image  # noqa: PLC0415
+
     (ROOT / "data/chord-ocr").mkdir(parents=True, exist_ok=True)  # inside a data root: path policy rejects elsewhere
     tmp = Path(tempfile.mkdtemp(prefix="selftest-", dir=ROOT / "data/chord-ocr"))
     img = tmp / "p.png"
-    img.write_bytes(b"page")
+    Image.new("RGB", (50, 50), "white").save(img)
     truth = {"image_sha256": _sha(img), "readers": ["r1", "r2"], "staff_systems": [{"y0": 0, "y1": 9}],
              "chords": [{"text": "G", "bbox": [0, 0, 1, 1], "system": 0}]}
     tp = tmp / "t.json"
@@ -271,6 +281,8 @@ def selftest() -> None:
         assert run(**bad), bad
     tp.write_text(json.dumps({**truth, "readers": ["r1", "gen"]}))
     assert run(truth={"path": rel(tp), "sha256": _sha(tp)}), "author-reader accepted"
+    img.write_bytes(img.read_bytes()[:-20])  # truncated PNG must fail, never READY
+    assert run(sha256=_sha(img)), "truncated page accepted"
     assert check(tmp / "absent.json")[0], "missing manifest must fail"
     shutil.rmtree(tmp)
     for d in (ROOT / "data/chord-ocr", ROOT / "data"):
