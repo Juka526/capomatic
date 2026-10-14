@@ -12,4 +12,4 @@ Contracts for cm2 adapters: `backend/omr/intent.py` (capo vs key_change, 422 via
 
 Fixtures with refused or unknown rights (GIFTED, 친구야/hey_buddy, user uploads) must not be used.
 
-Machine checks verify shapes, hashes against real file bytes (repo-relative paths only; symlink escapes, `.env`/secret names refused) and role disjointness. They cannot prove rights are genuinely cleared or humans independent; that needs independent review. Cleared register entries carry `license_file`/`asset_file`; the CLI requires them (library default does not).
+Machine checks verify shapes, hashes against real file bytes (repo-relative paths only; symlink escapes, `.env`/secret names refused) and role disjointness. They cannot prove rights are genuinely cleared or humans independent; that needs independent review. Cleared register entries carry `license_file`/`asset_file`; their bytes are always verified in every entry point (no opt-out).

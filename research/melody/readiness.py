@@ -71,7 +71,8 @@ def _bytes_match(root: Path, rel, want) -> bool:
     return p is not None and _ok_hash(want) and file_sha(p) == want
 
 
-def check_register(reg, root: Path = ROOT, extra=(), strict_files=False) -> list[str]:
+# strict_files is accepted for old callers and IGNORED: file bytes are always verified.
+def check_register(reg, root: Path = ROOT, extra=(), strict_files=True) -> list[str]:
     out = []
     entries = reg.get("entries") if isinstance(reg, dict) else None
     if not isinstance(entries, list) or not entries or not all(isinstance(e, dict) for e in entries):
@@ -97,8 +98,6 @@ def check_register(reg, root: Path = ROOT, extra=(), strict_files=False) -> list
             if not _ok_hash(e.get(k)):
                 out.append(f"asset {i}: {k} missing or malformed")
         for f, k in (("license_file", "license_sha256"), ("asset_file", "asset_sha256")):
-            if e.get(f) is None and not strict_files:
-                continue
             if not _bytes_match(root, e.get(f), e.get(k)):
                 out.append(f"asset {i}: {f} missing, unsafe or bytes do not match {k}")
     return out
@@ -243,10 +242,10 @@ def engine_assets(lock) -> tuple[list[str], list[str]]:
     return need, bad
 
 
-def readiness(reg, lock, root: Path = ROOT, strict_files=False) -> list[str]:
+def readiness(reg, lock, root: Path = ROOT, strict_files=True) -> list[str]:
     need, bad = engine_assets(lock) if lock is not None else ([], [])
     try:
-        problems = check_register(reg, root, need, strict_files) + bad
+        problems = check_register(reg, root, need) + bad
         problems += ["lock_a.json missing"] if lock is None else check_lock(lock, root)
     except (TypeError, KeyError, AttributeError, ValueError, OSError):
         problems = ["malformed input"]  # fail closed, no details (they could echo content)
