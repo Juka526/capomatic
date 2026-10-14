@@ -10,9 +10,12 @@ Errors carry a fixed ``code`` only: no filenames, parser messages or content.
 import io
 import math
 import threading
+import zlib
+from collections.abc import Iterable, Sized
 from dataclasses import dataclass
 
 import pypdfium2 as pdfium
+import pypdfium2.raw as pdfium_c
 from PIL import Image
 
 MAX_PDF_BYTES = 20 * 1024 * 1024
@@ -59,15 +62,21 @@ def _open(data: bytes) -> pdfium.PdfDocument:
         raise PdfError("pdf_empty")
     if len(data) > MAX_PDF_BYTES:
         raise PdfError("pdf_too_large")
+    # FPDF_GetLastError is process-global and not reset by a successful load;
+    # a failed load of garbage deterministically sets it to "format error".
+    try:
+        pdfium.PdfDocument(b"x")
+    except pdfium.PdfiumError:
+        pass
     try:
         doc = pdfium.PdfDocument(data)
     except pdfium.PdfiumError as exc:
-        # FPDF_GetLastError is process-global and can be stale after a load
-        # that sets no error, so also require the /Encrypt trailer key.
-        encrypted = exc.err_code == _ERR_PASSWORD and b"/Encrypt" in data
-        code = "pdf_encrypted" if encrypted else "pdf_corrupt"
-        raise PdfError(code) from None
+        raise PdfError("pdf_encrypted" if exc.err_code == _ERR_PASSWORD else "pdf_corrupt") from None
     try:
+        # Policy: reject every encrypted file, incl. owner-password-only ones
+        # that open with an empty user password. -1 = no security handler.
+        if pdfium_c.FPDF_GetSecurityHandlerRevision(doc) != -1:
+            raise PdfError("pdf_encrypted")
         n = len(doc)
         if n == 0:
             raise PdfError("pdf_empty")
@@ -104,19 +113,29 @@ def inspect_pdf(data: bytes) -> list[PageInfo]:
             doc.close()
 
 
-def raster_scale(info: PageInfo, scale: float | None = None) -> float:
-    """Scale for ``info``; checked against the pixel limit before any allocation.
+def _pixels(info: PageInfo, scale: float) -> float:
+    """Pixels PDFium will allocate: it rounds each dimension up."""
+    try:
+        return math.ceil(info.width_pt * scale) * math.ceil(info.height_pt * scale)
+    except (OverflowError, ValueError):
+        return math.inf
 
-    ``None`` -> DEFAULT_SCALE, reduced to fit MAX_RASTER_PIXELS. An explicit
-    scale over the limit is rejected, not silently reduced.
+
+def raster_scale(info: PageInfo, scale: float | None = None) -> float:
+    """Scale for ``info``; the exact ceil(w*s)*ceil(h*s) is checked before any allocation.
+
+    ``None`` -> DEFAULT_SCALE, reduced until it fits MAX_RASTER_PIXELS (rejected
+    below MIN_SCALE). An explicit scale over the limit is rejected, not reduced.
     """
-    area = info.width_pt * info.height_pt
-    if scale is None:
-        scale = min(DEFAULT_SCALE, 0.995 * math.sqrt(MAX_RASTER_PIXELS / area))  # margin: PDFium rounds dims up
+    if scale is not None:
+        if not (math.isfinite(scale) and scale > 0) or _pixels(info, scale) > MAX_RASTER_PIXELS:
+            raise PdfError("pdf_page_too_large")
+        return scale
+    scale = DEFAULT_SCALE
+    while _pixels(info, scale) > MAX_RASTER_PIXELS:
+        scale *= 0.97
         if scale < MIN_SCALE:
             raise PdfError("pdf_page_too_large")
-    elif not (math.isfinite(scale) and scale > 0) or area * scale * scale > MAX_RASTER_PIXELS * 0.99:
-        raise PdfError("pdf_page_too_large")
     return scale
 
 
@@ -144,47 +163,92 @@ def rasterize_page(data: bytes, index: int, scale: float | None = None) -> tuple
             doc.close()
 
 
-def export_raster_pdf(pages: list[tuple[PageInfo, Image.Image]]) -> bytes:
-    """Build a new PDF of one page-sized image per page, in the given order.
+def export_raster_pdf(pages: Iterable[tuple[PageInfo, Image.Image]]) -> bytes:
+    """Write a new PDF of one lossless (Flate, 8-bit RGB) page-sized image per page.
 
-    Nothing is copied from the source file, so links, actions, forms and
-    embedded files cannot carry over. Page size comes from ``PageInfo``.
+    ``pages`` may be a generator: each page is compressed straight into the
+    output and then released, so only one decoded page is live here, and the
+    output is refused the moment it passes MAX_RESULT_BYTES (never grown past
+    it). The PDF is written directly, so no PDFium handle or lock is involved
+    and nothing is copied from the source (no links, actions or files).
+    Memory is bounded by the output budget plus one page's raw bytes.
     """
-    if not 0 < len(pages) <= MAX_PAGES:
+    if isinstance(pages, Sized) and not 0 < len(pages) <= MAX_PAGES:
         raise PdfError("pdf_bad_page_count")
-    for info, img in pages:
-        if img.width * img.height > MAX_RASTER_PIXELS:
-            raise PdfError("pdf_page_too_large")
-        if not (math.isfinite(info.width_pt) and math.isfinite(info.height_pt)
-                and info.width_pt > 0 and info.height_pt > 0):
-            raise PdfError("pdf_bad_page_size")
-    with _PDFIUM_LOCK:
-        out = pdfium.PdfDocument.new()
-        try:
-            for info, img in pages:
-                _add_image_page(out, info, img)
-            buf = io.BytesIO()
-            out.save(buf)
-        except pdfium.PdfiumError:
-            raise PdfError("pdf_export_failed") from None
-        finally:
-            out.close()
-    if buf.tell() > MAX_RESULT_BYTES:
-        raise PdfError("pdf_result_too_large")
-    return buf.getvalue()
-
-
-def _add_image_page(out: pdfium.PdfDocument, info: PageInfo, img: Image.Image) -> None:
-    page = out.new_page(info.width_pt, info.height_pt)
+    out = io.BytesIO()
+    out.write(b"%PDF-1.4\n")
+    offsets: dict[int, int] = {}
+    it = iter(pages)
     try:
-        bitmap = pdfium.PdfBitmap.from_pil(img.convert("RGB"))
-        try:
-            obj = pdfium.PdfImage.new(out)
-            obj.set_bitmap(bitmap)
-            obj.set_matrix(pdfium.PdfMatrix().scale(info.width_pt, info.height_pt))
-            page.insert_obj(obj)
-        finally:
-            bitmap.close()
-        page.gen_content()
+        n = 0
+        for info, img in it:
+            n += 1
+            if n > MAX_PAGES:
+                raise PdfError("pdf_bad_page_count")
+            _write_page(out, offsets, n, info, img)
+            del img
+        if n == 0:
+            raise PdfError("pdf_bad_page_count")
     finally:
-        page.close()
+        close = getattr(it, "close", None)
+        if close:
+            close()
+    kids = " ".join(f"{3 + 3 * i} 0 R" for i in range(n))
+    _write_obj(out, offsets, 2, f"<</Type/Pages/Kids[{kids}]/Count {n}>>".encode())
+    _write_obj(out, offsets, 1, b"<</Type/Catalog/Pages 2 0 R>>")
+    xref = out.tell()
+    size = 3 + 3 * n
+    out.write(f"xref\n0 {size}\n0000000000 65535 f \n".encode())
+    for i in range(1, size):
+        out.write(f"{offsets[i]:010d} 00000 n \n".encode())
+    out.write(f"trailer<</Size {size}/Root 1 0 R>>\nstartxref\n{xref}\n%%EOF\n".encode())
+    _check_budget(out.tell())
+    return out.getvalue()
+
+
+def _check_budget(size: int) -> None:
+    if size > MAX_RESULT_BYTES:
+        raise PdfError("pdf_result_too_large")
+
+
+def _num(x: float) -> str:
+    return f"{x:.6f}".rstrip("0").rstrip(".")
+
+
+def _write_obj(out: io.BytesIO, offsets: dict[int, int], num: int, body: bytes) -> None:
+    offsets[num] = out.tell()
+    out.write(b"%d 0 obj\n%s\nendobj\n" % (num, body))
+
+
+def _write_page(out: io.BytesIO, offsets: dict[int, int], n: int, info: PageInfo, img: Image.Image) -> None:
+    if not (math.isfinite(info.width_pt) and math.isfinite(info.height_pt)
+            and info.width_pt > 0 and info.height_pt > 0):
+        raise PdfError("pdf_bad_page_size")
+    if img.width * img.height > MAX_RASTER_PIXELS:
+        raise PdfError("pdf_page_too_large")
+    w, h = _num(info.width_pt), _num(info.height_pt)
+    page, content, image = 3 * n, 3 * n + 1, 3 * n + 2
+    raw = img.convert("RGB").tobytes()
+    comp = zlib.compressobj(6)
+    chunks, size = [], 0
+    for i in range(0, len(raw), 1 << 20):
+        c = comp.compress(raw[i:i + (1 << 20)])
+        size += len(c)
+        chunks.append(c)
+        _check_budget(out.tell() + size)  # abort during serialization
+    del raw
+    chunks.append(comp.flush())
+    size += len(chunks[-1])
+    _check_budget(out.tell() + size)
+    # Page /Rotate stays 0: the raster is already upright.
+    _write_obj(out, offsets, page, (
+        f"<</Type/Page/Parent 2 0 R/MediaBox[0 0 {w} {h}]/Rotate 0"
+        f"/Resources<</XObject<</Im0 {image} 0 R>>>>/Contents {content} 0 R>>").encode())
+    cs = f"q {w} 0 0 {h} 0 0 cm /Im0 Do Q".encode()
+    _write_obj(out, offsets, content, b"<</Length %d>>\nstream\n%s\nendstream" % (len(cs), cs))
+    offsets[image] = out.tell()
+    out.write((f"{image} 0 obj\n<</Type/XObject/Subtype/Image/Width {img.width}/Height {img.height}"
+               f"/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/FlateDecode/Length {size}>>\nstream\n").encode())
+    for c in chunks:
+        out.write(c)
+    out.write(b"\nendstream\nendobj\n")
