@@ -1,0 +1,269 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Expected-label file for one snippet (written by human readers from the ORIGINAL image, never from model output or product code)",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "source_sha256",
+  "snippet_id",
+  "reader",
+  "key_fifths",
+  "time_signature",
+  "text",
+  "events",
+  "anchors"
+ ],
+ "properties": {
+  "source_sha256": {
+   "type": "string",
+   "pattern": "^[0-9a-f]{64}$"
+  },
+  "snippet_id": {
+   "type": "string",
+   "minLength": 1
+  },
+  "reader": {
+   "type": "string",
+   "minLength": 1,
+   "description": "opaque reader id, must be in roles.labelers"
+  },
+  "key_fifths": {
+   "type": "integer",
+   "minimum": -7,
+   "maximum": 7
+  },
+  "time_signature": {
+   "type": "string",
+   "pattern": "^[1-9][0-9]*/[1-9][0-9]*$"
+  },
+  "systems": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "index",
+     "x_left",
+     "x_right",
+     "line_ys"
+    ],
+    "properties": {
+     "index": {
+      "type": "integer",
+      "minimum": 0
+     },
+     "x_left": {
+      "type": "number",
+      "minimum": 0
+     },
+     "x_right": {
+      "type": "number",
+      "minimum": 0
+     },
+     "line_ys": {
+      "type": "array",
+      "items": {
+       "type": "number",
+       "minimum": 0
+      },
+      "minItems": 5,
+      "maxItems": 5,
+      "description": "strictly increasing (checked by contract)"
+     }
+    }
+   }
+  },
+  "text": {
+   "type": "array",
+   "description": "titles, credits, lyrics as read (Korean NFC)",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "kind",
+     "value",
+     "bbox"
+    ],
+    "properties": {
+     "kind": {
+      "enum": [
+       "title",
+       "credit",
+       "lyric"
+      ]
+     },
+     "value": {
+      "type": "string"
+     },
+     "bbox": {
+      "type": "array",
+      "items": {
+       "type": "number",
+       "minimum": 0
+      },
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "[x1,y1,x2,y2] original pixels, x1<x2,y1<y2 (checked by contract, not expressible here)"
+     }
+    }
+   }
+  },
+  "events": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "system",
+     "measure",
+     "event_index",
+     "onset",
+     "duration",
+     "midi",
+     "step",
+     "alter",
+     "octave",
+     "tie",
+     "bbox"
+    ],
+    "properties": {
+     "system": {
+      "type": "integer",
+      "minimum": 0
+     },
+     "measure": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "pickup = 0"
+     },
+     "event_index": {
+      "type": "integer",
+      "minimum": 0
+     },
+     "onset": {
+      "type": "string",
+      "pattern": "^[0-9]+/[1-9][0-9]*$",
+      "description": "ASCII n/d, d>0"
+     },
+     "duration": {
+      "type": "string",
+      "pattern": "^0*[1-9][0-9]*/[1-9][0-9]*$",
+      "description": "ASCII n/d, n>0, d>0"
+     },
+     "midi": {
+      "type": [
+       "integer",
+       "null"
+      ],
+      "minimum": 0,
+      "maximum": 127,
+      "description": "null = rest"
+     },
+     "step": {
+      "enum": [
+       "A",
+       "B",
+       "C",
+       "D",
+       "E",
+       "F",
+       "G",
+       null
+      ]
+     },
+     "alter": {
+      "type": "integer",
+      "minimum": -2,
+      "maximum": 2
+     },
+     "octave": {
+      "type": [
+       "integer",
+       "null"
+      ],
+      "minimum": -1,
+      "maximum": 9
+     },
+     "tie": {
+      "enum": [
+       null,
+       "start",
+       "stop",
+       "both"
+      ]
+     },
+     "bbox": {
+      "type": "array",
+      "items": {
+       "type": "number",
+       "minimum": 0
+      },
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "[x1,y1,x2,y2] original pixels, x1<x2,y1<y2 (checked by contract, not expressible here)"
+     }
+    }
+   }
+  },
+  "anchors": {
+   "type": "array",
+   "description": "lyric syllable -> event, chord -> beat",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "kind",
+     "event"
+    ],
+    "properties": {
+     "kind": {
+      "enum": [
+       "lyric",
+       "chord"
+      ]
+     },
+     "event": {
+      "type": "array",
+      "items": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "[system, measure, event_index]"
+     },
+     "text": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "expected_transposition": {
+   "type": "array",
+   "description": "hand-calculated by a reviewer, never by backend code",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "semitones",
+     "reviewer",
+     "events"
+    ],
+    "properties": {
+     "semitones": {
+      "type": "integer",
+      "minimum": -11,
+      "maximum": 11
+     },
+     "reviewer": {
+      "type": "string",
+      "minLength": 1
+     },
+     "events": {
+      "type": "array"
+     }
+    }
+   }
+  }
+ }
+}

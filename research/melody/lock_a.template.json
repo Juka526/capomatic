@@ -1,0 +1,55 @@
+{
+ "_doc": "Copy to lock_a.json and fill with REAL values. Every null/empty below is a prerequisite. Lock A = everything here before any experiment; Lock B = lock_b section filled before held-out access. Humans in roles are supplied by the owner, independent of generator/model; ids are opaque.",
+ "locked_at": null,
+ "snippets": [
+  {
+   "id": null,
+   "split": "dev|heldout|control",
+   "source_file": null,
+   "source_sha256": null,
+   "crop_bbox": null,
+   "rights_evidence": null,
+   "labels_sha256": null,
+   "event_count": null,
+   "chord_snapshot_sha256": null,
+   "labels_file": null,
+   "chord_snapshot_file": null,
+   "_paths": "repo-relative files inside the worktree; sha256 must equal the real bytes; env/secret/outside-repo paths are refused"
+  }
+ ],
+ "rejection_cases": [
+  {
+   "id": null,
+   "type": null,
+   "file_sha256": null,
+   "expected_reason": null
+  }
+ ],
+ "thresholds_frozen": false,
+ "alignment_metric": null,
+ "timebox_days": null,
+ "candidate_engines": [],
+ "correction_procedure_sha256": null,
+ "scorer": {
+  "path": "tests/omr/scorer.py",
+  "sha256": null,
+  "reviewer": null
+ },
+ "roles": {
+  "labelers": [],
+  "correctors": [],
+  "raters": [],
+  "developers": [],
+  "heldout_readers": []
+ },
+ "heldout_sealed": null,
+ "lock_b": {
+  "engine": null,
+  "arm": null,
+  "preprocessing_sha256": null,
+  "model_hashes": [],
+  "renderer_font_sha256": null,
+  "scorer_sha256": null,
+  "acceptance_rules_sha256": null
+ }
+}
