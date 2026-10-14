@@ -4,7 +4,8 @@ capo        -> chord shapes shift by -capo_fret; melody and key signature never 
 key_change  -> chords shift by `semitones`; melody shifts only if transpose_notes is true.
 
 The mode is always explicit: the same -2 never selects a mode. Invalid input raises
-IntentError (HTTP 422 for callers). No octave folding: melody pitch is plain addition, and
+IntentError (HTTP 422 for callers) with a FIXED message: it never echoes field names or values,
+because exceptions can reach error reporting. No octave folding: melody pitch is plain addition, and
 out-of-range results are the caller's to reject, never to wrap.
 """
 from dataclasses import dataclass
@@ -38,17 +39,18 @@ class Intent:
 def _int_in(raw: Mapping, key: str, lo: int, hi: int) -> int:
     v = raw.get(key)
     if type(v) is not int:  # rejects bool, float, str, None
-        raise IntentError(f"{key} must be an integer")
+        raise IntentError(f"{key}: integer required")
     if not lo <= v <= hi:
-        raise IntentError(f"{key} must be in {lo}..{hi}")
+        raise IntentError(f"{key}: out of range")
     return v
 
 
 def parse_intent(raw: Mapping) -> Intent:
     """Validate a request-shaped mapping into an Intent."""
-    extra = set(raw) - _FIELDS
-    if extra:
-        raise IntentError(f"unknown fields: {sorted(extra)}")
+    if not isinstance(raw, Mapping):
+        raise IntentError("request must be an object")
+    if set(raw) - _FIELDS:  # set math: safe for mixed-type keys, names never reported
+        raise IntentError("unknown field")
     mode = raw.get("intent")
     if mode == "capo":
         if "semitones" in raw:
@@ -64,7 +66,7 @@ def parse_intent(raw: Mapping) -> Intent:
             raise IntentError("transpose_notes must be an explicit boolean")
         return Intent("key_change", semitones=_int_in(raw, "semitones", -SEMITONE_MAX, SEMITONE_MAX),
                       transpose_notes=notes)
-    raise IntentError("intent must be 'capo' or 'key_change'")
+    raise IntentError("intent: must be capo or key_change")
 
 
 def _selfcheck() -> None:

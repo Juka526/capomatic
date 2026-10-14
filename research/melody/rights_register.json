@@ -1,33 +1,37 @@
 {
  "verified_on": "2026-10-14",
- "rule": "An entry is usable only when status=='cleared' with license_sha256 and asset_sha256 both set (verified against real bytes). Code licence never clears weights/data/fonts.",
+ "rule": "An entry is usable only when status=='cleared' with license_sha256 and asset_sha256 set AND license_file/asset_file (repo-relative, cleared files inside the worktree) whose bytes match. Hashes are machine-checked; that the rights are genuinely cleared remains a human/independent legal assertion. Code licence never clears weights/data/fonts.",
  "entries": [
   {
    "id": "audiveris",
    "name": "Audiveris",
    "pin": "5.11.0 commit 9e1e55cd2746037d059345881c53e6a6754bffbd (tag verified via git ls-remote 2026-10-14)",
    "license": "AGPL-3.0",
-   "license_url": "https://raw.githubusercontent.com/Audiveris/audiveris/5.11.0/LICENSE",
+   "license_url": "https://raw.githubusercontent.com/Audiveris/audiveris/9e1e55cd2746037d059345881c53e6a6754bffbd/LICENSE",
    "license_sha256": "76a97c878c9c7a8321bb395c2b44d3fe2f8d81314d219b20138ed0e2dddd5182",
    "asset": "Linux .deb release asset (not downloaded)",
    "asset_sha256": null,
    "required": true,
    "status": "license_verified_asset_unpinned",
-   "notes": "Local bounded research use only (owner-approved); not hosted adoption. gradle.properties@5.11.0 (sha256 144a40511bd39d4fcd2e468ca9537d7526d49583295b7130b78d43172a5d5ee9): theMinJavaVersion=25, theTessdataTag=4.1.0. Installable binary (.deb) hash not yet pinned; AGPL s13 / Corresponding Source review still needs legal check before any hosting."
+   "notes": "Local bounded research use only (owner-approved); not hosted adoption. gradle.properties@5.11.0 (sha256 144a40511bd39d4fcd2e468ca9537d7526d49583295b7130b78d43172a5d5ee9): theMinJavaVersion=25, theTessdataTag=4.1.0. Installable binary (.deb) hash not yet pinned; AGPL s13 / Corresponding Source review still needs legal check before any hosting.",
+   "license_file": null,
+   "asset_file": null
   },
   {
    "id": "temurin_jre",
    "name": "Temurin JRE",
    "pin": "25.0.4.1+1 OpenJDK25U-jre_x64_linux_hotspot_25.0.4.1_1.tar.gz (jdk25u tag jdk-25.0.4.1+1 -> 7b65d74bcbd7c3a0b4c1f5c5bd85e64aa2e51b4a)",
    "license": "GPL-2.0 with Classpath/Assembly Exception",
-   "license_url": "https://raw.githubusercontent.com/adoptium/jdk25u/master/LICENSE",
+   "license_url": "https://raw.githubusercontent.com/adoptium/jdk25u/jdk-25.0.4.1%2B1/LICENSE",
    "license_sha256": "4b9abebc4338048a7c2dc184e9f800deb349366bdf28eb23c2677a77b4c87726",
    "asset": "OpenJDK25U-jre_x64_linux_hotspot_25.0.4.1_1.tar.gz",
    "asset_sha256": "1731a34baadec5479258ea0202e4d5d865d2efeee60cb0c7d7eb056fe96ca219",
    "required": true,
    "status": "license_verified_asset_unpinned",
-   "notes": "Published tarball SHA-256 fetched from the .sha256.txt: 1731a34baadec5479258ea0202e4d5d865d2efeee60cb0c7d7eb056fe96ca219 (checksum file only; tarball NOT downloaded, so unverified against bytes). LICENSE file at master is plain GPL-2.0; exception is in ASSEMBLY_EXCEPTION (sha256 75292f03bf23d3db7c985aecc191029b93883200721ed23ed34a2e601463df33). Bundled third-party notices inside the tarball not yet inspected.",
-   "asset_sha_source": "upstream .sha256.txt; not yet verified against downloaded bytes"
+   "notes": "Published tarball SHA-256 fetched from the .sha256.txt: 1731a34baadec5479258ea0202e4d5d865d2efeee60cb0c7d7eb056fe96ca219 (checksum file only; tarball NOT downloaded, so unverified against bytes). LICENSE at tag jdk-25.0.4.1+1 (identical bytes to master) is plain GPL-2.0; exception is in ASSEMBLY_EXCEPTION at the same tag (sha256 75292f03bf23d3db7c985aecc191029b93883200721ed23ed34a2e601463df33). Bundled third-party notices inside the tarball not yet inspected.",
+   "asset_sha_source": "upstream .sha256.txt; not yet verified against downloaded bytes",
+   "license_file": null,
+   "asset_file": null
   },
   {
    "id": "tessdata_kor",
@@ -40,7 +44,9 @@
    "asset_sha256": null,
    "required": true,
    "status": "license_verified_asset_unpinned",
-   "notes": "Trained-data file hash and its own notices not frozen; repo LICENSE is not proof the training data is covered."
+   "notes": "Trained-data file hash and its own notices not frozen; repo LICENSE is not proof the training data is covered.",
+   "license_file": null,
+   "asset_file": null
   },
   {
    "id": "tessdata_eng",
@@ -53,7 +59,9 @@
    "asset_sha256": null,
    "required": true,
    "status": "license_verified_asset_unpinned",
-   "notes": "Same as kor: file hash not frozen."
+   "notes": "Same as kor: file hash not frozen.",
+   "license_file": null,
+   "asset_file": null
   },
   {
    "id": "noto_sans_cjk_kr",
@@ -66,7 +74,9 @@
    "asset_sha256": null,
    "required": true,
    "status": "license_verified_asset_unpinned",
-   "notes": "Font file Sans/OTF/Korean/NotoSansCJKkr-Regular.otf SHA-256 not frozen (large binary not fetched). Glyph coverage for needed Korean text unchecked. No system-font fallback."
+   "notes": "Font file Sans/OTF/Korean/NotoSansCJKkr-Regular.otf SHA-256 not frozen (large binary not fetched). Glyph coverage for needed Korean text unchecked. No system-font fallback.",
+   "license_file": null,
+   "asset_file": null
   },
   {
    "id": "verovio",
@@ -79,7 +89,9 @@
    "asset_sha256": null,
    "required": false,
    "status": "license_verified_asset_unpinned",
-   "notes": "Needed only for arm B / renderer. Distribution/relinking and bundled font review pending; Korean rendering NOT VERIFIED."
+   "notes": "Needed only for arm B / renderer. Distribution/relinking and bundled font review pending; Korean rendering NOT VERIFIED.",
+   "license_file": null,
+   "asset_file": null
   },
   {
    "id": "music21",
@@ -92,7 +104,9 @@
    "asset_sha256": null,
    "required": false,
    "status": "license_verified_asset_unpinned",
-   "notes": "Code only. Corpus has separate terms: must verify an install with no corpus before use."
+   "notes": "Code only. Corpus has separate terms: must verify an install with no corpus before use.",
+   "license_file": null,
+   "asset_file": null
   },
   {
    "id": "playwright",
@@ -105,7 +119,9 @@
    "asset_sha256": null,
    "required": false,
    "status": "license_verified_asset_unpinned",
-   "notes": "Chromium bundled notices and binary hash not inspected. Experimental rasterizer option only."
+   "notes": "Chromium bundled notices and binary hash not inspected. Experimental rasterizer option only.",
+   "license_file": null,
+   "asset_file": null
   },
   {
    "id": "oemer",
@@ -118,7 +134,9 @@
    "asset_sha256": null,
    "required": false,
    "status": "blocked",
-   "notes": "LICENSE is an unfilled MIT template ('[year] [fullname]'): copyright holder not stated in the file. Code license says nothing about weights."
+   "notes": "LICENSE is an unfilled MIT template ('[year] [fullname]'): copyright holder not stated in the file. Code license says nothing about weights.",
+   "license_file": null,
+   "asset_file": null
   },
   {
    "id": "oemer_weights",
@@ -131,7 +149,9 @@
    "asset_sha256": null,
    "required": false,
    "status": "blocked",
-   "notes": "Weights and underlying training-data rights unverified. DO NOT download or use until cleared."
+   "notes": "Weights and underlying training-data rights unverified. DO NOT download or use until cleared.",
+   "license_file": null,
+   "asset_file": null
   },
   {
    "id": "onnxruntime",
@@ -144,7 +164,9 @@
    "asset_sha256": null,
    "required": false,
    "status": "blocked",
-   "notes": "Only relevant to a cleared oemer CPU path; blocked with oemer. Compatibility with oemer/NumPy 1.26.4 unverified."
+   "notes": "Only relevant to a cleared oemer CPU path; blocked with oemer. Compatibility with oemer/NumPy 1.26.4 unverified.",
+   "license_file": null,
+   "asset_file": null
   }
  ]
 }

@@ -11,3 +11,5 @@ Plan: `docs/plans/V2_3_MELODY.md`. Status: M0 + M1 preparation. No engine instal
 Contracts for cm2 adapters: `backend/omr/intent.py` (capo vs key_change, 422 via `IntentError`) and `backend/omr/contract.py` (original-pixel geometry, staff systems with 5 line ys, note events with `"n/d"` rationals). Self-checks: `python -m backend.omr.intent`, `python -m backend.omr.contract`.
 
 Fixtures with refused or unknown rights (GIFTED, 친구야/hey_buddy, user uploads) must not be used.
+
+Machine checks verify shapes, hashes against real file bytes (repo-relative paths only; symlink escapes, `.env`/secret names refused) and role disjointness. They cannot prove rights are genuinely cleared or humans independent; that needs independent review. Cleared register entries carry `license_file`/`asset_file`; the CLI requires them (library default does not).
