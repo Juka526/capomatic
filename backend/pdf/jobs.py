@@ -95,6 +95,7 @@ class Job:
     cancel: bool = False
     removed: bool = False
     running: int = 0  # native calls still executing (inspect or page)
+    receiving: int = 0  # upload buffers still retained by a request
     failed_at: float = 0.0
     gone: asyncio.Event = field(default_factory=asyncio.Event)
     task: asyncio.Task | None = None
@@ -192,9 +193,14 @@ class PdfJobManager:
         return job, cap, new_session
 
     async def receive(self, job: Job, stream, limit: int) -> bytes:
-        """Read the body, giving up at once if the job expires or is removed."""
+        """Read the body, giving up at once if the job expires or is removed.
+
+        The job keeps its slot until this method has dropped its buffered chunks.
+        """
         chunks: list[bytes] = []
         total = 0
+        with self._lock:
+            job.receiving += 1
         it = stream.__aiter__()
         gone = asyncio.ensure_future(job.gone.wait())
         nxt = None
@@ -213,10 +219,13 @@ class PdfJobManager:
                     raise PdfError("pdf_too_large")
                 chunks.append(chunk)
         finally:
-            chunks.clear()
             for t in (gone, nxt):
                 if t is not None and not t.done():
                     t.cancel()
+            chunks.clear()
+            with self._lock:  # the slot is only freed once the buffer is gone
+                job.receiving -= 1
+                self._maybe_free(job)
 
     async def submit(self, job: Job, data: bytes) -> None:
         """Validate structure (off-loop) and start analysis; the caller removes the job on error."""
@@ -254,7 +263,7 @@ class PdfJobManager:
 
     def _maybe_free(self, job: Job) -> None:
         with self._lock:
-            if job.running == 0 and (job.removed or job.state == "failed"):
+            if job.running == 0 and job.receiving == 0 and (job.removed or job.state == "failed"):
                 job.data, job.previews = None, {}
                 for p in job.pages:
                     p.items = []
