@@ -12,7 +12,9 @@ Plan: `docs/plans/V2_1_OCR_ENGINE.md`. No training, no serving code, no Paddle i
 - `manifest.json` — rights/provenance + sha256 for every page and font. Only item today: the CI fixture.
 - `gen_ci_fixture.py` — regenerates `fixtures/images/ci-selfmade.png` (`--check` verifies the committed bytes against the manifest hash AND
   that regenerating reproduces the committed pixels. Rendering depends on the Pillow/FreeType build: verified on
-  Pillow 12.3.0 / FreeType 2.14.3 only; a pixel mismatch elsewhere may be drift, the manifest hash stays authoritative).
+  macOS Pillow 12.3.0 / FreeType 2.14.3 (no raqm) only; text layout is pinned to `Layout.BASIC` because the default
+  silently becomes RAQM when the wheel ships it (suspected cause of the Ubuntu CI pixel drift, run 38552030943;
+  NOT yet re-verified on Linux, and the fixture bytes are unchanged); a pixel mismatch elsewhere may be drift, the manifest hash stays authoritative).
 - `fonts/` — DejaVu Sans **2.35** (the copy bundled with matplotlib 3.9.2; source, version, license and sha256 are in
   `manifest.json`). Orchestrator-approved reuse for the **CI diagnostic fixture only**. The 2.37 pin in the plan is a
   separate candidate *training*-font proposal; it is not changed or downloaded here and 2.35 is not a training font.
