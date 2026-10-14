@@ -33,8 +33,9 @@ TOP0, SYS_STEP = 130, 190
 def render() -> Image.Image:
     img = Image.new("RGB", (W, 700), "white")
     d = ImageDraw.Draw(img)
-    chord_f = ImageFont.truetype(str(FONT), 34)
-    lyric_f = ImageFont.truetype(str(FONT), 22)
+    # BASIC explicitly: Pillow picks RAQM (HarfBuzz kerning) when the wheel has it, which differs from BASIC pixels.
+    chord_f = ImageFont.truetype(str(FONT), 34, layout_engine=ImageFont.Layout.BASIC)
+    lyric_f = ImageFont.truetype(str(FONT), 22, layout_engine=ImageFont.Layout.BASIC)
     for s, (chords, lyric) in enumerate(SYSTEMS):
         top = TOP0 + s * SYS_STEP
         right = LEFT + BAR_W * len(chords)
@@ -57,7 +58,7 @@ def render() -> Image.Image:
 def _versions() -> str:
     from PIL import __version__, features  # noqa: PLC0415
 
-    return f"Pillow {__version__}, FreeType {features.version('freetype2')}"
+    return f"Pillow {__version__}, FreeType {features.version('freetype2')}, raqm available: {features.check('raqm')}, layout: BASIC (explicit)"
 
 
 def main() -> int:
