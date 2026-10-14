@@ -24,6 +24,7 @@ import json
 import logging
 import math
 import os
+import re
 import tempfile
 import threading
 import time
@@ -53,6 +54,13 @@ from backend.pdf.jobs import JobError, PdfJobManager
 logger = logging.getLogger(__name__)
 
 _REDACTED = "redacted"
+_TRACE_FIELDS = {
+    "trace_id": re.compile(r"[0-9a-f]{32}"),
+    "span_id": re.compile(r"[0-9a-f]{16}"),
+    "parent_span_id": re.compile(r"[0-9a-f]{16}"),
+    "op": re.compile(r"[a-z._]{1,32}"),
+    "status": re.compile(r"[a-z_]{1,32}"),
+}
 
 
 def _scrub_event(event: dict, hint: dict | None = None) -> dict:
@@ -67,10 +75,24 @@ def _scrub_event(event: dict, hint: dict | None = None) -> dict:
         "release", "environment", "sdk",
     ) if k in event}
     if "transaction" in event:
-        name = str(event["transaction"])
-        out["transaction"] = "/pdf/*" if name.startswith("/pdf") else name.split("?")[0]
-    if "contexts" in event and isinstance(event["contexts"], dict):
-        out["contexts"] = {k: v for k, v in event["contexts"].items() if k in {"trace", "runtime"}}
+        # Only exact route templates; an unmatched request's name is its URL.
+        known = {getattr(r, "path", None) for r in app.routes}
+        name = event["transaction"]
+        out["transaction"] = "unknown" if name not in known else "/pdf/*" if name.startswith("/pdf") else name
+    ctx = event.get("contexts")
+    if isinstance(ctx, dict):
+        safe: dict = {}
+        trace = ctx.get("trace")
+        if isinstance(trace, dict):  # span data/description can hold free text
+            safe["trace"] = {
+                k: trace[k] for k, pat in _TRACE_FIELDS.items()
+                if isinstance(trace.get(k), str) and pat.fullmatch(trace[k])
+            }
+        runtime = ctx.get("runtime")
+        if isinstance(runtime, dict):
+            safe["runtime"] = {k: runtime[k] for k in ("name", "version")
+                               if isinstance(runtime.get(k), str) and len(runtime[k]) < 40}
+        out["contexts"] = safe
     if event.get("logentry") or event.get("message"):
         out["message"] = _REDACTED
     exc = event.get("exception")
@@ -758,14 +780,8 @@ async def pdf_create_job(
         declared = request.headers.get("content-length", "")
         if declared.isdigit() and int(declared) > MAX_PDF_BYTES:
             raise PdfError("pdf_too_large")
-        chunks: list[bytes] = []
-        total = 0
-        async for chunk in request.stream():
-            total += len(chunk)
-            if total > MAX_PDF_BYTES:
-                raise PdfError("pdf_too_large")
-            chunks.append(chunk)
-        await _pdf_jobs.submit(job, b"".join(chunks))
+        data = await _pdf_jobs.receive(job, request.stream(), MAX_PDF_BYTES)
+        await _pdf_jobs.submit(job, data)
     except (JobError, PdfError) as exc:
         _pdf_jobs.remove(job)
         raise _pdf_http_error(exc) from None
