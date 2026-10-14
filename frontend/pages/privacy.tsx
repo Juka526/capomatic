@@ -161,8 +161,8 @@ const ko: Section[] = [
     '서비스는 정보주체에게 중대한 영향을 미치는 완전히 자동화된 결정을 하지 않습니다. 악보에서 코드를 읽는 OCR은 이에 해당하지 않습니다.',
   ] },
   { heading: '16. 개인정보 보호책임자', paragraphs: [
-    '운영자는 개인정보 처리에 관한 업무를 총괄하고 관련 고충을 처리하기 위해 다음과 같이 개인정보 보호책임자를 지정하고 있습니다.',
-    ...officer('ko', '성명(담당)', '이메일'),
+    '운영자는 개인정보 처리에 관한 업무를 총괄하고 관련 고충을 처리하기 위해 다음과 같이 담당팀을 두고 있습니다.',
+    ...officer('ko', '담당팀', '이메일'),
   ] },
   { heading: '17. 국내대리인', paragraphs: [
     '운영자는 「개인정보 보호법」 제31조의2에 따른 국내대리인 지정 대상이 아닙니다.',
@@ -332,8 +332,8 @@ const en: Section[] = [
     'The service does not make fully automated decisions that significantly affect you. Reading chords from a sheet with OCR is not such a decision.',
   ] },
   { heading: '16. Privacy officer', paragraphs: [
-    'The operator has appointed the following privacy officer to oversee the processing of personal information and handle related complaints.',
-    ...officer('en', 'Name (role)', 'Email'),
+    'The operator has set up the following team to oversee the processing of personal information and handle related complaints.',
+    ...officer('en', 'Team', 'Email'),
   ] },
   { heading: '17. Domestic representative', paragraphs: [
     'The operator is not required to appoint a domestic representative under Article 31-2 of the Personal Information Protection Act.',
