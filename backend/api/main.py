@@ -24,6 +24,7 @@ import json
 import logging
 import math
 import os
+import re
 import tempfile
 import threading
 import time
@@ -31,7 +32,10 @@ import uuid
 from collections import OrderedDict
 from typing import Callable, Iterator, Optional
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, Response, UploadFile
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from PIL import Image, ImageOps
@@ -44,8 +48,71 @@ from backend.chords.transpose import transpose_chord, compute_target_key
 from backend.chords.key_detect import infer_key
 from backend.overlay.render import _get_staff_systems, render_overlay
 from backend.auth.auth0 import get_token_payload
+from backend.pdf.core import MAX_PDF_BYTES, PdfError
+from backend.pdf.jobs import JobError, PdfJobManager
 
 logger = logging.getLogger(__name__)
+
+_REDACTED = "redacted"
+_TRACE_FIELDS = {
+    "trace_id": re.compile(r"[0-9a-f]{32}"),
+    "span_id": re.compile(r"[0-9a-f]{16}"),
+    "parent_span_id": re.compile(r"[0-9a-f]{16}"),
+    "op": re.compile(r"[a-z._]{1,32}"),
+    "status": re.compile(r"[a-z_]{1,32}"),
+}
+
+
+def _scrub_event(event: dict, hint: dict | None = None) -> dict:
+    """Rebuild an error/transaction event from an allowlist of coarse fields.
+
+    Messages, exception values, requests, extras, tags, users, spans and
+    breadcrumbs can all carry detected text, filenames, capability headers or
+    request bodies, so none of them are copied.
+    """
+    out = {k: event[k] for k in (
+        "event_id", "timestamp", "start_timestamp", "type", "level", "platform",
+        "release", "environment", "sdk",
+    ) if k in event}
+    if "transaction" in event:
+        # Only exact route templates; an unmatched request's name is its URL.
+        known = {getattr(r, "path", None) for r in app.routes}
+        name = event["transaction"]
+        out["transaction"] = "unknown" if name not in known else "/pdf/*" if name.startswith("/pdf") else name
+    ctx = event.get("contexts")
+    if isinstance(ctx, dict):
+        safe: dict = {}
+        trace = ctx.get("trace")
+        if isinstance(trace, dict):  # span data/description can hold free text
+            safe["trace"] = {
+                k: trace[k] for k, pat in _TRACE_FIELDS.items()
+                if isinstance(trace.get(k), str) and pat.fullmatch(trace[k])
+            }
+        runtime = ctx.get("runtime")
+        if isinstance(runtime, dict):
+            safe["runtime"] = {k: runtime[k] for k in ("name", "version")
+                               if isinstance(runtime.get(k), str) and len(runtime[k]) < 40}
+        out["contexts"] = safe
+    if event.get("logentry") or event.get("message"):
+        out["message"] = _REDACTED
+    exc = event.get("exception")
+    if isinstance(exc, dict):
+        values = []
+        for v in exc.get("values") or []:
+            frames = [
+                {k: f[k] for k in ("function", "module", "lineno") if k in f}
+                for f in (v.get("stacktrace") or {}).get("frames", [])
+            ]
+            values.append({"type": v.get("type"), "value": _REDACTED,
+                           "stacktrace": {"frames": frames}})
+        out["exception"] = {"values": values}
+    return out
+
+
+def _scrub_breadcrumb(crumb: dict, hint: dict | None = None) -> None:
+    """Drop every breadcrumb: logger, HTTP and console crumbs may carry content."""
+    return None
+
 
 def _sentry_options() -> dict:
     """Privacy-safe Sentry settings: no PII, request bodies, or local variables."""
@@ -56,6 +123,9 @@ def _sentry_options() -> dict:
         "send_default_pii": False,
         "max_request_body_size": "never",
         "include_local_variables": False,
+        "before_send": _scrub_event,
+        "before_send_transaction": _scrub_event,
+        "before_breadcrumb": _scrub_breadcrumb,
     }
 
 
@@ -119,14 +189,23 @@ def _cache_get(detection_id: str) -> dict | None:
 # App setup
 # ---------------------------------------------------------------------------
 
-app = FastAPI(title="Capomatic", version="1.0.0")
+@contextlib.asynccontextmanager
+async def _lifespan(_: FastAPI):
+    _pdf_jobs.start()
+    try:
+        yield
+    finally:
+        await _pdf_jobs.shutdown()
+
+
+app = FastAPI(title="Capomatic", version="1.0.0", lifespan=_lifespan)
 
 _cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:3000")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in _cors_origins.split(",")],
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-PDF-Job-Capability", "X-PDF-Session"],
 )
 
 
@@ -180,7 +259,7 @@ def _build_chord_item(
         chord = parse_chord(item["text"])
         transposed = transpose_chord(chord, semitones, target_key=target_key, original_key=original_key)
     except (ValueError, KeyError):
-        logger.debug("Could not transpose %r: skipping", item["text"])
+        pass  # unparseable text stays untransposed; never log detected text
 
     style = item.get("style")
     parenthesis = style.get("parenthesis") if isinstance(style, dict) else None
@@ -635,6 +714,122 @@ async def overlay(
         media_type="image/png",
         headers={"X-Processing-Time-Ms": str(elapsed_ms)},
     )
+
+
+# ---------------------------------------------------------------------------
+# PDF analysis jobs (P2): ephemeral, in memory, capability-protected
+# ---------------------------------------------------------------------------
+
+def _detect_pdf_page(path: str) -> tuple[list[dict], dict]:
+    return detect_chords_hybrid(path, use_ai_fallback=False)
+
+
+# Pages run in the shared OCR executor under the shared OCR admission, so PDF
+# work never bypasses the busy limits that image requests see.
+_pdf_jobs = PdfJobManager(
+    submit=lambda fn: _ocr_executor.submit(fn),
+    detect=lambda path: _detect_pdf_page(path),
+    try_admit=lambda: _ocr_admission.acquire(blocking=False),
+    release=lambda: _ocr_admission.release(),
+)
+
+
+@app.middleware("http")
+async def _no_store_pdf(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/pdf"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.exception_handler(RequestValidationError)
+async def _validation_error(request: Request, exc: RequestValidationError):
+    if request.url.path.startswith("/pdf"):  # default body echoes the offending input
+        return JSONResponse(status_code=422, content={"detail": {"code": "invalid_request"}})
+    return await request_validation_exception_handler(request, exc)
+
+
+def _pdf_http_error(exc: JobError | PdfError) -> HTTPException:
+    if isinstance(exc, JobError):
+        headers = {"Retry-After": str(exc.retry_after)} if exc.retry_after else None
+        return HTTPException(exc.status, {"code": exc.code}, headers=headers)
+    status = 413 if exc.code in {"pdf_too_large", "pdf_too_many_pages", "pdf_page_too_large"} else 422
+    return HTTPException(status, {"code": exc.code})
+
+
+def _pdf_job_or_404(job_id: str, capability: str | None):
+    job = _pdf_jobs.get(job_id, capability)
+    if job is None:  # same answer for unknown id and wrong capability
+        raise HTTPException(404, {"code": "not_found"})
+    return job
+
+
+@app.post("/pdf/jobs", status_code=202)
+async def pdf_create_job(
+    request: Request,
+    x_pdf_session: Optional[str] = Header(None),
+) -> dict:
+    """Start an analysis job. Body: the raw PDF bytes (not multipart)."""
+    if x_pdf_session is not None and not (16 <= len(x_pdf_session) <= 128):
+        raise HTTPException(422, {"code": "invalid_request"})
+    try:
+        job, capability, new_session = _pdf_jobs.reserve(x_pdf_session)
+    except JobError as exc:
+        raise _pdf_http_error(exc) from None
+    try:
+        declared = request.headers.get("content-length", "")
+        if declared.isdigit() and int(declared) > MAX_PDF_BYTES:
+            raise PdfError("pdf_too_large")
+        data = await _pdf_jobs.receive(job, request.stream(), MAX_PDF_BYTES)
+        await _pdf_jobs.submit(job, data)
+    except (JobError, PdfError) as exc:
+        _pdf_jobs.remove(job)
+        raise _pdf_http_error(exc) from None
+    except BaseException:
+        _pdf_jobs.remove(job)  # disconnect or server fault: release the reservation
+        raise
+    body = {
+        "job_id": job.id,
+        "job_capability": capability,  # shown once
+        "status": _pdf_jobs.snapshot(job),
+    }
+    if new_session is not None:
+        body["session_token"] = new_session  # shown once
+    return body
+
+
+@app.get("/pdf/jobs/{job_id}")
+async def pdf_job_status(
+    job_id: str,
+    x_pdf_job_capability: Optional[str] = Header(None),
+) -> dict:
+    return _pdf_jobs.snapshot(_pdf_job_or_404(job_id, x_pdf_job_capability))
+
+
+@app.get("/pdf/jobs/{job_id}/pages/{page}/source")
+async def pdf_job_page_source(
+    job_id: str,
+    page: int,
+    x_pdf_job_capability: Optional[str] = Header(None),
+) -> Response:
+    """Downscaled JPEG preview captured during analysis (no extra raster)."""
+    job = _pdf_job_or_404(job_id, x_pdf_job_capability)
+    if not 0 <= page < len(job.pages):
+        raise HTTPException(404, {"code": "not_found"})
+    preview = job.previews.get(page)
+    if preview is None:
+        raise HTTPException(409, {"code": "page_not_ready"})
+    return Response(preview, media_type="image/jpeg")
+
+
+@app.delete("/pdf/jobs/{job_id}", status_code=204)
+async def pdf_job_cancel(
+    job_id: str,
+    x_pdf_job_capability: Optional[str] = Header(None),
+) -> Response:
+    """Cancel: no further pages start; a running OCR call finishes and is discarded."""
+    _pdf_jobs.remove(_pdf_job_or_404(job_id, x_pdf_job_capability))
+    return Response(status_code=204)
 
 
 # ---------------------------------------------------------------------------

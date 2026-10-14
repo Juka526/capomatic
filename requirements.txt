@@ -20,3 +20,6 @@ httpx==0.28.1         # Auth0 JWKS retrieval and deployed API evaluation
 # Section 6 (Auth0 token verification)
 PyJWT[crypto]==2.15.0
 cryptography==50.0.1
+
+# Section 7 (PDF reader)
+pypdfium2==5.14.0     # BSD-3-Clause/Apache-2.0 + bundled PDFium; wheel notices kept
