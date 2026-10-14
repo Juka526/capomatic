@@ -28,16 +28,27 @@ class _CaptureTransport(Transport):
             self.payloads.append(item.get_bytes().decode("utf-8", "replace"))
 
 
+def _init_capture(**overrides):
+    transport = _CaptureTransport()
+    options = {**_sentry_options(), "traces_sample_rate": 0.0, "release": "test-sha", **overrides}
+    sentry_sdk.init(dsn="https://public@o0.ingest.sentry.io/1", transport=transport, **options)
+    return transport
+
+
 @pytest.fixture
 def sentry_events():
-    transport = _CaptureTransport()
-    sentry_sdk.init(
-        dsn="https://public@o0.ingest.sentry.io/1",
-        transport=transport,
-        **{**_sentry_options(), "traces_sample_rate": 0.0, "release": "test-sha"},
-    )
     try:
-        yield transport
+        yield _init_capture()
+    finally:
+        sentry_sdk.get_client().close()
+        sentry_sdk.init()
+
+
+@pytest.fixture
+def unscrubbed_sentry_events():
+    """Same transport with the app's event scrubbers off: the known positive."""
+    try:
+        yield _init_capture(before_send=None, before_send_transaction=None, before_breadcrumb=None)
     finally:
         sentry_sdk.get_client().close()
         sentry_sdk.init()
@@ -59,7 +70,7 @@ def test_privacy_options_are_set():
     assert options["include_local_variables"] is False
 
 
-def test_backend_error_event_contains_no_token_email_image_or_locals(sentry_events):
+def _post_failing_detect():
     def explode(*_args, **_kwargs):
         secret_local = f"{_EMAIL} {_TOKEN}"  # must not appear via local-variable capture
         raise RuntimeError("controlled backend error " + str(len(secret_local)))
@@ -72,12 +83,25 @@ def test_backend_error_event_contains_no_token_email_image_or_locals(sentry_even
             headers={"Authorization": f"Bearer {_TOKEN}", "Cookie": f"email={_EMAIL}"},
         )
     sentry_sdk.flush()
+    return resp
+
+
+def test_capture_sees_exception_message_without_scrubbers(unscrubbed_sentry_events):
+    assert _post_failing_detect().status_code == 500
+    assert "controlled backend error" in "\n".join(unscrubbed_sentry_events.payloads)
+
+
+def test_backend_error_event_contains_no_token_email_image_or_locals(sentry_events):
+    resp = _post_failing_detect()
 
     assert resp.status_code == 500
     events = [json.loads(p) for p in sentry_events.payloads if '"exception"' in p]
     assert events, "the controlled error was not reported"
     payload = "\n".join(sentry_events.payloads)
-    assert "controlled backend error" in payload
+    # Exception text can carry detected content, so only the type is sent.
+    assert "controlled backend error" not in payload
+    assert events[0]["exception"]["values"][-1]["type"] == "RuntimeError"
+    assert events[0]["exception"]["values"][-1]["value"] == "redacted"
     assert events[0]["release"] == "test-sha"
     for secret in (_TOKEN, _EMAIL, _IMAGE_MARKER.decode()):
         assert secret not in payload
