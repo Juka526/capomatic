@@ -42,5 +42,7 @@ Truth must not be produced by the production parser/transposer or any OCR. The a
 ## Limits
 The validator checks shape, hashes, path scope and policy. It cannot prove rights, human attestation or reader
 independence; those need human sign-off. Pages are hashed only under `data/chord-ocr/` or `training/chords/` (plus the
-one CI fixture path); dot-files, `..` and non-data paths fail before any file is read. Truth geometry is bounds-checked
+one CI fixture path); dot-files, `..` and non-data paths fail before any file is read. Prohibited-name and identity comparisons use Unicode normalisation (NFC / NFKC), so decomposed Korean names and
+equivalent reader spellings are caught; symlinks are re-checked by the scope of their resolved target before any read.
+Truth geometry is bounds-checked
 against the decoded image when it decodes. The CI smoke gate (>=10 of 12 chords) is a smoke check, never the 99% gate.

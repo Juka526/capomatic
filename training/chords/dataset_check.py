@@ -16,6 +16,7 @@ import json
 import math
 import re
 import sys
+import unicodedata
 from collections import defaultdict
 from pathlib import Path, PurePosixPath
 
@@ -45,7 +46,22 @@ def _sha(path: Path) -> str:
 
 def _name(v: object) -> str | None:
     """Normalised human/author name, or None when not a usable string."""
-    return v.strip().casefold() if isinstance(v, str) and v.strip() and len(v) <= 64 else None
+    # NFKC first so canonically equivalent spellings of one identity compare equal
+    return unicodedata.normalize("NFKC", v).strip().casefold() if isinstance(v, str) and v.strip() and len(v) <= 64 else None
+
+
+def _prohibited(text: str) -> bool:
+    """NFC for policy comparison only (macOS names are often NFD); paths on disk are untouched."""
+    return bool(PROHIBITED.search(unicodedata.normalize("NFC", text)))
+
+
+def _in_scope(rel: str, roots: tuple[str, ...], exact: str) -> bool:
+    """Policy on a repo-relative POSIX string: scope, no hidden/dot parts, no prohibited names."""
+    rel = unicodedata.normalize("NFC", rel)
+    parts = PurePosixPath(rel).parts
+    return bool(parts and "\\" not in rel and "\0" not in rel and not rel.startswith("/")
+                and all(p not in ("", ".", "..") and not p.startswith(".") for p in parts)
+                and (rel == exact or rel.startswith(roots)) and not _prohibited(rel))
 
 
 def _num(v: object) -> bool:
@@ -61,14 +77,14 @@ def _file(rel: object, want: object, roots: tuple[str, ...], errs: list[str], ct
     if not (isinstance(rel, str) and isinstance(want, str) and SHA_RE.fullmatch(want)):
         errs.append(f"E_REF {ctx}")
         return None
-    parts = PurePosixPath(rel).parts
-    ok = ("\\" not in rel and "\0" not in rel and parts and not rel.startswith("/")
-          and all(p not in ("", ".", "..") and not p.startswith(".") for p in parts)
-          and (rel == exact or rel.startswith(roots)))
-    if not ok or PROHIBITED.search(rel):
+    if not _in_scope(rel, roots, exact):
         errs.append(f"E_PATH_POLICY {ctx}")
         return None
     p = (ROOT / rel).resolve()
+    # A symlink may resolve inside ROOT to an out-of-scope target: re-run the policy on the target BEFORE any read.
+    if ROOT not in p.parents or not _in_scope(p.relative_to(ROOT).as_posix(), roots, exact):
+        errs.append(f"E_PATH_POLICY {ctx}")
+        return None
     if ROOT not in p.parents or not p.is_file():
         errs.append(f"E_FILE {ctx}")
     elif _sha(p) != want:
@@ -186,7 +202,7 @@ def _check(manifest: Path) -> tuple[list[str], dict]:
             errs.append(f"E_LICENSE {ctx}")
         if item.get("user_upload") is not False or item.get("legacy_fixture") is not False:
             errs.append(f"E_PROVENANCE_FLAGS {ctx}")
-        if PROHIBITED.search(f"{item['path']} {item['source']} {item['family']}"):
+        if _prohibited(f"{item['path']} {item['source']} {item['family']}"):
             errs.append(f"E_PROHIBITED {ctx}")
         exact = CI_PAGE if item["split"] == "ci_diagnostic" else ""
         page = _file(item["path"], item["sha256"], PAGE_ROOTS, errs, ctx, exact)
