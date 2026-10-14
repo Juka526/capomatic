@@ -15,6 +15,7 @@
       "composer": "cm1-dev",
       "source": "training/chords/gen_ci_fixture.py (Pillow 12.3.0, pinned DejaVu Sans, no randomness)",
       "license": "CC0-1.0",
+      "allowable_use": "CI smoke diagnostic only; not training, not holdout, not an accuracy claim",
       "rights_holder": "Capomatic project (original work, no third-party score, scan or user upload)",
       "user_upload": false,
       "legacy_fixture": false,

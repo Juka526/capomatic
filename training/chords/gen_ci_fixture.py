@@ -54,13 +54,23 @@ def render() -> Image.Image:
     return img
 
 
+def _versions() -> str:
+    from PIL import __version__, features  # noqa: PLC0415
+
+    return f"Pillow {__version__}, FreeType {features.version('freetype2')}"
+
+
 def main() -> int:
     img = render()
     if "--check" in sys.argv:
-        got = hashlib.sha256(OUT.read_bytes()).hexdigest()
         want = next(i["sha256"] for i in json.loads(MANIFEST.read_text())["items"] if i["path"] == "fixtures/images/ci-selfmade.png")
-        print("committed png matches manifest:", got == want)
-        return 0 if got == want else 1
+        bytes_ok = hashlib.sha256(OUT.read_bytes()).hexdigest() == want
+        with Image.open(OUT) as committed:  # regeneration vs committed pixels, not just the stored hash
+            pixels_ok = committed.convert("RGB").tobytes() == img.tobytes() and committed.size == img.size
+        print(f"committed png matches manifest hash: {bytes_ok}; regenerated pixels equal committed: {pixels_ok} ({_versions()})")
+        if not pixels_ok:
+            print("pixel drift may come from a different FreeType/Pillow build; the manifest hash stays authoritative")
+        return 0 if bytes_ok and pixels_ok else 1
     img.save(OUT, optimize=False)
     print(OUT, hashlib.sha256(OUT.read_bytes()).hexdigest())
     return 0

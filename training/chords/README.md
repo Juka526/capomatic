@@ -10,11 +10,14 @@ Plan: `docs/plans/V2_1_OCR_ENGINE.md`. No training, no serving code, no Paddle i
 
 ## Files
 - `manifest.json` — rights/provenance + sha256 for every page and font. Only item today: the CI fixture.
-- `gen_ci_fixture.py` — regenerates `fixtures/images/ci-selfmade.png` (`--check` compares to the manifest hash;
-  bytes depend on the Pillow/FreeType build, so a mismatch on another build is a hint, not proof of tampering).
-- `fonts/` — DejaVu Sans 2.35 (the copy bundled with matplotlib 3.9.2) + license. The plan pinned 2.37; not used.
+- `gen_ci_fixture.py` — regenerates `fixtures/images/ci-selfmade.png` (`--check` verifies the committed bytes against the manifest hash AND
+  that regenerating reproduces the committed pixels. Rendering depends on the Pillow/FreeType build: verified on
+  Pillow 12.3.0 / FreeType 2.14.3 only; a pixel mismatch elsewhere may be drift, the manifest hash stays authoritative).
+- `fonts/` — DejaVu Sans **2.35** (the copy bundled with matplotlib 3.9.2; source, version, license and sha256 are in
+  `manifest.json`). Orchestrator-approved reuse for the **CI diagnostic fixture only**. The 2.37 pin in the plan is a
+  separate candidate *training*-font proposal; it is not changed or downloaded here and 2.35 is not a training font.
 - `dataset_check.py` — fail-closed validator: `python training/chords/dataset_check.py [manifest]`
-  (exit 0 ready, 1 invalid, 2 HOLD), `--selftest` runs a known-positive plus negative oracle.
+  (exit 0 ready, 1 invalid, 2 HOLD; output is fixed codes + item index only), `--selftest` runs a known-positive plus negative oracle.
 
 ## Rules enforced
 Explicit allowed license and `user_upload=false`/`legacy_fixture=false` per page; sha256 of every file; GIFTED/친구야/
@@ -33,3 +36,9 @@ file. Synthetic pages are `train`/`dev`/`ci_diagnostic` only and never count tow
 Original-image pixels; `system` indexes `staff_systems`; `text` is the full symbol (root, accidental, quality,
 extension, slash bass) transcribed by two readers who did not author the generator or model, before any OCR.
 Truth must not be produced by the production parser/transposer or any OCR. The acceptance scorer is tester-owned.
+
+## Limits
+The validator checks shape, hashes, path scope and policy. It cannot prove rights, human attestation or reader
+independence; those need human sign-off. Pages are hashed only under `data/chord-ocr/` or `training/chords/` (plus the
+one CI fixture path); dot-files, `..` and non-data paths fail before any file is read. Truth geometry is bounds-checked
+against the decoded image when it decodes. The CI smoke gate (>=10 of 12 chords) is a smoke check, never the 99% gate.
