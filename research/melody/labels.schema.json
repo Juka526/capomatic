@@ -1,0 +1,25 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Expected-label file for one snippet (written by human readers from the ORIGINAL image, never from model output or product code)",
+ "type": "object",
+ "required": ["source_sha256", "snippet_id", "reader", "key_fifths", "time_signature", "text", "events", "anchors"],
+ "additionalProperties": false,
+ "properties": {
+  "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+  "snippet_id": {"type": "string"},
+  "reader": {"type": "string", "description": "opaque reader id, must be in roles.labelers"},
+  "key_fifths": {"type": "integer", "minimum": -7, "maximum": 7},
+  "time_signature": {"type": "string", "pattern": "^[0-9]+/[0-9]+$"},
+  "systems": {"type": "array", "items": {"type": "object", "required": ["index", "x_left", "x_right", "line_ys"], "properties": {"index": {"type": "integer"}, "x_left": {"type": "number"}, "x_right": {"type": "number"}, "line_ys": {"type": "array", "items": {"type": "number"}, "minItems": 5, "maxItems": 5}}}},
+  "text": {"type": "array", "description": "titles, credits, lyrics as read (Korean NFC)", "items": {"type": "object", "required": ["kind", "value", "bbox"], "properties": {"kind": {"enum": ["title", "credit", "lyric"]}, "value": {"type": "string"}, "bbox": {"type": "array", "items": {"type": "number"}, "minItems": 4, "maxItems": 4}}}},
+  "events": {"type": "array", "items": {"type": "object",
+    "required": ["system", "measure", "event_index", "onset", "duration", "midi", "step", "alter", "octave", "tie", "bbox"],
+    "properties": {"system": {"type": "integer"}, "measure": {"type": "integer"}, "event_index": {"type": "integer"},
+      "onset": {"type": "string", "pattern": "^[0-9]+/[0-9]+$"}, "duration": {"type": "string", "pattern": "^[0-9]+/[0-9]+$"},
+      "midi": {"type": ["integer", "null"], "description": "null = rest"}, "step": {"type": ["string", "null"]}, "alter": {"type": "integer"}, "octave": {"type": ["integer", "null"]},
+      "tie": {"enum": [null, "start", "stop", "both"]}, "bbox": {"type": "array", "items": {"type": "number"}, "minItems": 4, "maxItems": 4}}}},
+  "anchors": {"type": "array", "description": "lyric syllable -> event, chord -> beat", "items": {"type": "object", "required": ["kind", "event"],
+    "properties": {"kind": {"enum": ["lyric", "chord"]}, "event": {"type": "array", "items": {"type": "integer"}, "minItems": 3, "maxItems": 3, "description": "[system, measure, event_index]"}, "text": {"type": "string"}}}},
+  "expected_transposition": {"type": "array", "description": "hand-calculated by a reviewer, never by backend code", "items": {"type": "object", "required": ["semitones", "reviewer", "events"], "properties": {"semitones": {"type": "integer"}, "reviewer": {"type": "string"}, "events": {"type": "array"}}}}
+ }
+}
