@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "generator_authors": ["cm1-dev"],
+  "fonts": [
+    {"path": "training/chords/fonts/DejaVuSans.ttf", "sha256": "3fdf69cabf06049ea70a00b5919340e2ce1e6d02b0cc3c4b44fb6801bd1e0d22", "license": "Bitstream-Vera-and-public-domain", "version": "2.35 (bundled with matplotlib 3.9.2; plan pinned 2.37, not used)", "notice": "training/chords/fonts/LICENSE_DEJAVU"}
+  ],
+  "items": [
+    {
+      "id": "ci-selfmade-001",
+      "path": "fixtures/images/ci-selfmade.png",
+      "sha256": "263d7468469139bcb72084f72d497230af2896ce0c13b29a1ce3661180f68bca",
+      "split": "ci_diagnostic",
+      "kind": "synthetic",
+      "family": "ci-selfmade",
+      "composer": "cm1-dev",
+      "source": "training/chords/gen_ci_fixture.py (Pillow 12.3.0, pinned DejaVu Sans, no randomness)",
+      "license": "CC0-1.0",
+      "rights_holder": "Capomatic project (original work, no third-party score, scan or user upload)",
+      "user_upload": false,
+      "legacy_fixture": false,
+      "note": "CI smoke diagnostic only. Never primary holdout truth. Drawn chords, left to right, top to bottom: G D/F# Em7 C Am7 D7 Bm7 Em C G/B Am7 D"
+    }
+  ]
+}

@@ -88,9 +88,18 @@ jobs:
             sleep 5
           done
           status=$(curl --silent --output detect.json --write-out '%{http_code}' \
-            --max-time 240 -F "image=@fixtures/images/친구야.jpeg" http://localhost:7860/detect)
+            --max-time 240 -F "image=@fixtures/images/ci-selfmade.png" http://localhost:7860/detect)
           docker logs capomatic-ocr > ocr-container.log 2>&1 || true
           docker stop capomatic-ocr
           echo "HTTP $status"
           if [ "$status" != "200" ]; then tail -n 40 ocr-container.log; exit 1; fi
-          python3 -c "import json; n = len(json.load(open('detect.json'))['chords']); print(f'{n} chords'); assert n > 0"
+          # Self-made page (training/chords/manifest.json): diagnostic only, never holdout truth.
+          python3 - <<'PY'
+          import json
+          from collections import Counter
+          expected = Counter("G D/F# Em7 C Am7 D7 Bm7 Em C G/B Am7 D".split())
+          got = Counter(c["text"] for c in json.load(open("detect.json"))["chords"])
+          hit = sum((expected & got).values())
+          print(f"{hit}/{sum(expected.values())} expected chords, detected: {dict(got)}")
+          assert hit >= 10, "OCR runs but does not read the known chords"
+          PY

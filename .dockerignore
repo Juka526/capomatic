@@ -19,3 +19,5 @@ tmp
 output.png
 *.md
 pytest.ini
+training
+data
