@@ -1,6 +1,6 @@
 # V2-3: Melody recognition and transposition feasibility
 
-Status: PLAN ONLY; no engine adoption, experiment or implementation approved. Issue: [#57](https://github.com/Juka526/capomatic/issues/57). This worktree retains PR #51's head `bc6ecdfce595bf8ec954df3b6c34f456fc62a80b` (`plan/staff-transpose`). Current main and owner-reported production: `3929ed86a96d156377649c55714a45eb9c23d719` as of 2026-10-14. Keep this base now; rebase on current `origin/main` before any owner decision to make the PR ready, without force-pushing or rewriting already pushed history. Resolve that future history constraint with an owner-approved replacement branch if a rebase would require rewriting published commits.
+Status: RESEARCH PLAN APPROVED (owner: "모든 작업 승인", 2026-10-14). Contracts/readiness preparation is implemented and tested; actual experiments remain gated on independent data/assets. No hosted adoption or product release is approved. Issue: [#57](https://github.com/Juka526/capomatic/issues/57). This worktree retains PR #51's head `bc6ecdfce595bf8ec954df3b6c34f456fc62a80b` (`plan/staff-transpose`). Current main and owner-reported production: `3929ed86a96d156377649c55714a45eb9c23d719` as of 2026-10-14. Keep this base now; rebase on current `origin/main` before any owner decision to make the PR ready, without force-pushing or rewriting already pushed history. Resolve that future history constraint with an owner-approved replacement branch if a rebase would require rewriting published commits.
 
 Understood as: find which of two rendering methods gives musicians a usable transposed melody sheet sooner, preserve Korean text, and implement a method only after measured research and a second owner approval. The inherited [STAFF_TRANSPOSE_PLAN.md](STAFF_TRANSPOSE_PLAN.md) remains the source of detailed musical correctness gates; this document fixes the V2 comparison, ownership and approval boundaries.
 
@@ -158,3 +158,5 @@ Independent reviewer: `cm3-test`, Claude Opus 5.5, through Herdr Roundtrip. Fina
 | CI | SKIPPED by plan-only `[skip ci]`; current smoke fixture is refused material. Required implementation checks remain pending. |
 
 Recovery command: `herdr agent read cm3-test --source recent-unwrapped --lines 240`. Result: matching final return markers, no remaining publication blockers, and explicit NOT RUN limitations. Review sources and package LICENSE URLs are listed above.
+
+Approved preparation evidence: [V2_3_PREPARATION_REPORT.md](V2_3_PREPARATION_REPORT.md). Code tests pass; real assets, independent humans/scorer and the musical comparison remain NOT RUN / NOT READY.
