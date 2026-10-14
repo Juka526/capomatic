@@ -1,6 +1,6 @@
 # V2-1: Dedicated chord OCR server feasibility
 
-Status: PLAN ONLY. Recommendation: **HOLD production implementation; offer a bounded feasibility experiment for owner approval.** Issue: [#55](https://github.com/Juka526/capomatic/issues/55). Base and owner-reported production: `3929ed86a96d156377649c55714a45eb9c23d719` (`origin/main`, 2026-10-14).
+Status: PLAN APPROVED (owner: "모든 작업 승인", 2026-10-14). S0/S1 preparation is implemented and tested; **production implementation remains HOLD until independent data/baseline gates pass.** Issue: [#55](https://github.com/Juka526/capomatic/issues/55). Base and owner-reported production: `3929ed86a96d156377649c55714a45eb9c23d719` (`origin/main`, 2026-10-14).
 
 Understood as: build our own Capomatic-specific OCR server, with no PaddleOCR service/model fallback in the candidate serving path, that takes at most half the current chord-detection time and reaches 99% accuracy. Investigate effectiveness first and hold the feature if it is not promising. This supersedes the original prompt's "halve OCR error rates" goal. The owner still must approve any development, including an experimental implementation.
 
@@ -143,3 +143,5 @@ Independent reviewer: `cm1-test`, Claude Opus 5.5, through Herdr Roundtrip. Fina
 | CI | SKIPPED by plan-only `[skip ci]`; current smoke fixture is refused material. Required implementation checks remain pending. |
 
 Recovery command: `herdr agent read cm1-test --source recent-unwrapped --lines 240`. Result: matching final return markers, no remaining publication blockers, and explicit NOT RUN limitations. Review sources and package LICENSE URLs are listed above.
+
+Approved first slice evidence: [V2_1_SLICE1_REPORT.md](V2_1_SLICE1_REPORT.md). The diagnostic-only CI font is independently verified/pinned DejaVu 2.35; the candidate training-font proposal remains 2.37.
