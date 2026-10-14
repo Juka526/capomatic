@@ -15,7 +15,7 @@ import pytest
 
 API_URL = os.environ.get("TEST_API_URL", "http://localhost:8000")
 TEST_TOKEN = os.environ.get("TEST_TOKEN", "")
-TEST_IMAGE = "fixtures/images/친구야.jpeg"
+TEST_IMAGE = "fixtures/images/ci-selfmade.png"
 
 # Skip the entire integration suite when no token is available.
 pytestmark = pytest.mark.skipif(
