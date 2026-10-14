@@ -5,7 +5,7 @@ import { Wordmark } from '@/components/Wordmark';
 import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-contact';
 
 // A table's first row is its header.
-export type Block = string | { list: string[] } | { table: string[][] } | { href: string; text: string };
+export type Block = string | { list: string[] } | { table: string[][] } | { href: string; text: string; label?: string };
 export type Section = { heading: string; paragraphs: Block[] };
 
 interface LegalPageProps {
@@ -21,7 +21,7 @@ const cellStyle = { padding: '6px 8px', border: '1px solid rgba(0,0,0,0.12)', te
 function renderBlock(block: Block, key: number) {
   if (typeof block === 'string') return <p key={key} style={textStyle}>{block}</p>;
   if ('list' in block) {
-    return <ul key={key} style={{ ...textStyle, paddingLeft: 22 }}>{block.list.map((item, i) => <li key={i}>{item}</li>)}</ul>;
+    return <ul key={key} style={{ ...textStyle, paddingLeft: 22, listStyle: 'disc' }}>{block.list.map((item, i) => <li key={i}>{item}</li>)}</ul>;
   }
   if ('table' in block) {
     const [head, ...rows] = block.table;
@@ -34,7 +34,11 @@ function renderBlock(block: Block, key: number) {
       </div>
     );
   }
-  return <p key={key} style={textStyle}><Link href={block.href} style={{ color: '#b44a00' }}>{block.text}</Link></p>;
+  // Internal pages go through Link; mailto and other external links stay plain anchors.
+  const link = block.href.startsWith('/')
+    ? <Link href={block.href} style={{ color: '#b44a00' }}>{block.text}</Link>
+    : <a href={block.href} style={{ color: '#b44a00' }}>{block.text}</a>;
+  return <p key={key} style={textStyle}>{block.label}{link}</p>;
 }
 
 export default function LegalPage({ title, sections, updated = '2026-09-16', toc = false }: LegalPageProps) {

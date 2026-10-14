@@ -8,12 +8,11 @@ const IS_TOSS = process.env.NEXT_PUBLIC_APP_TARGET === 'toss';
 // Short-circuit on IS_TOSS so the minifier drops the support sentences from the Toss bundle.
 const HAS_SUPPORT = !IS_TOSS && Boolean(supportUrl(process.env.NEXT_PUBLIC_SUPPORT_URL, process.env.NEXT_PUBLIC_APP_TARGET));
 
-function officer(nameLabel: string, emailLabel: string): Block[] {
-  const rows = [
-    PRIVACY_OFFICER_NAME && `${nameLabel}: ${PRIVACY_OFFICER_NAME}`,
-    PRIVACY_CONTACT_EMAIL && `${emailLabel}: ${PRIVACY_CONTACT_EMAIL}`,
-  ].filter((row): row is string => Boolean(row));
-  return rows.length ? [{ list: rows }] : [];
+function officer(lang: 'ko' | 'en', nameLabel: string, emailLabel: string): Block[] {
+  return [
+    ...(PRIVACY_OFFICER_NAME[lang] ? [`${nameLabel}: ${PRIVACY_OFFICER_NAME[lang]}`] : []),
+    ...(PRIVACY_CONTACT_EMAIL ? [{ label: `${emailLabel}: `, href: `mailto:${PRIVACY_CONTACT_EMAIL}`, text: PRIVACY_CONTACT_EMAIL }] : []),
+  ];
 }
 
 const ko: Section[] = [
@@ -86,7 +85,7 @@ const ko: Section[] = [
     { table: [
       ['수탁자', '위탁 업무'],
       ...(IS_TOSS ? [] : [['Vercel Inc.', '웹사이트 제공(호스팅), 이용 통계(Vercel Analytics)']]),
-      ['Hugging Face SAS', '악보 분석(OCR)과 결과 이미지 생성 서버 운영'],
+      ['Hugging Face, Inc.', '악보 분석(OCR)과 결과 이미지 생성 서버 운영'],
       ...(IS_TOSS ? [] : [['Okta, Inc. (Auth0)', '회원가입·로그인']]),
       ['Functional Software, Inc. (Sentry)', '오류 추적'],
     ] },
@@ -98,9 +97,9 @@ const ko: Section[] = [
     { table: [
       ['이전받는 자(연락처)', '국가', '이전 항목', '시기와 방법', '목적', '보유·이용 기간', '거부 방법과 효과'],
       ...(IS_TOSS ? [] : [['Vercel Inc. (privacy@vercel.com)', '미국(가까운 Vercel 엣지 서버를 거칠 수 있음)', 'IP 주소, 브라우저·기기 정보, 접속 기록, 이용 통계', '서비스 이용 시 네트워크를 통해 전송', '웹사이트 제공, 이용 통계', '4번 항목과 같음', '웹사이트를 이용하지 않으면 됩니다. 이 경우 서비스를 이용할 수 없습니다.']]),
-      ['Hugging Face SAS (privacy@huggingface.co)', '미국', '악보 이미지, 변환 설정, IP 주소', '악보를 올릴 때 네트워크를 통해 전송', '악보 분석, 결과 이미지 생성', '4번 항목과 같음', '악보를 올리지 않으면 됩니다. 이 경우 악보 분석과 전조를 이용할 수 없습니다.'],
+      ['Hugging Face, Inc. (privacy@huggingface.co)', '미국', '악보 이미지, 변환 설정, IP 주소', '악보를 올릴 때 네트워크를 통해 전송', '악보 분석, 결과 이미지 생성', '4번 항목과 같음', '악보를 올리지 않으면 됩니다. 이 경우 악보 분석과 전조를 이용할 수 없습니다.'],
       ...(IS_TOSS ? [] : [['Okta, Inc. (privacy@okta.com)', '미국', '이메일 주소, 비밀번호, 이름·닉네임, 프로필 이미지, 로그인 기록', '회원가입·로그인 시 네트워크를 통해 전송', '회원가입·로그인', '계정 삭제를 요청할 때까지', '로그인하지 않으면 됩니다. 로그인하지 않아도 악보 분석을 이용할 수 있습니다.']]),
-      ['Functional Software, Inc. (compliance@sentry.io)', '미국, 독일', '오류 정보, 브라우저·기기 정보', '오류가 생길 때 네트워크를 통해 전송', '오류 추적, 서비스 안정성', '최대 90일', '서비스를 이용하지 않으면 됩니다. 이 경우 서비스를 이용할 수 없습니다.'],
+      ['Functional Software, Inc. (compliance@sentry.io)', '미국', '오류 정보, 브라우저·기기 정보', '오류가 생길 때 네트워크를 통해 전송', '오류 추적, 서비스 안정성', '최대 90일', '서비스를 이용하지 않으면 됩니다. 이 경우 서비스를 이용할 수 없습니다.'],
     ] },
   ] },
   { heading: '10. 개인정보의 안전성 확보 조치', paragraphs: [
@@ -163,7 +162,7 @@ const ko: Section[] = [
   ] },
   { heading: '16. 개인정보 보호책임자', paragraphs: [
     '운영자는 개인정보 처리에 관한 업무를 총괄하고 관련 고충을 처리하기 위해 다음과 같이 개인정보 보호책임자를 지정하고 있습니다.',
-    ...officer('성명(담당)', '이메일'),
+    ...officer('ko', '성명(담당)', '이메일'),
   ] },
   { heading: '17. 국내대리인', paragraphs: [
     '운영자는 「개인정보 보호법」 제31조의2에 따른 국내대리인 지정 대상이 아닙니다.',
@@ -257,7 +256,7 @@ const en: Section[] = [
     { table: [
       ['Processor', 'Task'],
       ...(IS_TOSS ? [] : [['Vercel Inc.', 'Website hosting, usage statistics (Vercel Analytics)']]),
-      ['Hugging Face SAS', 'Running the server that analyses sheets (OCR) and creates result images'],
+      ['Hugging Face, Inc.', 'Running the server that analyses sheets (OCR) and creates result images'],
       ...(IS_TOSS ? [] : [['Okta, Inc. (Auth0)', 'Sign-up and login']]),
       ['Functional Software, Inc. (Sentry)', 'Error tracking'],
     ] },
@@ -269,9 +268,9 @@ const en: Section[] = [
     { table: [
       ['Recipient (contact)', 'Country', 'Items', 'When and how', 'Purpose', 'Retention', 'How to refuse, and the effect'],
       ...(IS_TOSS ? [] : [['Vercel Inc. (privacy@vercel.com)', 'United States (requests may pass through a nearby Vercel edge server)', 'IP address, browser and device information, access logs, usage statistics', 'Sent over the network when you use the service', 'Hosting the website, usage statistics', 'As in section 4', 'Do not use the website. You will then be unable to use the service.']]),
-      ['Hugging Face SAS (privacy@huggingface.co)', 'United States', 'Sheet image, transform settings, IP address', 'Sent over the network when you upload a sheet', 'Analysing sheets, creating result images', 'As in section 4', 'Do not upload sheets. You will then be unable to analyse or transpose sheets.'],
+      ['Hugging Face, Inc. (privacy@huggingface.co)', 'United States', 'Sheet image, transform settings, IP address', 'Sent over the network when you upload a sheet', 'Analysing sheets, creating result images', 'As in section 4', 'Do not upload sheets. You will then be unable to analyse or transpose sheets.'],
       ...(IS_TOSS ? [] : [['Okta, Inc. (privacy@okta.com)', 'United States', 'Email address, password, name, nickname, profile image, login records', 'Sent over the network at sign-up or login', 'Sign-up and login', 'Until you ask for the account to be deleted', 'Do not log in. You can still analyse sheets without logging in.']]),
-      ['Functional Software, Inc. (compliance@sentry.io)', 'United States, Germany', 'Error information, browser and device information', 'Sent over the network when an error occurs', 'Error tracking, service stability', 'Up to 90 days', 'Do not use the service. You will then be unable to use it.'],
+      ['Functional Software, Inc. (compliance@sentry.io)', 'United States', 'Error information, browser and device information', 'Sent over the network when an error occurs', 'Error tracking, service stability', 'Up to 90 days', 'Do not use the service. You will then be unable to use it.'],
     ] },
   ] },
   { heading: '10. Security measures', paragraphs: [
@@ -334,7 +333,7 @@ const en: Section[] = [
   ] },
   { heading: '16. Privacy officer', paragraphs: [
     'The operator has appointed the following privacy officer to oversee the processing of personal information and handle related complaints.',
-    ...officer('Name (role)', 'Email'),
+    ...officer('en', 'Name (role)', 'Email'),
   ] },
   { heading: '17. Domestic representative', paragraphs: [
     'The operator is not required to appoint a domestic representative under Article 31-2 of the Personal Information Protection Act.',

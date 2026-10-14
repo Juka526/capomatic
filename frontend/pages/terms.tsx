@@ -1,9 +1,14 @@
 import LegalPage, { type Section } from '@/components/LegalPage';
+import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-contact';
 import { supportUrl } from '@/lib/support-link.mjs';
 
 const IS_TOSS = process.env.NEXT_PUBLIC_APP_TARGET === 'toss';
 // Same gate as the support link itself: null in the Toss build or when unset.
 const HAS_SUPPORT = !IS_TOSS && Boolean(supportUrl(process.env.NEXT_PUBLIC_SUPPORT_URL, process.env.NEXT_PUBLIC_APP_TARGET));
+
+const contact = (label: string) => (LEGAL_CONTACT_EMAIL
+  ? [{ label: `${label}: `, href: `mailto:${LEGAL_CONTACT_EMAIL}`, text: LEGAL_CONTACT_EMAIL }]
+  : []);
 
 const sections: { ko: Section[]; en: Section[] } = {
   ko: [
@@ -35,6 +40,7 @@ const sections: { ko: Section[]; en: Section[] } = {
     ] },
     { heading: '권리자 요청', paragraphs: [
       '원작자나 권리자는 아래 문의 경로로 요청할 수 있습니다. 서비스 이용 중단 요청이나 홍보물·예시에서의 제외 요청 등이 해당합니다. 운영자는 요청을 확인한 뒤 빠르게 조치하고 결과를 알려드립니다.',
+      ...contact('이메일'),
       '요청에는 다음 내용을 적어 주세요.',
       { list: [
         '권리자 정보와 연락 방법',
@@ -83,6 +89,7 @@ const sections: { ko: Section[]; en: Section[] } = {
     ] },
     { heading: 'Requests from rights holders', paragraphs: [
       'Creators and rights holders can contact us through the channel below, for example to ask us to stop the service being used for a work, or to be left out of promotional material or examples. We will review the request, act on it promptly and tell you the outcome.',
+      ...contact('Email'),
       'Please include:',
       { list: [
         'who you are and how to reach you;',
