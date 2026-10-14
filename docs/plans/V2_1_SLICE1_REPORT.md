@@ -21,3 +21,9 @@ The validator now fully decodes each page before counting it, with the existing 
 Tester: Claude Opus 5.5, final token `c1tstl`; both return markers recovered. Developer: Sonnet 5.5. Final product fix at `02758f6`; tester files are separately committed by the orchestrator. Real WELOVE/local user inputs are excluded from training and formal held-out claims. Unknown/manual title handling is the approved feasibility choice.
 
 Stop: no S2 tuning/training until rights-cleared independent real-recapture truth and the baseline are frozen. Preserve current production. Rollback is an ordinary new commit; no merge, deployment, console changes or history rewrite. Existing privacy/terms remain untouched; policy changes are mapped in the plan.
+
+## CI reproducibility follow-up
+
+GitHub Ubuntu backend run [38552030943](https://github.com/Juka526/capomatic/actions/runs/38552030943) failed two regeneration checks (681 passed, 11 skipped), while the committed PNG hash remained correct. The developer fix `8483f6e` explicitly selects Pillow `Layout.BASIC` for both font sizes; fixture/font/manifest bytes and strict hash/pixel guards are unchanged. The prior default can select RAQM on builds providing it. Actual RAQM availability on that runner is not established, so this remains a cause hypothesis until the Linux rerun.
+
+Independent Opus verification (`c1linuxt`, both markers recovered): clean-shell `tests/ocr_v2` **75 passed**. The new font-selection spy records a deliberately non-BASIC request before checking generator calls; pre-fix generator fails that regression, the fixed version passes. This verifies explicit selection only, not actual RAQM rendering. Local build: Pillow 12.3.0, FreeType 2.14.3, RAQM unavailable. Ubuntu CI is the remaining integration gate; no skipped check or synthetic diagnostic is a production accuracy/speed claim.

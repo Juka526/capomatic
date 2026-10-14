@@ -178,3 +178,22 @@ def test_generator_check_catches_manifest_hash_mismatch(monkeypatch, tmp_path):
     (tmp_path / "manifest.json").write_text(json.dumps(m))
     monkeypatch.setattr(gen, "MANIFEST", tmp_path / "manifest.json")
     assert gen.main() == 1
+
+
+def test_generator_pins_basic_layout_for_every_font(monkeypatch):
+    """Pillow defaults to RAQM when the build has it (ImageFont.py 12.3.0 L267-270), changing pixels."""
+    from PIL import ImageFont
+
+    gen = _generator(monkeypatch)
+    seen, real = [], ImageFont.truetype
+
+    def spy(*args, **kwargs):
+        seen.append(kwargs.get("layout_engine"))
+        return real(*args, **{**kwargs, "layout_engine": ImageFont.Layout.BASIC})
+
+    monkeypatch.setattr(gen.ImageFont, "truetype", spy)
+    spy(str(ROOT / "training/chords/fonts/DejaVuSans.ttf"), 10, layout_engine=ImageFont.Layout.RAQM)
+    assert seen == [ImageFont.Layout.RAQM]  # T5: the spy records a non-BASIC request
+    seen.clear()
+    gen.render()
+    assert seen and all(engine == ImageFont.Layout.BASIC for engine in seen)
