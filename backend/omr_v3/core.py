@@ -290,6 +290,12 @@ def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', *,
             t = time.monotonic()
             page = root / 'page.png'
             report['input'] = rasterize(source, suffix, page, safety_timeout_seconds, home)
+            if report['input'].get('scale', 1.0) > 2:
+                # Measured: the 745 px test JPEG (upscaled x4) scored ~78 % on notes
+                # versus 97-100 % for 300 dpi PDFs. Tell the user before they rely on it.
+                report['warnings'].append({'type': 'low_resolution_input',
+                                           'upscale': report['input']['scale'],
+                                           'advice': 'Use a 300 dpi PDF or a photo at least 2000 px wide.'})
             t = lap('rasterize', t)
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                 ocr_future = pool.submit(chord_detector, str(page)) if chord_detector else None
