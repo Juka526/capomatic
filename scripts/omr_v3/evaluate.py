@@ -110,6 +110,11 @@ def main() -> None:
     from scripts.omr_v3.compare import compare, lyric_accuracy, transposed_reference
     from scripts.omr_v3.reference import parse_gt, to_music21
 
+    import logging
+
+    args.out.mkdir(parents=True, exist_ok=True)
+    logging.basicConfig(filename=str(args.out / 'pipeline.log'), level=logging.WARNING,
+                        format='%(asctime)s %(name)s %(levelname)s %(message)s')
     manifest = json.loads((EVAL / 'manifest.json').read_text(encoding='utf-8'))
     detector = _paddle_detector() if args.chords == 'paddle' else None
     args.out.mkdir(parents=True, exist_ok=True)

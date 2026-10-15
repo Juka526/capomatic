@@ -42,6 +42,16 @@ jobs:
           'java -version 2>&1 | head -1; /opt/audiveris/bin/Audiveris -help 2>&1 | head -3;
           QT_QPA_PLATFORM=offscreen mscore3 --version; pdfinfo -v 2>&1 | head -1;
           python -c "import music21; print(\"music21\", music21.__version__)"'
+      - name: Audiveris direct run (diagnostics)
+        if: always()
+        run: |
+          mkdir -p omr-v3-evidence/audiveris-direct
+          docker run --rm -v "$PWD:/work" capomatic-omr-eval sh -c \
+            'cd /tmp && pdftoppm -r 300 -gray -png -singlefile /work/tests/omr_v3_eval/scores/jusim.pdf page &&
+             /opt/audiveris/bin/Audiveris -batch -constant org.audiveris.omr.text.Language.defaultSpecification=eng+kor
+             -export -output /work/omr-v3-evidence/audiveris-direct -- /tmp/page.png' > omr-v3-evidence/audiveris-direct/stdout.txt 2>&1 \
+            && echo "::notice title=audiveris direct::ok $(ls omr-v3-evidence/audiveris-direct | tr '\n' ' ')" \
+            || echo "::error title=audiveris direct::$(tail -c 3000 omr-v3-evidence/audiveris-direct/stdout.txt | tr '\n' '|')"
       - name: End-to-end evaluation (PaddleOCR chords)
         run: >-
           docker run --rm -v "$PWD:/work" -w /work -e PYTHONPATH=/work capomatic-omr-eval
@@ -85,6 +95,13 @@ jobs:
                   print(f"::notice title={d} {r['score']} {r['condition']}::notes={t['pitched_notes']['exact']} pitch={t['pitched_notes']['pitch']} "
                         f"rhythm={t['rhythm_acc']} chordsR={t['chords']['recall']} chordsP={t['chords']['precision']} key={t['key_signature_acc']} "
                         f"wall={r['wall_s']}s stages={r['stages_ms']} toolsMB={r['tools_peak_mb']} lyrics={r.get('lyrics_verse1')}")
+          for d in ('omr-v3-evidence', 'omr-v3-evidence-audiveris-chords'):
+              log = pathlib.Path(d) / 'pipeline.log'
+              if log.exists():
+                  text = log.read_text(errors='replace')
+                  k = text.find('failed (exit')
+                  if k >= 0:
+                      print(f'::warning title={d} pipeline.log::' + ' | '.join(text[k:k + 2500].splitlines()))
           for f in ('api-benchmark.txt', 'api-zip-listing.txt', 'api-container-stats.txt'):
               p = pathlib.Path('omr-v3-evidence') / f
               if p.exists():
@@ -103,8 +120,8 @@ jobs:
     # Copy the evidence into a branch so reviewers (and sandboxes without
     # artifact access) can fetch it with git. Never for fork PRs.
     if: >-
-      (github.event_name == 'workflow_dispatch' && inputs.publish) ||
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+      always() && ((github.event_name == 'workflow_dispatch' && inputs.publish) ||
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
     needs: evaluate
     runs-on: ubuntu-latest
     permissions:
