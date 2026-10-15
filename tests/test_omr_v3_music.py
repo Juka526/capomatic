@@ -202,3 +202,11 @@ def test_suffixes_are_written_as_musicxml_degrees(text, kind, degrees, tmp_path)
     assert f'>{kind}</kind>' in xml
     for typ, value in degrees:
         assert f'<degree-value>{value}</degree-value>' in xml and f'<degree-type>{typ}</degree-type>' in xml
+
+
+def test_missing_c_major_key_signature_is_created_before_transposing():
+    s = _score(0, ['C4', 'E4', 'G4', 'C5'])
+    first = s.parts[0].getElementsByClass(stream.Measure).first()
+    first.remove(first.getElementsByClass(key.KeySignature).first())
+    transpose_score(s, 2, 'key')
+    assert s.recurse().getElementsByClass(key.KeySignature).first().sharps == 2

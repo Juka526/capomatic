@@ -66,7 +66,13 @@ def transpose_score(score, semitones: int, mode: Mode = 'key') -> dict:
     for part in score.parts:
         fifths = 0
         regions: list[dict] = []
-        for m in part.getElementsByClass(stream.Measure):
+        measures = list(part.getElementsByClass(stream.Measure))
+        # Audiveris (like MusicXML generally) may omit <key> for C major; without
+        # an explicit signature a transposed C-major song would print in D with no
+        # sharps in the key signature, every F#/C# spelled as an accidental.
+        if measures and not measures[0].getElementsByClass(key.KeySignature):
+            measures[0].insert(0, key.KeySignature(0))
+        for m in measures:
             for ks in m.getElementsByClass(key.KeySignature):
                 fifths = ks.sharps
             original = _region_key(fifths)

@@ -110,3 +110,10 @@ def test_mxl_zip_bomb_and_entities_are_rejected():
     assert exc.value.status == 413
     with pytest.raises(ScoreError):
         validate(_mxl({'score.xml': b'<!DOCTYPE x [<!ENTITY a "b">]><x/>'}), '.mxl')
+
+
+def test_upscaling_respects_the_pixel_budget(tmp_path):
+    src = tmp_path / 'strip.png'
+    src.write_bytes(_png(600, 20000))  # 12 MP; x4 would be 192 MP
+    info = core.rasterize(src, '.png', tmp_path / 'page.png', 10, tmp_path)
+    assert info['width'] * info['height'] <= core.MAX_PIXELS

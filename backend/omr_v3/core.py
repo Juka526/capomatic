@@ -189,10 +189,11 @@ def rasterize(source: Path, suffix: str, out: Path, timeout_seconds: float, home
         scale = 1.0
         if im.width < TARGET_WIDTH:
             scale = min(MAX_UPSCALE, math.ceil(TARGET_WIDTH / im.width))
+            # Never upscale beyond the pixel budget (e.g. a long, narrow strip).
+            while scale > 1 and im.width * im.height * scale * scale > MAX_PIXELS:
+                scale -= 1
             if scale > 1:
                 im = im.resize((im.width * scale, im.height * scale), Image.LANCZOS)
-        if im.width * im.height > MAX_PIXELS * 2:
-            raise ScoreError('Image too large after normalisation', 413)
         im.save(out, format='PNG')
         return {'source': 'image', 'width': im.width, 'height': im.height, 'scale': float(scale)}
 
