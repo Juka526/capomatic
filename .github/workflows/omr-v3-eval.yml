@@ -46,10 +46,7 @@ jobs:
         if: always()
         run: |
           mkdir -p omr-v3-evidence/audiveris-direct
-          docker run --rm -v "$PWD:/work" capomatic-omr-eval sh -c \
-            'cd /tmp && pdftoppm -r 300 -gray -png -singlefile /work/tests/omr_v3_eval/scores/jusim.pdf page &&
-             /opt/audiveris/bin/Audiveris -batch -constant org.audiveris.omr.text.Language.defaultSpecification=eng+kor
-             -export -output /work/omr-v3-evidence/audiveris-direct -- /tmp/page.png' > omr-v3-evidence/audiveris-direct/stdout.txt 2>&1 \
+          docker run --rm -v "$PWD:/work" -e GDK_SCALE=1 capomatic-omr-eval sh -c 'cd /tmp && pdftoppm -r 300 -gray -png -singlefile /work/tests/omr_v3_eval/scores/jusim.pdf page && /opt/audiveris/bin/Audiveris -batch -export -output /work/omr-v3-evidence/audiveris-direct -- /tmp/page.png' > omr-v3-evidence/audiveris-direct/stdout.txt 2>&1 \
             && echo "::notice title=audiveris direct::ok $(ls omr-v3-evidence/audiveris-direct | tr '\n' ' ')" \
             || echo "::error title=audiveris direct::$(tail -c 3000 omr-v3-evidence/audiveris-direct/stdout.txt | tr '\n' '|')"
       - name: End-to-end evaluation (PaddleOCR chords)

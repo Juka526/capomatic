@@ -134,7 +134,12 @@ def _tool_env(home: Path) -> dict[str, str]:
         'XDG_RUNTIME_DIR': str(home),
         'LANG': 'C.UTF-8',
         'QT_QPA_PLATFORM': 'offscreen',
-        'JAVA_OPTS': os.environ.get('CAPOMATIC_OMR_JAVA_OPTS', '-Xmx1536m -Djava.awt.headless=true'),
+        # sun.java2d.uiScale / GDK_SCALE make Audiveris skip its GTK HiDPI probe:
+        # it loads libgtk-3 through JNA and only catches Exception, so on a
+        # server image without GTK the UnsatisfiedLinkError killed every run.
+        'GDK_SCALE': '1',
+        'JAVA_OPTS': os.environ.get('CAPOMATIC_OMR_JAVA_OPTS',
+                                    '-Xmx1536m -Djava.awt.headless=true -Dsun.java2d.uiScale=1'),
     }
     for name in ('JAVA_HOME', 'TESSDATA_PREFIX', 'JAVA_TOOL_OPTIONS'):
         if os.environ.get(name):

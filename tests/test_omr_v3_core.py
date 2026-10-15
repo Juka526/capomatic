@@ -73,6 +73,7 @@ def test_tool_environment_does_not_leak_secrets(tmp_path):
         env = core._tool_env(tmp_path)
     assert not set(secrets) & set(env)
     assert env['HOME'] == str(tmp_path) and env['QT_QPA_PLATFORM'] == 'offscreen'
+    assert env['GDK_SCALE'] == '1' and '-Dsun.java2d.uiScale=1' in env['JAVA_OPTS']
 
 
 def test_tool_timeout_kills_the_process_group(tmp_path):
