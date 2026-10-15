@@ -6,6 +6,12 @@ name: OMR V3 evaluation
 # Evidence (PDFs, MusicXML, side-by-side PNGs, accuracy JSON) is uploaded as
 # an artifact. Results are reported, not gated: 99 % / 30 s are targets.
 on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Also push the evidence to the pr-assets/omr-v3-evidence branch'
+        type: boolean
+        default: false
   pull_request:
     paths:
       - 'backend/omr_v3/**'
@@ -14,7 +20,6 @@ on:
       - 'Dockerfile'
       - 'requirements.txt'
       - '.github/workflows/omr-v3-eval.yml'
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -55,14 +60,36 @@ jobs:
             -F "file=@tests/omr_v3_eval/scores/jusim.pdf" -F semitones=-2 -F mode=capo \
             http://localhost:7860/api/v3/score/transpose.zip)
           echo "HTTP $status"
-          python3 -c "import zipfile; print(sorted(zipfile.ZipFile('api.zip').namelist()))"
-          pip install requests==2.32.5 >/dev/null
-          python3 scripts/omr_v3/benchmark_api.py http://localhost:7860 tests/omr_v3_eval/scores/chingu.pdf --runs 3 \
+          python3 -c "import zipfile; print(sorted(zipfile.ZipFile('api.zip').namelist()))" | tee omr-v3-evidence/api-zip-listing.txt
+          # The runner's system Python refuses pip installs; the image already has requests.
+          docker run --rm --network host -v "$PWD:/work" capomatic-omr-eval \
+            python /work/scripts/omr_v3/benchmark_api.py http://localhost:7860 /work/tests/omr_v3_eval/scores/chingu.pdf --runs 3 \
             | tee omr-v3-evidence/api-benchmark.txt
           docker stats --no-stream omr-api | tee omr-v3-evidence/api-container-stats.txt
           docker logs omr-api > omr-v3-evidence/api-container.log 2>&1 || true
           docker stop omr-api
           test "$status" = 200
+      - name: Results as annotations (readable through the checks API)
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          for d in ('omr-v3-evidence', 'omr-v3-evidence-audiveris-chords'):
+              p = pathlib.Path(d) / 'summary.json'
+              if not p.exists():
+                  print(f'::warning title={d}::no summary.json'); continue
+              for r in json.loads(p.read_text())['runs']:
+                  if 'error' in r:
+                      print(f"::error title={d} {r['score']} {r['condition']}::{r['error'][:300]}"); continue
+                  t = r['transposed']
+                  print(f"::notice title={d} {r['score']} {r['condition']}::notes={t['pitched_notes']['exact']} pitch={t['pitched_notes']['pitch']} "
+                        f"rhythm={t['rhythm_acc']} chordsR={t['chords']['recall']} chordsP={t['chords']['precision']} key={t['key_signature_acc']} "
+                        f"wall={r['wall_s']}s stages={r['stages_ms']} toolsMB={r['tools_peak_mb']} lyrics={r.get('lyrics_verse1')}")
+          for f in ('api-benchmark.txt', 'api-zip-listing.txt', 'api-container-stats.txt'):
+              p = pathlib.Path('omr-v3-evidence') / f
+              if p.exists():
+                  print(f'::notice title={f}::' + p.read_text().replace('\n', ' | ')[:900])
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -71,3 +98,28 @@ jobs:
             omr-v3-evidence
             omr-v3-evidence-audiveris-chords
           retention-days: 30
+
+  publish:
+    # Copy the evidence into a branch so reviewers (and sandboxes without
+    # artifact access) can fetch it with git. Never for fork PRs.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.publish) ||
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    needs: evaluate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: omr-v3-evidence
+          path: evidence
+      - name: Push evidence branch
+        run: |
+          cd evidence
+          git init -q -b pr-assets/omr-v3-evidence
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "OMR V3 evaluation evidence for ${{ github.event.pull_request.head.sha || github.sha }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:pr-assets/omr-v3-evidence
