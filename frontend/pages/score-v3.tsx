@@ -15,6 +15,9 @@ import {
 } from '@/lib/score-v3.mjs';
 
 const ENABLED = process.env.NEXT_PUBLIC_ENABLE_SCORE_V3 === '1';
+// Without Auth0 settings (local development) there is no login to ask for;
+// the API still decides whether a token is required.
+const AUTH_CONFIGURED = Boolean(process.env.NEXT_PUBLIC_AUTH0_DOMAIN && process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID);
 const API = process.env.NEXT_PUBLIC_OMR_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 const TEXT = {
@@ -34,7 +37,7 @@ const TEXT = {
     pdf: 'PDF만',
     submit: '변환하기',
     busy: '변환 중… 한 페이지에 1분 정도 걸릴 수 있습니다.',
-    done: (s: number, w: string | null) => `완료 (${s.toFixed(1)}초). ${w && w !== '0' ? `검토가 필요한 마디 경고 ${w}건 — ` : ''}음표와 코드를 꼭 확인하세요.`,
+    done: (s: number, w: string | null) => `완료 (${s.toFixed(1)}초). ${w && w !== '0' ? `검토 경고 ${w}건 — ` : ''}음표와 코드를 꼭 확인하세요.`,
     badType: '지원하지 않는 파일 형식입니다.',
     badSize: '파일은 10MB 이하여야 합니다.',
     failed: (status: number) => `변환에 실패했습니다 (${status}).`,
@@ -58,7 +61,7 @@ const TEXT = {
     pdf: 'PDF only',
     submit: 'Convert',
     busy: 'Converting… about a minute per page.',
-    done: (s: number, w: string | null) => `Done in ${s.toFixed(1)} s. ${w && w !== '0' ? `${w} bar warning(s) to review — ` : ''}check notes and chords before use.`,
+    done: (s: number, w: string | null) => `Done in ${s.toFixed(1)} s. ${w && w !== '0' ? `${w} review warning(s) — ` : ''}check notes and chords before use.`,
     badType: 'Unsupported file type.',
     badSize: 'Files must be 10 MB or smaller.',
     failed: (status: number) => `Conversion failed (${status}).`,
@@ -139,7 +142,7 @@ export default function ScoreV3() {
           <h1 style={{ margin: 0, fontSize: '1.3rem' }}>{t.title}</h1>
           {!ENABLED ? (
             <p style={card}>{t.disabled}</p>
-          ) : isLoading ? null : !isAuthenticated ? (
+          ) : AUTH_CONFIGURED && isLoading ? null : AUTH_CONFIGURED && !isAuthenticated ? (
             <div style={card}>
               <p style={{ marginTop: 0 }}>{t.loginNeeded}</p>
               <button type="button" onClick={() => login('/score-v3')} style={{ background: '#a34200', color: 'white', border: 0, borderRadius: 50, padding: '10px 22px', fontWeight: 700, cursor: 'pointer' }}>{t.login}</button>
