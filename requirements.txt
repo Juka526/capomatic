@@ -17,6 +17,9 @@ python-multipart==0.0.32  # required for UploadFile form parsing
 sentry-sdk[fastapi]==2.69.1
 httpx==0.28.1         # Auth0 JWKS retrieval and deployed API evaluation
 
+# Section 5b (V3 score conversion; external Audiveris/MuseScore binaries are installed by the Dockerfile)
+music21==9.9.1       # MusicXML parsing/transposition; resolves with numpy 1.26.4
+
 # Section 6 (Auth0 token verification)
 PyJWT[crypto]==2.15.0
 cryptography==50.0.1

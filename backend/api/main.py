@@ -127,7 +127,25 @@ app.add_middleware(
     allow_origins=[o.strip() for o in _cors_origins.split(",")],
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
+    expose_headers=["X-OMR-Total-Ms", "X-OMR-Accuracy", "X-OMR-Review-Warnings"],
 )
+
+
+# ---------------------------------------------------------------------------
+# V3 score conversion (experimental, off unless CAPOMATIC_ENABLE_OMR_V3=1)
+# ---------------------------------------------------------------------------
+
+from backend.omr_v3 import router as omr_v3  # noqa: E402  (needs the app above)
+
+
+def _omr_chord_detector(image_path: str) -> tuple[list[dict], dict]:
+    """Chord OCR for the score pipeline, queued on the same single Paddle thread as /detect."""
+    future = _ocr_executor.submit(detect_chords_hybrid, image_path, use_ai_fallback=False)
+    return future.result()
+
+
+omr_v3.configure(chord_detector=_omr_chord_detector)
+app.include_router(omr_v3.router)
 
 
 # ---------------------------------------------------------------------------

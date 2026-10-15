@@ -101,15 +101,33 @@ class PlacedChord:
     text: str
 
 
-def align_ocr_chords(items: list[dict], geometry: SheetGeometry) -> list[PlacedChord]:
+def _anchor_residual(boxes, geometry: SheetGeometry, anchor) -> float:
+    """Median distance from each box's anchor x to its nearest time slot."""
+    dists = []
+    for (x1, x2, y2) in boxes:
+        system = geometry.system_below(y2)
+        if system is None:
+            continue
+        x = anchor(x1, x2)
+        stack = system.stack_at(x)
+        if stack is None or not stack.slots:
+            continue
+        dists.append(min(abs(sx - x) for sx, _ in stack.slots))
+    dists.sort()
+    return dists[len(dists) // 2] if dists else 0.0
+
+
+def align_ocr_chords(items: list[dict], geometry: SheetGeometry, report: dict | None = None) -> list[PlacedChord]:
     """Place OCR chord boxes (pixel coordinates of the OMR raster) on measure offsets.
 
-    A chord belongs to the nearest staff system *below* it and to the time slot
-    whose x position is closest to the chord's left edge plus half a note head
-    (lead sheets left-align chord names with the note they sound on).
+    A chord belongs to the nearest staff system *below* it. Engravers either
+    left-align a chord name with its note (most notation software) or centre
+    it over the note; the convention whose anchors sit closer to the measure's
+    time slots is chosen per sheet, then each chord snaps to the nearest slot
+    (preferring beats, see ``Stack.offset_at``).
     """
-    placed: list[PlacedChord] = []
     head = geometry.head_width
+    chords: list[tuple[float, float, float, float, str]] = []
     for item in items:
         bbox = item.get('bbox')
         text = item.get('text', '')
@@ -119,16 +137,32 @@ def align_ocr_chords(items: list[dict], geometry: SheetGeometry) -> list[PlacedC
             parse_chord(text)
         except ValueError:
             continue
-        x1, _, x2, y2 = (float(v) for v in bbox)
+        x1, y1, x2, y2 = (float(v) for v in bbox)
+        chords.append((x1, y1, x2, y2, text))
+
+    def left(x1: float, x2: float) -> float:
+        return x1 + head / 2
+
+    def centre(x1: float, x2: float) -> float:
+        return (x1 + x2) / 2
+
+    boxes = [(c[0], c[2], c[3]) for c in chords]
+    anchor = left
+    if _anchor_residual(boxes, geometry, centre) < _anchor_residual(boxes, geometry, left):
+        anchor = centre
+    if report is not None:
+        report['chord_anchor'] = 'centre' if anchor is centre else 'left'
+
+    placed: list[PlacedChord] = []
+    for x1, _, x2, y2, text in chords:
         system = geometry.system_below(y2)
         if system is None:
             continue
-        x = x1 + head / 2
+        x = anchor(x1, x2)
         stack = system.stack_at(x)
         if stack is None:
             continue
-        offset = stack.offset_at(x, tolerance=head * 1.5)
-        placed.append(PlacedChord(stack.index, offset, text))
+        placed.append(PlacedChord(stack.index, stack.offset_at(x, tolerance=head * 1.5), text))
     placed.sort(key=lambda p: (p.measure_index, p.offset))
     # Two detections on the same beat are one chord read twice; keep the first.
     unique: list[PlacedChord] = []
@@ -155,3 +189,28 @@ def replace_chord_symbols(score, placed: list[PlacedChord]) -> int:
         measures[p.measure_index].insert(float(p.offset), chord_symbol_from_text(p.text))
         inserted += 1
     return inserted
+
+
+def score_chords(score) -> list[PlacedChord]:
+    """Chord symbols already in the score (from Audiveris), as placements."""
+    from music21 import harmony, stream
+
+    out: list[PlacedChord] = []
+    for i, m in enumerate(score.parts[0].getElementsByClass(stream.Measure)):
+        for cs in m.recurse().getElementsByClass(harmony.ChordSymbol):
+            try:
+                text = chord_text(cs)
+                parse_chord(text)
+            except ValueError:
+                continue
+            out.append(PlacedChord(i, Fraction(cs.getOffsetInHierarchy(m)).limit_denominator(64), text))
+    return out
+
+
+def merge_chords(primary: list[PlacedChord], fallback: list[PlacedChord]) -> tuple[list[PlacedChord], int]:
+    """Primary chords plus fallback chords on beats the primary source left empty."""
+    taken = {(p.measure_index, p.offset) for p in primary}
+    added = [f for f in fallback
+             if not any(m == f.measure_index and abs(o - f.offset) < 1 for m, o in taken)]
+    merged = sorted(primary + added, key=lambda p: (p.measure_index, p.offset))
+    return merged, len(added)

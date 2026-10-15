@@ -29,14 +29,24 @@ class Stack:
     slots: list[tuple[float, Fraction]]  # (absolute x, offset in quarter lengths)
 
     def offset_at(self, x: float, tolerance: float) -> Fraction:
-        """Offset of the slot nearest *x*; a chord before the first slot sits on beat 1."""
+        """Offset of the slot nearest *x*, nudged toward beats.
+
+        Chord changes fall on beats far more often than on 16th positions, so a
+        slot on a beat (or half beat) wins over a slightly closer off-beat slot.
+        A chord before the first slot sits on that slot.
+        """
         if not self.slots:
             return Fraction(0)
-        best_x, best_off = min(self.slots, key=lambda s: abs(s[0] - x))
         first_x, first_off = self.slots[0]
         if x < first_x - tolerance:
             return first_off
-        return best_off
+
+        def cost(slot: tuple[float, Fraction]) -> float:
+            sx, off = slot
+            penalty = 0.0 if off.denominator == 1 else 0.25 if off.denominator == 2 else 0.6
+            return abs(sx - x) + penalty * tolerance
+
+        return min(self.slots, key=cost)[1]
 
 
 @dataclass(frozen=True)

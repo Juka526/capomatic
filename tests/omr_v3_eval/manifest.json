@@ -1,0 +1,9 @@
+{
+  "note": "Owner-supplied worship lead sheets (2026-10-15) used with the owner's permission for this private evaluation. 'dev' sheets were inspected while building repairs; 'held-out' was not used for any tuning.",
+  "scores": [
+    {"name": "jusim", "title": "주님 난 알고 싶어요", "source": "scores/jusim.pdf", "reference": "reference/jusim.gt", "role": "dev", "key_shift": 2, "capo": 2},
+    {"name": "jayu", "title": "자유", "source": "scores/jayu.pdf", "reference": "reference/jayu.gt", "role": "dev", "key_shift": -2, "capo": 3},
+    {"name": "chingu", "title": "친구여 함께 노래해", "source": "scores/chingu.pdf", "reference": "reference/chingu.gt", "role": "dev", "key_shift": 2, "capo": 2},
+    {"name": "naui", "title": "나의 모습 나의 소유", "source": "scores/naui.jpg", "reference": "reference/naui.gt", "role": "held-out", "key_shift": -2, "capo": 2}
+  ]
+}

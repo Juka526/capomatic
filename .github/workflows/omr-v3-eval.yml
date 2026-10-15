@@ -1,0 +1,68 @@
+name: OMR V3 evaluation
+
+# Builds the production image (with the V3 tools) and runs the end-to-end
+# score evaluation inside it: Audiveris + PaddleOCR chords + music21 +
+# MuseScore on the evaluation sheets, compared with hand-made references.
+# Evidence (PDFs, MusicXML, side-by-side PNGs, accuracy JSON) is uploaded as
+# an artifact. Results are reported, not gated: 99 % / 30 s are targets.
+on:
+  pull_request:
+    paths:
+      - 'backend/omr_v3/**'
+      - 'scripts/omr_v3/**'
+      - 'tests/omr_v3_eval/**'
+      - 'Dockerfile'
+      - 'requirements.txt'
+      - '.github/workflows/omr-v3-eval.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --tag capomatic-omr-eval .
+      - name: Tool versions
+        run: >-
+          docker run --rm capomatic-omr-eval sh -c
+          'java -version 2>&1 | head -1; /opt/audiveris/bin/Audiveris -help 2>&1 | head -3;
+          QT_QPA_PLATFORM=offscreen mscore3 --version; pdfinfo -v 2>&1 | head -1;
+          python -c "import music21; print(\"music21\", music21.__version__)"'
+      - name: End-to-end evaluation (PaddleOCR chords)
+        run: >-
+          docker run --rm -v "$PWD:/work" -w /work -e PYTHONPATH=/work capomatic-omr-eval
+          python -m scripts.omr_v3.evaluate --out /work/omr-v3-evidence --chords paddle
+      - name: End-to-end evaluation (Audiveris chords only, for comparison)
+        run: >-
+          docker run --rm -v "$PWD:/work" -w /work -e PYTHONPATH=/work capomatic-omr-eval
+          python -m scripts.omr_v3.evaluate --out /work/omr-v3-evidence-audiveris-chords --chords none
+      - name: API smoke test and latency (feature flag on, auth off for CI only)
+        run: |
+          docker run --rm --detach --name omr-api --publish 7860:7860 \
+            -e CAPOMATIC_ENABLE_OMR_V3=1 -e CAPOMATIC_OMR_REQUIRE_AUTH=0 -e CAPOMATIC_OMR_RATE_LIMIT=100/3600 \
+            capomatic-omr-eval
+          for _ in $(seq 1 60); do curl --fail --silent http://localhost:7860/health && break; sleep 5; done
+          status=$(curl --silent --output api.zip --write-out '%{http_code}' --max-time 600 \
+            -F "file=@tests/omr_v3_eval/scores/jusim.pdf" -F semitones=-2 -F mode=capo \
+            http://localhost:7860/api/v3/score/transpose.zip)
+          echo "HTTP $status"
+          python3 -c "import zipfile; print(sorted(zipfile.ZipFile('api.zip').namelist()))"
+          pip install requests==2.32.5 >/dev/null
+          python3 scripts/omr_v3/benchmark_api.py http://localhost:7860 tests/omr_v3_eval/scores/chingu.pdf --runs 3 \
+            | tee omr-v3-evidence/api-benchmark.txt
+          docker stats --no-stream omr-api | tee omr-v3-evidence/api-container-stats.txt
+          docker logs omr-api > omr-v3-evidence/api-container.log 2>&1 || true
+          docker stop omr-api
+          test "$status" = 200
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: omr-v3-evidence
+          path: |
+            omr-v3-evidence
+            omr-v3-evidence-audiveris-chords
+          retention-days: 30

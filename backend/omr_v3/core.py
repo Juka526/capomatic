@@ -29,7 +29,7 @@ from typing import Callable
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from . import cleanup
-from .chords import align_ocr_chords, replace_chord_symbols
+from .chords import align_ocr_chords, merge_chords, replace_chord_symbols, score_chords
 from .geometry import GeometryError, load_geometry
 from .transpose import transpose_score, validate_request
 
@@ -301,8 +301,12 @@ def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', *,
         if geometry is not None and geometry.measure_count == len(measures):
             report['repairs']['ledger_notes_fixed'] = cleanup.fix_missed_ledgers(score, geometry, root / 'page.png')
         if ocr_items is not None and geometry is not None and geometry.measure_count == len(measures):
-            placed = align_ocr_chords(ocr_items, geometry)
+            placed = align_ocr_chords(ocr_items, geometry, report)
             report['chord_source'] = 'paddleocr'
+            if os.environ.get('CAPOMATIC_OMR_CHORD_MERGE', '1') == '1':
+                placed, added = merge_chords(placed, score_chords(score))
+                report['chord_source'] = 'paddleocr+audiveris'
+                report['chords_from_audiveris'] = added
             report['chords_placed'] = replace_chord_symbols(score, placed)
             report['chords_detected'] = len(ocr_items)
         elif ocr_items is not None:
