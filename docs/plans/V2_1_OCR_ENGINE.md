@@ -1,8 +1,12 @@
+> Owner scope update (2026-10-15): ACTIVE V2 PRIORITY: custom non-Paddle OCR. Research-led replanning replaces automatic Arena escalation. Preserve independent data/baseline gates and report unmeasured candidate performance honestly. Base remains `3929ed86a96d156377649c55714a45eb9c23d719`; retain existing worktree history.
+
 # V2-1: Dedicated chord OCR server feasibility
 
 Status: PLAN APPROVED (owner: "모든 작업 승인", 2026-10-14). S0/S1 preparation is implemented and tested; **production implementation remains HOLD until independent data/baseline gates pass.** Issue: [#55](https://github.com/Juka526/capomatic/issues/55). Base and owner-reported production: `3929ed86a96d156377649c55714a45eb9c23d719` (`origin/main`, 2026-10-14).
 
 Understood as: build our own Capomatic-specific OCR server, with no PaddleOCR service/model fallback in the candidate serving path, that takes at most half the current chord-detection time and reaches 99% accuracy. Investigate effectiveness first and hold the feature if it is not promising. This supersedes the original prompt's "halve OCR error rates" goal. The owner still must approve any development, including an experimental implementation.
+
+Current staged research plan: [V2_1_RESEARCH_REPLAN.md](V2_1_RESEARCH_REPLAN.md). It supersedes stale recommendation/architecture/scheduling prose below while preserving historical evidence and all acceptance gates. Unknown/manual title was already approved.
 
 ## 1. Decision and evidence
 
