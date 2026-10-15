@@ -44,7 +44,7 @@ Backend (Hugging Face Space variables):
 | `CAPOMATIC_OMR_TOOL_TIMEOUT_SECONDS` | `300` | hard kill for one external tool (safety net, not a latency target) |
 | `CAPOMATIC_OMR_JAVA_OPTS` | `-Xmx1536m -Djava.awt.headless=true` | Audiveris JVM options |
 | `CAPOMATIC_OMR_CHORD_MERGE` | `1` | add Audiveris chords on beats PaddleOCR left empty |
-| `CAPOMATIC_OMR_KEEP_MARKS` | unset | `1` keeps dynamics/articulations (default strips them; all were false positives on the test sheets) |
+| `CAPOMATIC_OMR_KEEP_MARKS` | unset | `1` keeps dynamics, articulations and fermatas (default strips them; all were false positives on the test sheets) |
 | `CAPOMATIC_OMR_OCR_LANGUAGES` | `eng+kor` | Tesseract languages for Audiveris text |
 | `CORS_ORIGINS` | existing | must include the frontend origin (already true for V1) |
 

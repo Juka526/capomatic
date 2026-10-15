@@ -123,7 +123,7 @@ def chord_words_to_symbols(score) -> dict:
 
 
 def strip_marks(score) -> dict:
-    """Remove dynamics and articulations.
+    """Remove dynamics, articulations and fermatas.
 
     On the evaluation lead sheets every recognised dynamic/accent was a false
     positive (watermark strokes and lyric hyphens); real lead sheets rarely
@@ -131,10 +131,10 @@ def strip_marks(score) -> dict:
     """
     import os
 
-    from music21 import dynamics, note
+    from music21 import dynamics, expressions, note
 
     if os.environ.get('CAPOMATIC_OMR_KEEP_MARKS') == '1':
-        return {'dynamics': 0, 'articulations': 0}
+        return {'dynamics': 0, 'articulations': 0, 'fermatas': 0}
     dyn = 0
     for d in list(score.recurse().getElementsByClass(dynamics.Dynamic)):
         d.activeSite.remove(d)
@@ -144,12 +144,15 @@ def strip_marks(score) -> dict:
             if isinstance(sp, dynamics.DynamicWedge):
                 part.remove(sp, recurse=True)
                 dyn += 1
-    arts = 0
+    arts = ferm = 0
     for n in score.recurse().getElementsByClass(note.GeneralNote):
         if n.articulations:
             arts += len(n.articulations)
             n.articulations = []
-    return {'dynamics': dyn, 'articulations': arts}
+        kept = [e for e in n.expressions if not isinstance(e, expressions.Fermata)]
+        ferm += len(n.expressions) - len(kept)
+        n.expressions = kept
+    return {'dynamics': dyn, 'articulations': arts, 'fermatas': ferm}
 
 
 def _has_ledger(pixels, width: int, height: int, head, line_ys, dark: int = 128) -> bool:

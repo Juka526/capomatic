@@ -127,9 +127,10 @@ def test_chord_words_become_symbols_and_marks_are_removed():
     m.insert(1, expressions.TextExpression('Fine'))
     m.insert(0, dynamics.Dynamic('p'))
     m.notes[1].articulations = [articulations.Accent()]
+    m.notes[2].expressions.append(expressions.Fermata())
     assert cleanup.chord_words_to_symbols(s)['converted'] == 1
     assert _chords(s) == ['Bbadd2']
-    assert cleanup.strip_marks(s) == {'dynamics': 1, 'articulations': 1}
+    assert cleanup.strip_marks(s) == {'dynamics': 1, 'articulations': 1, 'fermatas': 1}
 
 
 def _geometry() -> SheetGeometry:
