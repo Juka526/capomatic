@@ -1,0 +1,183 @@
+{
+ "recognized_vs_reference": {
+  "measures": {
+   "reference": 33,
+   "candidate": 33
+  },
+  "events": {
+   "reference": 274,
+   "candidate": 274
+  },
+  "note_exact": 1.0,
+  "pitch_acc": 1.0,
+  "rhythm_acc": 1.0,
+  "pitched_notes": {
+   "reference": 249,
+   "exact": 1.0,
+   "pitch": 1.0
+  },
+  "ser": 0.0,
+  "ops": {
+   "substitutions": 0,
+   "deletions": 0,
+   "insertions": 0
+  },
+  "chords": {
+   "reference": 64,
+   "candidate": 64,
+   "hits": 63,
+   "recall": 0.9844,
+   "precision": 0.9844
+  },
+  "key_signature_acc": 1.0,
+  "time_signature_acc": 1.0,
+  "note_diffs": [],
+  "chord_diffs": [
+   {
+    "ref_measure": 17,
+    "offset": "0",
+    "expected": "A7/C#",
+    "found_in_bar": [
+     "A@0",
+     "Dm7@2"
+    ]
+   }
+  ]
+ },
+ "transposed_vs_reference": {
+  "measures": {
+   "reference": 33,
+   "candidate": 33
+  },
+  "events": {
+   "reference": 274,
+   "candidate": 274
+  },
+  "note_exact": 1.0,
+  "pitch_acc": 1.0,
+  "rhythm_acc": 1.0,
+  "pitched_notes": {
+   "reference": 249,
+   "exact": 1.0,
+   "pitch": 1.0
+  },
+  "ser": 0.0,
+  "ops": {
+   "substitutions": 0,
+   "deletions": 0,
+   "insertions": 0
+  },
+  "chords": {
+   "reference": 64,
+   "candidate": 64,
+   "hits": 63,
+   "recall": 0.9844,
+   "precision": 0.9844
+  },
+  "key_signature_acc": 1.0,
+  "time_signature_acc": 1.0,
+  "note_diffs": [],
+  "chord_diffs": [
+   {
+    "ref_measure": 17,
+    "offset": "0",
+    "expected": "F#7/A#",
+    "found_in_bar": [
+     "F#@0",
+     "Bm7@2"
+    ]
+   }
+  ]
+ },
+ "musescore_roundtrip_vs_transposed": {
+  "measures": {
+   "reference": 33,
+   "candidate": 33
+  },
+  "events": {
+   "reference": 274,
+   "candidate": 274
+  },
+  "note_exact": 1.0,
+  "pitch_acc": 1.0,
+  "rhythm_acc": 1.0,
+  "pitched_notes": {
+   "reference": 249,
+   "exact": 1.0,
+   "pitch": 1.0
+  },
+  "ser": 0.0,
+  "ops": {
+   "substitutions": 0,
+   "deletions": 0,
+   "insertions": 0
+  },
+  "chords": {
+   "reference": 64,
+   "candidate": 64,
+   "hits": 58,
+   "recall": 0.9062,
+   "precision": 0.9062
+  },
+  "key_signature_acc": 1.0,
+  "time_signature_acc": 1.0,
+  "note_diffs": [],
+  "chord_diffs": [
+   {
+    "ref_measure": 7,
+    "offset": "0",
+    "expected": "A7sus4",
+    "found_in_bar": [
+     "A7@0",
+     "G/B@2",
+     "A/C#@3"
+    ]
+   },
+   {
+    "ref_measure": 9,
+    "offset": "2",
+    "expected": "A7sus4",
+    "found_in_bar": [
+     "Gmaj7@0",
+     "A7@2",
+     "A/C#@3"
+    ]
+   },
+   {
+    "ref_measure": 13,
+    "offset": "0",
+    "expected": "Gadd9",
+    "found_in_bar": [
+     "G@0",
+     "D/F#@2",
+     "F6@3"
+    ]
+   },
+   {
+    "ref_measure": 15,
+    "offset": "0",
+    "expected": "A7sus4",
+    "found_in_bar": [
+     "A7@0",
+     "A/G@3"
+    ]
+   },
+   {
+    "ref_measure": 23,
+    "offset": "0",
+    "expected": "A7sus4",
+    "found_in_bar": [
+     "A7@0"
+    ]
+   },
+   {
+    "ref_measure": 31,
+    "offset": "0",
+    "expected": "A7sus4",
+    "found_in_bar": [
+     "A7@0"
+    ]
+   }
+  ]
+ }
+}

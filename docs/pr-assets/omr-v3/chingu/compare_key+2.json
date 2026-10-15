@@ -1,0 +1,145 @@
+{
+ "recognized_vs_reference": {
+  "measures": {
+   "reference": 27,
+   "candidate": 27
+  },
+  "events": {
+   "reference": 219,
+   "candidate": 219
+  },
+  "note_exact": 1.0,
+  "pitch_acc": 1.0,
+  "rhythm_acc": 1.0,
+  "pitched_notes": {
+   "reference": 197,
+   "exact": 1.0,
+   "pitch": 1.0
+  },
+  "ser": 0.0,
+  "ops": {
+   "substitutions": 0,
+   "deletions": 0,
+   "insertions": 0
+  },
+  "chords": {
+   "reference": 36,
+   "candidate": 36,
+   "hits": 34,
+   "recall": 0.9444,
+   "precision": 0.9444
+  },
+  "key_signature_acc": 1.0,
+  "time_signature_acc": 1.0,
+  "note_diffs": [],
+  "chord_diffs": [
+   {
+    "ref_measure": 1,
+    "offset": "2",
+    "expected": "Dm711",
+    "found_in_bar": [
+     "C@0",
+     "Dm@2"
+    ]
+   },
+   {
+    "ref_measure": 9,
+    "offset": "2",
+    "expected": "Dm711",
+    "found_in_bar": [
+     "C@0",
+     "Dm@2"
+    ]
+   }
+  ]
+ },
+ "transposed_vs_reference": {
+  "measures": {
+   "reference": 27,
+   "candidate": 27
+  },
+  "events": {
+   "reference": 219,
+   "candidate": 219
+  },
+  "note_exact": 1.0,
+  "pitch_acc": 1.0,
+  "rhythm_acc": 1.0,
+  "pitched_notes": {
+   "reference": 197,
+   "exact": 1.0,
+   "pitch": 1.0
+  },
+  "ser": 0.0,
+  "ops": {
+   "substitutions": 0,
+   "deletions": 0,
+   "insertions": 0
+  },
+  "chords": {
+   "reference": 36,
+   "candidate": 36,
+   "hits": 34,
+   "recall": 0.9444,
+   "precision": 0.9444
+  },
+  "key_signature_acc": 1.0,
+  "time_signature_acc": 1.0,
+  "note_diffs": [],
+  "chord_diffs": [
+   {
+    "ref_measure": 1,
+    "offset": "2",
+    "expected": "Em711",
+    "found_in_bar": [
+     "D@0",
+     "Em@2"
+    ]
+   },
+   {
+    "ref_measure": 9,
+    "offset": "2",
+    "expected": "Em711",
+    "found_in_bar": [
+     "D@0",
+     "Em@2"
+    ]
+   }
+  ]
+ },
+ "musescore_roundtrip_vs_transposed": {
+  "measures": {
+   "reference": 27,
+   "candidate": 27
+  },
+  "events": {
+   "reference": 219,
+   "candidate": 219
+  },
+  "note_exact": 1.0,
+  "pitch_acc": 1.0,
+  "rhythm_acc": 1.0,
+  "pitched_notes": {
+   "reference": 197,
+   "exact": 1.0,
+   "pitch": 1.0
+  },
+  "ser": 0.0,
+  "ops": {
+   "substitutions": 0,
+   "deletions": 0,
+   "insertions": 0
+  },
+  "chords": {
+   "reference": 36,
+   "candidate": 36,
+   "hits": 36,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "key_signature_acc": 1.0,
+  "time_signature_acc": 1.0,
+  "note_diffs": [],
+  "chord_diffs": []
+ }
+}

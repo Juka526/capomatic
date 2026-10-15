@@ -1,0 +1,265 @@
+{
+ "recognized_vs_reference": {
+  "measures": {
+   "reference": 25,
+   "candidate": 25
+  },
+  "events": {
+   "reference": 200,
+   "candidate": 197
+  },
+  "note_exact": 0.97,
+  "pitch_acc": 0.98,
+  "rhythm_acc": 0.975,
+  "pitched_notes": {
+   "reference": 174,
+   "exact": 0.9713,
+   "pitch": 0.9828
+  },
+  "ser": 0.03,
+  "ops": {
+   "substitutions": 3,
+   "deletions": 3,
+   "insertions": 0
+  },
+  "chords": {
+   "reference": 38,
+   "candidate": 34,
+   "hits": 33,
+   "recall": 0.8684,
+   "precision": 0.9706
+  },
+  "key_signature_acc": 1.0,
+  "time_signature_acc": 1.0,
+  "note_diffs": [
+   {
+    "ref_measure": 8,
+    "offset": "1",
+    "expected": "A4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 8,
+    "offset": "3/2",
+    "expected": "G4/1/4",
+    "found": null
+   },
+   {
+    "ref_measure": 8,
+    "offset": "7/4",
+    "expected": "A4/1/4",
+    "found": null
+   },
+   {
+    "ref_measure": 8,
+    "offset": "3",
+    "expected": "rest/1/2",
+    "found": "G4/1/2"
+   },
+   {
+    "ref_measure": 8,
+    "offset": "7/2",
+    "expected": "A4/1/4",
+    "found": "A4/1/2"
+   },
+   {
+    "ref_measure": 8,
+    "offset": "15/4",
+    "expected": "A4/1/4",
+    "found": "A4/1"
+   }
+  ],
+  "chord_diffs": [
+   {
+    "ref_measure": 3,
+    "offset": "0",
+    "expected": "Bbadd2",
+    "found_in_bar": [
+     "Bbm6@2"
+    ]
+   },
+   {
+    "ref_measure": 7,
+    "offset": "0",
+    "expected": "Bbadd2",
+    "found_in_bar": [
+     "Bbm6@3"
+    ]
+   },
+   {
+    "ref_measure": 7,
+    "offset": "2",
+    "expected": "Bbm6",
+    "found_in_bar": [
+     "Bbm6@3"
+    ]
+   },
+   {
+    "ref_measure": 15,
+    "offset": "0",
+    "expected": "Bbadd2",
+    "found_in_bar": []
+   },
+   {
+    "ref_measure": 15,
+    "offset": "2",
+    "expected": "Bbm6",
+    "found_in_bar": []
+   }
+  ]
+ },
+ "transposed_vs_reference": {
+  "measures": {
+   "reference": 25,
+   "candidate": 25
+  },
+  "events": {
+   "reference": 200,
+   "candidate": 197
+  },
+  "note_exact": 0.97,
+  "pitch_acc": 0.98,
+  "rhythm_acc": 0.975,
+  "pitched_notes": {
+   "reference": 174,
+   "exact": 0.9713,
+   "pitch": 0.9828
+  },
+  "ser": 0.03,
+  "ops": {
+   "substitutions": 3,
+   "deletions": 3,
+   "insertions": 0
+  },
+  "chords": {
+   "reference": 38,
+   "candidate": 34,
+   "hits": 33,
+   "recall": 0.8684,
+   "precision": 0.9706
+  },
+  "key_signature_acc": 1.0,
+  "time_signature_acc": 1.0,
+  "note_diffs": [
+   {
+    "ref_measure": 8,
+    "offset": "1",
+    "expected": "A4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 8,
+    "offset": "3/2",
+    "expected": "G4/1/4",
+    "found": null
+   },
+   {
+    "ref_measure": 8,
+    "offset": "7/4",
+    "expected": "A4/1/4",
+    "found": null
+   },
+   {
+    "ref_measure": 8,
+    "offset": "3",
+    "expected": "rest/1/2",
+    "found": "G4/1/2"
+   },
+   {
+    "ref_measure": 8,
+    "offset": "7/2",
+    "expected": "A4/1/4",
+    "found": "A4/1/2"
+   },
+   {
+    "ref_measure": 8,
+    "offset": "15/4",
+    "expected": "A4/1/4",
+    "found": "A4/1"
+   }
+  ],
+  "chord_diffs": [
+   {
+    "ref_measure": 3,
+    "offset": "0",
+    "expected": "Abadd2",
+    "found_in_bar": [
+     "Abm6@2"
+    ]
+   },
+   {
+    "ref_measure": 7,
+    "offset": "0",
+    "expected": "Abadd2",
+    "found_in_bar": [
+     "Abm6@3"
+    ]
+   },
+   {
+    "ref_measure": 7,
+    "offset": "2",
+    "expected": "Abm6",
+    "found_in_bar": [
+     "Abm6@3"
+    ]
+   },
+   {
+    "ref_measure": 15,
+    "offset": "0",
+    "expected": "Abadd2",
+    "found_in_bar": []
+   },
+   {
+    "ref_measure": 15,
+    "offset": "2",
+    "expected": "Abm6",
+    "found_in_bar": []
+   }
+  ]
+ },
+ "musescore_roundtrip_vs_transposed": {
+  "measures": {
+   "reference": 25,
+   "candidate": 25
+  },
+  "events": {
+   "reference": 197,
+   "candidate": 197
+  },
+  "note_exact": 1.0,
+  "pitch_acc": 1.0,
+  "rhythm_acc": 1.0,
+  "pitched_notes": {
+   "reference": 172,
+   "exact": 1.0,
+   "pitch": 1.0
+  },
+  "ser": 0.0,
+  "ops": {
+   "substitutions": 0,
+   "deletions": 0,
+   "insertions": 0
+  },
+  "chords": {
+   "reference": 34,
+   "candidate": 34,
+   "hits": 33,
+   "recall": 0.9706,
+   "precision": 0.9706
+  },
+  "key_signature_acc": 1.0,
+  "time_signature_acc": 1.0,
+  "note_diffs": [],
+  "chord_diffs": [
+   {
+    "ref_measure": 11,
+    "offset": "0",
+    "expected": "Abadd2",
+    "found_in_bar": [
+     "Ab@0",
+     "Abm6@2"
+    ]
+   }
+  ]
+ }
+}
