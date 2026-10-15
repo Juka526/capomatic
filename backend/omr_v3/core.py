@@ -202,9 +202,12 @@ def _add_header(score, title: str | None, summary: dict) -> None:
 
     if score.metadata is None:
         score.metadata = metadata.Metadata()
-    if title:
-        score.metadata.title = title
-        score.metadata.movementName = title
+    # music21 fills empty metadata with "Music21 Fragment"/"Music21", which
+    # MuseScore would print on the sheet; a blank title keeps the page clean.
+    score.metadata.title = title or (score.metadata.title if score.metadata.title not in (None, 'Music21 Fragment') else ' ')
+    score.metadata.movementName = title or score.metadata.movementName or ' '
+    if score.metadata.composer in (None, 'Music21'):
+        score.metadata.composer = ''
     first = score.parts[0].getElementsByClass(stream.Measure).first()
     if first is None:
         return
@@ -294,7 +297,7 @@ def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', *,
         report['repairs'] = {
             'rest_only_voices_removed': cleanup.drop_rest_only_voices(score),
             'lyrics_removed': cleanup.clean_lyrics(score),
-            'chord_words_converted': cleanup.chord_words_to_symbols(score),
+            'chord_words': cleanup.chord_words_to_symbols(score),
             'marks_removed': cleanup.strip_marks(score),
         }
         measures = list(score.parts[0].getElementsByClass(stream.Measure))

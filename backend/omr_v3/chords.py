@@ -8,6 +8,7 @@ recognised measures instead. Chord text is always handled through
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from fractions import Fraction
 
@@ -58,21 +59,89 @@ def canonical(text: str) -> str:
     return out + (f'/{c.bass}' if c.bass and c.bass != c.root else '')
 
 
+_BASE_KIND = {
+    '': {'': 'major', '5': 'power', '6': 'major-sixth', '7': 'dominant', '9': 'dominant-ninth',
+         '11': 'dominant-11th', '13': 'dominant-13th', '69': 'major-sixth'},
+    'm': {'': 'minor', '6': 'minor-sixth', '7': 'minor-seventh', '9': 'minor-ninth',
+          '11': 'minor-11th', '13': 'minor-13th', '69': 'minor-sixth'},
+    'maj': {'': 'major-seventh', '7': 'major-seventh', '9': 'major-ninth', '11': 'major-11th', '13': 'major-13th'},
+    'dim': {'': 'diminished', '7': 'diminished-seventh'},
+    'aug': {'': 'augmented', '7': 'augmented-seventh'},
+    'sus': {'': 'suspended-fourth', '4': 'suspended-fourth', '2': 'suspended-second'},
+}
+_TOKEN = re.compile(r'(add)(\d+)|(sus)([24]?)|([#b])(\d+)|(\d+)')
+
+
+def _kind_and_degrees(quality: str, extensions: str) -> tuple[str, list[tuple[str, int, int]]] | None:
+    """MusicXML kind plus explicit <degree> changes for a chord suffix.
+
+    MuseScore builds the printed name from kind and degrees and ignores
+    kind@text for most chords: without degrees ``Cadd2`` printed as ``C`` and
+    ``C7sus4`` as ``C``, i.e. silently wrong. None means "not understood".
+    """
+    ext = extensions.replace('(', '').replace(')', '').replace(',', '')
+    m = re.match(r'^(69|13|11|9|7|6|5|4|2)?', ext)
+    number = m.group(1) or ''
+    rest = ext[m.end():]
+    if quality == 'sus' and number in ('2', '4'):
+        kind = _BASE_KIND['sus'][number]
+        number = ''
+    elif quality == 'sus' and number:      # e.g. "sus" followed by nothing else is handled above
+        return None
+    else:
+        table = _BASE_KIND.get(quality, {})
+        if number == '2' and quality == '':   # "G2" is read as Gadd2
+            kind, number, rest = 'major', '', 'add2' + rest
+        elif number == '4' and quality == '':  # "G4" is read as Gsus4
+            kind, number, rest = 'suspended-fourth', '', rest
+        else:
+            kind = table.get(number)
+            if kind is None:
+                return None
+    degrees: list[tuple[str, int, int]] = []
+    if number == '69':
+        degrees.append(('add', 9, 0))
+    pos = 0
+    for t in _TOKEN.finditer(rest):
+        if t.start() != pos:
+            return None
+        pos = t.end()
+        if t.group(1):
+            degrees.append(('add', int(t.group(2)), 0))
+        elif t.group(3):
+            # 7sus4 / 9sus4: replace the third
+            degrees += [('subtract', 3, 0), ('add', int(t.group(4) or 4), 0)]
+        elif t.group(5):
+            value, alter = int(t.group(6)), (-1 if t.group(5) == 'b' else 1)
+            degrees.append(('alter' if value == 5 else 'add', value, alter))
+        else:
+            degrees.append(('add', int(t.group(7)), 0))
+    if pos != len(rest):
+        return None
+    return kind, degrees
+
+
 def chord_symbol_from_text(text: str):
     """Build a music21 ChordSymbol that writes *text* faithfully to MusicXML."""
     from music21 import harmony
 
     c = parse_chord(text)
-    kind = _KIND_BY_SUFFIX.get((c.quality, c.extensions))
-    if kind is None:
+    parsed = _kind_and_degrees(c.quality, c.extensions)
+    if parsed is None:
         kind = {'m': 'minor', 'dim': 'diminished', 'aug': 'augmented',
                 'sus': 'suspended-fourth'}.get(c.quality, 'major')
+        degrees: list[tuple[str, int, int]] = []
+    else:
+        kind, degrees = parsed
     kwargs = {'root': _m21_name(c.root), 'kind': kind}
     if c.bass:
         kwargs['bass'] = _m21_name(c.bass)
     cs = harmony.ChordSymbol(**kwargs)
+    for mod, value, alter in degrees:
+        cs.addChordStepModification(harmony.ChordStepModification(mod, value, alter), updatePitches=False)
     cs.chordKindStr = display_suffix(c.quality, c.extensions)
     cs.editorial.capomaticText = c.original
+    cs.editorial.capomaticEncoded = parsed is not None
     return cs
 
 

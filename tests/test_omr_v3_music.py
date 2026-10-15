@@ -127,7 +127,7 @@ def test_chord_words_become_symbols_and_marks_are_removed():
     m.insert(1, expressions.TextExpression('Fine'))
     m.insert(0, dynamics.Dynamic('p'))
     m.notes[1].articulations = [articulations.Accent()]
-    assert cleanup.chord_words_to_symbols(s) == 1
+    assert cleanup.chord_words_to_symbols(s)['converted'] == 1
     assert _chords(s) == ['Bbadd2']
     assert cleanup.strip_marks(s) == {'dynamics': 1, 'articulations': 1}
 
@@ -177,3 +177,28 @@ def test_ledger_detection_on_synthetic_page(tmp_path):
     lines = [100, 122, 144, 166, 188]
     assert cleanup._has_ledger(px, 400, 300, on_ledger, lines)
     assert not cleanup._has_ledger(px, 400, 300, hanging, lines)
+
+
+def test_chord_words_handle_lowercase_bass_navigation_and_garbage():
+    s = _score(0, ['C4', 'D4', 'E4', 'F4'])
+    m = s.parts[0].getElementsByClass(stream.Measure).first()
+    for i, text in enumerate(['Am7/c', 'Fine', 'D.S.', 'Ebzq7']):
+        m.insert(i, expressions.TextExpression(text))
+    result = cleanup.chord_words_to_symbols(s)
+    assert result['converted'] == 1 and result['dropped_unreadable'] == 1
+    assert _chords(s) == ['Am7/C']
+    left = sorted(te.content for te in s.recurse().getElementsByClass(expressions.TextExpression))
+    assert left == ['D.S.', 'Fine']
+
+
+@pytest.mark.parametrize('text,kind,degrees', [
+    ('Bbadd2', 'major', [('add', 2)]), ('C7sus4', 'dominant', [('subtract', 3), ('add', 4)]),
+    ('Dm7(11)', 'minor-seventh', [('add', 11)]), ('Am11', 'minor-11th', []), ('G2', 'major', [('add', 2)]),
+])
+def test_suffixes_are_written_as_musicxml_degrees(text, kind, degrees, tmp_path):
+    path = tmp_path / 'c.musicxml'
+    _score(0, ['C4'] * 4, [(0, text)]).write('musicxml', fp=str(path))
+    xml = path.read_text()
+    assert f'>{kind}</kind>' in xml
+    for typ, value in degrees:
+        assert f'<degree-value>{value}</degree-value>' in xml and f'<degree-type>{typ}</degree-type>' in xml

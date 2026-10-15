@@ -85,11 +85,18 @@ def measure_warnings(score) -> list[dict]:
     return warnings
 
 
-def chord_words_to_symbols(score) -> int:
-    """Turn above-staff words that are chord names into chord symbols.
+_NAVIGATION = re.compile(
+    r'^(fine|coda|to\s*coda|d\.?\s?[sc]\.?(\s.*)?|al\s.*|bridge|chorus|verse.*|intro|outro|ending|'
+    r'interlude|rit\.?.*|a\s?tempo|repeat.*)$', re.I)
+_CHORD_LIKE = re.compile(r'^[A-G][#b♭♯]?[A-Za-z0-9()#b+/\-♭♯]{0,12}$')
 
-    Audiveris exports a chord name it could not structure (e.g. ``Bbadd2``) as
-    plain words; left as text it would silently stay untransposed.
+
+def chord_words_to_symbols(score) -> dict:
+    """Turn chord names that Audiveris exported as plain words into chord symbols.
+
+    Left as text such a chord (``Bbadd2``, ``Am7/c``) is printed unchanged in a
+    transposed score, i.e. silently wrong. Words that look like a chord but
+    cannot be parsed are removed and reported instead of being kept.
     """
     from music21 import expressions
 
@@ -98,16 +105,21 @@ def chord_words_to_symbols(score) -> int:
 
     from .chords import chord_symbol_from_text
 
-    converted = 0
+    converted, dropped = 0, []
     for te in list(score.recurse().getElementsByClass(expressions.TextExpression)):
-        text = normalize_chord_text((te.content or '').strip().replace('♭', 'b').replace('♯', '#'))
-        if not text or not is_chord_candidate(text):
+        raw = (te.content or '').strip().replace('♭', 'b').replace('♯', '#')
+        if not raw or _NAVIGATION.match(raw) or not _CHORD_LIKE.match(raw):
             continue
+        text = normalize_chord_text(re.sub(r'/([a-g])([#b]?)$', lambda m: '/' + m.group(1).upper() + m.group(2), raw))
         site, offset = te.activeSite, te.offset
+        measure = te.getContextByClass('Measure')
         site.remove(te)
-        site.insert(offset, chord_symbol_from_text(text))
-        converted += 1
-    return converted
+        if is_chord_candidate(text):
+            site.insert(offset, chord_symbol_from_text(text))
+            converted += 1
+        else:
+            dropped.append(getattr(measure, 'number', None))
+    return {'converted': converted, 'dropped_unreadable': len(dropped), 'dropped_in_measures': dropped}
 
 
 def strip_marks(score) -> dict:
