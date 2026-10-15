@@ -23,10 +23,12 @@ class GeometryError(ValueError):
 
 @dataclass
 class Stack:
-    index: int            # global measure index on the page (0-based, matches MusicXML order)
+    index: int            # measure index in the exported part (0-based); see remap_to_measures
     left: float
     right: float
     slots: list[tuple[float, Fraction]]  # (absolute x, offset in quarter lengths)
+    number: str = ''      # Audiveris measure id ("22", or "22C" style continuations share "22")
+    duration: Fraction = Fraction(0)  # quarter lengths
 
     def offset_at(self, x: float, tolerance: float) -> Fraction:
         """Offset of the slot nearest *x*, nudged toward beats.
@@ -87,6 +89,27 @@ class SheetGeometry:
     def measure_count(self) -> int:
         return sum(len(s.stacks) for s in self.systems)
 
+    def remap_to_measures(self, measure_numbers: list[str]) -> bool:
+        """Point every stack at its exported measure by Audiveris measure id.
+
+        A bar cut by a mid-bar key change becomes two stacks with the same id
+        but one exported measure; the second stack's beats are shifted by the
+        first one's length. Returns False (and changes nothing) when an id has
+        no exported measure, so callers can fall back to positional mapping.
+        """
+        position = {num: i for i, num in enumerate(measure_numbers)}
+        stacks = [st for sys_ in self.systems for st in sys_.stacks]
+        if not stacks or any(st.number not in position for st in stacks):
+            return False
+        seen: dict[str, Fraction] = {}
+        for st in stacks:
+            shift = seen.get(st.number, Fraction(0))
+            st.index = position[st.number]
+            if shift:
+                st.slots = [(x, off + shift) for x, off in st.slots]
+            seen[st.number] = shift + st.duration
+        return True
+
     def system_below(self, y: float) -> System | None:
         """System whose staff starts below *y* (chords are printed above the staff)."""
         limit = 8 * self.interline
@@ -141,7 +164,12 @@ def load_geometry(omr_path: Path) -> SheetGeometry:
                 slots = [(left + float(sl.get('x-offset')), Fraction(sl.get('time-offset')) * 4)
                          for sl in st.findall('slot')]
                 slots.sort()
-                system.stacks.append(Stack(index, left, float(st.get('right')), slots))
+                try:
+                    duration = Fraction(st.get('duration') or '0') * 4
+                except (ValueError, ZeroDivisionError):
+                    duration = Fraction(0)
+                system.stacks.append(Stack(index, left, float(st.get('right')), slots,
+                                           st.get('id', ''), duration))
                 index += 1
             for h in sys_el.iter('head'):
                 b = h.find('bounds')

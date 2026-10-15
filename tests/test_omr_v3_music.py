@@ -229,3 +229,15 @@ def test_normalize_layout_keeps_title_and_composer_drops_junk():
     assert s.metadata.title == '친구여 함께 노래해'
     assert s.metadata.composer == 'Lyrics and Composed by 박은총'
     assert [te.content for te in s.recurse().getElementsByClass(expressions.TextExpression)] == ['D.S.']
+
+
+def test_remap_handles_a_bar_split_by_a_key_change():
+    def stack(number, duration, left):
+        return Stack(0, left, left + 100, [(left + 10, Fraction(0)), (left + 50, Fraction(1))], number, Fraction(duration))
+
+    sys_ = System(500, 588, [stack('21', 4, 0), stack('22', 1, 100), stack('22', 3, 200), stack('23', 4, 300)])
+    g = SheetGeometry(1000, 1000, 22, 28, [sys_])
+    assert g.remap_to_measures(['21', '22', '23'])
+    assert [s.index for s in sys_.stacks] == [0, 1, 1, 2]
+    assert sys_.stacks[2].slots == [(210, Fraction(1)), (250, Fraction(2))]  # shifted by the first part
+    assert not g.remap_to_measures(['21', '23'])

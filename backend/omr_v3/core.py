@@ -329,9 +329,12 @@ def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', *,
             'layout': cleanup.normalize_layout(score),
         }
         measures = list(score.parts[0].getElementsByClass(stream.Measure))
-        if geometry is not None and geometry.measure_count == len(measures):
+        aligned = geometry is not None and (
+            geometry.remap_to_measures([m.measureNumberWithSuffix() for m in measures])
+            or geometry.measure_count == len(measures))
+        if aligned:
             report['repairs']['ledger_notes_fixed'] = cleanup.fix_missed_ledgers(score, geometry, root / 'page.png')
-        if ocr_items is not None and geometry is not None and geometry.measure_count == len(measures):
+        if ocr_items is not None and aligned:
             placed = align_ocr_chords(ocr_items, geometry, report)
             report['chord_source'] = 'paddleocr'
             if os.environ.get('CAPOMATIC_OMR_CHORD_MERGE', '1') == '1':
