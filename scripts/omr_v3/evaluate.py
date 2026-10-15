@@ -107,7 +107,7 @@ def main() -> None:
     from music21 import converter
 
     from backend.omr_v3.core import process
-    from scripts.omr_v3.compare import compare, transposed_reference
+    from scripts.omr_v3.compare import compare, lyric_accuracy, transposed_reference
     from scripts.omr_v3.reference import parse_gt, to_music21
 
     manifest = json.loads((EVAL / 'manifest.json').read_text(encoding='utf-8'))
@@ -169,6 +169,7 @@ def main() -> None:
                    'wall_s': wall, 'stages_ms': result.stages_ms, **_rss_mb(),
                    'recognized': brief(recognized_cmp), 'transposed': brief(transposed_cmp),
                    'musescore_fidelity': brief(fidelity),
+                   'lyrics_verse1': lyric_accuracy(gt.lyrics1, converter.parse(str(d / 'recognized.musicxml'))),
                    'warnings': len(result.report.get('warnings', [])),
                    'repairs': result.report.get('repairs'),
                    'chord_source': result.report.get('chord_source'),

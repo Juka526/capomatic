@@ -92,3 +92,21 @@ def test_missing_binary_is_503(tmp_path):
         with pytest.raises(ScoreError) as exc:
             core._bin('CAPOMATIC_AUDIVERIS_BIN', 'audiveris')
     assert exc.value.status == 503
+
+
+def _mxl(files: dict) -> bytes:
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as z:
+        for name, content in files.items():
+            z.writestr(name, content)
+    return buf.getvalue()
+
+
+def test_mxl_zip_bomb_and_entities_are_rejected():
+    validate(_mxl({'score.xml': b'<score-partwise/>'}), '.mxl')
+    with pytest.raises(ScoreError) as exc:
+        validate(_mxl({'score.xml': b'0' * (core.MAX_MXL_UNCOMPRESSED + 1)}), '.mxl')
+    assert exc.value.status == 413
+    with pytest.raises(ScoreError):
+        validate(_mxl({'score.xml': b'<!DOCTYPE x [<!ENTITY a "b">]><x/>'}), '.mxl')

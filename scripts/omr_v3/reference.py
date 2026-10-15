@@ -39,6 +39,7 @@ class RefScore:
     key: int
     time: str
     measures: list[RefMeasure] = field(default_factory=list)
+    lyrics1: str = ''  # verse 1 as printed, Hangul only (scored separately from notes)
 
 
 def _length(den: str, dots: str) -> Fraction:
@@ -80,7 +81,8 @@ def parse_gt(text: str) -> RefScore:
             pitch = None if mt.group(1) == 'r' else mt.group(1)
             m.notes.append((pitch, _length(mt.group(2), mt.group(3)), bool(mt.group(4))))
         measures.append(m)
-    return RefScore(header.get('title', ''), int(header.get('key', 0)), header.get('time', '4/4'), measures)
+    return RefScore(header.get('title', ''), int(header.get('key', 0)), header.get('time', '4/4'), measures,
+                    header.get('lyrics1', ''))
 
 
 def check(ref: RefScore) -> list[str]:

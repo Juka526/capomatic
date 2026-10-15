@@ -181,6 +181,36 @@ def compare(ref_score, cand_score) -> dict:
     }
 
 
+def _levenshtein(a: str, b: str) -> int:
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        prev = cur
+    return prev[-1]
+
+
+def lyric_accuracy(reference: str, score) -> dict | None:
+    """Character accuracy of verse-1 lyrics (Hangul only, in note order)."""
+    import re
+
+    from music21 import note
+
+    if not reference:
+        return None
+    sung = []
+    for n in score.parts[0].recurse().getElementsByClass(note.Note):
+        for ly in n.lyrics:
+            if ly.number == 1 and ly.text:
+                sung.append(ly.text)
+    cand = re.sub(r'[^\uac00-\ud7a3]', '', ''.join(sung))
+    ref = re.sub(r'[^\uac00-\ud7a3]', '', reference)
+    dist = _levenshtein(ref, cand)
+    return {'reference_chars': len(ref), 'candidate_chars': len(cand),
+            'char_acc': round(max(0.0, 1 - dist / len(ref)), 4) if ref else None}
+
+
 def transposed_reference(ref_score, ref_gt, semitones: int, mode: str):
     """Reference transposed without the pipeline's own transposition module."""
     from music21 import harmony, interval, key, stream

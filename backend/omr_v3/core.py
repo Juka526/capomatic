@@ -89,12 +89,33 @@ def validate(data: bytes, suffix: str) -> None:
                 im.verify()
         except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError) as exc:
             raise ScoreError('Corrupt image') from exc
-    if suffix == '.mxl' and not data.startswith(b'PK\x03\x04'):
-        raise ScoreError('Invalid MXL archive')
+    if suffix == '.mxl':
+        _validate_mxl(data)
     if suffix in {'.xml', '.musicxml'}:
         head = data[:4096].upper()
         if b'<!DOCTYPE' in head and b'MUSICXML' not in head or b'<!ENTITY' in data.upper():
             raise ScoreError('XML entities are not accepted')
+
+
+MAX_MXL_UNCOMPRESSED = 30 * 1024 * 1024
+
+
+def _validate_mxl(data: bytes) -> None:
+    """Reject zip bombs and entity declarations inside compressed MusicXML."""
+    import zipfile
+
+    if not data.startswith(b'PK\x03\x04'):
+        raise ScoreError('Invalid MXL archive')
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            infos = z.infolist()
+            if len(infos) > 50 or sum(i.file_size for i in infos) > MAX_MXL_UNCOMPRESSED:
+                raise ScoreError('MXL archive too large', 413)
+            for info in infos:
+                if info.filename.endswith(('.xml', '.musicxml')) and b'<!ENTITY' in z.read(info).upper():
+                    raise ScoreError('XML entities are not accepted')
+    except zipfile.BadZipFile as exc:
+        raise ScoreError('Invalid MXL archive') from exc
 
 
 def _bin(env: str, *defaults: str) -> str:
