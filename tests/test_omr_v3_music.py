@@ -210,3 +210,22 @@ def test_missing_c_major_key_signature_is_created_before_transposing():
     first.remove(first.getElementsByClass(key.KeySignature).first())
     transpose_score(s, 2, 'key')
     assert s.recurse().getElementsByClass(key.KeySignature).first().sharps == 2
+
+
+def test_normalize_layout_keeps_title_and_composer_drops_junk():
+    from music21 import layout, text
+
+    s = _score(0, ['C4'] * 4)
+    for content, size in [('친구여 함께 노래해', 22), ('Lyrics and Composed by 박은총', 9), ('0', 10), ('14', 8)]:
+        tb = text.TextBox(content)
+        tb.style.fontSize = size
+        s.insert(0, tb)
+    m = s.parts[0].getElementsByClass(stream.Measure).first()
+    m.insert(0, layout.SystemLayout(isNew=True))
+    m.insert(0, expressions.TextExpression('l)m7삐'))
+    m.insert(1, expressions.TextExpression('D.S.'))
+    removed = cleanup.normalize_layout(s)
+    assert removed == {'layout': 1, 'credits': 4, 'words': 1}
+    assert s.metadata.title == '친구여 함께 노래해'
+    assert s.metadata.composer == 'Lyrics and Composed by 박은총'
+    assert [te.content for te in s.recurse().getElementsByClass(expressions.TextExpression)] == ['D.S.']

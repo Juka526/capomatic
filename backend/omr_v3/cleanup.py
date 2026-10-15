@@ -233,3 +233,50 @@ def _outward(n, staff_position: int):
     if ks is not None:
         new.accidental = ks.accidentalByStep(new.step)
     return new
+
+
+_CREDIT_PEOPLE = re.compile(r'\bby\b|compos|words|music|lyric|arr\.|작사|작곡|편곡', re.I)
+
+
+def normalize_layout(score) -> dict:
+    """Let MuseScore lay the page out instead of replaying the scanned layout.
+
+    Audiveris exports the original page geometry (system distances, credit
+    coordinates). Rendered at a new size that produced a half-empty first page
+    and stray credits such as "0" and old bar numbers. The title (largest
+    credit) and composer line are kept as metadata; every other credit, all
+    layout hints and above-staff words that are not navigation marks are dropped.
+    """
+    from music21 import expressions, layout, metadata, text
+
+    removed = {'layout': 0, 'credits': 0, 'words': 0}
+    for el in list(score.recurse().getElementsByClass(layout.LayoutBase)):
+        el.activeSite.remove(el)
+        removed['layout'] += 1
+    boxes = [b for b in score.getElementsByClass(text.TextBox)]
+    title = composer = None
+    if boxes:
+        def size(b):
+            try:
+                return float(b.style.fontSize or 0)
+            except (TypeError, ValueError):
+                return 0.0
+        wordy = [b for b in boxes if re.search(r'[A-Za-z가-힣]{2,}', b.content or '')]
+        if wordy:
+            title = max(wordy, key=size).content.strip()
+        people = [b.content.strip() for b in wordy if _CREDIT_PEOPLE.search(b.content or '') and b.content.strip() != title]
+        composer = ' / '.join(people) or None
+    for b in boxes:
+        score.remove(b)
+        removed['credits'] += 1
+    if score.metadata is None:
+        score.metadata = metadata.Metadata()
+    if title and not (score.metadata.title or '').strip():
+        score.metadata.title = title
+    if composer:
+        score.metadata.composer = composer
+    for te in list(score.recurse().getElementsByClass(expressions.TextExpression)):
+        if not _NAVIGATION.match((te.content or '').strip()):
+            te.activeSite.remove(te)
+            removed['words'] += 1
+    return removed

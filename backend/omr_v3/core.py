@@ -321,6 +321,7 @@ def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', *,
             'lyrics_removed': cleanup.clean_lyrics(score),
             'chord_words': cleanup.chord_words_to_symbols(score),
             'marks_removed': cleanup.strip_marks(score),
+            'layout': cleanup.normalize_layout(score),
         }
         measures = list(score.parts[0].getElementsByClass(stream.Measure))
         if geometry is not None and geometry.measure_count == len(measures):

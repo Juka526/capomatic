@@ -19,6 +19,11 @@ on:
 permissions:
   contents: read
 
+# A newer push supersedes a running evaluation (path filters match the whole PR).
+concurrency:
+  group: omr-v3-eval-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   evaluate:
     runs-on: ubuntu-latest
