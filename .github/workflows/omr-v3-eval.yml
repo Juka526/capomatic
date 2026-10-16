@@ -32,7 +32,7 @@ concurrency:
 jobs:
   evaluate:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
       - run: docker build --tag capomatic-omr-eval .
@@ -53,10 +53,11 @@ jobs:
         run: >-
           docker run --rm -v "$PWD:/work" -w /work -e PYTHONPATH=/work capomatic-omr-eval
           python -m scripts.omr_v3.evaluate --out /work/omr-v3-evidence --chords paddle
-      - name: End-to-end evaluation (Audiveris chords only, for comparison)
+      - name: Markdown report
+        if: always()
         run: >-
           docker run --rm -v "$PWD:/work" -w /work -e PYTHONPATH=/work capomatic-omr-eval
-          python -m scripts.omr_v3.evaluate --out /work/omr-v3-evidence-audiveris-chords --chords none
+          sh -c 'python -m scripts.omr_v3.report /work/omr-v3-evidence > /work/omr-v3-evidence/REPORT.generated.md'
       - name: API smoke test and latency (feature flag on, auth off for CI only)
         run: |
           docker run --rm --detach --name omr-api --publish 7860:7860 \
@@ -68,6 +69,12 @@ jobs:
             http://localhost:7860/api/v3/score/transpose.zip)
           echo "HTTP $status"
           python3 -c "import zipfile; print(sorted(zipfile.ZipFile('api.zip').namelist()))" | tee omr-v3-evidence/api-zip-listing.txt
+          # A low-resolution page must come back as an explicit chord-only result, never a full score.
+          fb_status=$(curl --silent --dump-header fb-headers.txt --output api-fallback.zip --write-out '%{http_code}' --max-time 600 \
+            -F "file=@tests/omr_v3_eval/scores/naui.jpg" -F semitones=-2 -F mode=key \
+            http://localhost:7860/api/v3/score/transpose.zip)
+          { echo "HTTP $fb_status"; grep -i '^x-capomatic' fb-headers.txt;
+            python3 -c "import zipfile; print(sorted(zipfile.ZipFile('api-fallback.zip').namelist()))"; } | tee omr-v3-evidence/api-fallback.txt
           # The runner's system Python refuses pip installs; the image already has requests.
           docker run --rm --network host -v "$PWD:/work" capomatic-omr-eval \
             python /work/scripts/omr_v3/benchmark_api.py http://localhost:7860 /work/tests/omr_v3_eval/scores/chingu.pdf --runs 3 \
@@ -76,30 +83,35 @@ jobs:
           docker logs omr-api > omr-v3-evidence/api-container.log 2>&1 || true
           docker stop omr-api
           test "$status" = 200
+          test "$fb_status" = 200 && grep -qi '^x-capomatic-mode: chord_only' fb-headers.txt
       - name: Results as annotations (readable through the checks API)
         if: always()
         run: |
           python3 - <<'PY'
           import json, pathlib
-          for d in ('omr-v3-evidence', 'omr-v3-evidence-audiveris-chords'):
-              p = pathlib.Path(d) / 'summary.json'
-              if not p.exists():
-                  print(f'::warning title={d}::no summary.json'); continue
+          p = pathlib.Path('omr-v3-evidence') / 'summary.json'
+          if not p.exists():
+              print('::warning title=evaluation::no summary.json')
+          else:
               for r in json.loads(p.read_text())['runs']:
-                  if 'error' in r:
-                      print(f"::error title={d} {r['score']} {r['condition']}::{r['error'][:300]}"); continue
-                  t = r['transposed']
-                  print(f"::notice title={d} {r['score']} {r['condition']}::notes={t['pitched_notes']['exact']} pitch={t['pitched_notes']['pitch']} "
-                        f"rhythm={t['rhythm_acc']} chordsR={t['chords']['recall']} chordsP={t['chords']['precision']} key={t['key_signature_acc']} "
-                        f"wall={r['wall_s']}s stages={r['stages_ms']} toolsMB={r['tools_peak_mb']} lyrics={r.get('lyrics_verse1')}")
-          for d in ('omr-v3-evidence', 'omr-v3-evidence-audiveris-chords'):
-              log = pathlib.Path(d) / 'pipeline.log'
-              if log.exists():
-                  text = log.read_text(errors='replace')
-                  k = text.find('failed (exit')
-                  if k >= 0:
-                      print(f'::warning title={d} pipeline.log::' + ' | '.join(text[k:k + 2500].splitlines()))
-          for f in ('api-benchmark.txt', 'api-zip-listing.txt', 'api-container-stats.txt'):
+                  t = r.get('transposed') or {}
+                  dec = (r.get('decision') or {}).get('reason')
+                  head = f"{r['id']} {r['condition']} -> {r.get('mode')} ({dec})"
+                  body = (f"notes={(t.get('pitched_notes') or {}).get('exact')} rhythm={t.get('rhythm_acc')} "
+                          f"chordsR={(t.get('chords') or {}).get('recall')} chordsP={(t.get('chords') or {}).get('precision')} "
+                          f"from={r.get('full_score_metrics_from')} wall={r.get('wall_s')}s ungated={r.get('ungated_wall_s')}s "
+                          f"pyMB={r.get('python_peak_mb')} toolsMB={r.get('tools_peak_mb')} errors={r.get('error_classes')}")
+                  if r.get('mode') == 'error' or (r.get('error_classes') or {}).get('integrity_ok') is False:
+                      print(f"::error title={head}::{r.get('error', '')[:200]} {body}")
+                  else:
+                      print(f"::notice title={head}::{body}")
+          log = pathlib.Path('omr-v3-evidence') / 'pipeline.log'
+          if log.exists():
+              text = log.read_text(errors='replace')
+              k = text.find('failed (exit')
+              if k >= 0:
+                  print('::warning title=pipeline.log::' + ' | '.join(text[k:k + 2500].splitlines()))
+          for f in ('api-benchmark.txt', 'api-zip-listing.txt', 'api-fallback.txt', 'api-container-stats.txt'):
               p = pathlib.Path('omr-v3-evidence') / f
               if p.exists():
                   print(f'::notice title={f}::' + p.read_text().replace('\n', ' | ')[:900])
@@ -108,9 +120,7 @@ jobs:
         if: always()
         with:
           name: omr-v3-evidence
-          path: |
-            omr-v3-evidence
-            omr-v3-evidence-audiveris-chords
+          path: omr-v3-evidence
           retention-days: 30
 
   publish:

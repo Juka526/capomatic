@@ -218,10 +218,14 @@ def main() -> None:
                 (d / f'compare_{tag}.json').write_text(json.dumps(
                     {'recognized_vs_reference': recognized_cmp, 'transposed_vs_reference': transposed_cmp,
                      'musescore_roundtrip_vs_transposed': fidelity}, ensure_ascii=False, indent=1))
-                if full is gated and original_png is not None:
+                if original_png is not None:
                     pages = _pdf_to_pngs(d / f'{stem}_{tag}.pdf', d / f'{stem}_{tag}')
-                    _side_by_side(original_png, pages, d / f'side_by_side_{tag}.png',
-                                  (f'Original: {entry["title"]}', f'Capomatic V3 {tag} (full score)'))
+                    if full is gated:
+                        _side_by_side(original_png, pages, d / f'side_by_side_{tag}.png',
+                                      (f'Original: {entry["title"]}', f'Capomatic V3 {tag} (full score)'))
+                    else:  # what the gate withheld, for reviewers
+                        _side_by_side(original_png, pages, d / f'side_by_side_ungated_{tag}.png',
+                                      (f'Original: {entry["title"]}', f'{tag} full score WITHHELD by the gate'))
                 rec_err = sum(recognized_cmp['ops'].values())
                 tr_err = sum(transposed_cmp['ops'].values())
                 run.update(
