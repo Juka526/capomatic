@@ -31,6 +31,9 @@ upload (1-page PDF / PNG / JPEG / MusicXML)        MusicXML skips straight to tr
 
 chord-only fallback = V1's own /detect + /render "replace" output for the page (main._omr_chord_only):
   only chord symbols are transposed, the notes stay as printed, and the response says so.
+  Chords V1 does not recognise stay printed in the original key (the warning says so; on
+  low-resolution phone photos and 150 dpi scans recall was 21-90 %, see REPORT.md).
+  No chord recognised at all => HTTP 422, never an untouched page labelled as a result.
 ```
 
 Result modes: `full_score` (MusicXML + PDF) or `chord_only` (page image + PDF of V1's chord
