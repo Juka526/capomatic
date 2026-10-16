@@ -232,6 +232,16 @@ def test_normalize_layout_keeps_title_and_composer_drops_junk():
     assert [te.content for te in s.recurse().getElementsByClass(expressions.TextExpression)] == ['D.S.']
 
 
+def test_normalize_layout_drops_a_chord_label_filed_as_composer():
+    from music21 import metadata
+
+    s = _score(0, ['C4'] * 4)
+    s.metadata = metadata.Metadata()
+    s.metadata.composers = ['Capomatic synthetic set', 'Cm7']
+    removed = cleanup.normalize_layout(s)
+    assert s.metadata.composers == ('Capomatic synthetic set',) and removed['credits'] == 1
+
+
 def test_remap_handles_a_bar_split_by_a_key_change():
     def stack(number, duration, left):
         return Stack(0, left, left + 100, [(left + 10, Fraction(0)), (left + 50, Fraction(1))], number, Fraction(duration))

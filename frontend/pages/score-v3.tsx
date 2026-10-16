@@ -42,7 +42,7 @@ const TEXT = {
     badSize: '파일은 10MB 이하여야 합니다.',
     failed: (status: number) => `변환에 실패했습니다 (${status}).`,
     tooMany: '요청이 많습니다. 잠시 후 다시 시도해 주세요.',
-    chordOnly: (s: number, why: string) => `완료 (${s.toFixed(1)}초). 악보 전체를 믿고 옮기기 어려워 코드만 옮겼습니다(음표는 원본 그대로). 이유: ${why}`,
+    chordOnly: (s: number, why: string) => `완료 (${s.toFixed(1)}초). 악보 전체를 믿고 옮기기 어려워 코드만 옮겼습니다(음표는 원본 그대로). 인식하지 못한 코드는 원래 조로 남아 있으니 모든 코드를 확인하세요. 이유: ${why}`,
     why: {
       lowResolution: '이미지 해상도가 낮습니다. 300 dpi PDF나 2000px 이상 사진을 올려 주세요.',
       blurry: '이미지가 흐립니다.',
@@ -75,7 +75,7 @@ const TEXT = {
     badSize: 'Files must be 10 MB or smaller.',
     failed: (status: number) => `Conversion failed (${status}).`,
     tooMany: 'Too many requests. Please try again later.',
-    chordOnly: (s: number, why: string) => `Done in ${s.toFixed(1)} s. The page could not be read reliably enough to rewrite the notes, so only the chords were transposed (notes unchanged). Reason: ${why}`,
+    chordOnly: (s: number, why: string) => `Done in ${s.toFixed(1)} s. The page could not be read reliably enough to rewrite the notes, so only the chords were transposed (notes unchanged). Chords that were not recognised stay in the original key, so check every chord. Reason: ${why}`,
     why: {
       lowResolution: 'the image resolution is too low. Upload a 300 dpi PDF or a photo at least 2000 px wide.',
       blurry: 'the image is blurry.',

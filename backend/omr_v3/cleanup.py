@@ -278,6 +278,15 @@ def normalize_layout(score) -> dict:
         score.metadata.title = title
     if composer:
         score.metadata.composer = composer
+    # Audiveris sometimes files a chord label near the title as a composer credit;
+    # it would be printed untransposed in the header.
+    from backend.ocr.filter import is_chord_candidate
+
+    names = list(score.metadata.composers)
+    kept = [n for n in names if not is_chord_candidate(str(n).strip())]
+    if len(kept) != len(names):
+        score.metadata.composers = kept
+        removed['credits'] += len(names) - len(kept)
     for te in list(score.recurse().getElementsByClass(expressions.TextExpression)):
         if not _NAVIGATION.match((te.content or '').strip()):
             te.activeSite.remove(te)

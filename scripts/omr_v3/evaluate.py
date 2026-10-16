@@ -139,7 +139,7 @@ def main() -> None:
     from music21 import converter
 
     from backend.omr_v3.core import process
-    from scripts.omr_v3.compare import compare, lyric_accuracy, transposed_reference
+    from scripts.omr_v3.compare import chord_text_accuracy, compare, lyric_accuracy, transposed_reference
     from scripts.omr_v3.reference import parse_gt, to_music21
 
     args.out.mkdir(parents=True, exist_ok=True)
@@ -191,6 +191,9 @@ def main() -> None:
                 (d / f'chord_only_{tag}.png').write_bytes(gated.png)
                 _side_by_side(original_png, [d / f'chord_only_{tag}.png'], d / f'side_by_side_{tag}.png',
                               (f'Original: {entry["title"]}', f'Capomatic V3 {tag} (chord-only fallback)'))
+                run['chord_only_chords'] = chord_text_accuracy(
+                    transposed_reference(to_music21(gt), gt, semis, mode),
+                    [c['transposed'] for c in (gated.report.get('chord_only') or {}).get('chords', [])])
             # 2) The full-score path (gate off when it fell back) to measure what it would have produced.
             full = gated if gated is not None and gated.mode == 'full_score' else None
             if full is None:

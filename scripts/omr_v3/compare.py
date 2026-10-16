@@ -188,6 +188,43 @@ def compare(ref_score, cand_score) -> dict:
     }
 
 
+def chord_text_accuracy(ref_score, texts: list[str]) -> dict:
+    """Chord-only output vs the (transposed) reference, ignoring position.
+
+    The chord-only fallback returns chord labels drawn on the page, not a
+    score, so chords are compared as multisets: ``exact`` needs the same
+    spelling, ``sounding`` accepts enharmonic spellings (Gb for F#).
+    """
+    from collections import Counter
+
+    from backend.chords.parser import parse_chord
+    from backend.omr_v3.chords import canonical
+
+    names = 'C C# D D# E F F# G G# A A# B'.split()
+    pcs = {n: i for i, n in enumerate(names)} | {'Db': 1, 'Eb': 3, 'Gb': 6, 'Ab': 8, 'Bb': 10, 'Cb': 11, 'Fb': 4,
+                                                 'E#': 5, 'B#': 0}
+
+    def sounding(text: str) -> str:
+        c = parse_chord(canonical(text))
+        bass = pcs.get(c.bass) if c.bass else None
+        return f'{pcs.get(c.root)}{c.quality}{c.extensions}/{bass}'
+
+    def safe(fn, text):
+        try:
+            return fn(text)
+        except (ValueError, KeyError):
+            return '?' + text
+
+    ref = [t for _, _, t in extract(ref_score)['chords']]
+    out = {'reference': len(ref), 'candidate': len(texts)}
+    for label, fn in (('exact', canonical), ('sounding', sounding)):
+        r, c = Counter(safe(fn, t) for t in ref), Counter(safe(fn, t) for t in texts)
+        hits = sum((r & c).values())
+        out[label] = {'hits': hits, 'recall': round(hits / len(ref), 4) if ref else None,
+                      'precision': round(hits / len(texts), 4) if texts else None}
+    return out
+
+
 def _levenshtein(a: str, b: str) -> int:
     prev = list(range(len(b) + 1))
     for i, ca in enumerate(a, 1):

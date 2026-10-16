@@ -161,6 +161,16 @@ def test_chord_only_needs_chord_recognition():
     assert exc.value.status == 422
 
 
+def test_chord_only_without_any_recognised_chord_is_an_error():
+    calls = []
+    with patch.object(core, 'run_audiveris', side_effect=AssertionError('OMR must not run')):
+        with pytest.raises(core.ScoreError) as exc:
+            core.process(_png(_staff_page(6, 700, 1000)), '.png', 2, 'key',
+                         chord_detector=lambda path: ([], {}), chord_only_renderer=_renderer(calls))
+    assert exc.value.status == 422 and 'no chord symbols' in str(exc.value)
+    assert calls == []
+
+
 def _musicxml_bytes(tmp_path) -> bytes:
     p = tmp_path / 'in.musicxml'
     _score().write('musicxml', fp=str(p))

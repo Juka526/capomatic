@@ -130,6 +130,28 @@ def main() -> None:
               f"precision {_pct(m['chord_precision'])} of {m['chords_n']} chords.")
     w('')
 
+    co = [r for r in runs if r.get('chord_only_chords')]
+    if co:
+        w('### Chord-only fallback: transposed chord labels vs the transposed reference')
+        w('')
+        w('Position-free multiset comparison (the fallback draws labels on the page, it has no measure structure). '
+          'Recall = reference chords found; precision = drawn chords that are correct. '
+          'A run with no chord at all is now an explicit 422 error, not a result.')
+        w('')
+        w('| Input | Set | Condition | Reference chords | Drawn | Recall | Precision | Recall incl. enharmonic |')
+        w('|---|---|---|---|---|---|---|---|')
+        tot = {}
+        for r in co:
+            c = r['chord_only_chords']
+            for k in ('reference', 'candidate'):
+                tot[k] = tot.get(k, 0) + c[k]
+            tot['hits'] = tot.get('hits', 0) + c['exact']['hits']
+            w(f"| {r['id']} | {r['role']} | {r['condition']} | {c['reference']} | {c['candidate']} | "
+              f"{_pct(c['exact']['recall'])} | {_pct(c['exact']['precision'])} | {_pct(c['sounding']['recall'])} |")
+        w(f"| **pooled** | | | {tot['reference']} | {tot['candidate']} | {_pct(tot['hits'] / tot['reference'])} | "
+          f"{_pct(tot['hits'] / tot['candidate'] if tot['candidate'] else None)} | |")
+        w('')
+
     w('### Error classes (all runs with a full-score path)')
     w('')
     w('| Input | Condition | Recognition (notes) | Transposition (notes) | Rendering (MuseScore, notes) | '

@@ -292,6 +292,9 @@ def _chord_only(page: Path, items: list[dict] | None, semitones: int, renderer: 
     if renderer is None or items is None:
         raise ScoreError('This page is not reliable enough for full-score conversion, '
                          'and chord-only conversion is unavailable', 422)
+    if not items:  # an untouched page labelled as a result would hide the failure
+        raise ScoreError('This page is not reliable enough for full-score conversion, '
+                         'and no chord symbols were recognised for chord-only conversion', 422)
     t = time.monotonic()
     image, info = renderer(str(page), items, semitones)
     png, pdf = io.BytesIO(), io.BytesIO()
@@ -302,7 +305,8 @@ def _chord_only(page: Path, items: list[dict] | None, semitones: int, renderer: 
     report['chord_only'] = info
     report['review_required'] = True
     report['warning'] = ('Chord-only result: the page or its recognition was not reliable enough to rewrite '
-                         f"the notes ({report['decision']['reason']}). Only chord symbols were transposed.")
+                         f"the notes ({report['decision']['reason']}). Only the {len(items)} recognised chord symbols were "
+                         'transposed; any chord that was not recognised is still in the original key.')
     return Result(pdf.getvalue(), None, None, stages, report, mode='chord_only', png=png.getvalue())
 
 
