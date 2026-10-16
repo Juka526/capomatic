@@ -28,7 +28,7 @@ from typing import Callable
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
-from . import cleanup
+from . import cleanup, music_guard, quality, reliability
 from .chords import align_ocr_chords, merge_chords, replace_chord_symbols, score_chords
 from .geometry import GeometryError, load_geometry
 from .transpose import transpose_score, validate_request
@@ -47,6 +47,9 @@ PDF_DPI = 300
 OCR_LANGUAGES = os.environ.get('CAPOMATIC_OMR_OCR_LANGUAGES', 'eng+kor')
 
 ChordDetector = Callable[[str], tuple[list[dict], dict]]
+# (page image path, OCR chord items, semitones) -> (rendered page, info). Supplied by the
+# host app so chord-only output is exactly V1's /render "replace" result.
+ChordOnlyRenderer = Callable[[str, list[dict], int], tuple[Image.Image, dict]]
 
 
 class ScoreError(Exception):
@@ -58,10 +61,12 @@ class ScoreError(Exception):
 @dataclass(frozen=True)
 class Result:
     pdf: bytes
-    musicxml: bytes
-    recognized_musicxml: bytes
+    musicxml: bytes | None            # None in chord-only mode
+    recognized_musicxml: bytes | None
     stages_ms: dict[str, float]
     report: dict = field(default_factory=dict)
+    mode: str = 'full_score'          # 'full_score' or 'chord_only'
+    png: bytes | None = None          # chord-only page image
 
     @property
     def warning(self) -> str:
@@ -250,10 +255,69 @@ def _add_header(score, title: str | None, summary: dict) -> None:
     first.insert(0, te)
 
 
+def _native_scale(source: Path, suffix: str, home: Path, timeout_seconds: float) -> float:
+    """Native resolution of a raster PDF relative to the 300 dpi raster (1.0 for vector PDFs)."""
+    if suffix != '.pdf':
+        return 1.0
+    try:
+        out = _run([_bin('CAPOMATIC_PDFIMAGES_BIN', 'pdfimages'), '-list', str(source)],
+                   timeout_seconds, home, 'PDF inspection').stdout.decode('utf-8', 'replace')
+    except ScoreError:
+        return 1.0
+    best = None
+    for line in out.splitlines()[2:]:
+        f = line.split()
+        if len(f) > 13 and f[2] == 'image':
+            try:
+                area, ppi = int(f[3]) * int(f[4]), float(f[12])
+            except ValueError:
+                continue
+            if best is None or area > best[0]:
+                best = (area, ppi)
+    return min(1.0, best[1] / PDF_DPI) if best and best[1] > 0 else 1.0
+
+
+def _preflight(source: Path, suffix: str, page: Path, home: Path, timeout_seconds: float):
+    """Stage 1: judge the page as uploaded (images before our upscaling)."""
+    if suffix in {'.png', '.jpg', '.jpeg'}:
+        with Image.open(source) as im:
+            return quality.assess(ImageOps.exif_transpose(im))
+    with Image.open(page) as im:
+        return quality.assess(im, native_scale=_native_scale(source, suffix, home, timeout_seconds))
+
+
+def _chord_only(page: Path, items: list[dict] | None, semitones: int, renderer: ChordOnlyRenderer | None,
+                report: dict, stages: dict, started: float) -> Result:
+    """Fallback: V1 chord transposition on the page image; no notes are rewritten."""
+    if renderer is None or items is None:
+        raise ScoreError('This page is not reliable enough for full-score conversion, '
+                         'and chord-only conversion is unavailable', 422)
+    t = time.monotonic()
+    image, info = renderer(str(page), items, semitones)
+    png, pdf = io.BytesIO(), io.BytesIO()
+    image.convert('RGB').save(png, format='PNG')
+    image.convert('RGB').save(pdf, format='PDF', resolution=PDF_DPI)
+    stages['chord_only_render'] = round((time.monotonic() - t) * 1000, 1)
+    stages['total'] = round((time.monotonic() - started) * 1000, 1)
+    report['chord_only'] = info
+    report['review_required'] = True
+    report['warning'] = ('Chord-only result: the page or its recognition was not reliable enough to rewrite '
+                         f"the notes ({report['decision']['reason']}). Only chord symbols were transposed.")
+    return Result(pdf.getvalue(), None, None, stages, report, mode='chord_only', png=png.getvalue())
+
+
 def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', *,
             chord_detector: ChordDetector | None = None,
+            chord_only_renderer: ChordOnlyRenderer | None = None,
+            gate: bool = True,
             safety_timeout_seconds: float | None = None) -> Result:
-    """Run the full conversion and fail closed on tool errors."""
+    """Run the conversion and fail closed on tool errors.
+
+    With *gate* on (the API always uses it) an unreliable page or recognition
+    returns a chord-only result instead of a full score. The evaluation turns
+    it off to measure what the full-score path would have produced; the
+    decision is still computed and reported.
+    """
     validate(data, suffix)
     try:
         validate_request(mode, semitones)
@@ -272,42 +336,58 @@ def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', *,
         stages[name] = round((now - since) * 1000, 1)
         return now
 
-    report: dict = {'accuracy': 'unverified', 'chord_source': None, 'warnings': []}
+    report: dict = {'accuracy': 'unverified', 'chord_source': None, 'warnings': [], 'gate_enforced': gate}
     with tempfile.TemporaryDirectory(prefix='capomatic-v3-') as tmp:
         root = Path(tmp)
         home = root / 'home'
         home.mkdir()
         source = root / ('source' + suffix)
         source.write_bytes(data)
+        page = root / 'page.png'
         title = None
         geometry = None
         ocr_items: list[dict] | None = None
+        preflight = None
 
         if suffix in {'.xml', '.musicxml', '.mxl'}:
             recognized = source
             report['input'] = {'source': 'musicxml'}
         else:
             t = time.monotonic()
-            page = root / 'page.png'
             report['input'] = rasterize(source, suffix, page, safety_timeout_seconds, home)
             if report['input'].get('scale', 1.0) > 2:
-                # Measured: the 745 px test JPEG (upscaled x4) scored ~78 % on notes
-                # versus 97-100 % for 300 dpi PDFs. Tell the user before they rely on it.
                 report['warnings'].append({'type': 'low_resolution_input',
                                            'upscale': report['input']['scale'],
                                            'advice': 'Use a 300 dpi PDF or a photo at least 2000 px wide.'})
             t = lap('rasterize', t)
+            preflight = _preflight(source, suffix, page, home, safety_timeout_seconds)
+            report['preflight'] = preflight.to_dict()
+            t = lap('preflight', t)
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                 ocr_future = pool.submit(chord_detector, str(page)) if chord_detector else None
+
+                def chord_items() -> list[dict] | None:
+                    nonlocal title
+                    if ocr_future is None:
+                        return None
+                    try:
+                        items, meta = ocr_future.result(timeout=safety_timeout_seconds)
+                    except Exception:  # chord OCR is an enhancement for the full score
+                        logger.exception('Chord OCR failed')
+                        report['warnings'].append({'type': 'chord_ocr_failed'})
+                        return None
+                    title = (meta or {}).get('song_title') or None
+                    return items
+
+                if gate and preflight.mode is quality.ProcessingMode.CHORD_ONLY:
+                    decision = reliability.decide(preflight, None)
+                    report['decision'] = decision.to_dict()
+                    items = chord_items()
+                    lap('chord_ocr_wait', t)
+                    return _chord_only(page, items, semitones, chord_only_renderer, report, stages, started)
                 recognized, book = run_audiveris(page, root / 'omr', safety_timeout_seconds, home)
                 t = lap('omr', t)
-                if ocr_future is not None:
-                    try:
-                        ocr_items, ocr_meta = ocr_future.result(timeout=safety_timeout_seconds)
-                        title = (ocr_meta or {}).get('song_title') or None
-                    except Exception:  # chord OCR is an enhancement; OMR output still stands
-                        logger.exception('Chord OCR failed; keeping OMR chord names')
-                        report['warnings'].append({'type': 'chord_ocr_failed'})
+                ocr_items = chord_items()
                 t = lap('chord_ocr_wait', t)
             if book is not None:
                 try:
@@ -339,7 +419,7 @@ def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', *,
             geometry.remap_to_measures([m.measureNumberWithSuffix() for m in measures])
             or geometry.measure_count == len(measures))
         if aligned:
-            report['repairs']['ledger_notes_fixed'] = cleanup.fix_missed_ledgers(score, geometry, root / 'page.png')
+            report['repairs']['ledger_notes_fixed'] = cleanup.fix_missed_ledgers(score, geometry, page)
         if ocr_items is not None and aligned:
             placed = align_ocr_chords(ocr_items, geometry, report)
             report['chord_source'] = 'paddleocr'
@@ -357,7 +437,19 @@ def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', *,
         else:
             report['chord_source'] = 'audiveris' if suffix not in {'.xml', '.musicxml', '.mxl'} else 'input'
         report['measures'] = len(measures)
-        report['warnings'].extend({'type': 'bar_length', **w} for w in cleanup.measure_warnings(score))
+        bar_warnings = cleanup.measure_warnings(score)
+        report['warnings'].extend({'type': 'bar_length', **w} for w in bar_warnings)
+
+        if suffix not in {'.xml', '.musicxml', '.mxl'}:
+            signals = reliability.post_omr_signals(score, geometry, aligned, len(bar_warnings))
+            report['post_omr'] = signals.to_dict()
+            decision = reliability.decide(preflight, signals)
+            report['decision'] = decision.to_dict()
+            if gate and decision.mode is quality.ProcessingMode.CHORD_ONLY:
+                lap('analyse', t)
+                return _chord_only(page, ocr_items, semitones, chord_only_renderer, report, stages, started)
+        else:
+            report['decision'] = {'mode': 'full_score', 'reason': 'musicxml_input'}
 
         recognized_xml = root / 'recognized.musicxml'
         score.write('musicxml', fp=str(recognized_xml))
@@ -368,11 +460,20 @@ def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', *,
         score.write('musicxml', fp=str(xml))
         t = lap('transpose', t)
 
+        # Stage 3: the files we are about to hand out must differ only by the transposition.
+        guard = music_guard.validate(converter.parse(str(recognized_xml)), converter.parse(str(xml)),
+                                     semitones, mode, summary)
+        report['integrity'] = guard.to_dict()
+        t = lap('integrity_check', t)
+        if not guard.ok:
+            logger.error('Transposition integrity check failed: %s', guard.issues[:5])
+            raise ScoreError('Transposition integrity check failed; no result was produced', 500)
+
         pdf = root / 'transposed.pdf'
         render_pdf(xml, pdf, safety_timeout_seconds, home)
         lap('render', t)
         stages['total'] = round((time.monotonic() - started) * 1000, 1)
         report['review_required'] = True
         report['warning'] = ('Experimental OMR: check notes, rhythm, chords and accidentals before use. '
-                             f"{len([w for w in report['warnings'] if w['type'] == 'bar_length'])} bar(s) flagged.")
+                             f"{len(bar_warnings)} bar(s) flagged.")
         return Result(pdf.read_bytes(), xml.read_bytes(), recognized_xml.read_bytes(), stages, report)

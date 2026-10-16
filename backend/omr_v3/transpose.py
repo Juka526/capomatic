@@ -16,10 +16,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from backend.chords.parser import parse_chord
-from backend.chords.transpose import compute_target_key, transpose_chord
+from backend.chords.transpose import compute_target_key
 
-from .chords import chord_symbol_from_text, chord_text
+from .chords import chord_symbol_from_text, chord_text, transpose_chord_text
 
 Mode = Literal['key', 'capo']
 CAPO_MAX = 7
@@ -91,8 +90,7 @@ def transpose_score(score, semitones: int, mode: Mode = 'key') -> dict:
             for cs in list(m.recurse().getElementsByClass(harmony.ChordSymbol)):
                 try:
                     text = chord_text(cs)
-                    new = transpose_chord(parse_chord(text), semitones,
-                                          target_key=target, original_key=original)
+                    new = transpose_chord_text(text, semitones, original_key=original, target_key=target)
                 except ValueError:
                     unparsed.append(str(cs.figure))
                     continue

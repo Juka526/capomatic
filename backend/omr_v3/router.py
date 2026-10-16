@@ -28,19 +28,22 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from .core import MAX_BYTES, ChordDetector, Result, ScoreError, process, validate
+from .core import MAX_BYTES, ChordDetector, ChordOnlyRenderer, Result, ScoreError, process, validate
 
 router = APIRouter(prefix='/api/v3/score', tags=['experimental-score'])
 logger = logging.getLogger(__name__)
 _slot = threading.BoundedSemaphore(1)
 _bearer = HTTPBearer(auto_error=False)
 _chord_detector: ChordDetector | None = None
+_chord_only_renderer: ChordOnlyRenderer | None = None
 
 
-def configure(*, chord_detector: ChordDetector | None) -> None:
-    """Let the host app supply its (serialised) PaddleOCR chord detector."""
-    global _chord_detector
+def configure(*, chord_detector: ChordDetector | None,
+              chord_only_renderer: ChordOnlyRenderer | None = None) -> None:
+    """Let the host app supply its PaddleOCR chord detector and V1 chord-only renderer."""
+    global _chord_detector, _chord_only_renderer
     _chord_detector = chord_detector
+    _chord_only_renderer = chord_only_renderer
 
 
 class _RateLimiter:
@@ -103,7 +106,8 @@ def _execute(data: bytes, suffix: str, semitones: int, mode: str) -> Result:
     if not _slot.acquire(blocking=False):
         raise ScoreError('Score conversion is busy; retry shortly', 429)
     try:
-        return process(data, suffix, semitones, mode, chord_detector=_chord_detector)
+        return process(data, suffix, semitones, mode, chord_detector=_chord_detector,
+                       chord_only_renderer=_chord_only_renderer)
     finally:
         _slot.release()
 
@@ -141,20 +145,27 @@ async def _convert(request: Request, file: UploadFile, semitones: int, mode: str
 
 
 def _headers(result: Result, filename: str) -> dict[str, str]:
-    return {
+    decision = result.report.get('decision') or {}
+    headers = {
         'Content-Disposition': f'attachment; filename="{filename}"',
         'Cache-Control': 'no-store',
         'X-OMR-Total-Ms': str(result.stages_ms.get('total', '')),
         'X-OMR-Accuracy': 'unverified',
         'X-OMR-Review-Warnings': str(len(result.report.get('warnings', []))),
+        'X-Capomatic-Mode': result.mode,
     }
+    if result.mode == 'chord_only':
+        # Fixed reason codes only (no user content), e.g. "preflight:staff_spacing_too_small".
+        headers['X-Capomatic-Fallback-Reason'] = str(decision.get('reason', 'unknown'))[:120]
+    return headers
 
 
 @router.post('/transpose.pdf')
 async def transpose_pdf(request: Request, file: UploadFile = File(...),
                         semitones: int = Form(0), mode: str = Form('key')):
     result = await _convert(request, file, semitones, mode)
-    return Response(result.pdf, media_type='application/pdf', headers=_headers(result, 'transposed.pdf'))
+    name = 'chord-only.pdf' if result.mode == 'chord_only' else 'transposed.pdf'
+    return Response(result.pdf, media_type='application/pdf', headers=_headers(result, name))
 
 
 @router.post('/transpose.zip')
@@ -164,11 +175,17 @@ async def transpose_zip(request: Request, file: UploadFile = File(...),
     result = await _convert(request, file, semitones, mode)
     output = io.BytesIO()
     with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED) as z:
-        z.writestr('transposed.pdf', result.pdf)
-        z.writestr('transposed.musicxml', result.musicxml)
-        z.writestr('recognized.musicxml', result.recognized_musicxml)
+        if result.mode == 'chord_only':
+            z.writestr('chord-only.pdf', result.pdf)
+            if result.png:
+                z.writestr('chord-only.png', result.png)
+        else:
+            z.writestr('transposed.pdf', result.pdf)
+            z.writestr('transposed.musicxml', result.musicxml)
+            z.writestr('recognized.musicxml', result.recognized_musicxml)
         z.writestr('conversion-report.json', json.dumps({
-            'semitones': semitones, 'mode': mode, 'stages_ms': result.stages_ms, **result.report,
+            'semitones': semitones, 'mode': mode, 'result_mode': result.mode,
+            'stages_ms': result.stages_ms, **result.report,
         }, ensure_ascii=False, indent=2))
     return Response(output.getvalue(), media_type='application/zip',
                     headers=_headers(result, 'capomatic-score-results.zip'))

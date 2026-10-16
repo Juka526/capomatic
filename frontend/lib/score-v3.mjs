@@ -39,3 +39,24 @@ export function scoreDownloadName(original, fields, format) {
   const tag = fields.mode === 'capo' ? `capo${-fields.semitones}` : `key${fields.semitones >= 0 ? '+' : ''}${fields.semitones}`;
   return `${stem}-${tag}.${format}`;
 }
+
+/**
+ * Which explanation to show for a chord-only fallback. The API sends fixed
+ * reason codes such as "preflight:staff_spacing_too_small" or
+ * "omr:too_many_inconsistent_bars" (several preflight reasons are comma-joined).
+ */
+export function fallbackKind(reason) {
+  const r = String(reason || '');
+  if (r.includes('staff_spacing_too_small')) return 'lowResolution';
+  if (r.includes('image_too_blurry')) return 'blurry';
+  if (r.includes('contrast_too_low')) return 'lowContrast';
+  if (r.includes('no_staff_lines_found')) return 'noStaff';
+  if (r.startsWith('omr:')) return 'unreliableRecognition';
+  return 'unknown';
+}
+
+/** Download name for the file the API actually returned. */
+export function resultDownloadName(original, fields, format, resultMode) {
+  const name = scoreDownloadName(original, fields, format);
+  return resultMode === 'chord_only' ? name.replace(/(\.[^.]+)$/, '-chords-only$1') : name;
+}

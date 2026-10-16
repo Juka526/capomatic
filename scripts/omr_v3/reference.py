@@ -103,13 +103,12 @@ def check(ref: RefScore) -> list[str]:
 
 
 def to_music21(ref: RefScore):
-    from music21 import bar, harmony, key, metadata, meter, note, stream, tie
+    from music21 import bar, key, metadata, meter, note, stream, tie
 
     from backend.omr_v3.chords import chord_symbol_from_text
 
     part = stream.Part()
     pending_tie = False
-    time = ref.time
     for i, m in enumerate(ref.measures):
         meas = stream.Measure(number=m.number)
         if i == 0:
@@ -119,7 +118,6 @@ def to_music21(ref: RefScore):
             meas.insert(0, key.KeySignature(m.key))
         if m.time is not None:
             meas.insert(0, meter.TimeSignature(m.time))
-            time = m.time
         offset = Fraction(0)
         for pitch, ql, tie_start in m.notes:
             el = note.Rest(quarterLength=ql) if pitch is None else note.Note(pitch[0] + pitch[1:].replace('b', '-'), quarterLength=ql)

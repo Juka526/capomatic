@@ -58,6 +58,7 @@ class Head:
     w: float
     h: float
     pitch: int        # staff position: 0 = middle line, +4 = bottom line, +6 = first ledger below
+    grade: float = 1.0  # Audiveris contextual confidence (ctx-grade, 0..1)
 
 
 @dataclass
@@ -177,9 +178,13 @@ def load_geometry(omr_path: Path) -> SheetGeometry:
                     pitch = round(float(h.get('pitch')))
                 except (TypeError, ValueError):
                     continue
+                try:
+                    grade = float(h.get('ctx-grade') or h.get('grade') or 1.0)
+                except ValueError:
+                    grade = 1.0
                 if b is not None:
                     system.heads.append(Head(float(b.get('x')), float(b.get('y')),
-                                             float(b.get('w')), float(b.get('h')), pitch))
+                                             float(b.get('w')), float(b.get('h')), pitch, grade))
             systems.append(system)
     if not systems:
         raise GeometryError('no systems found')

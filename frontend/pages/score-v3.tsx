@@ -11,7 +11,7 @@ import { Wordmark } from '@/components/Wordmark';
 import { getAccessToken } from '@/lib/auth0';
 import {
   CAPO_MAX, KEY_SHIFT_LIMIT, SCORE_EXTENSIONS,
-  scoreDownloadName, scoreFileProblem, shiftFields,
+  fallbackKind, resultDownloadName, scoreFileProblem, shiftFields, type FallbackKind,
 } from '@/lib/score-v3.mjs';
 
 const ENABLED = process.env.NEXT_PUBLIC_ENABLE_SCORE_V3 === '1';
@@ -42,6 +42,15 @@ const TEXT = {
     badSize: '파일은 10MB 이하여야 합니다.',
     failed: (status: number) => `변환에 실패했습니다 (${status}).`,
     tooMany: '요청이 많습니다. 잠시 후 다시 시도해 주세요.',
+    chordOnly: (s: number, why: string) => `완료 (${s.toFixed(1)}초). 악보 전체를 믿고 옮기기 어려워 코드만 옮겼습니다(음표는 원본 그대로). 이유: ${why}`,
+    why: {
+      lowResolution: '이미지 해상도가 낮습니다. 300 dpi PDF나 2000px 이상 사진을 올려 주세요.',
+      blurry: '이미지가 흐립니다.',
+      lowContrast: '이미지 대비가 낮습니다.',
+      noStaff: '오선을 찾지 못했습니다.',
+      unreliableRecognition: '음표 인식 결과가 박자와 맞지 않는 마디가 많습니다.',
+      unknown: '인식 신뢰도가 낮습니다.',
+    } as Record<FallbackKind, string>,
     note: '정확도 99%와 페이지당 30초는 개발 목표이며 아직 검증된 성능이 아닙니다.',
     back: '← 돌아가기',
   },
@@ -66,6 +75,15 @@ const TEXT = {
     badSize: 'Files must be 10 MB or smaller.',
     failed: (status: number) => `Conversion failed (${status}).`,
     tooMany: 'Too many requests. Please try again later.',
+    chordOnly: (s: number, why: string) => `Done in ${s.toFixed(1)} s. The page could not be read reliably enough to rewrite the notes, so only the chords were transposed (notes unchanged). Reason: ${why}`,
+    why: {
+      lowResolution: 'the image resolution is too low. Upload a 300 dpi PDF or a photo at least 2000 px wide.',
+      blurry: 'the image is blurry.',
+      lowContrast: 'the image contrast is too low.',
+      noStaff: 'no staff lines were found.',
+      unreliableRecognition: 'many recognised bars do not add up to the time signature.',
+      unknown: 'recognition confidence is low.',
+    } as Record<FallbackKind, string>,
     note: '99% accuracy and 30 s per page are development targets, not verified performance.',
     back: '← Back',
   },
@@ -114,12 +132,16 @@ export default function ScoreV3() {
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = scoreDownloadName(file.name, fields, format);
+      const resultMode = response.headers.get('X-Capomatic-Mode');
+      anchor.download = resultDownloadName(file.name, fields, format, resultMode);
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      setStatus(t.done((performance.now() - start) / 1000, response.headers.get('X-OMR-Review-Warnings')));
+      const seconds = (performance.now() - start) / 1000;
+      setStatus(resultMode === 'chord_only'
+        ? t.chordOnly(seconds, t.why[fallbackKind(response.headers.get('X-Capomatic-Fallback-Reason'))])
+        : t.done(seconds, response.headers.get('X-OMR-Review-Warnings')));
     } catch (e) {
       setError(e instanceof Error ? e.message : t.failed(0));
     } finally {

@@ -157,7 +157,12 @@ def compare(ref_score, cand_score) -> dict:
             hits += 1
         else:
             near = [f'{t}@{o}' for o, t in cand_chords.get(cm, [])]
-            chord_diffs.append({'ref_measure': rm, 'offset': str(off), 'expected': text, 'found_in_bar': near})
+            # Right chord, wrong place (beat or neighbouring bar) is a placement error;
+            # anything else means the chord itself was not read correctly.
+            nearby = [t for b in (cm - 1, cm, cm + 1) for _, t in cand_chords.get(b, [])]
+            kind = 'mapping' if text in nearby else 'recognition'
+            chord_diffs.append({'ref_measure': rm, 'offset': str(off), 'expected': text, 'found_in_bar': near,
+                                'class': kind})
     nr, nc = len(ref['chords']), len(cand['chords'])
     key_ok = sum(1 for i, k in enumerate(ref['keys']) if measure_map.get(i, i) < len(cand['keys']) and cand['keys'][measure_map.get(i, i)] == k)
     time_ok = sum(1 for i, t in enumerate(ref['times']) if measure_map.get(i, i) < len(cand['times']) and cand['times'][measure_map.get(i, i)] == t)
@@ -171,6 +176,8 @@ def compare(ref_score, cand_score) -> dict:
                           'pitch': round(pn_pitch / len(pitched), 4) if pitched else None},
         'ser': round((subs + dels + ins) / n, 4) if n else None,
         'ops': {'substitutions': subs, 'deletions': dels, 'insertions': ins},
+        'chord_error_classes': {'recognition': sum(1 for d in chord_diffs if d['class'] == 'recognition'),
+                                'mapping': sum(1 for d in chord_diffs if d['class'] == 'mapping')},
         'chords': {'reference': nr, 'candidate': nc, 'hits': hits,
                    'recall': round(hits / nr, 4) if nr else None,
                    'precision': round(hits / nc, 4) if nc else None},
@@ -215,9 +222,8 @@ def transposed_reference(ref_score, ref_gt, semitones: int, mode: str):
     """Reference transposed without the pipeline's own transposition module."""
     from music21 import harmony, interval, key, stream
 
-    from backend.chords.parser import parse_chord
-    from backend.chords.transpose import compute_target_key, transpose_chord
-    from backend.omr_v3.chords import chord_symbol_from_text, chord_text
+    from backend.chords.transpose import compute_target_key
+    from backend.omr_v3.chords import chord_symbol_from_text, chord_text, transpose_chord_text
 
     names = {-6: 'Gb', -5: 'Db', -4: 'Ab', -3: 'Eb', -2: 'Bb', -1: 'F', 0: 'C', 1: 'G', 2: 'D', 3: 'A', 4: 'E', 5: 'B', 6: 'F#'}
     out = ref_score  # transposed in place by design (caller passes a fresh copy)
@@ -245,8 +251,8 @@ def transposed_reference(ref_score, ref_gt, semitones: int, mode: str):
         else:
             target = target if mode == 'key' else orig
         for cs in list(m.recurse().getElementsByClass(harmony.ChordSymbol)):
-            new = transpose_chord(parse_chord(chord_text(cs)), semitones,
-                                  target_key=compute_target_key(orig, semitones), original_key=orig)
+            new = transpose_chord_text(chord_text(cs), semitones, original_key=orig,
+                                       target_key=compute_target_key(orig, semitones))
             site, off = cs.activeSite, cs.offset
             site.remove(cs)
             site.insert(off, chord_symbol_from_text(new))

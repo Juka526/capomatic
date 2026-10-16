@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 
 from backend.chords.parser import parse_chord
+from backend.chords.transpose import transpose_chord
 
 from .geometry import SheetGeometry
 
@@ -119,6 +120,16 @@ def _kind_and_degrees(quality: str, extensions: str) -> tuple[str, list[tuple[st
     if pos != len(rest):
         return None
     return kind, degrees
+
+
+def transpose_chord_text(text: str, semitones: int, *, original_key: str | None, target_key: str | None) -> str:
+    """The one chord-text transposition used by V3: Capomatic's V1 engine, unchanged.
+
+    ``transpose_chord(parse_chord(text), ...)`` is the exact current API
+    (Chord in, str out), so no compatibility layer is needed; music21 never
+    transposes chord text.
+    """
+    return transpose_chord(parse_chord(text), semitones, target_key=target_key, original_key=original_key)
 
 
 def chord_symbol_from_text(text: str):

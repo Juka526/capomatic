@@ -100,3 +100,32 @@ def test_main_app_registers_router_and_keeps_v1_routes():
     paths = {route.path for route in app.routes}
     assert {'/detect', '/render', '/overlay', '/health'} <= paths
     assert {'/api/v3/score/transpose.pdf', '/api/v3/score/transpose.zip'} <= paths
+
+
+CHORD_ONLY = Result(b'%PDF-1.4\n', None, None, {'total': 5.0},
+                    {'warnings': [], 'decision': {'mode': 'chord_only', 'reason': 'preflight:staff_spacing_too_small'}},
+                    mode='chord_only', png=b'\x89PNG\r\n\x1a\n')
+
+
+def test_chord_only_result_is_labelled(client):
+    with patch.object(omr, '_execute', return_value=CHORD_ONLY):
+        pdf = client.post('/api/v3/score/transpose.pdf', files={'file': PDF})
+        z = client.post('/api/v3/score/transpose.zip', files={'file': PDF})
+    assert pdf.status_code == 200 and pdf.headers['X-Capomatic-Mode'] == 'chord_only'
+    assert pdf.headers['X-Capomatic-Fallback-Reason'] == 'preflight:staff_spacing_too_small'
+    assert 'chord-only.pdf' in pdf.headers['Content-Disposition']
+    with zipfile.ZipFile(io.BytesIO(z.content)) as archive:
+        assert set(archive.namelist()) == {'chord-only.pdf', 'chord-only.png', 'conversion-report.json'}
+        assert json.loads(archive.read('conversion-report.json'))['result_mode'] == 'chord_only'
+
+
+def test_full_score_result_is_labelled(client):
+    with patch.object(omr, '_execute', return_value=RESULT):
+        r = client.post('/api/v3/score/transpose.pdf', files={'file': PDF})
+    assert r.headers['X-Capomatic-Mode'] == 'full_score' and 'X-Capomatic-Fallback-Reason' not in r.headers
+
+
+def test_main_app_wires_the_v1_chord_only_renderer():
+    from backend.api import main
+
+    assert omr._chord_only_renderer is main._omr_chord_only

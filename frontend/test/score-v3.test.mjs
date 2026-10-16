@@ -30,3 +30,18 @@ test('download names keep Korean titles and describe the conversion', () => {
   assert.equal(scoreDownloadName('a/b:c.png', { mode: 'capo', semitones: -3 }, 'pdf'), 'a_b_c-capo3.pdf');
   assert.equal(scoreDownloadName('x.jpg', { mode: 'key', semitones: 2 }, 'pdf'), 'x-key+2.pdf');
 });
+
+import { fallbackKind, resultDownloadName } from '../lib/score-v3.mjs';
+
+test('fallback reasons map to user explanations', () => {
+  assert.equal(fallbackKind('preflight:staff_spacing_too_small'), 'lowResolution');
+  assert.equal(fallbackKind('preflight:image_too_blurry,contrast_too_low'), 'blurry');
+  assert.equal(fallbackKind('omr:too_many_inconsistent_bars'), 'unreliableRecognition');
+  assert.equal(fallbackKind(null), 'unknown');
+});
+
+test('chord-only downloads are named as such', () => {
+  const f = { mode: 'capo', semitones: -2 };
+  assert.equal(resultDownloadName('자유.pdf', f, 'pdf', 'chord_only'), '자유-capo2-chords-only.pdf');
+  assert.equal(resultDownloadName('자유.pdf', f, 'zip', 'full_score'), '자유-capo2.zip');
+});

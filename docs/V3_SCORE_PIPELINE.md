@@ -7,26 +7,44 @@ and 30 s per page are targets, not runtime limits.
 ## What it does
 
 ```
-upload (1-page PDF / PNG / JPEG / MusicXML)
+upload (1-page PDF / PNG / JPEG / MusicXML)        MusicXML skips straight to transposition
   -> one grayscale raster (PDF at 300 dpi; small images upscaled toward 2400 px wide)
+  -> GATE 1 preflight (quality.py): staff spacing at the source's native resolution,
+     sharpness, contrast  -- fail => chord-only (Audiveris is not even started)
   -> Audiveris 5.11 (pinned commit)          notes, rhythm, key/time, lyrics, measure geometry (.omr)
      || PaddleOCR chord detection (V1 model, same Paddle thread as /detect)
   -> repairs: drop watermark-only voices, strip phantom dynamics/accents, missed ledger lines,
      chord names exported as plain text, footer/garbage lyrics
   -> chord placement: OCR chord boxes -> measure + beat via the .omr stacks/slots
      (left-aligned or centred engraving detected per sheet); Audiveris chords fill empty beats
-  -> transposition (music21)
+  -> GATE 2 post-OMR (reliability.py): share of bars that do not add up to the time
+     signature, note-head confidence, time signature present  -- fail => chord-only
+  -> transposition (music21; chord text only through backend.chords via transpose_chord_text)
        key  : notes + key signatures + chords move; each key-signature region spelled
               toward V1's standard key names (D -1 -> Db, not C#)
        capo : notes untouched, chords written N semitones lower (V1 convention, semitones = -N)
   -> MusicXML (chord suffixes written as MusicXML degrees so MuseScore prints add/sus/(11))
+  -> INTEGRITY CHECK (music_guard.py) on the two files handed out: same bars, same notes and
+     durations, every pitch moved by exactly the shift (0 for capo), chords kept and moved,
+     key signatures = targets  -- fail => HTTP 500, no result
   -> MuseScore 3 -> PDF
+
+chord-only fallback = V1's own /detect + /render "replace" output for the page (main._omr_chord_only):
+  only chord symbols are transposed, the notes stay as printed, and the response says so.
 ```
 
+Result modes: `full_score` (MusicXML + PDF) or `chord_only` (page image + PDF of V1's chord
+overlay). Responses carry `X-Capomatic-Mode` and, for chord-only, a fixed reason code in
+`X-Capomatic-Fallback-Reason` (e.g. `preflight:staff_spacing_too_small`,
+`omr:too_many_inconsistent_bars`). A plausible-looking full score is never returned when either
+gate fails; time is never a gate (30 s/page is a target).
+
 API: `POST /api/v3/score/transpose.pdf` and `POST /api/v3/score/transpose.zip`
-(form fields `file`, `semitones`, `mode=key|capo`). The ZIP holds `transposed.pdf`,
-`transposed.musicxml`, `recognized.musicxml` (before transposition) and
-`conversion-report.json` (stage timings, repairs, review warnings). Every response is
+(form fields `file`, `semitones`, `mode=key|capo`). For a full score the ZIP holds
+`transposed.pdf`, `transposed.musicxml`, `recognized.musicxml` (before transposition) and
+`conversion-report.json` (stage timings, preflight metrics, post-OMR signals, decision,
+integrity check, repairs, review warnings); for chord-only it holds `chord-only.pdf`,
+`chord-only.png` and the report. Every response is
 marked `X-OMR-Accuracy: unverified`.
 
 Frontend: `/score-v3`, shown only when `NEXT_PUBLIC_ENABLE_SCORE_V3=1`, login required
@@ -46,6 +64,9 @@ Backend (Hugging Face Space variables):
 | `CAPOMATIC_OMR_CHORD_MERGE` | `1` | add Audiveris chords on beats PaddleOCR left empty |
 | `CAPOMATIC_OMR_KEEP_MARKS` | unset | `1` keeps dynamics, articulations and fermatas (default strips them; all were false positives on the test sheets) |
 | `CAPOMATIC_OMR_OCR_LANGUAGES` | `eng+kor` | Tesseract languages for Audiveris text |
+| `CAPOMATIC_OMR_MIN_INTERLINE_PX` | see `quality.py` | gate 1: minimum staff spacing at native resolution |
+| `CAPOMATIC_OMR_MAX_BAD_BAR_RATIO` | see `reliability.py` | gate 2: maximum share of bars that do not add up |
+| `CAPOMATIC_OMR_MIN_CONFIDENCE` | see `reliability.py` | gate 2: minimum combined post-OMR confidence |
 | `CORS_ORIGINS` | existing | must include the frontend origin (already true for V1) |
 
 Frontend (Vercel): `NEXT_PUBLIC_ENABLE_SCORE_V3=1` to show the page;
