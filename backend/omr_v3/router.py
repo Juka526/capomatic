@@ -164,6 +164,8 @@ def _headers(result: Result, filename: str) -> dict[str, str]:
 async def transpose_pdf(request: Request, file: UploadFile = File(...),
                         semitones: int = Form(0), mode: str = Form('key')):
     result = await _convert(request, file, semitones, mode)
+    if result.report.get('document', {}).get('failed_pages'):
+        raise HTTPException(422, 'Some pages failed conversion; request the ZIP for per-page results.')
     name = 'chord-only.pdf' if result.mode == 'chord_only' else 'transposed.pdf'
     return Response(result.pdf, media_type='application/pdf', headers=_headers(result, name))
 
@@ -175,7 +177,19 @@ async def transpose_zip(request: Request, file: UploadFile = File(...),
     result = await _convert(request, file, semitones, mode)
     output = io.BytesIO()
     with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED) as z:
-        if result.mode == 'chord_only':
+        if result.pages:
+            z.writestr('transposed.pdf', result.pdf)
+            for number, page in enumerate(result.pages, 1):
+                if page is None:
+                    continue
+                prefix = f'page-{number:03d}'
+                z.writestr(prefix + '-' + page.mode + '.pdf', page.pdf)
+                if page.musicxml is not None:
+                    z.writestr(prefix + '-transposed.musicxml', page.musicxml)
+                    z.writestr(prefix + '-recognized.musicxml', page.recognized_musicxml)
+                if page.png is not None:
+                    z.writestr(prefix + '-chord-only.png', page.png)
+        elif result.mode == 'chord_only':
             z.writestr('chord-only.pdf', result.pdf)
             if result.png:
                 z.writestr('chord-only.png', result.png)

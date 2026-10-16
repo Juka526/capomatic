@@ -20,6 +20,11 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from fractions import Fraction
 
+from backend.chords.parser import parse_chord
+from .chords import chord_text
+from backend.chords.transpose import compute_target_key
+from .transpose import _region_key
+
 _FIFTHS = {'Cb': -7, 'Gb': -6, 'Db': -5, 'Ab': -4, 'Eb': -3, 'Bb': -2, 'F': -1, 'C': 0,
            'G': 1, 'D': 2, 'A': 3, 'E': 4, 'B': 5, 'F#': 6, 'C#': 7}
 
@@ -50,8 +55,13 @@ def _measure_content(score):
         for el in m.recurse():
             if isinstance(el, harmony.ChordSymbol):
                 root, bass = el.root(), el.bass()
+                parsed = parse_chord(chord_text(el))
+                semantics = (parsed.quality, parsed.extensions,
+                             tuple(sorted((d.modType, d.degree, d.interval.chromatic.semitones)
+                                          for d in el.getChordStepModifications())), el.chordKind)
+                slash = parsed.bass is not None
                 chords.append((Fraction(el.getOffsetInHierarchy(m)).limit_denominator(64),
-                               root.pitchClass if root else None, bass.pitchClass if bass else None))
+                               root.pitchClass if root else None, bass.pitchClass if bass else None, slash, semantics))
             elif isinstance(el, key.KeySignature):
                 keys.append(el.sharps)
             elif getattr(el, 'isNote', False) or getattr(el, 'isRest', False) or getattr(el, 'isChord', False):
@@ -70,7 +80,11 @@ def _measure_content(score):
 def validate(original, transposed, semitones: int, mode: str, summary: dict | None = None) -> GuardReport:
     """Compare a recognised score with its transposed version."""
     report = GuardReport()
-    a, b = _measure_content(original), _measure_content(transposed)
+    try:
+        a, b = _measure_content(original), _measure_content(transposed)
+    except (ValueError, TypeError, AttributeError, IndexError):
+        report.fail('unreadable chord or score semantics')
+        return report
     report.measures = (len(a), len(b))
     report.events = (sum(len(x[1]) for x in a), sum(len(x[1]) for x in b))
     report.chords = (sum(len(x[2]) for x in a), sum(len(x[2]) for x in b))
@@ -78,7 +92,14 @@ def validate(original, transposed, semitones: int, mode: str, summary: dict | No
         report.fail(f'measure count changed {len(a)} -> {len(b)}')
     pitch_shift = semitones if mode == 'key' else 0
     chord_shift = semitones % 12
-    for (num, ev_a, ch_a, _), (_, ev_b, ch_b, ks_b) in zip(a, b):
+    source_fifths = 0
+    for index, ((num, ev_a, ch_a, ks_a), (_, ev_b, ch_b, ks_b)) in enumerate(zip(a, b)):
+        if ks_a:
+            source_fifths = ks_a[-1]
+        original_key = _region_key(source_fifths)
+        expected = compute_target_key(original_key, semitones) if mode == 'key' else original_key
+        if ((index == 0 or ks_a) and not ks_b) or any(k != _FIFTHS[expected] for k in ks_b):
+            report.fail(f'bar {num}: key signature missing or inconsistent with requested shift')
         if len(ev_a) != len(ev_b):
             report.fail(f'bar {num}: {len(ev_a)} -> {len(ev_b)} notes/rests')
             continue
@@ -90,7 +111,9 @@ def validate(original, transposed, semitones: int, mode: str, summary: dict | No
         if len(ch_a) != len(ch_b):
             report.fail(f'bar {num}: {len(ch_a)} -> {len(ch_b)} chord symbols')
             continue
-        for (oa, ra, ba), (ob, rb, bb) in zip(ch_a, ch_b):
+        for (oa, ra, ba, sa, qa), (ob, rb, bb, sb, qb) in zip(ch_a, ch_b):
+            if sa != sb or qa != qb:
+                report.fail(f'bar {num}: chord semantics changed at {oa}')
             if oa != ob or ra is None or rb is None or (rb - ra) % 12 != chord_shift:
                 report.fail(f'bar {num}: chord root moved wrongly at {oa}')
             elif ba is not None and bb is not None and (bb - ba) % 12 != chord_shift:
@@ -102,6 +125,15 @@ def validate(original, transposed, semitones: int, mode: str, summary: dict | No
                 n = int(''.join(ch for ch in str(num) if ch.isdigit() or ch == '-'))
             except ValueError:
                 continue
-            if n in wanted and ks and wanted[n] in _FIFTHS and ks[0] != _FIFTHS[wanted[n]]:
-                report.fail(f'bar {num}: key signature {ks[0]} does not match target {wanted[n]}')
+            if n in wanted:
+                target = _FIFTHS.get(wanted[n])
+                if target is None or not ks or any(k != target for k in ks):
+                    report.fail(f'bar {num}: missing or incorrect target key signature')
+            elif ks:
+                prior = [m for m in wanted if m <= n]
+                if not prior or any(k != _FIFTHS.get(wanted[max(prior)]) for k in ks):
+                    report.fail(f'bar {num}: key signature contradicts region target')
+        observed = {int(str(num)) for num, _, _, _ in b if str(num).lstrip('-').isdigit()}
+        if set(wanted) - observed:
+            report.fail('key region references a missing measure')
     return report

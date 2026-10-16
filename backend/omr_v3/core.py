@@ -28,7 +28,7 @@ from typing import Callable
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
-from . import cleanup, music_guard, quality, reliability
+from . import chord_coverage, cleanup, music_guard, quality, reliability
 from .chords import align_ocr_chords, merge_chords, replace_chord_symbols, score_chords
 from .geometry import GeometryError, load_geometry
 from .transpose import transpose_score, validate_request
@@ -36,6 +36,7 @@ from .transpose import transpose_score, validate_request
 logger = logging.getLogger(__name__)
 
 MAX_BYTES = 10 * 1024 * 1024
+MAX_PAGES = 10
 MAX_PIXELS = 40_000_000
 ALLOWED = {'.png', '.jpg', '.jpeg', '.pdf', '.xml', '.musicxml', '.mxl'}
 # Audiveris needs roughly 15+ px between staff lines; phone photos and web
@@ -53,9 +54,10 @@ ChordOnlyRenderer = Callable[[str, list[dict], int], tuple[Image.Image, dict]]
 
 
 class ScoreError(Exception):
-    def __init__(self, message: str, status: int = 422):
+    def __init__(self, message: str, status: int = 422, report: dict | None = None):
         super().__init__(message)
         self.status = status
+        self.report = report or {}
 
 
 @dataclass(frozen=True)
@@ -67,6 +69,7 @@ class Result:
     report: dict = field(default_factory=dict)
     mode: str = 'full_score'          # 'full_score' or 'chord_only'
     png: bytes | None = None          # chord-only page image
+    pages: tuple[Result | None, ...] = ()
 
     @property
     def warning(self) -> str:
@@ -292,9 +295,12 @@ def _chord_only(page: Path, items: list[dict] | None, semitones: int, renderer: 
     if renderer is None or items is None:
         raise ScoreError('This page is not reliable enough for full-score conversion, '
                          'and chord-only conversion is unavailable', 422)
-    if not items:  # an untouched page labelled as a result would hide the failure
-        raise ScoreError('This page is not reliable enough for full-score conversion, '
-                         'and no chord symbols were recognised for chord-only conversion', 422)
+    with Image.open(page) as image:
+        coverage = chord_coverage.assess(image, items)
+    report['chord_only_confidence'] = coverage
+    if not coverage['accepted']:
+        raise ScoreError(chord_coverage.REASON + ': Please upload a clearer PDF/image; '
+                         'too few confident chord symbols cover the staff systems.', 422, report)
     t = time.monotonic()
     image, info = renderer(str(page), items, semitones)
     png, pdf = io.BytesIO(), io.BytesIO()
@@ -310,7 +316,7 @@ def _chord_only(page: Path, items: list[dict] | None, semitones: int, renderer: 
     return Result(pdf.getvalue(), None, None, stages, report, mode='chord_only', png=png.getvalue())
 
 
-def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', *,
+def _process_page(data: bytes, suffix: str, semitones: int, mode: str = 'key', *,
             chord_detector: ChordDetector | None = None,
             chord_only_renderer: ChordOnlyRenderer | None = None,
             gate: bool = True,
@@ -481,3 +487,69 @@ def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', *,
         report['warning'] = ('Experimental OMR: check notes, rhythm, chords and accidentals before use. '
                              f"{len(bar_warnings)} bar(s) flagged.")
         return Result(pdf.read_bytes(), xml.read_bytes(), recognized_xml.read_bytes(), stages, report)
+
+
+def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', **kwargs) -> Result:
+    """Process up to ten PDF pages sequentially; retain explicit failures in order."""
+    validate(data, suffix)
+    try:
+        validate_request(mode, semitones)
+    except ValueError as exc:
+        raise ScoreError(str(exc)) from exc
+    if suffix != '.pdf':
+        return _process_page(data, suffix, semitones, mode, **kwargs)
+    timeout = kwargs.get('safety_timeout_seconds')
+    if timeout is None:
+        timeout = float(os.environ.get('CAPOMATIC_OMR_TOOL_TIMEOUT_SECONDS', '300'))
+    if not 10 <= timeout <= 3600:
+        raise ScoreError('Invalid operational tool timeout', 500)
+    started = time.monotonic()
+    with tempfile.TemporaryDirectory(prefix='capomatic-document-') as tmp:
+        root = Path(tmp)
+        source = root / 'source.pdf'
+        source.write_bytes(data)
+        count = _pdf_pages(source, timeout, root)
+        if not 1 <= count <= MAX_PAGES:
+            raise ScoreError(f'PDF must contain 1 to {MAX_PAGES} pages', 413)
+        if count == 1:
+            return _process_page(data, suffix, semitones, mode, **kwargs)
+        _run([_bin('CAPOMATIC_PDFSEPARATE_BIN', 'pdfseparate'), str(source),
+              str(root / 'input-%d.pdf')], timeout, root, 'PDF splitting')
+        results, details, pdfs = [], [], []
+        for number in range(1, count + 1):
+            output = root / f'result-{number}.pdf'
+            try:
+                result = _process_page((root / f'input-{number}.pdf').read_bytes(),
+                                       '.pdf', semitones, mode, **kwargs)
+            except ScoreError as exc:
+                # Integrity and service errors must never become a successful document.
+                if exc.status != 422:
+                    raise
+                results.append(None)
+                details.append({'page': number, 'mode': 'failure', 'status': exc.status,
+                                'error': str(exc)})
+                from PIL import ImageDraw
+                placeholder = Image.new('RGB', (1240, 1754), 'white')
+                draw = ImageDraw.Draw(placeholder)
+                draw.text((80, 100), f'Page {number}: conversion failed', fill='black')
+                draw.text((80, 140), 'No transposed score is available. Upload a clearer PDF/image.', fill='black')
+                placeholder.save(output, format='PDF', resolution=150)
+            else:
+                results.append(result)
+                details.append({'page': number, 'mode': result.mode,
+                                'stages_ms': result.stages_ms, **result.report})
+                output.write_bytes(result.pdf)
+            pdfs.append(str(output))
+        combined = root / 'combined.pdf'
+        _run([_bin('CAPOMATIC_PDFUNITE_BIN', 'pdfunite'), *pdfs, str(combined)],
+             timeout, root, 'PDF combination')
+        failures = sum(r is None for r in results)
+        report = {'document': {'page_count': count, 'successful_pages': count - failures,
+                               'failed_pages': failures, 'complete': failures == 0},
+                  'pages': details, 'review_required': True,
+                  'warning': 'Review each page. Failure placeholders are not transposed scores.'}
+        modes = {r.mode for r in results if r is not None}
+        result_mode = 'partial_failure' if failures else (next(iter(modes)) if len(modes) == 1 else 'mixed')
+        return Result(combined.read_bytes(), None, None,
+                      {'total': round((time.monotonic() - started) * 1000, 1)},
+                      report, mode=result_mode, pages=tuple(results))

@@ -27,7 +27,7 @@ const TEXT = {
     disabled: '이 기능은 아직 공개되지 않았습니다.',
     loginNeeded: '악보 전체 변환은 로그인 후 사용할 수 있습니다.',
     login: '로그인',
-    file: '악보 파일 (PDF는 1페이지, 이미지, MusicXML)',
+    file: '악보 파일 (PDF 최대 10페이지, 이미지, MusicXML)',
     modeKey: '조옮김 (음표+코드)',
     modeCapo: '카포 (코드만, 음표 그대로)',
     keyValue: (n: number) => `반음 ${n > 0 ? '+' : ''}${n}`,
@@ -38,6 +38,8 @@ const TEXT = {
     submit: '변환하기',
     busy: '변환 중… 한 페이지에 1분 정도 걸릴 수 있습니다.',
     done: (s: number, w: string | null) => `완료 (${s.toFixed(1)}초). ${w && w !== '0' ? `검토 경고 ${w}건 — ` : ''}음표와 코드를 꼭 확인하세요.`,
+    partial: '일부 페이지 변환에 실패했습니다. ZIP의 페이지별 보고서를 확인하고 더 선명한 파일을 올려 주세요.',
+    mixed: '페이지별로 악보 전체 또는 코드만 변환했습니다. ZIP 보고서와 모든 페이지를 확인하세요.',
     badType: '지원하지 않는 파일 형식입니다.',
     badSize: '파일은 10MB 이하여야 합니다.',
     failed: (status: number) => `변환에 실패했습니다 (${status}).`,
@@ -48,7 +50,7 @@ const TEXT = {
       blurry: '이미지가 흐립니다.',
       lowContrast: '이미지 대비가 낮습니다.',
       noStaff: '오선을 찾지 못했습니다.',
-      unreliableRecognition: '음표 인식 결과가 박자와 맞지 않는 마디가 많습니다.',
+      unreliableRecognition: '음표 인식 결과의 신뢰도가 부족합니다.',
       unknown: '인식 신뢰도가 낮습니다.',
     } as Record<FallbackKind, string>,
     note: '정확도 99%와 페이지당 30초는 개발 목표이며 아직 검증된 성능이 아닙니다.',
@@ -60,7 +62,7 @@ const TEXT = {
     disabled: 'This feature is not available yet.',
     loginNeeded: 'Please log in to convert whole scores.',
     login: 'Log in',
-    file: 'Score file (1-page PDF, image or MusicXML)',
+    file: 'Score file (PDF up to 10 pages, image or MusicXML)',
     modeKey: 'Key change (notes + chords)',
     modeCapo: 'Capo (chords only, notes unchanged)',
     keyValue: (n: number) => `${n > 0 ? '+' : ''}${n} semitones`,
@@ -71,6 +73,8 @@ const TEXT = {
     submit: 'Convert',
     busy: 'Converting… about a minute per page.',
     done: (s: number, w: string | null) => `Done in ${s.toFixed(1)} s. ${w && w !== '0' ? `${w} review warning(s) — ` : ''}check notes and chords before use.`,
+    partial: 'Some pages failed conversion. Check the per-page ZIP report and upload a clearer file.',
+    mixed: 'Pages used full-score or chord-only conversion. Check the ZIP report and every page.',
     badType: 'Unsupported file type.',
     badSize: 'Files must be 10 MB or smaller.',
     failed: (status: number) => `Conversion failed (${status}).`,
@@ -81,7 +85,7 @@ const TEXT = {
       blurry: 'the image is blurry.',
       lowContrast: 'the image contrast is too low.',
       noStaff: 'no staff lines were found.',
-      unreliableRecognition: 'many recognised bars do not add up to the time signature.',
+      unreliableRecognition: 'recognition evidence is insufficient for a reliable full score.',
       unknown: 'recognition confidence is low.',
     } as Record<FallbackKind, string>,
     note: '99% accuracy and 30 s per page are development targets, not verified performance.',
@@ -139,7 +143,7 @@ export default function ScoreV3() {
       anchor.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
       const seconds = (performance.now() - start) / 1000;
-      setStatus(resultMode === 'chord_only'
+      setStatus(resultMode === 'partial_failure' ? t.partial : resultMode === 'mixed' ? t.mixed : resultMode === 'chord_only'
         ? t.chordOnly(seconds, t.why[fallbackKind(response.headers.get('X-Capomatic-Fallback-Reason'))])
         : t.done(seconds, response.headers.get('X-OMR-Review-Warnings')));
     } catch (e) {

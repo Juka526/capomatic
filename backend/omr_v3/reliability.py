@@ -27,6 +27,9 @@ from .quality import ProcessingMode, QualityDecision
 MAX_BAD_BAR_RATIO = 0.08
 MIN_MEAN_HEAD_GRADE = 0.60
 MIN_CONFIDENCE = 0.80
+# Conservative provisional limits; these are evidence checks, not accuracy estimates.
+MAX_LOW_HEAD_RATIO = 0.15
+MAX_HEAD_COUNT_DISAGREEMENT = 0.05
 
 
 @dataclass(frozen=True)
@@ -39,6 +42,14 @@ class PostOmrSignals:
     low_grade_heads: int
     has_time_signature: bool
     notes: int
+
+    @property
+    def head_count_disagreement(self) -> float:
+        return abs(self.heads - self.notes) / max(self.heads, self.notes, 1)
+
+    @property
+    def low_head_ratio(self) -> float:
+        return self.low_grade_heads / self.heads if self.heads else 1.0
 
     @property
     def bad_bar_ratio(self) -> float:
@@ -58,7 +69,7 @@ class PostOmrSignals:
 
     def to_dict(self) -> dict:
         d = asdict(self)
-        d.update(bad_bar_ratio=round(self.bad_bar_ratio, 3), confidence=self.confidence)
+        d.update(head_count_disagreement=round(self.head_count_disagreement, 3), low_head_ratio=round(self.low_head_ratio, 3), bad_bar_ratio=round(self.bad_bar_ratio, 3), confidence=self.confidence)
         return d
 
 
@@ -75,7 +86,7 @@ class FinalDecision:
 
 
 def post_omr_signals(score, geometry, aligned: bool, bad_bars: int) -> PostOmrSignals:
-    from music21 import meter, note, stream
+    from music21 import harmony, meter, stream
 
     measures = list(score.parts[0].getElementsByClass(stream.Measure)) if score.parts else []
     heads = [h for s in geometry.systems for h in s.heads] if geometry is not None else []
@@ -88,7 +99,8 @@ def post_omr_signals(score, geometry, aligned: bool, bad_bars: int) -> PostOmrSi
         mean_head_grade=round(sum(grades) / len(grades), 3) if grades else None,
         low_grade_heads=sum(1 for g in grades if g < 0.5),
         has_time_signature=any(True for _ in score.recurse().getElementsByClass(meter.TimeSignature)),
-        notes=sum(1 for _ in score.recurse().getElementsByClass(note.Note)),
+        notes=sum(len(n.pitches) for n in score.recurse().notes
+                  if not isinstance(n, harmony.ChordSymbol)),
     )
 
 
@@ -109,6 +121,12 @@ def decide(preflight: QualityDecision | None, signals: PostOmrSignals | None) ->
             return FinalDecision(ProcessingMode.CHORD_ONLY, 'omr:too_many_inconsistent_bars', pre_score, conf)
         if signals.mean_head_grade is not None and signals.mean_head_grade < MIN_MEAN_HEAD_GRADE:
             return FinalDecision(ProcessingMode.CHORD_ONLY, 'omr:low_note_confidence', pre_score, conf)
+        if not signals.geometry_aligned or not signals.heads or signals.mean_head_grade is None:
+            return FinalDecision(ProcessingMode.CHORD_ONLY, 'omr:missing_confidence_evidence', pre_score, conf)
+        if signals.head_count_disagreement > MAX_HEAD_COUNT_DISAGREEMENT:
+            return FinalDecision(ProcessingMode.CHORD_ONLY, 'omr:head_export_disagreement', pre_score, conf)
+        if signals.low_head_ratio > MAX_LOW_HEAD_RATIO:
+            return FinalDecision(ProcessingMode.CHORD_ONLY, 'omr:too_many_low_confidence_heads', pre_score, conf)
         if conf is not None and conf < min_conf:
             return FinalDecision(ProcessingMode.CHORD_ONLY, 'omr:confidence_below_threshold', pre_score, conf)
     return FinalDecision(ProcessingMode.FULL_SCORE, 'full_score_allowed', pre_score, conf)

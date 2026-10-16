@@ -129,3 +129,23 @@ def test_main_app_wires_the_v1_chord_only_renderer():
     from backend.api import main
 
     assert omr._chord_only_renderer is main._omr_chord_only
+
+
+def test_multipage_zip_keeps_page_numbers_and_failure_details(client):
+    result = Result(b'%PDF-combined', None, None, {},
+                    {'document': {'failed_pages': 1},
+                     'pages': [{'page': 1, 'mode': 'full_score'},
+                               {'page': 2, 'mode': 'failure'},
+                               {'page': 3, 'mode': 'full_score'}]},
+                    mode='partial_failure', pages=(RESULT, None, RESULT))
+    with patch.object(omr, '_execute', return_value=result):
+        response = client.post('/api/v3/score/transpose.zip', files={'file': PDF})
+        assert response.status_code == 200
+        with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+            assert 'page-001-recognized.musicxml' in archive.namelist()
+            assert 'page-003-transposed.musicxml' in archive.namelist()
+            assert not any('page-002' in name for name in archive.namelist())
+            report = json.loads(archive.read('conversion-report.json'))
+            assert report['pages'][1]['mode'] == 'failure'
+        response = client.post('/api/v3/score/transpose.pdf', files={'file': PDF})
+        assert response.status_code == 422

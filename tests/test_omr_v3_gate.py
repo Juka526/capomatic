@@ -144,14 +144,14 @@ def _renderer(calls):
 
 def test_unreliable_page_returns_chord_only_without_running_omr():
     calls = []
-    detector = lambda path: ([{'text': 'G', 'confidence': 0.9, 'bbox': [10, 10, 30, 30]}], {})
+    detector = _coverage_items
     with patch.object(core, 'run_audiveris', side_effect=AssertionError('OMR must not run')):
         result = core.process(_png(_staff_page(6, 700, 1000)), '.png', -2, 'capo',
                               chord_detector=detector, chord_only_renderer=_renderer(calls))
     assert result.mode == 'chord_only' and result.musicxml is None
     assert result.pdf.startswith(b'%PDF') and result.png.startswith(b'\x89PNG')
     assert result.report['decision']['reason'] == 'preflight:staff_spacing_too_small'
-    assert calls == [('page.png', 1, -2)]
+    assert len(calls) == 1 and calls[0][1] > 2 and calls[0][2] == -2
 
 
 def test_chord_only_needs_chord_recognition():
@@ -167,7 +167,7 @@ def test_chord_only_without_any_recognised_chord_is_an_error():
         with pytest.raises(core.ScoreError) as exc:
             core.process(_png(_staff_page(6, 700, 1000)), '.png', 2, 'key',
                          chord_detector=lambda path: ([], {}), chord_only_renderer=_renderer(calls))
-    assert exc.value.status == 422 and 'no chord symbols' in str(exc.value)
+    assert exc.value.status == 422 and 'chord_only:insufficient_chord_coverage' in str(exc.value)
     assert calls == []
 
 
@@ -193,3 +193,90 @@ def test_musicxml_fast_path_skips_gate_and_passes_integrity(tmp_path):
         result = core.process(_musicxml_bytes(tmp_path), '.musicxml', 2, 'key')
     assert result.mode == 'full_score' and result.report['decision']['reason'] == 'musicxml_input'
     assert result.report['integrity']['ok'] and result.pdf.startswith(b'%PDF')
+
+@pytest.mark.parametrize('kw', [dict(low_grade_heads=40), dict(heads=0),
+                                dict(geometry_aligned=False), dict(mean_head_grade=None)])
+def test_consistent_bars_do_not_override_weak_head_evidence(kw):
+    assert reliability.decide(None, _signals(**kw)).mode is ProcessingMode.CHORD_ONLY
+
+
+@pytest.mark.parametrize('text', ['Cmaj7', 'Cm7', 'Csus4', 'Cadd2', 'Cadd11', 'C7sus4', 'Cm7b5', 'C/E'])
+def test_guard_preserves_complex_chord_semantics(text, tmp_path):
+    s = _score()
+    m = s.parts[0].measure(1)
+    for cs in list(m.getElementsByClass(harmony.ChordSymbol)):
+        m.remove(cs)
+    m.insert(0, chord_symbol_from_text(text))
+    original = _roundtrip(s, tmp_path, 'a.musicxml')
+    summary = transpose_score(s, 2)
+    assert music_guard.validate(original, _roundtrip(s, tmp_path, 'b.musicxml'), 2, 'key', summary).ok
+
+
+@pytest.mark.parametrize('before,after', [('Cmaj7', 'D'), ('Cm7', 'Dm9'), ('Csus4', 'D'),
+                                          ('Cadd11', 'Dadd2'), ('C/E', 'D'),
+                                          ('C', 'D/F#'), ('C/E', 'D/F')])
+def test_guard_rejects_chord_semantic_damage(before, after, tmp_path):
+    s = _score()
+    m = s.parts[0].measure(1)
+    for cs in list(m.getElementsByClass(harmony.ChordSymbol)):
+        m.remove(cs)
+    m.insert(0, chord_symbol_from_text(before))
+    original = _roundtrip(s, tmp_path, 'a.musicxml')
+    summary = transpose_score(s, 2)
+    m.remove(m.getElementsByClass(harmony.ChordSymbol).first())
+    m.insert(0, chord_symbol_from_text(after))
+    assert not music_guard.validate(original, _roundtrip(s, tmp_path, 'b.musicxml'), 2, 'key', summary).ok
+
+
+@pytest.mark.parametrize('damage', ['offset', 'missing_key', 'region_key'])
+def test_guard_rejects_chord_offset_and_key_region_damage(damage, tmp_path):
+    s = _score()
+    original = _roundtrip(s, tmp_path, 'a.musicxml')
+    summary = transpose_score(s, 2)
+    m = s.parts[0].measure(1)
+    if damage == 'offset':
+        m.getElementsByClass(harmony.ChordSymbol).first().offset = 1
+    elif damage == 'missing_key':
+        m.remove(m.getElementsByClass(key.KeySignature).first())
+    else:
+        s.parts[0].measure(2).insert(0, key.KeySignature(5))
+    assert not music_guard.validate(original, _roundtrip(s, tmp_path, 'b.musicxml'), 2, 'key', summary).ok
+
+
+def _coverage_items(path):
+    from backend.ocr.preprocess import detect_staff_systems
+    with Image.open(path) as im:
+        systems = detect_staff_systems(im)
+        width = im.width
+    return ([{'text': 'G', 'confidence': .95, 'bbox': [x, top - 35, x + 30, top - 10]}
+             for top, _ in systems for x in (width * .2, width * .7)], {})
+
+
+@pytest.mark.parametrize('damage', ['sparse', 'low', 'zero', 'duplicate', 'no_staff', 'nan'])
+def test_chord_coverage_rejects_uncertain_output(damage, tmp_path):
+    from backend.omr_v3 import chord_coverage
+    image = _staff_page(20)
+    path = tmp_path / 'page.png'
+    image.save(path)
+    items, _ = _coverage_items(path)
+    if damage == 'sparse':
+        items = items[:2]
+    elif damage == 'low':
+        for item in items:
+            item['confidence'] = .5
+    elif damage == 'zero':
+        items = []
+    elif damage == 'duplicate':
+        items.append(items[0])
+    elif damage == 'nan':
+        items[0]['confidence'] = float('nan')
+    else:
+        image = Image.new('L', image.size, 255)
+    assert not chord_coverage.assess(image, items)['accepted']
+
+
+def test_head_export_disagreement_catches_confident_missing_notes():
+    decision = reliability.decide(None, _signals(heads=100, notes=90, mean_head_grade=.96,
+                                                low_grade_heads=0))
+    assert decision.reason == 'omr:head_export_disagreement'
+    assert reliability.decide(None, _signals(heads=100, notes=99)).mode is ProcessingMode.FULL_SCORE

@@ -8,6 +8,7 @@ by our own Audiveris run, and DTD/entity declarations are rejected anyway.
 """
 from __future__ import annotations
 
+import math
 import zipfile
 from dataclasses import dataclass, field
 from fractions import Fraction
@@ -58,7 +59,7 @@ class Head:
     w: float
     h: float
     pitch: int        # staff position: 0 = middle line, +4 = bottom line, +6 = first ledger below
-    grade: float = 1.0  # Audiveris contextual confidence (ctx-grade, 0..1)
+    grade: float = 0.0  # Audiveris contextual confidence (ctx-grade, 0..1)
 
 
 @dataclass
@@ -179,9 +180,11 @@ def load_geometry(omr_path: Path) -> SheetGeometry:
                 except (TypeError, ValueError):
                     continue
                 try:
-                    grade = float(h.get('ctx-grade') or h.get('grade') or 1.0)
+                    grade = float(h.get('ctx-grade') or h.get('grade') or 0.0)
                 except ValueError:
-                    grade = 1.0
+                    grade = 0.0
+                if not math.isfinite(grade) or not 0 <= grade <= 1:
+                    grade = 0.0
                 if b is not None:
                     system.heads.append(Head(float(b.get('x')), float(b.get('y')),
                                              float(b.get('w')), float(b.get('h')), pitch, grade))
