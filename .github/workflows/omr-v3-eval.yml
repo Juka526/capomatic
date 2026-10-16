@@ -83,6 +83,9 @@ jobs:
           docker run --rm --network host -v "$PWD:/work" capomatic-omr-eval \
             python /work/scripts/omr_v3/benchmark_api.py http://localhost:7860 /work/tests/omr_v3_eval/scores/chingu.pdf --runs 3 \
             | tee omr-v3-evidence/api-benchmark.txt
+          docker run --rm --network host -v "$PWD:/work" -w /work capomatic-omr-eval \
+            python -m scripts.omr_v3.smoke_multipage http://localhost:7860 --out /work/omr-v3-evidence \
+            | tee omr-v3-evidence/multipage-smoke.txt
           docker stats --no-stream omr-api | tee omr-v3-evidence/api-container-stats.txt
           docker logs omr-api > omr-v3-evidence/api-container.log 2>&1 || true
           docker stop omr-api

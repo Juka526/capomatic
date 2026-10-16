@@ -10,7 +10,7 @@ def build(source: Path, destination: Path) -> None:
     destination.mkdir(parents=True, exist_ok=True)
     budget = 12 * 1024 * 1024
     names = ['REPORT.generated.md', 'summary.json', 'api-benchmark.txt',
-             'api-fallback.txt', 'api-zip-listing.txt', 'api-container-stats.txt']
+             'multipage-smoke.txt', 'api-fallback.txt', 'api-zip-listing.txt', 'api-container-stats.txt']
     for name in names:
         path = source / name
         if path.is_file() and path.stat().st_size <= min(budget, 2 * 1024 * 1024):
