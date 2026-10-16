@@ -180,6 +180,21 @@ def test_ledger_detection_on_synthetic_page(tmp_path):
     assert not cleanup._has_ledger(px, 400, 300, hanging, lines)
 
 
+def test_staff_line_off_its_mean_position_is_not_taken_for_a_ledger():
+    from PIL import Image, ImageDraw
+
+    # On a skewed/resampled raster the bottom line beside this head is 6 px below
+    # the system's mean position (188); the D4 head hangs from it.
+    im = Image.new('L', (400, 300), 255)
+    d = ImageDraw.Draw(im)
+    for y in (100, 122, 144, 166):
+        d.line([(0, y), (399, y)], fill=0, width=3)
+    d.line([(0, 194), (399, 194)], fill=0, width=5)
+    d.ellipse([200, 194, 228, 216], fill=0)
+    px = im.load()
+    assert not cleanup._has_ledger(px, 400, 300, Head(200, 194, 28, 22, 5), [100, 122, 144, 166, 188])
+
+
 def test_chord_words_handle_lowercase_bass_navigation_and_garbage():
     s = _score(0, ['C4', 'D4', 'E4', 'F4'])
     m = s.parts[0].getElementsByClass(stream.Measure).first()

@@ -1,5 +1,5 @@
 {
-  "note": "Owner-supplied worship lead sheets (2026-10-15) used with the owner's permission for this private evaluation. All four real sheets are now 'dev': each was inspected while building repairs (naui was the blind sheet until it was used to design chord anchoring and measure-id mapping). The blind hold-out is the synthetic 'holdout' seeds. 201-204 were the blind hold-out for the evaluation of commit 95318f3 (reported as blind in REPORT.md). Their outputs were then inspected and two bugs found there were fixed, so they moved to dev; 205-208 were generated afterwards and not inspected before the final evaluation.",
+  "note": "Owner-supplied worship lead sheets (2026-10-15) used with the owner's permission for this private evaluation. All four real sheets are now 'dev': each was inspected while building repairs (naui was the blind sheet until it was used to design chord anchoring and measure-id mapping). The blind hold-out is the synthetic 'holdout' seeds, rotated whenever a hold-out result was inspected and led to a change: 201-204 were blind for the evaluation of 95318f3, 205-208 for a96b574; each set was then inspected, bugs found there were fixed (chord-only with no chord, chord label as composer; then the ledger repair), and the set moved to dev. 209-212 were generated afterwards and not inspected before the final evaluation.",
   "scores": [
     {
       "name": "jusim",
@@ -50,13 +50,17 @@
       201,
       202,
       203,
-      204
-    ],
-    "holdout": [
+      204,
       205,
       206,
       207,
       208
+    ],
+    "holdout": [
+      209,
+      210,
+      211,
+      212
     ],
     "classes": {
       "clean": "clean.pdf",

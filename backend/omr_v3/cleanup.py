@@ -155,26 +155,57 @@ def strip_marks(score) -> dict:
     return {'dynamics': dyn, 'articulations': arts, 'fermatas': ferm}
 
 
-def _has_ledger(pixels, width: int, height: int, head, line_ys, dark: int = 128) -> bool:
-    """True when a short horizontal line (not a staff line) crosses the head on both sides.
+def _dark_ratio(pixels, width: int, y: int, x0: int, x1: int, dark: int = 128) -> float:
+    x0, x1 = max(0, x0), min(width - 1, x1)
+    if x1 < x0:
+        return 0.0
+    return sum(1 for x in range(x0, x1 + 1) if pixels[x, y] < dark) / (x1 - x0 + 1)
 
-    Audiveris sometimes records the head a few pixels off its real position, so
-    every row of the head box is searched, skipping rows on real staff lines.
+
+def _local_line_y(pixels, width: int, height: int, head, near: float, interline: float) -> float:
+    """y of the staff line nearest *near*, measured just beside the head.
+
+    The system's mean line positions can be several pixels off at a given x on
+    a skewed raster, which is enough to mistake the staff line for a ledger.
     """
+    w = max(4, int(head.w))
+    x0, x1 = int(head.x - 2.5 * w), int(head.x - 1.2 * w)
+    if x0 < 0:
+        x0, x1 = int(head.x + head.w + 1.2 * w), int(head.x + head.w + 2.5 * w)
+    rows = range(max(0, int(near - interline / 2)), min(height, int(near + interline / 2) + 1))
+    best = max(rows, key=lambda y: _dark_ratio(pixels, width, y, x0, x1), default=None)
+    return near if best is None else float(best)
+
+
+def _has_ledger(pixels, width: int, height: int, head, line_ys) -> bool:
+    """True when a ledger line lies one staff space outside the staff at this head.
+
+    Audiveris marks the head at staff position +5/-5 (the space just outside
+    the staff); a real ledger for +6/-6 is one interline beyond the outer staff
+    line, measured locally, and crosses the head on both sides.
+    """
+    ys = sorted(line_ys)
+    gaps = sorted(b - a for a, b in zip(ys, ys[1:]) if b > a)
+    if not gaps:
+        return False
+    interline = gaps[len(gaps) // 2]
+    centre = head.y + head.h / 2
+    if head.pitch > 0:
+        above = [ly for ly in ys if ly < centre]
+        if not above:
+            return False
+        target = _local_line_y(pixels, width, height, head, above[-1], interline) + interline
+    else:
+        below = [ly for ly in ys if ly > centre]
+        if not below:
+            return False
+        target = _local_line_y(pixels, width, height, head, below[0], interline) - interline
     reach = max(3, int(head.w * 0.2))
     left = (int(head.x) - reach, int(head.x) - 1)
     right = (int(head.x + head.w) + 1, int(head.x + head.w) + reach)
-
-    def dark_ratio(y: int, x0: int, x1: int) -> float:
-        x0, x1 = max(0, x0), min(width - 1, x1)
-        if x1 < x0:
-            return 0.0
-        return sum(1 for x in range(x0, x1 + 1) if pixels[x, y] < dark) / (x1 - x0 + 1)
-
-    for y in range(max(0, int(head.y)), min(height, int(head.y + head.h) + 1)):
-        if any(abs(y - ly) <= 4 for ly in line_ys):
-            continue
-        if dark_ratio(y, *left) >= 0.6 and dark_ratio(y, *right) >= 0.6:
+    tol = max(2, int(interline / 4))
+    for y in range(max(0, int(target) - tol), min(height, int(target) + tol + 1)):
+        if _dark_ratio(pixels, width, y, *left) >= 0.6 and _dark_ratio(pixels, width, y, *right) >= 0.6:
             return True
     return False
 
