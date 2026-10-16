@@ -46,8 +46,11 @@ class QualityDecision:
                 'metrics': asdict(self.metrics)}
 
 
-# Calibrated thresholds (development set only); env overrides exist for tuning.
-MIN_INTERLINE_PX = 11.0        # below this Audiveris misreads ledger/rhythm badly (745 px JPEG: ~6 px)
+# Calibrated on the development set only (4 real sheets + synthetic seeds 101-103, REPORT.md):
+#   effective staff spacing 21-22 px (300 dpi PDFs) and 14 px (200 dpi PDFs): notes 95-100 %;
+#   13 px (1500 px phone photos): 90.5-97.7 %; 10 px (150 dpi scans): 84-93 %; 6 px (745 px JPEG): 78 %.
+# Policy is conservative: when in doubt, chord-only. Env overrides exist for tuning.
+MIN_INTERLINE_PX = 13.5
 MIN_SHARPNESS = 40.0
 MIN_CONTRAST = 25.0
 

@@ -22,8 +22,9 @@ from dataclasses import asdict, dataclass
 
 from .quality import ProcessingMode, QualityDecision
 
-# Calibrated on the development sheets only; see REPORT.md. Env overrides for tuning.
-MAX_BAD_BAR_RATIO = 0.10
+# Calibrated on the development set only (REPORT.md): inputs with more than 8 % of bars not
+# adding up scored 84-95 % on notes; every input at or below it that passed gate 1 scored >= 95 %.
+MAX_BAD_BAR_RATIO = 0.08
 MIN_MEAN_HEAD_GRADE = 0.60
 MIN_CONFIDENCE = 0.80
 
