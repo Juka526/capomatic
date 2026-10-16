@@ -7,7 +7,7 @@ and 30 s per page are targets, not runtime limits.
 ## What it does
 
 ```
-upload (1-page PDF / PNG / JPEG / MusicXML)        MusicXML skips straight to transposition
+upload (1–10-page PDF / PNG / JPEG / MusicXML)        MusicXML skips straight to transposition
   -> one grayscale raster (PDF at 300 dpi; small images upscaled toward 2400 px wide)
   -> GATE 1 preflight (quality.py): staff spacing at the source's native resolution,
      sharpness, contrast  -- fail => chord-only (Audiveris is not even started)
@@ -33,10 +33,12 @@ chord-only fallback = V1's own /detect + /render "replace" output for the page (
   only chord symbols are transposed, the notes stay as printed, and the response says so.
   Chords V1 does not recognise stay printed in the original key (the warning says so; on
   low-resolution phone photos and 150 dpi scans recall was 21-90 %, see REPORT.md).
-  No chord recognised at all => HTTP 422, never an untouched page labelled as a result.
+  Insufficient confidence or spatial staff coverage => HTTP 422; see V3_ACCEPTANCE.md.
 ```
 
-Result modes: `full_score` (MusicXML + PDF) or `chord_only` (page image + PDF of V1's chord
+Multi-page contracts, partial failures and current validation status: [V3_ACCEPTANCE.md](V3_ACCEPTANCE.md).
+
+Single-page result modes: `full_score` (MusicXML + PDF) or `chord_only` (page image + PDF of V1's chord
 overlay). Responses carry `X-Capomatic-Mode` and, for chord-only, a fixed reason code in
 `X-Capomatic-Fallback-Reason` (e.g. `preflight:staff_spacing_too_small`,
 `omr:too_many_inconsistent_bars`). A plausible-looking full score is never returned when either
@@ -101,7 +103,7 @@ unset. Full removal: revert this PR (router registration is three lines in
 - Login + per-subject rate limit + single slot bound the CPU cost; anonymous use is
   only possible by explicitly setting `CAPOMATIC_OMR_REQUIRE_AUTH=0`.
 - Uploads: 10 MiB, magic-byte checks, Pillow decompression-bomb limit, PDF page count
-  via `pdfinfo` (exactly one page), MusicXML with `<!ENTITY>` rejected, MXL archives
+  via `pdfinfo` (1–10 pages, sequential processing), MusicXML with `<!ENTITY>` rejected, MXL archives
   limited to 50 members / 30 MiB uncompressed.
 - External tools run with a scrubbed environment (no Auth0/Sentry/API keys), a private
   `HOME` inside the per-job temp dir, their own process group and a hard timeout that

@@ -59,3 +59,19 @@ def test_transposed_reference_is_independent_of_the_pipeline():
     assert keys == [0, -3, 0]  # D -> C, F -> Eb, D -> C
     first = next(n for n in ref.recurse().getElementsByClass(note.Note))
     assert first.pitch.nameWithOctave == 'G3'  # A3 down a major second
+
+
+def test_review_bundle_excludes_binary_corpus_and_limits_images(tmp_path):
+    from scripts.omr_v3.review_bundle import build
+    source, destination = tmp_path / 'full', tmp_path / 'review'
+    source.mkdir()
+    (source / 'summary.json').write_text('{"runs": []}')
+    (source / 'large.pdf').write_bytes(b'x' * 100)
+    for i in range(10):
+        d = source / str(i)
+        d.mkdir()
+        (d / 'side_by_side.png').write_bytes(b'png')
+    build(source, destination)
+    assert (destination / 'summary.json').is_file()
+    assert not list(destination.rglob('*.pdf'))
+    assert len(list(destination.glob('*.png'))) <= 4

@@ -102,7 +102,7 @@ def main() -> None:
             label = f"{r['id']} {r['condition']}"
             withheld = r.get('decision', {}) and (r.get('decision') or {}).get('mode') == 'chord_only'
             if r.get('mode') == 'full_score':
-                cells['tp' if n is None or n >= USABLE_NOTE_EXACT else 'unsafe'].append(label)
+                cells['err' if n is None else ('tp' if n >= USABLE_NOTE_EXACT else 'unsafe')].append(label)
             elif withheld and n is not None:
                 cells['extra_fb' if n >= USABLE_NOTE_EXACT else 'good_fb'].append(label)
             if r.get('mode') == 'error':
@@ -130,6 +130,8 @@ def main() -> None:
               f"precision {_pct(m['chord_precision'])} of {m['chords_n']} chords.")
     w('')
 
+    w(f"Chord-only accepted: {sum(r.get('mode') == 'chord_only' for r in runs)}; rejected for insufficient confidence: {sum((r.get('chord_only_confidence') or {}).get('accepted') is False for r in runs)}.")
+    w('')
     co = [r for r in runs if r.get('chord_only_chords')]
     if co:
         w('### Chord-only fallback: transposed chord labels vs the transposed reference')
@@ -152,6 +154,16 @@ def main() -> None:
           f"{_pct(tot['hits'] / tot['candidate'] if tot['candidate'] else None)} | |")
         w('')
 
+    rejected = [r for r in runs if r.get('rejected_chord_only_chords')]
+    if rejected:
+        w('### Rejected chord-only candidates (offline, never returned)')
+        w('')
+        w('| Input | Recall | Precision |')
+        w('|---|---|---|')
+        for r in rejected:
+            metrics = r['rejected_chord_only_chords']['exact']
+            w(f"| {r['id']} | {_pct(metrics['recall'])} | {_pct(metrics['precision'])} |")
+        w('')
     w('### Error classes (all runs with a full-score path)')
     w('')
     w('| Input | Condition | Recognition (notes) | Transposition (notes) | Rendering (MuseScore, notes) | '

@@ -107,7 +107,7 @@ def _inputs(manifest: dict, sets: list[str]) -> list[dict]:
         if f'synthetic-{role}' not in sets:
             continue
         for i, seed in enumerate(syn.get(role, [])):
-            base = EVAL / 'synthetic' / role / f'syn{seed}'
+            base = Path(syn.get('holdout_dir', EVAL / 'synthetic' / role)) / f'syn{seed}' if role == 'holdout' else EVAL / 'synthetic' / role / f'syn{seed}'
             shift = (2, -2, 3, -3)[i % 4]
             for cls_name, file in syn['classes'].items():
                 out.append({'id': f'syn{seed}-{cls_name}', 'name': f'syn{seed}', 'title': f'synthetic {seed}',
@@ -131,6 +131,7 @@ def main() -> None:
     ap.add_argument('--chords', choices=('paddle', 'none'), default='paddle')
     ap.add_argument('--sets', nargs='+', default=['real', 'synthetic-dev', 'synthetic-holdout'],
                     choices=('real', 'synthetic-dev', 'synthetic-holdout'))
+    ap.add_argument('--fresh-holdout-seeds', type=int, nargs='+')
     ap.add_argument('--only', nargs='*', help='input ids (e.g. jusim, syn201-scan)')
     args = ap.parse_args()
 
@@ -146,9 +147,35 @@ def main() -> None:
     logging.basicConfig(filename=str(args.out / 'pipeline.log'), level=logging.WARNING,
                         format='%(asctime)s %(name)s %(levelname)s %(message)s')
     manifest = json.loads((EVAL / 'manifest.json').read_text(encoding='utf-8'))
-    detector = _paddle_detector() if args.chords == 'paddle' else None
+    if args.fresh_holdout_seeds:
+        used = set(manifest['synthetic']['dev'] + manifest['synthetic']['holdout'])
+        if used.intersection(args.fresh_holdout_seeds):
+            ap.error('Fresh hold-out seeds must not have been used in the existing corpus')
+        from scripts.omr_v3 import synth
+        fresh = args.out.resolve() / 'fresh-holdout'
+        for seed in args.fresh_holdout_seeds:
+            directory = fresh / f'syn{seed}'
+            directory.mkdir(parents=True, exist_ok=True)
+            sheet = synth.compose(seed)
+            gt = directory / 'reference.gt'
+            gt.write_text(synth.gt_text(sheet), encoding='utf-8')
+            xml = directory / 'score.musicxml'
+            synth.write_musicxml(sheet, gt, xml)
+            synth.render_clean_pdf(xml, directory / 'clean.pdf', directory / '.mscore-home')
+            synth.degrade(directory / 'clean.pdf', directory, seed)
+        manifest['synthetic']['holdout'] = args.fresh_holdout_seeds
+        manifest['synthetic']['holdout_dir'] = str(fresh)
+    base_detector = _paddle_detector() if args.chords == 'paddle' else None
+    observed_items = []
+
+    def capture_detector(path):
+        items, metadata = base_detector(path)
+        observed_items[:] = items
+        return items, metadata
+
+    detector = capture_detector if base_detector else None
     renderer = _chord_only_renderer()
-    summary = {'chords': args.chords, 'python': sys.version.split()[0], 'sets': args.sets, 'runs': []}
+    summary = {'chords': args.chords, 'python': sys.version.split()[0], 'sets': args.sets, 'fresh_holdout_seeds': args.fresh_holdout_seeds, 'runs': []}
     first = True
 
     def brief(c: dict) -> dict:
@@ -172,6 +199,7 @@ def main() -> None:
                    'class': entry.get('class', entry.get('input_class')), 'condition': tag, 'cold': first}
             first = False
             # 1) What the API returns (gate enforced).
+            observed_items.clear()
             t0 = time.monotonic()
             try:
                 gated = process(src.read_bytes(), src.suffix.lower(), semis, mode,
@@ -179,9 +207,12 @@ def main() -> None:
                 run.update(mode=gated.mode, decision=gated.report.get('decision'),
                            wall_s=round(time.monotonic() - t0, 2), stages_ms=gated.stages_ms,
                            preflight=gated.report.get('preflight'), post_omr=gated.report.get('post_omr'),
-                           integrity=gated.report.get('integrity'))
+                           integrity=gated.report.get('integrity'),
+                           chord_only_confidence=gated.report.get('chord_only_confidence'))
             except Exception as exc:  # record failures as evidence, do not hide them
                 run.update(mode='error', error=repr(exc), wall_s=round(time.monotonic() - t0, 2))
+                run.update(decision=getattr(exc, 'report', {}).get('decision'),
+                           chord_only_confidence=getattr(exc, 'report', {}).get('chord_only_confidence'))
                 gated = None
             (d / f'gated_report_{tag}.json').write_text(json.dumps(
                 {'stages_ms': gated.stages_ms, **gated.report} if gated else {'error': run['error']},
@@ -194,6 +225,15 @@ def main() -> None:
                 run['chord_only_chords'] = chord_text_accuracy(
                     transposed_reference(to_music21(gt), gt, semis, mode),
                     [c['transposed'] for c in (gated.report.get('chord_only') or {}).get('chords', [])])
+            if run.get('chord_only_confidence') and gated is None:
+                # Offline only: measure rejected detections without rendering an unsafe page.
+                from backend.api.main import _resolve_keys, _build_chord_item
+                original_key, target_key = _resolve_keys(observed_items, semis)
+                labels = [_build_chord_item(item, semis, target_key, original_key)['transposed']
+                          for item in observed_items]
+                run['rejected_chord_only_chords'] = chord_text_accuracy(
+                    transposed_reference(to_music21(gt), gt, semis, mode),
+                    [label for label in labels if label is not None])
             # 2) The full-score path (gate off when it fell back) to measure what it would have produced.
             full = gated if gated is not None and gated.mode == 'full_score' else None
             if full is None:
