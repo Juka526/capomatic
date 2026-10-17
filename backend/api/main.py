@@ -127,7 +127,41 @@ app.add_middleware(
     allow_origins=[o.strip() for o in _cors_origins.split(",")],
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
+    expose_headers=["X-OMR-Total-Ms", "X-OMR-Accuracy", "X-OMR-Review-Warnings",
+                    "X-Capomatic-Mode", "X-Capomatic-Fallback-Reason"],
 )
+
+
+# ---------------------------------------------------------------------------
+# V3 score conversion (experimental, off unless CAPOMATIC_ENABLE_OMR_V3=1)
+# ---------------------------------------------------------------------------
+
+from backend.omr_v3 import router as omr_v3  # noqa: E402  (needs the app above)
+
+
+def _omr_chord_detector(image_path: str) -> tuple[list[dict], dict]:
+    """Chord OCR for the score pipeline, queued on the same single Paddle thread as /detect."""
+    future = _ocr_executor.submit(detect_chords_hybrid, image_path, use_ai_fallback=False)
+    return future.result()
+
+
+def _omr_chord_only(image_path: str, items: list[dict], semitones: int) -> tuple[Image.Image, dict]:
+    """V3 fallback: exactly the V1 /detect + /render "replace" result for this page."""
+    with Image.open(image_path) as uploaded:
+        img = ImageOps.exif_transpose(uploaded).convert("RGB")
+    original_key, target_key = _resolve_keys(items, semitones)
+    chords = [_build_chord_item(item, semitones, target_key, original_key) for item in items]
+    rendered = render_overlay(img, chords, "replace", original_key=original_key,
+                              target_key=target_key, semitones=semitones)
+    return rendered, {
+        "original_key": original_key,
+        "target_key": target_key,
+        "chords": [{"text": c["text"], "transposed": c["transposed"]} for c in chords],
+    }
+
+
+omr_v3.configure(chord_detector=_omr_chord_detector, chord_only_renderer=_omr_chord_only)
+app.include_router(omr_v3.router)
 
 
 # ---------------------------------------------------------------------------

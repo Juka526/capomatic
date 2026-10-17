@@ -1,0 +1,175 @@
+name: Full OMR V3 Acceptance Evaluation
+
+# Builds the production image (with the V3 tools) and runs the end-to-end
+# score evaluation inside it: Audiveris + PaddleOCR chords + music21 +
+# MuseScore on the evaluation sheets, compared with hand-made references.
+# Evidence (PDFs, MusicXML, side-by-side PNGs, accuracy JSON) is uploaded as
+# an artifact. Results are reported, not gated: 99 % / 30 s are targets.
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Also push the evidence to the pr-assets/omr-v3-evidence branch'
+        type: boolean
+        default: false
+      fresh_holdout:
+        description: 'Generate unseen synthetic holdout (disable for stored regression corpus)'
+        type: boolean
+        default: true
+      holdout_seeds:
+        description: 'Optional space-separated seeds; empty derives four from run_id (recorded in artifact)'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+# Manual acceptance runs are independent of PR pushes; retain deliberate runs.
+concurrency:
+  group: omr-v3-eval-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --tag capomatic-omr-eval .
+      - name: Tool versions
+        run: >-
+          docker run --rm capomatic-omr-eval sh -c
+          'java -version 2>&1 | head -1; /opt/audiveris/bin/Audiveris -help 2>&1 | head -3;
+          QT_QPA_PLATFORM=offscreen mscore3 --version; pdfinfo -v 2>&1 | head -1;
+          python -c "import music21; print(\"music21\", music21.__version__)"'
+      - name: Audiveris direct run (diagnostics)
+        if: always()
+        run: |
+          mkdir -p omr-v3-evidence/audiveris-direct
+          docker run --rm -v "$PWD:/work" -e GDK_SCALE=1 capomatic-omr-eval sh -c 'cd /tmp && pdftoppm -r 300 -gray -png -singlefile /work/tests/omr_v3_eval/scores/jusim.pdf page && /opt/audiveris/bin/Audiveris -batch -export -output /work/omr-v3-evidence/audiveris-direct -- /tmp/page.png' > omr-v3-evidence/audiveris-direct/stdout.txt 2>&1 \
+            && echo "::notice title=audiveris direct::ok $(ls omr-v3-evidence/audiveris-direct | tr '\n' ' ')" \
+            || echo "::error title=audiveris direct::$(tail -c 3000 omr-v3-evidence/audiveris-direct/stdout.txt | tr '\n' '|')"
+      - name: End-to-end evaluation (PaddleOCR chords)
+        env:
+          FRESH_HOLDOUT: ${{ inputs.fresh_holdout }}
+          HOLDOUT_SEEDS: ${{ inputs.holdout_seeds }}
+        run: |
+          mkdir -p omr-v3-evidence
+          git rev-parse HEAD > omr-v3-evidence/source-revision.txt
+          args=()
+          if [ "$FRESH_HOLDOUT" = true ]; then
+            if [ -z "$HOLDOUT_SEEDS" ]; then
+              HOLDOUT_SEEDS=$(python3 -c 'import os; base = int(os.environ["GITHUB_RUN_ID"]) * 4; print(*(base + i for i in range(4)))')
+            fi
+            read -r -a seeds <<< "$HOLDOUT_SEEDS"
+            args+=(--fresh-holdout-seeds "${seeds[@]}")
+          fi
+          printf '%s\n' "$FRESH_HOLDOUT" "$HOLDOUT_SEEDS" > omr-v3-evidence/holdout-config.txt
+          docker run --rm -v "$PWD:/work" -w /work -e PYTHONPATH=/work capomatic-omr-eval \
+            python -m scripts.omr_v3.evaluate --out /work/omr-v3-evidence --chords paddle "${args[@]}"
+      - name: Markdown report
+        if: always()
+        run: >-
+          docker run --rm -v "$PWD:/work" -w /work -e PYTHONPATH=/work capomatic-omr-eval
+          sh -c 'python -m scripts.omr_v3.report /work/omr-v3-evidence > /work/omr-v3-evidence/REPORT.generated.md'
+      - name: API smoke test and latency (feature flag on, auth off for CI only)
+        run: |
+          docker run --rm --detach --name omr-api --publish 7860:7860 \
+            -e CAPOMATIC_ENABLE_OMR_V3=1 -e CAPOMATIC_OMR_REQUIRE_AUTH=0 -e CAPOMATIC_OMR_RATE_LIMIT=100/3600 \
+            capomatic-omr-eval
+          for _ in $(seq 1 60); do curl --fail --silent http://localhost:7860/health && break; sleep 5; done
+          status=$(curl --silent --output api.zip --write-out '%{http_code}' --max-time 600 \
+            -F "file=@tests/omr_v3_eval/scores/jusim.pdf" -F semitones=-2 -F mode=capo \
+            http://localhost:7860/api/v3/score/transpose.zip)
+          echo "HTTP $status"
+          python3 -c "import zipfile; print(sorted(zipfile.ZipFile('api.zip').namelist()))" | tee omr-v3-evidence/api-zip-listing.txt
+          # A low-resolution page must come back as an explicit chord-only result, never a full score.
+          fb_status=$(curl --silent --dump-header fb-headers.txt --output api-fallback.zip --write-out '%{http_code}' --max-time 600 \
+            -F "file=@tests/omr_v3_eval/scores/naui.jpg" -F semitones=-2 -F mode=key \
+            http://localhost:7860/api/v3/score/transpose.zip)
+          { echo "HTTP $fb_status"; cat fb-headers.txt;
+            if [ "$fb_status" = 200 ]; then
+              python3 -c "import zipfile; print(sorted(zipfile.ZipFile('api-fallback.zip').namelist()))"
+            else
+              cat api-fallback.zip
+            fi; } | tee omr-v3-evidence/api-fallback.txt
+          # The runner's system Python refuses pip installs; the image already has requests.
+          docker run --rm --network host -v "$PWD:/work" capomatic-omr-eval \
+            python /work/scripts/omr_v3/benchmark_api.py http://localhost:7860 /work/tests/omr_v3_eval/scores/chingu.pdf --runs 3 \
+            | tee omr-v3-evidence/api-benchmark.txt
+          docker run --rm --network host -v "$PWD:/work" -w /work capomatic-omr-eval \
+            python -m scripts.omr_v3.smoke_multipage http://localhost:7860 --out /work/omr-v3-evidence \
+            | tee omr-v3-evidence/multipage-smoke.txt
+          docker stats --no-stream omr-api | tee omr-v3-evidence/api-container-stats.txt
+          docker logs omr-api > omr-v3-evidence/api-container.log 2>&1 || true
+          docker stop omr-api
+          test "$status" = 200
+          if [ "$fb_status" = 200 ]; then
+            grep -qi '^x-capomatic-mode: chord_only' fb-headers.txt
+          else
+            test "$fb_status" = 422
+            grep -q 'chord_only:insufficient_chord_coverage' api-fallback.zip
+          fi
+      - name: Results as annotations (readable through the checks API)
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          p = pathlib.Path('omr-v3-evidence') / 'summary.json'
+          if not p.exists():
+              print('::warning title=evaluation::no summary.json')
+          else:
+              for r in json.loads(p.read_text())['runs']:
+                  t = r.get('transposed') or {}
+                  dec = (r.get('decision') or {}).get('reason')
+                  head = f"{r['id']} {r['condition']} -> {r.get('mode')} ({dec})"
+                  body = (f"notes={(t.get('pitched_notes') or {}).get('exact')} rhythm={t.get('rhythm_acc')} "
+                          f"chordsR={(t.get('chords') or {}).get('recall')} chordsP={(t.get('chords') or {}).get('precision')} "
+                          f"from={r.get('full_score_metrics_from')} wall={r.get('wall_s')}s ungated={r.get('ungated_wall_s')}s "
+                          f"pyMB={r.get('python_peak_mb')} toolsMB={r.get('tools_peak_mb')} errors={r.get('error_classes')}")
+                  if r.get('mode') == 'error' or (r.get('error_classes') or {}).get('integrity_ok') is False:
+                      print(f"::error title={head}::{r.get('error', '')[:200]} {body}")
+                  else:
+                      print(f"::notice title={head}::{body}")
+          log = pathlib.Path('omr-v3-evidence') / 'pipeline.log'
+          if log.exists():
+              text = log.read_text(errors='replace')
+              k = text.find('failed (exit')
+              if k >= 0:
+                  print('::warning title=pipeline.log::' + ' | '.join(text[k:k + 2500].splitlines()))
+          for f in ('api-benchmark.txt', 'api-zip-listing.txt', 'api-fallback.txt', 'api-container-stats.txt'):
+              p = pathlib.Path('omr-v3-evidence') / f
+              if p.exists():
+                  print(f'::notice title={f}::' + p.read_text().replace('\n', ' | ')[:900])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: omr-v3-evidence
+          path: omr-v3-evidence
+          retention-days: 30
+
+  publish:
+    # Copy the evidence into a branch so reviewers (and sandboxes without
+    # artifact access) can fetch it with git. Never for fork PRs.
+    if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.publish == true }}
+    needs: evaluate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: omr-v3-evidence
+          path: evidence
+      - name: Push evidence branch
+        run: |
+          python3 -m scripts.omr_v3.review_bundle evidence review-evidence
+          cd review-evidence
+          git init -q -b pr-assets/omr-v3-evidence
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "OMR V3 evaluation evidence for ${{ github.sha }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:pr-assets/omr-v3-evidence

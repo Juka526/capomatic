@@ -1,0 +1,5 @@
+run=1 status=200 elapsed_ms=44288.2 server_ms=44276.3 warnings=0
+run=2 status=200 elapsed_ms=43716.2 server_ms=43705.2 warnings=0
+run=3 status=200 elapsed_ms=42491.7 server_ms=42480.9 warnings=0
+completed=3/3 p50_ms=43716.2 p95_nearest_rank_ms=44288.2 max_ms=44288.2
+Accuracy is NOT measured by this script; see scripts/omr_v3/evaluate.py.

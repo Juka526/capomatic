@@ -1,0 +1,59 @@
+{
+ "stages_ms": {
+  "rasterize": 1064.2,
+  "omr": 40699.5,
+  "chord_ocr_wait": 0.0,
+  "transpose": 567.5,
+  "render": 389.8,
+  "total": 42777.2
+ },
+ "accuracy": "unverified",
+ "chord_source": "paddleocr+audiveris",
+ "warnings": [],
+ "input": {
+  "source": "pdf",
+  "width": 2481,
+  "height": 3508,
+  "scale": 1.0
+ },
+ "repairs": {
+  "rest_only_voices_removed": 0,
+  "lyrics_removed": 5,
+  "chord_words": {
+   "converted": 0,
+   "dropped_unreadable": 0,
+   "dropped_in_measures": []
+  },
+  "marks_removed": {
+   "dynamics": 7,
+   "articulations": 28,
+   "fermatas": 0
+  },
+  "layout": {
+   "layout": 15,
+   "credits": 11,
+   "words": 1
+  },
+  "ledger_notes_fixed": 0
+ },
+ "chord_anchor": "centre",
+ "chords_from_audiveris": 0,
+ "chords_placed": 36,
+ "chords_detected": 36,
+ "measures": 27,
+ "transposition": {
+  "mode": "key",
+  "semitones": 2,
+  "capo": null,
+  "keys": [
+   {
+    "measure": 0,
+    "original": "C",
+    "target": "D"
+   }
+  ],
+  "untransposed_chords": []
+ },
+ "review_required": true,
+ "warning": "Experimental OMR: check notes, rhythm, chords and accidentals before use. 0 bar(s) flagged."
+}

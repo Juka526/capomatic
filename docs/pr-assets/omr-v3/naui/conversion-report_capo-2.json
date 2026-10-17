@@ -1,0 +1,172 @@
+{
+ "stages_ms": {
+  "rasterize": 409.1,
+  "omr": 57604.5,
+  "chord_ocr_wait": 0.0,
+  "transpose": 553.6,
+  "render": 360.5,
+  "total": 58987.4
+ },
+ "accuracy": "unverified",
+ "chord_source": "paddleocr+audiveris",
+ "warnings": [
+  {
+   "type": "low_resolution_input",
+   "upscale": 4.0,
+   "advice": "Use a 300 dpi PDF or a photo at least 2000 px wide."
+  },
+  {
+   "type": "bar_length",
+   "measure": 2,
+   "index": 1,
+   "expected_quarters": 4.0,
+   "found_quarters": 4.5
+  },
+  {
+   "type": "bar_length",
+   "measure": 7,
+   "index": 6,
+   "expected_quarters": 4.0,
+   "found_quarters": 5.25
+  },
+  {
+   "type": "bar_length",
+   "measure": 8,
+   "index": 7,
+   "expected_quarters": 4.0,
+   "found_quarters": 2.0
+  },
+  {
+   "type": "bar_length",
+   "measure": 9,
+   "index": 8,
+   "expected_quarters": 4.0,
+   "found_quarters": 5.0
+  },
+  {
+   "type": "bar_length",
+   "measure": 11,
+   "index": 10,
+   "expected_quarters": 4.0,
+   "found_quarters": 3.5
+  },
+  {
+   "type": "bar_length",
+   "measure": 12,
+   "index": 11,
+   "expected_quarters": 4.0,
+   "found_quarters": 3.5
+  },
+  {
+   "type": "bar_length",
+   "measure": 16,
+   "index": 15,
+   "expected_quarters": 4.0,
+   "found_quarters": 4.5
+  },
+  {
+   "type": "bar_length",
+   "measure": 22,
+   "index": 21,
+   "expected_quarters": 4.0,
+   "found_quarters": 2.0
+  },
+  {
+   "type": "bar_length",
+   "measure": 23,
+   "index": 22,
+   "expected_quarters": 4.0,
+   "found_quarters": 3.5
+  },
+  {
+   "type": "bar_length",
+   "measure": 24,
+   "index": 23,
+   "expected_quarters": 4.0,
+   "found_quarters": 4.5
+  },
+  {
+   "type": "bar_length",
+   "measure": 25,
+   "index": 24,
+   "expected_quarters": 4.0,
+   "found_quarters": 3.5
+  },
+  {
+   "type": "bar_length",
+   "measure": 28,
+   "index": 27,
+   "expected_quarters": 4.0,
+   "found_quarters": 4.25
+  },
+  {
+   "type": "bar_length",
+   "measure": 29,
+   "index": 28,
+   "expected_quarters": 4.0,
+   "found_quarters": 2.5
+  },
+  {
+   "type": "bar_length",
+   "measure": 30,
+   "index": 29,
+   "expected_quarters": 4.0,
+   "found_quarters": 6.0
+  }
+ ],
+ "input": {
+  "source": "image",
+  "width": 2980,
+  "height": 4216,
+  "scale": 4.0
+ },
+ "repairs": {
+  "rest_only_voices_removed": 0,
+  "lyrics_removed": 2,
+  "chord_words": {
+   "converted": 1,
+   "dropped_unreadable": 3,
+   "dropped_in_measures": [
+    3,
+    18,
+    23
+   ]
+  },
+  "marks_removed": {
+   "dynamics": 2,
+   "articulations": 9,
+   "fermatas": 0
+  },
+  "layout": {
+   "layout": 15,
+   "credits": 3,
+   "words": 10
+  },
+  "ledger_notes_fixed": 5
+ },
+ "chord_anchor": "centre",
+ "chords_from_audiveris": 0,
+ "chords_placed": 52,
+ "chords_detected": 58,
+ "measures": 31,
+ "transposition": {
+  "mode": "capo",
+  "semitones": -2,
+  "capo": 2,
+  "keys": [
+   {
+    "measure": 1,
+    "original": "D",
+    "target": "D"
+   },
+   {
+    "measure": 23,
+    "original": "F",
+    "target": "F"
+   }
+  ],
+  "untransposed_chords": []
+ },
+ "review_required": true,
+ "warning": "Experimental OMR: check notes, rhythm, chords and accidentals before use. 14 bar(s) flagged."
+}

@@ -1,0 +1,876 @@
+{
+ "recognized_vs_reference": {
+  "measures": {
+   "reference": 32,
+   "candidate": 31
+  },
+  "events": {
+   "reference": 172,
+   "candidate": 160
+  },
+  "note_exact": 0.75,
+  "pitch_acc": 0.8314,
+  "rhythm_acc": 0.7907,
+  "pitched_notes": {
+   "reference": 153,
+   "exact": 0.7778,
+   "pitch": 0.8693
+  },
+  "ser": 0.2733,
+  "ops": {
+   "substitutions": 27,
+   "deletions": 16,
+   "insertions": 4
+  },
+  "chords": {
+   "reference": 58,
+   "candidate": 52,
+   "hits": 47,
+   "recall": 0.8103,
+   "precision": 0.9038
+  },
+  "key_signature_acc": 0.9375,
+  "time_signature_acc": 0.9688,
+  "note_diffs": [
+   {
+    "ref_measure": 1,
+    "offset": "0",
+    "expected": "B3/1/2",
+    "found": "B3/1"
+   },
+   {
+    "ref_measure": 1,
+    "offset": "1/2",
+    "expected": "G4/1/2",
+    "found": "E5/1"
+   },
+   {
+    "ref_measure": 1,
+    "offset": "2",
+    "expected": "G4/3/2",
+    "found": "G4/1"
+   },
+   {
+    "ref_measure": 1,
+    "offset": "7/2",
+    "expected": "rest/1/2",
+    "found": "E4/1/2"
+   },
+   {
+    "ref_measure": 2,
+    "offset": "0",
+    "expected": "E4/1/2",
+    "found": "G4/1/2"
+   },
+   {
+    "ref_measure": 6,
+    "offset": "1/2",
+    "expected": "C#4/1/2",
+    "found": "C#4/3/4"
+   },
+   {
+    "ref_measure": 6,
+    "offset": "3/2",
+    "expected": "A3/1/2",
+    "found": "C#4/3/2"
+   },
+   {
+    "ref_measure": 6,
+    "offset": "2",
+    "expected": "A3/1",
+    "found": "C#4/3/4"
+   },
+   {
+    "ref_measure": 6,
+    "offset": "3",
+    "expected": "A3/1/2",
+    "found": "D4/1/2"
+   },
+   {
+    "ref_measure": 7,
+    "offset": "0",
+    "expected": "D4/1/2",
+    "found": "C#4/3/4"
+   },
+   {
+    "cand_measure": 8,
+    "offset": "0",
+    "expected": null,
+    "found": "E5/2"
+   },
+   {
+    "ref_measure": 8,
+    "offset": "0",
+    "expected": "E4/3",
+    "found": "E4/2"
+   },
+   {
+    "ref_measure": 8,
+    "offset": "3",
+    "expected": "rest/1",
+    "found": "F#4/1"
+   },
+   {
+    "ref_measure": 9,
+    "offset": "0",
+    "expected": "F#4/1",
+    "found": "E4/1"
+   },
+   {
+    "ref_measure": 10,
+    "offset": "3/2",
+    "expected": "rest/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 11,
+    "offset": "7/2",
+    "expected": "rest/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 15,
+    "offset": "1",
+    "expected": "B3/1/2",
+    "found": "B3/1"
+   },
+   {
+    "ref_measure": 15,
+    "offset": "3/2",
+    "expected": "E4/1/2",
+    "found": "C#5/1"
+   },
+   {
+    "ref_measure": 15,
+    "offset": "2",
+    "expected": "D4/3/2",
+    "found": "D4/1"
+   },
+   {
+    "ref_measure": 15,
+    "offset": "7/2",
+    "expected": "rest/1/2",
+    "found": "B3/1/2"
+   },
+   {
+    "ref_measure": 16,
+    "offset": "0",
+    "expected": "B3/1/2",
+    "found": "D4/1/2"
+   },
+   {
+    "ref_measure": 21,
+    "offset": "0",
+    "expected": "A4/7/2",
+    "found": "A4/2"
+   },
+   {
+    "ref_measure": 21,
+    "offset": "7/2",
+    "expected": "rest/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 22,
+    "offset": "3",
+    "expected": "rest/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 23,
+    "offset": "3",
+    "expected": "rest/1/2",
+    "found": "C4/1"
+   },
+   {
+    "ref_measure": 24,
+    "offset": "0",
+    "expected": "A4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "1/2",
+    "expected": "A4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "1",
+    "expected": "A4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "3/2",
+    "expected": "G4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "2",
+    "expected": "G4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "5/2",
+    "expected": "E4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "3",
+    "expected": "E4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "7/2",
+    "expected": "D4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 25,
+    "offset": "7/2",
+    "expected": "rest/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 26,
+    "offset": "2",
+    "expected": "G4/1/2",
+    "found": "G4/1"
+   },
+   {
+    "ref_measure": 26,
+    "offset": "5/2",
+    "expected": "E4/1/2",
+    "found": "E4/1"
+   },
+   {
+    "ref_measure": 26,
+    "offset": "3",
+    "expected": "D4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 26,
+    "offset": "7/2",
+    "expected": "C4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 27,
+    "offset": "0",
+    "expected": "C4/1",
+    "found": "C4/3/2"
+   },
+   {
+    "ref_measure": 27,
+    "offset": "7/2",
+    "expected": "D4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 28,
+    "offset": "5/2",
+    "expected": "C4/1/2",
+    "found": "C4/3/4"
+   },
+   {
+    "ref_measure": 28,
+    "offset": "3",
+    "expected": "A4/1",
+    "found": "A4/3/4"
+   },
+   {
+    "ref_measure": 29,
+    "offset": "0",
+    "expected": "G4/7/2",
+    "found": "G4/2"
+   },
+   {
+    "cand_measure": 28,
+    "offset": "2",
+    "expected": null,
+    "found": "A4/1/4"
+   },
+   {
+    "cand_measure": 29,
+    "offset": "0",
+    "expected": null,
+    "found": "E5/2"
+   },
+   {
+    "cand_measure": 29,
+    "offset": "2",
+    "expected": null,
+    "found": "D4/2"
+   },
+   {
+    "ref_measure": 31,
+    "offset": "0",
+    "expected": "D4/4",
+    "found": "D4/2"
+   }
+  ],
+  "chord_diffs": [
+   {
+    "ref_measure": 5,
+    "offset": "3",
+    "expected": "D/F#",
+    "found_in_bar": [
+     "G2@0",
+     "D/F@3"
+    ]
+   },
+   {
+    "ref_measure": 6,
+    "offset": "2",
+    "expected": "D/F#",
+    "found_in_bar": [
+     "Em7@0",
+     "D/F@7/4"
+    ]
+   },
+   {
+    "ref_measure": 8,
+    "offset": "0",
+    "expected": "Em7/A",
+    "found_in_bar": [
+     "Em7/A@2"
+    ]
+   },
+   {
+    "ref_measure": 8,
+    "offset": "3",
+    "expected": "A",
+    "found_in_bar": [
+     "Em7/A@2"
+    ]
+   },
+   {
+    "ref_measure": 15,
+    "offset": "2",
+    "expected": "D/F#",
+    "found_in_bar": [
+     "Em9@0",
+     "D/F@3"
+    ]
+   },
+   {
+    "ref_measure": 19,
+    "offset": "3",
+    "expected": "G/D",
+    "found_in_bar": [
+     "D@0",
+     "A/D@2"
+    ]
+   },
+   {
+    "ref_measure": 20,
+    "offset": "2",
+    "expected": "A/D",
+    "found_in_bar": [
+     "D@0"
+    ]
+   },
+   {
+    "ref_measure": 20,
+    "offset": "3",
+    "expected": "G/D",
+    "found_in_bar": [
+     "D@0"
+    ]
+   },
+   {
+    "ref_measure": 24,
+    "offset": "0",
+    "expected": "Gm9",
+    "found_in_bar": [
+     "Am7@0",
+     "Dm@2"
+    ]
+   },
+   {
+    "ref_measure": 24,
+    "offset": "2",
+    "expected": "C",
+    "found_in_bar": [
+     "Am7@0",
+     "Dm@2"
+    ]
+   },
+   {
+    "ref_measure": 30,
+    "offset": "0",
+    "expected": "D",
+    "found_in_bar": []
+   }
+  ]
+ },
+ "transposed_vs_reference": {
+  "measures": {
+   "reference": 32,
+   "candidate": 31
+  },
+  "events": {
+   "reference": 172,
+   "candidate": 160
+  },
+  "note_exact": 0.75,
+  "pitch_acc": 0.8314,
+  "rhythm_acc": 0.7907,
+  "pitched_notes": {
+   "reference": 153,
+   "exact": 0.7778,
+   "pitch": 0.8693
+  },
+  "ser": 0.2733,
+  "ops": {
+   "substitutions": 27,
+   "deletions": 16,
+   "insertions": 4
+  },
+  "chords": {
+   "reference": 58,
+   "candidate": 52,
+   "hits": 47,
+   "recall": 0.8103,
+   "precision": 0.9038
+  },
+  "key_signature_acc": 0.9375,
+  "time_signature_acc": 0.9688,
+  "note_diffs": [
+   {
+    "ref_measure": 1,
+    "offset": "0",
+    "expected": "B3/1/2",
+    "found": "B3/1"
+   },
+   {
+    "ref_measure": 1,
+    "offset": "1/2",
+    "expected": "G4/1/2",
+    "found": "E5/1"
+   },
+   {
+    "ref_measure": 1,
+    "offset": "2",
+    "expected": "G4/3/2",
+    "found": "G4/1"
+   },
+   {
+    "ref_measure": 1,
+    "offset": "7/2",
+    "expected": "rest/1/2",
+    "found": "E4/1/2"
+   },
+   {
+    "ref_measure": 2,
+    "offset": "0",
+    "expected": "E4/1/2",
+    "found": "G4/1/2"
+   },
+   {
+    "ref_measure": 6,
+    "offset": "1/2",
+    "expected": "C#4/1/2",
+    "found": "C#4/3/4"
+   },
+   {
+    "ref_measure": 6,
+    "offset": "3/2",
+    "expected": "A3/1/2",
+    "found": "C#4/3/2"
+   },
+   {
+    "ref_measure": 6,
+    "offset": "2",
+    "expected": "A3/1",
+    "found": "C#4/3/4"
+   },
+   {
+    "ref_measure": 6,
+    "offset": "3",
+    "expected": "A3/1/2",
+    "found": "D4/1/2"
+   },
+   {
+    "ref_measure": 7,
+    "offset": "0",
+    "expected": "D4/1/2",
+    "found": "C#4/3/4"
+   },
+   {
+    "cand_measure": 8,
+    "offset": "0",
+    "expected": null,
+    "found": "E5/2"
+   },
+   {
+    "ref_measure": 8,
+    "offset": "0",
+    "expected": "E4/3",
+    "found": "E4/2"
+   },
+   {
+    "ref_measure": 8,
+    "offset": "3",
+    "expected": "rest/1",
+    "found": "F#4/1"
+   },
+   {
+    "ref_measure": 9,
+    "offset": "0",
+    "expected": "F#4/1",
+    "found": "E4/1"
+   },
+   {
+    "ref_measure": 10,
+    "offset": "3/2",
+    "expected": "rest/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 11,
+    "offset": "7/2",
+    "expected": "rest/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 15,
+    "offset": "1",
+    "expected": "B3/1/2",
+    "found": "B3/1"
+   },
+   {
+    "ref_measure": 15,
+    "offset": "3/2",
+    "expected": "E4/1/2",
+    "found": "C#5/1"
+   },
+   {
+    "ref_measure": 15,
+    "offset": "2",
+    "expected": "D4/3/2",
+    "found": "D4/1"
+   },
+   {
+    "ref_measure": 15,
+    "offset": "7/2",
+    "expected": "rest/1/2",
+    "found": "B3/1/2"
+   },
+   {
+    "ref_measure": 16,
+    "offset": "0",
+    "expected": "B3/1/2",
+    "found": "D4/1/2"
+   },
+   {
+    "ref_measure": 21,
+    "offset": "0",
+    "expected": "A4/7/2",
+    "found": "A4/2"
+   },
+   {
+    "ref_measure": 21,
+    "offset": "7/2",
+    "expected": "rest/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 22,
+    "offset": "3",
+    "expected": "rest/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 23,
+    "offset": "3",
+    "expected": "rest/1/2",
+    "found": "C4/1"
+   },
+   {
+    "ref_measure": 24,
+    "offset": "0",
+    "expected": "A4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "1/2",
+    "expected": "A4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "1",
+    "expected": "A4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "3/2",
+    "expected": "G4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "2",
+    "expected": "G4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "5/2",
+    "expected": "E4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "3",
+    "expected": "E4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 24,
+    "offset": "7/2",
+    "expected": "D4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 25,
+    "offset": "7/2",
+    "expected": "rest/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 26,
+    "offset": "2",
+    "expected": "G4/1/2",
+    "found": "G4/1"
+   },
+   {
+    "ref_measure": 26,
+    "offset": "5/2",
+    "expected": "E4/1/2",
+    "found": "E4/1"
+   },
+   {
+    "ref_measure": 26,
+    "offset": "3",
+    "expected": "D4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 26,
+    "offset": "7/2",
+    "expected": "C4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 27,
+    "offset": "0",
+    "expected": "C4/1",
+    "found": "C4/3/2"
+   },
+   {
+    "ref_measure": 27,
+    "offset": "7/2",
+    "expected": "D4/1/2",
+    "found": null
+   },
+   {
+    "ref_measure": 28,
+    "offset": "5/2",
+    "expected": "C4/1/2",
+    "found": "C4/3/4"
+   },
+   {
+    "ref_measure": 28,
+    "offset": "3",
+    "expected": "A4/1",
+    "found": "A4/3/4"
+   },
+   {
+    "ref_measure": 29,
+    "offset": "0",
+    "expected": "G4/7/2",
+    "found": "G4/2"
+   },
+   {
+    "cand_measure": 28,
+    "offset": "2",
+    "expected": null,
+    "found": "A4/1/4"
+   },
+   {
+    "cand_measure": 29,
+    "offset": "0",
+    "expected": null,
+    "found": "E5/2"
+   },
+   {
+    "cand_measure": 29,
+    "offset": "2",
+    "expected": null,
+    "found": "D4/2"
+   },
+   {
+    "ref_measure": 31,
+    "offset": "0",
+    "expected": "D4/4",
+    "found": "D4/2"
+   }
+  ],
+  "chord_diffs": [
+   {
+    "ref_measure": 5,
+    "offset": "3",
+    "expected": "C/E",
+    "found_in_bar": [
+     "F2@0",
+     "C/Eb@3"
+    ]
+   },
+   {
+    "ref_measure": 6,
+    "offset": "2",
+    "expected": "C/E",
+    "found_in_bar": [
+     "Dm7@0",
+     "C/Eb@7/4"
+    ]
+   },
+   {
+    "ref_measure": 8,
+    "offset": "0",
+    "expected": "Dm7/G",
+    "found_in_bar": [
+     "Dm7/G@2"
+    ]
+   },
+   {
+    "ref_measure": 8,
+    "offset": "3",
+    "expected": "G",
+    "found_in_bar": [
+     "Dm7/G@2"
+    ]
+   },
+   {
+    "ref_measure": 15,
+    "offset": "2",
+    "expected": "C/E",
+    "found_in_bar": [
+     "Dm9@0",
+     "C/Eb@3"
+    ]
+   },
+   {
+    "ref_measure": 19,
+    "offset": "3",
+    "expected": "F/C",
+    "found_in_bar": [
+     "C@0",
+     "G/C@2"
+    ]
+   },
+   {
+    "ref_measure": 20,
+    "offset": "2",
+    "expected": "G/C",
+    "found_in_bar": [
+     "C@0"
+    ]
+   },
+   {
+    "ref_measure": 20,
+    "offset": "3",
+    "expected": "F/C",
+    "found_in_bar": [
+     "C@0"
+    ]
+   },
+   {
+    "ref_measure": 24,
+    "offset": "0",
+    "expected": "Fm9",
+    "found_in_bar": [
+     "Gm7@0",
+     "Cm@2"
+    ]
+   },
+   {
+    "ref_measure": 24,
+    "offset": "2",
+    "expected": "Bb",
+    "found_in_bar": [
+     "Gm7@0",
+     "Cm@2"
+    ]
+   },
+   {
+    "ref_measure": 30,
+    "offset": "0",
+    "expected": "C",
+    "found_in_bar": []
+   }
+  ]
+ },
+ "musescore_roundtrip_vs_transposed": {
+  "measures": {
+   "reference": 31,
+   "candidate": 31
+  },
+  "events": {
+   "reference": 160,
+   "candidate": 161
+  },
+  "note_exact": 1.0,
+  "pitch_acc": 1.0,
+  "rhythm_acc": 1.0,
+  "pitched_notes": {
+   "reference": 150,
+   "exact": 1.0,
+   "pitch": 1.0
+  },
+  "ser": 0.0063,
+  "ops": {
+   "substitutions": 0,
+   "deletions": 0,
+   "insertions": 1
+  },
+  "chords": {
+   "reference": 52,
+   "candidate": 52,
+   "hits": 51,
+   "recall": 0.9808,
+   "precision": 0.9808
+  },
+  "key_signature_acc": 1.0,
+  "time_signature_acc": 1.0,
+  "note_diffs": [
+   {
+    "cand_measure": 6,
+    "offset": "4",
+    "expected": null,
+    "found": "rest/3/4"
+   }
+  ],
+  "chord_diffs": [
+   {
+    "ref_measure": 5,
+    "offset": "0",
+    "expected": "F2",
+    "found_in_bar": [
+     "F@0",
+     "C/Eb@3"
+    ]
+   }
+  ]
+ }
+}

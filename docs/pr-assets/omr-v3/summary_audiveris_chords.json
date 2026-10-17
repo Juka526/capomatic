@@ -1,0 +1,1050 @@
+{
+ "chords": "none",
+ "python": "3.12.15",
+ "runs": [
+  {
+   "score": "jusim",
+   "role": "dev",
+   "condition": "key+2",
+   "cold": true,
+   "wall_s": 35.89,
+   "stages_ms": {
+    "rasterize": 1167.2,
+    "omr": 33837.0,
+    "chord_ocr_wait": 0.0,
+    "transpose": 436.8,
+    "render": 378.4,
+    "total": 35883.7
+   },
+   "python_peak_mb": 115.8,
+   "tools_peak_mb": 670.7,
+   "recognized": {
+    "measures": {
+     "reference": 25,
+     "candidate": 25
+    },
+    "events": {
+     "reference": 200,
+     "candidate": 197
+    },
+    "note_exact": 0.97,
+    "pitch_acc": 0.98,
+    "rhythm_acc": 0.975,
+    "pitched_notes": {
+     "reference": 174,
+     "exact": 0.9713,
+     "pitch": 0.9828
+    },
+    "ser": 0.03,
+    "chords": {
+     "reference": 38,
+     "candidate": 25,
+     "hits": 25,
+     "recall": 0.6579,
+     "precision": 1.0
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "transposed": {
+    "measures": {
+     "reference": 25,
+     "candidate": 25
+    },
+    "events": {
+     "reference": 200,
+     "candidate": 197
+    },
+    "note_exact": 0.97,
+    "pitch_acc": 0.98,
+    "rhythm_acc": 0.975,
+    "pitched_notes": {
+     "reference": 174,
+     "exact": 0.9713,
+     "pitch": 0.9828
+    },
+    "ser": 0.03,
+    "chords": {
+     "reference": 38,
+     "candidate": 25,
+     "hits": 25,
+     "recall": 0.6579,
+     "precision": 1.0
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "musescore_fidelity": {
+    "measures": {
+     "reference": 25,
+     "candidate": 25
+    },
+    "events": {
+     "reference": 197,
+     "candidate": 197
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 172,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 25,
+     "candidate": 25,
+     "hits": 24,
+     "recall": 0.96,
+     "precision": 0.96
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "lyrics_verse1": {
+    "reference_chars": 132,
+    "candidate_chars": 86,
+    "char_acc": 0.447
+   },
+   "warnings": 0,
+   "repairs": {
+    "rest_only_voices_removed": 1,
+    "lyrics_removed": 9,
+    "chord_words": {
+     "converted": 3,
+     "dropped_unreadable": 0,
+     "dropped_in_measures": []
+    },
+    "marks_removed": {
+     "dynamics": 10,
+     "articulations": 21,
+     "fermatas": 0
+    },
+    "layout": {
+     "layout": 13,
+     "credits": 4,
+     "words": 0
+    },
+    "ledger_notes_fixed": 0
+   },
+   "chord_source": "audiveris",
+   "chords_from_audiveris": null
+  },
+  {
+   "score": "jusim",
+   "role": "dev",
+   "condition": "capo-2",
+   "cold": false,
+   "wall_s": 36.71,
+   "stages_ms": {
+    "rasterize": 1161.0,
+    "omr": 34648.8,
+    "chord_ocr_wait": 0.0,
+    "transpose": 448.3,
+    "render": 384.7,
+    "total": 36707.4
+   },
+   "python_peak_mb": 121.4,
+   "tools_peak_mb": 732.1,
+   "recognized": {
+    "measures": {
+     "reference": 25,
+     "candidate": 25
+    },
+    "events": {
+     "reference": 200,
+     "candidate": 197
+    },
+    "note_exact": 0.97,
+    "pitch_acc": 0.98,
+    "rhythm_acc": 0.975,
+    "pitched_notes": {
+     "reference": 174,
+     "exact": 0.9713,
+     "pitch": 0.9828
+    },
+    "ser": 0.03,
+    "chords": {
+     "reference": 38,
+     "candidate": 25,
+     "hits": 25,
+     "recall": 0.6579,
+     "precision": 1.0
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "transposed": {
+    "measures": {
+     "reference": 25,
+     "candidate": 25
+    },
+    "events": {
+     "reference": 200,
+     "candidate": 197
+    },
+    "note_exact": 0.97,
+    "pitch_acc": 0.98,
+    "rhythm_acc": 0.975,
+    "pitched_notes": {
+     "reference": 174,
+     "exact": 0.9713,
+     "pitch": 0.9828
+    },
+    "ser": 0.03,
+    "chords": {
+     "reference": 38,
+     "candidate": 25,
+     "hits": 25,
+     "recall": 0.6579,
+     "precision": 1.0
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "musescore_fidelity": {
+    "measures": {
+     "reference": 25,
+     "candidate": 25
+    },
+    "events": {
+     "reference": 197,
+     "candidate": 197
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 172,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 25,
+     "candidate": 25,
+     "hits": 24,
+     "recall": 0.96,
+     "precision": 0.96
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "lyrics_verse1": {
+    "reference_chars": 132,
+    "candidate_chars": 86,
+    "char_acc": 0.447
+   },
+   "warnings": 0,
+   "repairs": {
+    "rest_only_voices_removed": 1,
+    "lyrics_removed": 9,
+    "chord_words": {
+     "converted": 3,
+     "dropped_unreadable": 0,
+     "dropped_in_measures": []
+    },
+    "marks_removed": {
+     "dynamics": 10,
+     "articulations": 21,
+     "fermatas": 0
+    },
+    "layout": {
+     "layout": 13,
+     "credits": 4,
+     "words": 0
+    },
+    "ledger_notes_fixed": 0
+   },
+   "chord_source": "audiveris",
+   "chords_from_audiveris": null
+  },
+  {
+   "score": "jayu",
+   "role": "dev",
+   "condition": "key-2",
+   "cold": false,
+   "wall_s": 36.41,
+   "stages_ms": {
+    "rasterize": 1267.6,
+    "omr": 34015.9,
+    "chord_ocr_wait": 0.0,
+    "transpose": 605.7,
+    "render": 439.9,
+    "total": 36402.3
+   },
+   "python_peak_mb": 127.9,
+   "tools_peak_mb": 769.3,
+   "recognized": {
+    "measures": {
+     "reference": 33,
+     "candidate": 33
+    },
+    "events": {
+     "reference": 274,
+     "candidate": 274
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 249,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 64,
+     "candidate": 39,
+     "hits": 38,
+     "recall": 0.5938,
+     "precision": 0.9744
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "transposed": {
+    "measures": {
+     "reference": 33,
+     "candidate": 33
+    },
+    "events": {
+     "reference": 274,
+     "candidate": 274
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 249,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 64,
+     "candidate": 39,
+     "hits": 38,
+     "recall": 0.5938,
+     "precision": 0.9744
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "musescore_fidelity": {
+    "measures": {
+     "reference": 33,
+     "candidate": 33
+    },
+    "events": {
+     "reference": 274,
+     "candidate": 274
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 249,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 39,
+     "candidate": 39,
+     "hits": 38,
+     "recall": 0.9744,
+     "precision": 0.9744
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "lyrics_verse1": {
+    "reference_chars": 184,
+    "candidate_chars": 107,
+    "char_acc": 0.5054
+   },
+   "warnings": 0,
+   "repairs": {
+    "rest_only_voices_removed": 0,
+    "lyrics_removed": 6,
+    "chord_words": {
+     "converted": 4,
+     "dropped_unreadable": 1,
+     "dropped_in_measures": [
+      28
+     ]
+    },
+    "marks_removed": {
+     "dynamics": 1,
+     "articulations": 38,
+     "fermatas": 2
+    },
+    "layout": {
+     "layout": 17,
+     "credits": 6,
+     "words": 4
+    },
+    "ledger_notes_fixed": 5
+   },
+   "chord_source": "audiveris",
+   "chords_from_audiveris": null
+  },
+  {
+   "score": "jayu",
+   "role": "dev",
+   "condition": "capo-3",
+   "cold": false,
+   "wall_s": 36.3,
+   "stages_ms": {
+    "rasterize": 1256.8,
+    "omr": 33934.1,
+    "chord_ocr_wait": 0.0,
+    "transpose": 583.7,
+    "render": 443.5,
+    "total": 36293.7
+   },
+   "python_peak_mb": 130.1,
+   "tools_peak_mb": 769.3,
+   "recognized": {
+    "measures": {
+     "reference": 33,
+     "candidate": 33
+    },
+    "events": {
+     "reference": 274,
+     "candidate": 274
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 249,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 64,
+     "candidate": 39,
+     "hits": 38,
+     "recall": 0.5938,
+     "precision": 0.9744
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "transposed": {
+    "measures": {
+     "reference": 33,
+     "candidate": 33
+    },
+    "events": {
+     "reference": 274,
+     "candidate": 274
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 249,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 64,
+     "candidate": 39,
+     "hits": 38,
+     "recall": 0.5938,
+     "precision": 0.9744
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "musescore_fidelity": {
+    "measures": {
+     "reference": 33,
+     "candidate": 33
+    },
+    "events": {
+     "reference": 274,
+     "candidate": 274
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 249,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 39,
+     "candidate": 39,
+     "hits": 38,
+     "recall": 0.9744,
+     "precision": 0.9744
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "lyrics_verse1": {
+    "reference_chars": 184,
+    "candidate_chars": 107,
+    "char_acc": 0.5054
+   },
+   "warnings": 0,
+   "repairs": {
+    "rest_only_voices_removed": 0,
+    "lyrics_removed": 6,
+    "chord_words": {
+     "converted": 4,
+     "dropped_unreadable": 1,
+     "dropped_in_measures": [
+      28
+     ]
+    },
+    "marks_removed": {
+     "dynamics": 1,
+     "articulations": 38,
+     "fermatas": 2
+    },
+    "layout": {
+     "layout": 17,
+     "credits": 6,
+     "words": 4
+    },
+    "ledger_notes_fixed": 5
+   },
+   "chord_source": "audiveris",
+   "chords_from_audiveris": null
+  },
+  {
+   "score": "chingu",
+   "role": "dev",
+   "condition": "key+2",
+   "cold": false,
+   "wall_s": 30.46,
+   "stages_ms": {
+    "rasterize": 1064.6,
+    "omr": 28466.8,
+    "chord_ocr_wait": 0.0,
+    "transpose": 478.6,
+    "render": 388.0,
+    "total": 30454.9
+   },
+   "python_peak_mb": 130.8,
+   "tools_peak_mb": 769.3,
+   "recognized": {
+    "measures": {
+     "reference": 27,
+     "candidate": 27
+    },
+    "events": {
+     "reference": 219,
+     "candidate": 219
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 197,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 36,
+     "candidate": 24,
+     "hits": 23,
+     "recall": 0.6389,
+     "precision": 0.9583
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "transposed": {
+    "measures": {
+     "reference": 27,
+     "candidate": 27
+    },
+    "events": {
+     "reference": 219,
+     "candidate": 219
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 197,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 36,
+     "candidate": 24,
+     "hits": 23,
+     "recall": 0.6389,
+     "precision": 0.9583
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "musescore_fidelity": {
+    "measures": {
+     "reference": 27,
+     "candidate": 27
+    },
+    "events": {
+     "reference": 219,
+     "candidate": 219
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 197,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 24,
+     "candidate": 24,
+     "hits": 24,
+     "recall": 1.0,
+     "precision": 1.0
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "lyrics_verse1": {
+    "reference_chars": 155,
+    "candidate_chars": 96,
+    "char_acc": 0.5548
+   },
+   "warnings": 0,
+   "repairs": {
+    "rest_only_voices_removed": 0,
+    "lyrics_removed": 5,
+    "chord_words": {
+     "converted": 0,
+     "dropped_unreadable": 0,
+     "dropped_in_measures": []
+    },
+    "marks_removed": {
+     "dynamics": 7,
+     "articulations": 28,
+     "fermatas": 0
+    },
+    "layout": {
+     "layout": 15,
+     "credits": 11,
+     "words": 1
+    },
+    "ledger_notes_fixed": 0
+   },
+   "chord_source": "audiveris",
+   "chords_from_audiveris": null
+  },
+  {
+   "score": "chingu",
+   "role": "dev",
+   "condition": "capo-2",
+   "cold": false,
+   "wall_s": 30.71,
+   "stages_ms": {
+    "rasterize": 1066.0,
+    "omr": 28725.1,
+    "chord_ocr_wait": 0.0,
+    "transpose": 471.2,
+    "render": 388.7,
+    "total": 30710.2
+   },
+   "python_peak_mb": 131.0,
+   "tools_peak_mb": 769.3,
+   "recognized": {
+    "measures": {
+     "reference": 27,
+     "candidate": 27
+    },
+    "events": {
+     "reference": 219,
+     "candidate": 219
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 197,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 36,
+     "candidate": 24,
+     "hits": 23,
+     "recall": 0.6389,
+     "precision": 0.9583
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "transposed": {
+    "measures": {
+     "reference": 27,
+     "candidate": 27
+    },
+    "events": {
+     "reference": 219,
+     "candidate": 219
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 197,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 36,
+     "candidate": 24,
+     "hits": 23,
+     "recall": 0.6389,
+     "precision": 0.9583
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "musescore_fidelity": {
+    "measures": {
+     "reference": 27,
+     "candidate": 27
+    },
+    "events": {
+     "reference": 219,
+     "candidate": 219
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 197,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0,
+    "chords": {
+     "reference": 24,
+     "candidate": 24,
+     "hits": 24,
+     "recall": 1.0,
+     "precision": 1.0
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "lyrics_verse1": {
+    "reference_chars": 155,
+    "candidate_chars": 96,
+    "char_acc": 0.5548
+   },
+   "warnings": 0,
+   "repairs": {
+    "rest_only_voices_removed": 0,
+    "lyrics_removed": 5,
+    "chord_words": {
+     "converted": 0,
+     "dropped_unreadable": 0,
+     "dropped_in_measures": []
+    },
+    "marks_removed": {
+     "dynamics": 7,
+     "articulations": 28,
+     "fermatas": 0
+    },
+    "layout": {
+     "layout": 15,
+     "credits": 11,
+     "words": 1
+    },
+    "ledger_notes_fixed": 0
+   },
+   "chord_source": "audiveris",
+   "chords_from_audiveris": null
+  },
+  {
+   "score": "naui",
+   "role": "held-out",
+   "condition": "key-2",
+   "cold": false,
+   "wall_s": 43.3,
+   "stages_ms": {
+    "rasterize": 403.5,
+    "omr": 42026.1,
+    "chord_ocr_wait": 0.0,
+    "transpose": 446.0,
+    "render": 357.1,
+    "total": 43294.3
+   },
+   "python_peak_mb": 131.0,
+   "tools_peak_mb": 894.6,
+   "recognized": {
+    "measures": {
+     "reference": 32,
+     "candidate": 31
+    },
+    "events": {
+     "reference": 172,
+     "candidate": 160
+    },
+    "note_exact": 0.75,
+    "pitch_acc": 0.8314,
+    "rhythm_acc": 0.7907,
+    "pitched_notes": {
+     "reference": 153,
+     "exact": 0.7778,
+     "pitch": 0.8693
+    },
+    "ser": 0.2733,
+    "chords": {
+     "reference": 58,
+     "candidate": 23,
+     "hits": 22,
+     "recall": 0.3793,
+     "precision": 0.9565
+    },
+    "key_signature_acc": 0.9375,
+    "time_signature_acc": 0.9688
+   },
+   "transposed": {
+    "measures": {
+     "reference": 32,
+     "candidate": 31
+    },
+    "events": {
+     "reference": 172,
+     "candidate": 160
+    },
+    "note_exact": 0.75,
+    "pitch_acc": 0.8314,
+    "rhythm_acc": 0.7907,
+    "pitched_notes": {
+     "reference": 153,
+     "exact": 0.7778,
+     "pitch": 0.8693
+    },
+    "ser": 0.2733,
+    "chords": {
+     "reference": 58,
+     "candidate": 23,
+     "hits": 22,
+     "recall": 0.3793,
+     "precision": 0.9565
+    },
+    "key_signature_acc": 0.9375,
+    "time_signature_acc": 0.9688
+   },
+   "musescore_fidelity": {
+    "measures": {
+     "reference": 31,
+     "candidate": 31
+    },
+    "events": {
+     "reference": 160,
+     "candidate": 161
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 150,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0063,
+    "chords": {
+     "reference": 23,
+     "candidate": 23,
+     "hits": 23,
+     "recall": 1.0,
+     "precision": 1.0
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "lyrics_verse1": {
+    "reference_chars": 126,
+    "candidate_chars": 88,
+    "char_acc": 0.5317
+   },
+   "warnings": 15,
+   "repairs": {
+    "rest_only_voices_removed": 0,
+    "lyrics_removed": 2,
+    "chord_words": {
+     "converted": 1,
+     "dropped_unreadable": 3,
+     "dropped_in_measures": [
+      3,
+      18,
+      23
+     ]
+    },
+    "marks_removed": {
+     "dynamics": 2,
+     "articulations": 9,
+     "fermatas": 0
+    },
+    "layout": {
+     "layout": 15,
+     "credits": 3,
+     "words": 10
+    },
+    "ledger_notes_fixed": 5
+   },
+   "chord_source": "audiveris",
+   "chords_from_audiveris": null
+  },
+  {
+   "score": "naui",
+   "role": "held-out",
+   "condition": "capo-2",
+   "cold": false,
+   "wall_s": 42.43,
+   "stages_ms": {
+    "rasterize": 412.6,
+    "omr": 41122.4,
+    "chord_ocr_wait": 0.0,
+    "transpose": 468.1,
+    "render": 364.6,
+    "total": 42431.4
+   },
+   "python_peak_mb": 131.0,
+   "tools_peak_mb": 894.6,
+   "recognized": {
+    "measures": {
+     "reference": 32,
+     "candidate": 31
+    },
+    "events": {
+     "reference": 172,
+     "candidate": 160
+    },
+    "note_exact": 0.75,
+    "pitch_acc": 0.8314,
+    "rhythm_acc": 0.7907,
+    "pitched_notes": {
+     "reference": 153,
+     "exact": 0.7778,
+     "pitch": 0.8693
+    },
+    "ser": 0.2733,
+    "chords": {
+     "reference": 58,
+     "candidate": 23,
+     "hits": 22,
+     "recall": 0.3793,
+     "precision": 0.9565
+    },
+    "key_signature_acc": 0.9375,
+    "time_signature_acc": 0.9688
+   },
+   "transposed": {
+    "measures": {
+     "reference": 32,
+     "candidate": 31
+    },
+    "events": {
+     "reference": 172,
+     "candidate": 160
+    },
+    "note_exact": 0.75,
+    "pitch_acc": 0.8314,
+    "rhythm_acc": 0.7907,
+    "pitched_notes": {
+     "reference": 153,
+     "exact": 0.7778,
+     "pitch": 0.8693
+    },
+    "ser": 0.2733,
+    "chords": {
+     "reference": 58,
+     "candidate": 23,
+     "hits": 22,
+     "recall": 0.3793,
+     "precision": 0.9565
+    },
+    "key_signature_acc": 0.9375,
+    "time_signature_acc": 0.9688
+   },
+   "musescore_fidelity": {
+    "measures": {
+     "reference": 31,
+     "candidate": 31
+    },
+    "events": {
+     "reference": 160,
+     "candidate": 161
+    },
+    "note_exact": 1.0,
+    "pitch_acc": 1.0,
+    "rhythm_acc": 1.0,
+    "pitched_notes": {
+     "reference": 150,
+     "exact": 1.0,
+     "pitch": 1.0
+    },
+    "ser": 0.0063,
+    "chords": {
+     "reference": 23,
+     "candidate": 23,
+     "hits": 23,
+     "recall": 1.0,
+     "precision": 1.0
+    },
+    "key_signature_acc": 1.0,
+    "time_signature_acc": 1.0
+   },
+   "lyrics_verse1": {
+    "reference_chars": 126,
+    "candidate_chars": 88,
+    "char_acc": 0.5317
+   },
+   "warnings": 15,
+   "repairs": {
+    "rest_only_voices_removed": 0,
+    "lyrics_removed": 2,
+    "chord_words": {
+     "converted": 1,
+     "dropped_unreadable": 3,
+     "dropped_in_measures": [
+      3,
+      18,
+      23
+     ]
+    },
+    "marks_removed": {
+     "dynamics": 2,
+     "articulations": 9,
+     "fermatas": 0
+    },
+    "layout": {
+     "layout": 15,
+     "credits": 3,
+     "words": 10
+    },
+    "ledger_notes_fixed": 5
+   },
+   "chord_source": "audiveris",
+   "chords_from_audiveris": null
+  }
+ ]
+}
