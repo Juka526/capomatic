@@ -1,4 +1,4 @@
-name: OMR V3 evaluation
+name: Full OMR V3 Acceptance Evaluation
 
 # Builds the production image (with the V3 tools) and runs the end-to-end
 # score evaluation inside it: Audiveris + PaddleOCR chords + music21 +
@@ -12,22 +12,22 @@ on:
         description: 'Also push the evidence to the pr-assets/omr-v3-evidence branch'
         type: boolean
         default: false
-  pull_request:
-    paths:
-      - 'backend/omr_v3/**'
-      - 'scripts/omr_v3/**'
-      - 'tests/omr_v3_eval/**'
-      - 'Dockerfile'
-      - 'requirements.txt'
-      - '.github/workflows/omr-v3-eval.yml'
+      fresh_holdout:
+        description: 'Generate unseen synthetic holdout (disable for stored regression corpus)'
+        type: boolean
+        default: true
+      holdout_seeds:
+        description: 'Optional space-separated seeds; empty derives four from run_id (recorded in artifact)'
+        type: string
+        default: ''
 
 permissions:
   contents: read
 
-# A newer push supersedes a running evaluation (path filters match the whole PR).
+# Manual acceptance runs are independent of PR pushes; retain deliberate runs.
 concurrency:
   group: omr-v3-eval-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   evaluate:
@@ -50,9 +50,23 @@ jobs:
             && echo "::notice title=audiveris direct::ok $(ls omr-v3-evidence/audiveris-direct | tr '\n' ' ')" \
             || echo "::error title=audiveris direct::$(tail -c 3000 omr-v3-evidence/audiveris-direct/stdout.txt | tr '\n' '|')"
       - name: End-to-end evaluation (PaddleOCR chords)
-        run: >-
-          docker run --rm -v "$PWD:/work" -w /work -e PYTHONPATH=/work capomatic-omr-eval
-          python -m scripts.omr_v3.evaluate --out /work/omr-v3-evidence --chords paddle --fresh-holdout-seeds 73101 73102 73103 73104
+        env:
+          FRESH_HOLDOUT: ${{ inputs.fresh_holdout }}
+          HOLDOUT_SEEDS: ${{ inputs.holdout_seeds }}
+        run: |
+          mkdir -p omr-v3-evidence
+          git rev-parse HEAD > omr-v3-evidence/source-revision.txt
+          args=()
+          if [ "$FRESH_HOLDOUT" = true ]; then
+            if [ -z "$HOLDOUT_SEEDS" ]; then
+              HOLDOUT_SEEDS=$(python3 -c 'import os; base = int(os.environ["GITHUB_RUN_ID"]) * 4; print(*(base + i for i in range(4)))')
+            fi
+            read -r -a seeds <<< "$HOLDOUT_SEEDS"
+            args+=(--fresh-holdout-seeds "${seeds[@]}")
+          fi
+          printf '%s\n' "$FRESH_HOLDOUT" "$HOLDOUT_SEEDS" > omr-v3-evidence/holdout-config.txt
+          docker run --rm -v "$PWD:/work" -w /work -e PYTHONPATH=/work capomatic-omr-eval \
+            python -m scripts.omr_v3.evaluate --out /work/omr-v3-evidence --chords paddle "${args[@]}"
       - name: Markdown report
         if: always()
         run: >-
@@ -138,9 +152,7 @@ jobs:
   publish:
     # Copy the evidence into a branch so reviewers (and sandboxes without
     # artifact access) can fetch it with git. Never for fork PRs.
-    if: >-
-      always() && ((github.event_name == 'workflow_dispatch' && inputs.publish) ||
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
+    if: ${{ always() && inputs.publish }}
     needs: evaluate
     runs-on: ubuntu-latest
     permissions:
@@ -159,5 +171,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -q -m "OMR V3 evaluation evidence for ${{ github.event.pull_request.head.sha || github.sha }}"
+          git commit -q -m "OMR V3 evaluation evidence for ${{ github.sha }}"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" HEAD:pr-assets/omr-v3-evidence

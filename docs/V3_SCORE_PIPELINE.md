@@ -128,5 +128,4 @@ pipeline on `tests/omr_v3_eval/` and writes per-sheet PDFs, MusicXML, side-by-si
 images, `compare_*.json` discrepancy lists and `summary.json`. References are hand
 transcriptions in a bar-by-bar text format (`tests/omr_v3_eval/reference/*.gt`) that
 `scripts/omr_v3/reference.py` turns into MusicXML and checks bar lengths for.
-The `OMR V3 evaluation` workflow runs this on every PR touching the pipeline and
-uploads the evidence as an artifact.
+The manual `Full OMR V3 Acceptance Evaluation` workflow runs the comprehensive benchmark and uploads the evidence as an artifact. It is required before final V3 approval. Pull requests run `PR Fast OMR Check`, a fixed regression/smoke subset with no blind generation or acceptance benchmark. See [evaluation tiers](V3_ACCEPTANCE.md#evaluation-tiers) for inputs and reproducibility.

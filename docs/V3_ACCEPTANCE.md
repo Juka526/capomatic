@@ -35,10 +35,23 @@ PDFs accept 1–10 pages within the existing 10 MiB upload limit. Pages are spli
 
 A rejected page has an explicit failure entry and an unmistakable failure placeholder in the combined PDF, never an untouched source page. The ZIP mode is `partial_failure`; its document summary says `complete: false`. The PDF-only endpoint returns 422 for partial failure and directs the caller to the ZIP. Integrity/service errors still fail the whole request. Single-page response filenames remain compatible.
 
+## Evaluation tiers
+
+**PR Fast CI is regression/smoke only.** `.github/workflows/omr-v3-fast.yml` runs automatically for relevant pull-request changes with a 20-minute job budget. It builds Docker, runs backend tests including the controlled multi-page integration tests, exercises real V1 `/detect`, runs three fixed gated cases (development seed 101 clean and ordinary PDFs, plus the `naui` chord-only fallback), and sends one V3 API smoke request using MusicXML. The fallback may succeed as `chord_only` or explicitly reject insufficient coverage with HTTP 422. Unexpected full-score fallback, missing integrity evidence, or tool/service errors fail the smoke check. The 20-minute budget is a CI target/timeout, not a change to per-page OMR behavior; its actual runtime has not been measured locally.
+
+Fast CI does not generate seeds, iterate development/hold-out corpora, retry ungated scores, render side-by-side comparisons, benchmark the API, or publish an evidence branch. Its short-lived `omr-v3-smoke` artifact contains the checked-out SHA and smoke diagnostics. Passing this tier establishes no accuracy, recall, latency percentile, peak-memory or blind-acceptance result.
+
+**Full Acceptance Evaluation is required before final V3 approval, not on every commit.** `.github/workflows/omr-v3-eval.yml` is `workflow_dispatch` only. It retains the full real/development/hold-out evaluation, gated versus ungated analysis, accuracy reports, side-by-side evidence, API p50/p95 benchmark, memory reporting and real multi-page API smoke. `publish` defaults to `false`; enabling it publishes the bounded review bundle, while the full evidence remains an Actions artifact. Public readiness and licensing/compliance remain OPEN.
+
+`fresh_holdout` defaults to `true`. With no `holdout_seeds` input, four seeds are derived from the workflow run ID; the exact seeds and checked-out SHA are recorded in `holdout-config.txt`, `source-revision.txt` and the evaluation summary/artifact. Supply the recorded space-separated seeds to reproduce a run. Reusing a run's seeds, including a workflow rerun, provides regression evidence once those results have informed changes. With `fresh_holdout=false`, the stored corpus runs without generating new seeds and must not be presented as fresh blind evidence.
+
 ## Pending CI closure
 
+Acceptance metrics below require the completed manual Full Acceptance Evaluation; PR Fast CI cannot close them.
+
 - Current head SHA: PENDING (record the exact SHA evaluated by the next completed run)
-- CI run: PENDING
+- PR Fast CI run (regression/smoke only): PENDING
+- Full Acceptance Evaluation run: PENDING
 - OMR V3 evaluation: PENDING
 - Returned full_score usable/unusable: PENDING
 - Withheld full_score unusable/usable: PENDING
