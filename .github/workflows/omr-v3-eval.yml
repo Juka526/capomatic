@@ -20,8 +20,6 @@ on:
         description: 'Optional space-separated seeds; empty derives four from run_id (recorded in artifact)'
         type: string
         default: ''
-  pull_request:
-    types: [labeled]
 
 permissions:
   contents: read
@@ -33,16 +31,10 @@ concurrency:
 
 jobs:
   evaluate:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && github.event.action == 'labeled' &&
-       github.event.pull_request.number == 62 && github.event.label.name == 'full-acceptance')
     runs-on: ubuntu-latest
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
       - run: docker build --tag capomatic-omr-eval .
       - name: Tool versions
         run: >-
@@ -59,8 +51,8 @@ jobs:
             || echo "::error title=audiveris direct::$(tail -c 3000 omr-v3-evidence/audiveris-direct/stdout.txt | tr '\n' '|')"
       - name: End-to-end evaluation (PaddleOCR chords)
         env:
-          FRESH_HOLDOUT: ${{ github.event_name == 'pull_request' || inputs.fresh_holdout }}
-          HOLDOUT_SEEDS: ${{ github.event_name == 'workflow_dispatch' && inputs.holdout_seeds || '' }}
+          FRESH_HOLDOUT: ${{ inputs.fresh_holdout }}
+          HOLDOUT_SEEDS: ${{ inputs.holdout_seeds }}
         run: |
           mkdir -p omr-v3-evidence
           git rev-parse HEAD > omr-v3-evidence/source-revision.txt

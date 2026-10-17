@@ -1,83 +1,111 @@
-# V3 acceptance
+# V3 acceptance — CLOSED
 
-Overall verdict: **OPEN — not a final candidate or a public release**.
+**ENGINEERING ACCEPTANCE CLOSED — PASS as a feature-flagged merge candidate; PUBLIC/PRODUCTION RELEASE HOLD.**
 
-This revision strengthens chord-only coverage validation. It is based on `2152e8dc571927a9b7d0cf7606ef9e7a5f9279b0`; previous CI and evaluation numbers do not establish results for this revision. Feature flags remain off by default. V1 chord parsing, transposition and rendering remain authoritative and unchanged.
+Engineering acceptance permits human review for a feature-flagged merge. It does not authorize public release, deployment, or enabling either feature flag. `CAPOMATIC_ENABLE_OMR_V3` and `NEXT_PUBLIC_ENABLE_SCORE_V3` remain OFF by default.
 
-| Acceptance item | Status | Current revision evidence |
-|---|---|---|
-| Targeted gate, router and multi-page tests | PASS | 79 passed, 1 skipped locally |
-| Backend regression suite | PASS | 763 passed, 12 skipped locally; new CI pending |
-| Frontend tests, typecheck, production build | OPEN | Not rerun in this backend-only change; new CI pending |
-| Docker build and real V1 `/detect` | OPEN | New CI pending |
-| Full-score reliability | OPEN | New completed-run measurement pending |
-| Chord-only confidence gate | OPEN | Local regression cases pass; real accepted/rejected outcomes and recall remain pending |
-| Transposition integrity | PASS | Local targeted tests cover suffixes, slash bass, offsets and keys; real evaluation pending |
-| Multi-page PDF | PASS | Local Poppler integration tests preserve ordering and partial failures; real OMR pending |
-| Public readiness | OPEN | Independent real blind evaluation remains required |
-| Licensing/compliance | OPEN | Review required before public release |
+V3 algorithmic development is frozen. Future reliability, layout, OCR-semantic and selective-reconstruction improvements belong to V4 unless a true regression or release-blocking bug is found.
 
-## Reliability rationale and limits
+## Canonical evidence and scope
 
-The previous gate could accept structurally consistent omissions: a high average head grade says little about heads missing from the exported score. It also recorded low-grade heads without gating on their proportion and treated absent grades as perfect confidence. The gate now rejects missing geometry/confidence, more than 15% low-grade heads, or more than 5% disagreement between geometry heads and exported sounding pitches. These provisional limits are runtime evidence checks, not accuracy estimates. They can reject usable polyphonic or shared-head notation. They cannot detect every confidently wrong pitch.
+- Evaluated runtime SHA: `d5756433c8bb0ae18cd9aa7507340ffd478ef8f5`.
+- Canonical Full Acceptance run: [39006649835](https://github.com/Juka526/capomatic/actions/runs/39006649835).
+- Fresh synthetic holdout seeds: `156026599340`, `156026599341`, `156026599342`, `156026599343`.
+- The acceptance artifact records the checked-out source in `source-revision.txt`; full reports, JSON, PDFs, MusicXML, images and logs belong to that run's `omr-v3-evidence` artifact.
 
-Chord-only output first cross-checks full-width staff detection against six narrow strips spanning the central 80% of the image. Staff regions supported by at least three strips must overlap detected systems, and each detected system must have strip support. Missing regions or absent supporting evidence reject the fallback. This addresses a circular coverage decision: a full-width detector can miss most systems on a distorted page, leaving a few high-confidence chords on its single detected system looking well distributed. The completed prior summary showed that pattern in both reported extremely sparse phone results. A local tilted-staff regression reproduces this class of failure without sample-specific seeds or runtime ground truth.
+The acceptance evidence belongs to runtime SHA `d5756433c8bb0ae18cd9aa7507340ffd478ef8f5`. Any subsequent closure commit changes documentation / CI orchestration only and does not invalidate that runtime evidence. This closure neither reruns evaluation nor tunes the completed holdout.
 
-The existing per-system requirements remain: at least two valid chords at distinct locations, at least 20% page-width horizontal spread, no invalid/duplicate/unassigned detections, no confidence below 0.6, and at most 10% below 0.8. Repeated chord names at different locations are valid. A simple one-system score with two chords can pass; there is no added global chord-count floor. Coverage reports include strip-supported, uncovered and unsupported staff counts for review. Rejection retains `chord_only:insufficient_chord_coverage`, HTTP 422 and the request for a clearer PDF/image.
+## Full-score gate outcomes
 
-Strip voting is a conservative heuristic, not independent OMR or an exact recall estimate. Both views can still miss a staff; a region with no intended chords may cause unnecessary rejection. The change does not prove that no original-key chord remains. Actual outcomes and the minimum accepted chord-only recall must be measured by the next completed evaluation, rather than predicted here.
+| Corpus | Returned usable full_score | Returned unsafe full_score | Withheld unusable | Withheld usable | Errors |
+|---|---:|---:|---:|---:|---:|
+| Real/dev | 6 | 0 | 2 | 0 | 0 |
+| Synthetic-dev | 26 | 0 | 15 | 14 | 22 |
+| Fresh synthetic-holdout | 7 | 0 | 4 | 8 | 8 |
 
-Neither 99% accuracy nor 30 seconds per page is a runtime rejection threshold.
+Error counts are reported separately; do not sum the columns into a population count. Offline “usable” follows the report's pitched-note exact threshold of 95%; this is not a runtime accuracy gate or a guarantee of musical correctness.
 
-## Document contract
+There were **zero unsafe returned full-score cases in this completed evaluation**. The conservative gate unnecessarily withheld **8 usable fresh-holdout scores**. These observations do not establish that every real score is safe.
 
-PDFs accept 1–10 pages within the existing 10 MiB upload limit. Pages are split and processed sequentially, with page-local native-resolution preflight and gates. ZIPs contain the combined PDF, per-page outputs and `conversion-report.json` with document counts and ordered page details. MusicXML stays separate (`page-001-recognized.musicxml`, `page-001-transposed.musicxml`, etc.); movements, ties and layout are not combined across pages.
+Fresh-holdout pooled accuracy of returned full scores:
 
-A rejected page has an explicit failure entry and an unmistakable failure placeholder in the combined PDF, never an untouched source page. The ZIP mode is `partial_failure`; its document summary says `complete: false`. The PDF-only endpoint returns 422 for partial failure and directs the caller to the ZIP. Integrity/service errors still fail the whole request. Single-page response filenames remain compatible.
+| Metric | Result |
+|---|---:|
+| Pitched notes exact | 99.7% of 1050 notes |
+| Pitch-only | 99.9% |
+| Chord recall | 98.9% |
+| Chord precision | 98.9% |
 
-## Evaluation tiers
+## Chord-only fallback
 
-**PR Fast CI is regression/smoke only.** `.github/workflows/omr-v3-fast.yml` runs automatically for relevant pull-request changes with a 20-minute job budget. It builds Docker, runs backend tests including the controlled multi-page integration tests, exercises real V1 `/detect`, runs three fixed gated cases (development seed 101 clean and ordinary PDFs, plus the `naui` chord-only fallback), and sends one V3 API smoke request using MusicXML. The fallback may succeed as `chord_only` or explicitly reject insufficient coverage with HTTP 422. Unexpected full-score fallback, missing integrity evidence, or tool/service errors fail the smoke check. The 20-minute budget is a CI target/timeout, not a change to per-page OMR behavior; its actual runtime has not been measured locally.
+| Metric | Result |
+|---|---:|
+| Accepted | 14 |
+| Rejected for insufficient coverage/confidence | 29 |
+| Pooled accepted reference chords | 415 |
+| Pooled drawn chords | 414 |
+| Pooled recall | 98.1% |
+| Pooled precision | 98.3% |
+| Minimum accepted recall | 92.6% — `syn156026599343-scan` |
+| Precision of that weakest-recall fallback | 96.2% |
+| Real `naui` fallback recall / precision | 94.8% / 94.8% |
 
-Fast CI does not generate seeds, iterate development/hold-out corpora, retry ungated scores, render side-by-side comparisons, benchmark the API, or publish an evidence branch. Its short-lived `omr-v3-smoke` artifact contains the checked-out SHA and smoke diagnostics. Passing this tier establishes no accuracy, recall, latency percentile, peak-memory or blind-acceptance result.
+The `naui` full-score path was withheld at **77.8% note exact**. Chord-only fallback is not perfect: accidental and slash-bass semantic OCR errors remain possible. Structural coverage passing does **not** prove semantic chord correctness or that every printed chord was transposed.
 
-**Full Acceptance Evaluation is required before final V3 approval, not on every commit.** `.github/workflows/omr-v3-eval.yml` is `workflow_dispatch` only. It retains the full real/development/hold-out evaluation, gated versus ungated analysis, accuracy reports, side-by-side evidence, API p50/p95 benchmark, memory reporting and real multi-page API smoke. `publish` defaults to `false`; enabling it publishes the bounded review bundle, while the full evidence remains an Actions artifact. Public readiness and licensing/compliance remain OPEN.
+Runtime `recall_estimate` remains `null`. Confidence and staff coverage are abstention signals, not calibrated accuracy. The recall and precision above are offline reference measurements; none enters the runtime gate.
 
-`fresh_holdout` defaults to `true`. With no `holdout_seeds` input, four seeds are derived from the workflow run ID; the exact seeds and checked-out SHA are recorded in `holdout-config.txt`, `source-revision.txt` and the evaluation summary/artifact. Supply the recorded space-separated seeds to reproduce a run. Reusing a run's seeds, including a workflow rerun, provides regression evidence once those results have informed changes. With `fresh_holdout=false`, the stored corpus runs without generating new seeds and must not be presented as fresh blind evidence.
+## Error attribution
 
-## Pending CI closure
+Across measured full-score paths, including broad diagnostic reconstruction:
 
-Acceptance metrics below require the completed manual Full Acceptance Evaluation; PR Fast CI cannot close them.
+| Error class | Count |
+|---|---:|
+| Recognition note errors | 624 |
+| Chord recognition errors | 260 |
+| Chord mapping errors | 65 |
+| MuseScore/rendering note-level discrepancies | 13 |
+| Transposition-introduced note errors | 0 |
+| Chord transposition errors | 0 |
+| Integrity failures | 0 |
 
-- Current head SHA: PENDING (record the exact SHA evaluated by the next completed run)
-- PR Fast CI run (regression/smoke only): PENDING
-- Full Acceptance Evaluation run: PENDING
-- OMR V3 evaluation: PENDING
-- Returned full_score usable/unusable: PENDING
-- Withheld full_score unusable/usable: PENDING
-- Unsafe blind full-score: PENDING
-- Chord-only accepted/rejected: PENDING
-- Minimum accepted chord-only recall (offline evaluation): PENDING
-- Chord-only recall/precision distribution: PENDING
-- Transposition-introduced note/chord errors: PENDING
-- Integrity failures: PENDING
-- Real multi-page mixed-mode result: PENDING
-- Existing V1 real detection regression: PENDING
-- API p50/p95: PENDING
-- Peak RSS (Python/tools): PENDING
+The 13 MuseScore/render note-level discrepancies remain part of the evidence even though transposition-introduced errors were zero. XML transposition integrity does not imply a discrepancy-free rendered PDF.
 
-Fill these fields only from completed evidence matching the evaluated SHA, cross-checking `REPORT.generated.md`, `summary.json` and API benchmark output. Do not carry prior CI numbers into these fields. GitHub Actions runs independently after push; no evaluation was rerun or monitored for this revision.
+## Multi-page, API and regression validation
 
-Seeds 209–212 and 73101–73104 have now influenced changes and are regression data, not fresh blind evidence. A new unseen hold-out is required before claiming blind results for this revision. Re-running the configured older seeds provides regression measurements only. Generated inputs and references must remain in the full Actions artifact with exact seeds. Synthetic hold-out shares its generator with development data and cannot replace independent real-sheet evaluation. Offline “usable” retains the report definition (pitched-note exact ≥95%); it is not a runtime gate or a musical correctness guarantee.
+The real multi-page result contained **3 pages**, **3 successful pages**, **0 failed pages**, and `complete: true`. Original order was preserved with modes `full_score`, `chord_only`, `full_score`. MusicXML remains per-page; it is not combined across page boundaries.
 
-Full evidence stays in the `omr-v3-evidence` Actions artifact. The evidence branch receives summaries, small text outputs and at most four images with a 12 MiB bundle budget. Reproduce using `.github/workflows/omr-v3-eval.yml` and the pinned Dockerfile.
+| Validation / performance item | Result |
+|---|---|
+| API benchmark completed | 3/3 |
+| API p50 | 24.5197 s |
+| API p95 (nearest rank) | 25.2878 s |
+| API maximum | 25.2878 s |
+| API container memory snapshot | 1.077 GiB |
+| Fast CI backend suite | 786 passed / 11 skipped |
+| Real V1 `/detect` smoke | PASS |
 
-## Acceptance closure and report interpretation
+The memory value is a container snapshot, not a peak-RSS measurement. Three API requests do not establish an SLA. **99% accuracy and 30 seconds/page remain report-only targets**, not runtime rejection thresholds and not an SLA.
 
-Final-candidate acceptance requires zero V1 regressions, zero transposition-introduced musical errors, zero integrity regressions, and independent blind evaluation of unsafe returned scores versus unnecessary withholding. Aim for zero unsafe returns while retaining useful full-score output. If that cannot be demonstrated, keep reliability OPEN and report the tradeoff. Production additionally requires licensing/compliance approval and real blind-sheet evaluation.
+## Real-sheet development/reference evidence
 
-Head checks apply per page. A head is an Audiveris geometry symbol; exported sounding pitches count each pitch of a music21 note or chord, excluding harmony symbols and rests. Disagreement is `abs(heads - pitches) / max(heads, pitches, 1)`. Low grade means below 0.5. Missing, invalid or nonfinite grades become zero. Missing geometry, zero heads or no recognised notes reject. Shared heads, tied/duplicate voices and percussion are not independently calibrated.
+| Sheet | Returned mode | Full-score notes exact | Chord recall / precision | Key signature |
+|---|---|---:|---:|---:|
+| jusim | full_score | 97.1% | 86.8% / 97.1% | 100% |
+| jayu | full_score | 100% | 98.4% / 98.4% | 100% |
+| chingu | full_score | 100% | 94.4% / 94.4% | 100% |
+| naui | chord_only; full-score reconstruction withheld | 77.8% (withheld) | 94.8% / 94.8% (fallback) | — |
 
-Chord duplicates mean identical bounding boxes, not repeated chord names. Zero detected staff systems reject. Staff systems missed by both full-width and strip detection can still hide missing coverage; this remains a limitation requiring independent evaluation.
+These real sheets are development/reference evidence, **not an independent blind corpus**. The synthetic holdout shares its generator family with development data. The completed holdout must not be tuned against; once its results inform changes, its seeds are regression data rather than unseen evidence.
 
-An incomplete ZIP reports `"document": {"page_count": 3, "successful_pages": 2, "failed_pages": 1, "complete": false}`, `"result_mode": "partial_failure"`, and ordered `"pages"` entries numbered 1, 2, 3. Page 2 has `"mode": "failure"`, `"status": 422` and an error message; it has no MusicXML. The combined PDF retains its position with a page-numbered failure notice. If all pages fail, all positions contain failure notices and `successful_pages` is zero. A complete mixed document has `complete: true`, `failed_pages: 0`, `result_mode: "mixed"`, and per-page `full_score` or `chord_only` modes. A successful chord-only page has a PDF and PNG, with no MusicXML.
+## CI operation after closure
+
+**PR Fast CI is regression/smoke only.** It runs automatically on relevant pull-request changes and cannot establish full acceptance accuracy or blind results.
+
+**Full Acceptance Evaluation is manual-only (`workflow_dispatch`), not required on every commit.** The temporary PR #62 label trigger has been removed. Manual inputs remain `publish=false`, `fresh_holdout=true`, and optional `holdout_seeds`. Empty seeds with fresh holdout enabled derive four seeds from `GITHUB_RUN_ID`; recorded seeds and source SHA preserve reproducibility. Artifact upload remains enabled. Evidence-branch publication requires an explicit manual request and remains a bounded review bundle; full evidence stays in the Actions artifact.
+
+## Public / production release — HOLD
+
+1. Independent real-sheet blind evaluation is still required.
+2. Audiveris AGPL-3.0 deployment, corresponding-source and compliance obligations need review.
+
+Engineering acceptance is closed; these public-release obligations remain unresolved. PR #62 remains open for human merge review. Neither release nor production feature-flag activation is authorized by this record.
