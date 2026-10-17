@@ -17,7 +17,8 @@ def test_workflows_separate_pr_smoke_from_manual_acceptance():
     fast = yaml.load((ROOT / '.github/workflows/omr-v3-fast.yml').read_text(), Loader=yaml.BaseLoader)
     full = yaml.load((ROOT / '.github/workflows/omr-v3-eval.yml').read_text(), Loader=yaml.BaseLoader)
     assert set(fast['on']) == {'pull_request'}
-    assert set(full['on']) == {'workflow_dispatch'}
+    assert set(full['on']) == {'workflow_dispatch', 'pull_request'}
+    assert full['on']['pull_request'] == {'types': ['labeled']}
     assert full['on']['workflow_dispatch']['inputs']['publish']['default'] == 'false'
     assert full['on']['workflow_dispatch']['inputs']['fresh_holdout']['default'] == 'true'
     assert fast['jobs']['smoke']['timeout-minutes'] == '20'
@@ -81,12 +82,13 @@ def test_fast_smoke_fails_closed_without_ungated_retry(processor, tmp_path, fail
     assert (tmp_path / 'smoke-summary.json').exists()
 
 
-@pytest.mark.parametrize('fresh,seeds,expected', [
-    ('true', '', ['492', '493', '494', '495']),
-    ('true', '9001 9002', ['9001', '9002']),
-    ('false', '', []),
+@pytest.mark.parametrize('event,fresh,seeds,expected', [
+    ('workflow_dispatch', 'true', '', ['492', '493', '494', '495']),
+    ('workflow_dispatch', 'true', '9001 9002', ['9001', '9002']),
+    ('workflow_dispatch', 'false', '', []),
+    ('pull_request', 'false', '73101 73102 73103 73104', ['492', '493', '494', '495']),
 ])
-def test_manual_holdout_configuration_is_reproducible(fresh, seeds, expected, tmp_path):
+def test_manual_holdout_configuration_is_reproducible(event, fresh, seeds, expected, tmp_path):
     import os
     import subprocess
     import sys
@@ -107,7 +109,10 @@ def test_manual_holdout_configuration_is_reproducible(fresh, seeds, expected, tm
     git.chmod(0o755)
     subprocess.run(['bash', '-e', '-o', 'pipefail', '-c', step['run']], cwd=tmp_path,
                    env={**os.environ, 'PATH': str(binaries) + os.pathsep + os.environ['PATH'],
-                        'GITHUB_RUN_ID': '123', 'FRESH_HOLDOUT': fresh, 'HOLDOUT_SEEDS': seeds},
+                        'GITHUB_RUN_ID': '123',
+                        **{name: str(_expression(value, event=event, fresh=fresh == 'true', seeds=seeds)).lower()
+                           if name == 'FRESH_HOLDOUT' else _expression(value, event=event, seeds=seeds)
+                           for name, value in step['env'].items()}},
                    check=True)
     args = json.loads((tmp_path / 'docker-args.json').read_text())
     if expected:
@@ -115,3 +120,49 @@ def test_manual_holdout_configuration_is_reproducible(fresh, seeds, expected, tm
     else:
         assert '--fresh-holdout-seeds' not in args
     assert (tmp_path / 'omr-v3-evidence/source-revision.txt').read_text().strip() == 'fixture-revision'
+
+
+def _expression(value, *, event='pull_request', action='labeled', label='full-acceptance',
+                number=62, publish=False, fresh=True, seeds=''):
+    """Evaluate the small boolean/context expressions actually used by this workflow."""
+    expression = value.removeprefix('${{').removesuffix('}}').strip()
+    expression = expression.replace('&&', ' and ').replace('||', ' or ').replace('true', 'True')
+    github = SimpleNamespace(event_name=event, sha='dispatch-sha', event=SimpleNamespace(
+        action=action, label=SimpleNamespace(name=label),
+        pull_request=SimpleNamespace(number=number, head=SimpleNamespace(sha='pr-head-sha'))))
+    inputs = SimpleNamespace(publish=publish, fresh_holdout=fresh, holdout_seeds=seeds)
+    return eval(expression, {'__builtins__': {}, 'github': github, 'inputs': inputs,
+                             'always': lambda: True})
+
+
+@pytest.mark.parametrize('event,action,label,number,expected', [
+    ('workflow_dispatch', '', '', 0, True),
+    ('pull_request', 'labeled', 'full-acceptance', 62, True),
+    ('pull_request', 'labeled', 'documentation', 62, False),
+    ('pull_request', 'synchronize', 'full-acceptance', 62, False),
+    ('pull_request', 'opened', 'full-acceptance', 62, False),
+    ('pull_request', 'reopened', 'full-acceptance', 62, False),
+    ('pull_request', 'labeled', 'full-acceptance', 63, False),
+    ('push', '', '', 62, False),
+])
+def test_full_acceptance_requires_dispatch_or_pr62_label(event, action, label, number, expected):
+    yaml = pytest.importorskip('yaml')
+    workflow = yaml.load((ROOT / '.github/workflows/omr-v3-eval.yml').read_text(), Loader=yaml.BaseLoader)
+    assert _expression(workflow['jobs']['evaluate']['if'], event=event, action=action,
+                       label=label, number=number) is expected
+
+
+@pytest.mark.parametrize('event,publish,expected_publish,expected_sha', [
+    ('pull_request', False, False, 'pr-head-sha'),
+    ('pull_request', True, False, 'pr-head-sha'),
+    ('workflow_dispatch', False, False, 'dispatch-sha'),
+    ('workflow_dispatch', True, True, 'dispatch-sha'),
+])
+def test_full_acceptance_checkout_and_publish_are_event_scoped(event, publish, expected_publish, expected_sha):
+    yaml = pytest.importorskip('yaml')
+    workflow = yaml.load((ROOT / '.github/workflows/omr-v3-eval.yml').read_text(), Loader=yaml.BaseLoader)
+    checkout = workflow['jobs']['evaluate']['steps'][0]
+    assert _expression(checkout['with']['ref'], event=event) == expected_sha
+    assert _expression(workflow['jobs']['publish']['if'], event=event, publish=publish) is expected_publish
+    assert any(step.get('uses') == 'actions/upload-artifact@v4'
+               and step['if'] == 'always()' for step in workflow['jobs']['evaluate']['steps'])
