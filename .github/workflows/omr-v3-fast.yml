@@ -29,12 +29,15 @@ jobs:
       - name: Docker build
         run: docker build --tag capomatic-omr-fast .
       - name: Backend tests including controlled multi-page smoke
-        run: docker run --rm capomatic-omr-fast python -m pytest -q
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work -e PYTHONPATH=/work \
+            capomatic-omr-fast python -m pytest -q
       - name: Fixed clean, ordinary and chord-only cases (gated only)
         run: |
           mkdir -p omr-v3-smoke
           git rev-parse HEAD > omr-v3-smoke/source-revision.txt
-          docker run --rm -v "$PWD/omr-v3-smoke:/evidence" capomatic-omr-fast \
+          docker run --rm -v "$PWD:/work" -v "$PWD/omr-v3-smoke:/evidence" \
+            -w /work -e PYTHONPATH=/work capomatic-omr-fast \
             python -m scripts.omr_v3.smoke_fast --out /evidence
       - name: V1 real detection and one V3 API smoke request
         run: |
