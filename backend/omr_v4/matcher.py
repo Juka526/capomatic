@@ -7,7 +7,10 @@ from dataclasses import dataclass
 from fractions import Fraction
 from pathlib import Path
 import re
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from .provenance import RepairProvenance
 
 from .visual_graph import GraphError, MAX_XML_BYTES, VisualScoreGraph, safe_xml
 
@@ -74,6 +77,8 @@ class NoteMatch:
     candidate_ids: tuple[str, ...]
     confidence: float
     reasons: tuple[str, ...]
+    ownership_basis: Literal['DIRECT', 'REPAIRED_PROVENANCE'] | None = None
+    provenance: RepairProvenance | None = None
 
 
 @dataclass(frozen=True)
@@ -88,6 +93,13 @@ class MatchResult:
             'semantic_pitched_note_count': len(self.notes),
             'visual_head_count': counts['MATCHED'] + len(self.unmatched_visual_ids),
             'matched_count': counts['MATCHED'],
+            'direct_matches': sum(
+                m.status == 'MATCHED' and m.ownership_basis == 'DIRECT' for m in self.notes
+            ),
+            'provenance_matches': sum(
+                m.status == 'MATCHED' and m.ownership_basis == 'REPAIRED_PROVENANCE'
+                for m in self.notes
+            ),
             'ambiguous_count': counts['AMBIGUOUS'],
             'unmatched_semantic_count': counts['UNMATCHED'],
             'unmatched_visual_count': len(self.unmatched_visual_ids),
@@ -367,6 +379,7 @@ def match_notes(semantic: SemanticScore, graph: VisualScoreGraph) -> MatchResult
                 ordered,
                 heads[head_id].confidence if head_id else 0.0,
                 tuple(sorted(reasons)),
+                'DIRECT' if accepted else None,
             )
         )
     claims = Counter(h for r in results for h in r.candidate_ids)

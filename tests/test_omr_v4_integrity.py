@@ -161,7 +161,9 @@ def test_warning_cli_writes_all_evidence_and_deterministic_json(tmp_path):
 
 
 @pytest.mark.parametrize('damage', ['pitch', 'rhythm', 'key'])
-def test_fatal_cli_never_reaches_matching_and_writes_failure_report(tmp_path, monkeypatch, damage):
+def test_fatal_cli_never_transfers_ownership_and_writes_failure_report(
+    tmp_path, monkeypatch, damage
+):
     from backend.omr_v3 import transpose
     from scripts.omr_v4 import inspect_layout
 
@@ -179,10 +181,10 @@ def test_fatal_cli_never_reaches_matching_and_writes_failure_report(tmp_path, mo
         return result
 
     def forbidden(*args):
-        pytest.fail('Fatal integrity failure reached matcher')
+        pytest.fail('Fatal integrity failure reached repaired ownership transfer')
 
     monkeypatch.setattr(transpose, 'transpose_score', broken)
-    monkeypatch.setattr(inspect_layout, 'match_notes', forbidden)
+    monkeypatch.setattr(inspect_layout, 'match_with_provenance', forbidden)
     raster = tmp_path / 'raster.png'
     Image.new('L', (400, 300), 255).save(raster)
     out = tmp_path / 'out'

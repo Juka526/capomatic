@@ -117,6 +117,26 @@ Written chromatic spelling comes from MusicXML; staff pitch checks its diatonic
 position, not the independent correctness of each accidental. A match is evidence
 of correspondence, not proof that OMR recognized the score correctly.
 
+### Ownership across existing V3 ledger repair
+
+The V4 offline pipeline captures a stable semantic snapshot and strict raw
+head ownership immediately before the unchanged V3 ledger-repair function.
+Frozen `RepairProvenance` records carry complete raw/repaired event identities,
+both pitches and staff positions, changed fields, repair kind and the original
+head claim. Structural identity, explicit function-boundary/count evidence and
+unique claims are mandatory; a pitch difference alone never grants ownership.
+
+Direct rules remain unchanged. A separate V4 ownership layer may inherit only a
+previously unique raw match, with provenance marked `REPAIRED_PROVENANCE`; other
+accepted matches remain `DIRECT`. Unknown repairs, changed rhythm/staff/measure/
+chord membership, ambiguous raw matches and ownership collisions fail closed.
+The graph keeps raw Audiveris pitch/geometry. Movement is computed using corrected
+source semantics, never by applying the raw-to-target pitch difference.
+
+This fixes lineage across an existing semantic repair; it does not authorize
+head-pivot adjustment, pixel editing, protected-mask overlap or reconstruction.
+Details and validation are in [the mapping-gap report](V4_JAYU_MAPPING_GAPS.md).
+
 ## Transposition and immutable edit intent
 
 `plan.py` receives the recognized and V3-transposed semantic streams. It rejects
@@ -299,7 +319,15 @@ chord representation conflict remains an explicit warning after the independent
 note/rhythm/key guard passes. Updated tests: 163 passed, 1 skipped (67 V4 and 96 V3).
 Full details and unsupported categories are in [the diagnostic report](V4_JAYU_DIAGNOSTIC.md).
 
-Status: **NEEDS_MAPPING_FIXES**. No matcher tuning was performed from that run.
+The Phase 1.6 status was **NEEDS_MAPPING_FIXES**. No matcher tuning was performed
+from that run. Phase 1.7 subsequently implemented explicit ledger-repair lineage
+and a single retry recorded **244 DIRECT + 5 REPAIRED_PROVENANCE = 249/249** with
+no ambiguous/unmatched events. Beam groups are now 66 uniform / 0 unresolved;
+slurs/ties are 63 linked / 4 cross-system segments unlinked. Protection remains
+30 pairs across four physical components. The current decision is
+**READY_FOR_PHASE_2_GATING**, which authorizes no rendering and means only that a
+separate mask-safety gate can be considered. Targeted validation: 189 passed,
+1 skipped. The existing chord-integrity warning remains recorded.
 Resolve the unmatched head correspondence, protection/geometry ownership and curve
 links before defining approved masks and outside-mask pixel-integrity tests. No
 Phase 2 erasure or local rendering was implemented.

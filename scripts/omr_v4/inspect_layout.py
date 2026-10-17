@@ -14,7 +14,8 @@ from xml.etree import ElementTree as ET
 from backend.omr_v4.diagnostic import write_diagnostics
 from backend.omr_v4.integrity import classify_integrity
 from backend.omr_v4.matcher import match_notes, read_semantics
-from backend.omr_v4.plan import build_plan
+from backend.omr_v4.plan import build_plan, to_data
+from backend.omr_v4.provenance import capture_ledger_repairs, match_with_provenance
 from backend.omr_v4.visual_graph import load_visual_graph, safe_xml
 
 
@@ -54,6 +55,15 @@ def inspect_recognized(
         'marks_removed': cleanup.strip_marks(score),
         'layout': cleanup.normalize_layout(score),
     }
+    # Bind ownership to a stable semantic snapshot BEFORE the authoritative repair.
+    # Non-pitch cleanup above is complete; these are the exact ledger-call inputs.
+    out.mkdir(parents=True, exist_ok=True)
+    raw_xml = out / 'pre-ledger.musicxml'
+    score.write('musicxml', fp=str(raw_xml))
+    _stable_export_ids(raw_xml)
+    raw_semantics = read_semantics(raw_xml)
+    raw_matches = match_notes(raw_semantics, graph)
+    ledger_repair_count = 0
     # Do not pass malformed V4 coordinates into V3's optional spatial repair.
     if graph.invalid_geometry_count == 0:
         try:
@@ -66,8 +76,8 @@ def inspect_recognized(
             or geometry.measure_count == len(measures)
         )
         if aligned:
-            repairs['ledger_notes_fixed'] = cleanup.fix_missed_ledgers(score, geometry, raster)
-    out.mkdir(parents=True, exist_ok=True)
+            ledger_repair_count = cleanup.fix_missed_ledgers(score, geometry, raster)
+            repairs['ledger_notes_fixed'] = ledger_repair_count
     source_xml, target_xml = out / 'recognized.musicxml', out / 'transposed.musicxml'
     score.write('musicxml', fp=str(source_xml))
     transposed = copy.deepcopy(score)
@@ -77,6 +87,8 @@ def inspect_recognized(
     _stable_export_ids(target_xml)
     before, after = converter.parse(str(source_xml)), converter.parse(str(target_xml))
     integrity = classify_integrity(before, after, semitones)
+    source, target = read_semantics(source_xml), read_semantics(target_xml)
+    provenance = capture_ledger_repairs(raw_semantics, source, raw_matches, ledger_repair_count)
     (out / 'semantic-report.json').write_text(
         json.dumps(
             {
@@ -84,6 +96,13 @@ def inspect_recognized(
                 'transposition': transposition,
                 'integrity': integrity['full_guard'],
                 'semantic_integrity': integrity,
+                'repair_provenance': to_data(provenance),
+                'raw_matching': raw_matches.summary(),
+                'repair_capture': {
+                    'reported_ledger_repairs': ledger_repair_count,
+                    'captured_records': len(provenance),
+                    'count_consistent': len(provenance) == ledger_repair_count,
+                },
                 'recognition': 'V3 Audiveris; Audiveris chord text only (no separate Paddle pass)',
                 'purpose': 'Offline diagnostic, not a V3 gate/acceptance or release decision',
             },
@@ -96,8 +115,7 @@ def inspect_recognized(
     )
     if integrity['overall'] == 'fail':
         raise ValueError(f"V4 diagnostic semantic integrity failed: {integrity['fatal_issues']}")
-    source, target = read_semantics(source_xml), read_semantics(target_xml)
-    matches = match_notes(source, graph)
+    matches = match_with_provenance(raw_semantics, source, graph, raw_matches, provenance)
     plan = build_plan(graph, source, target, matches)
     if integrity['overall'] == 'warning':
         plan = replace(

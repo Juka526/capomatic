@@ -1,6 +1,8 @@
 # V4 Phase 1.6: jayu mapping gap audit
 
-**Decision: READY_FOR_MATCHER_FIX. Phase 2 remains unauthorized.**
+**Phase 1.6 decision: READY_FOR_MATCHER_FIX.** The historical audit below is
+unchanged evidence; the Phase 1.7 implementation and retry are recorded at the end.
+Phase 2 remains unauthorized.
 
 Analyzed commit: `c044a675ef32b108dce010da7e0aa452c97abc61`, branch
 `feature/score-v4-layout-preserve`. Inputs are the existing
@@ -380,3 +382,133 @@ Generated crops/JSON are local diagnostic evidence, not production outputs or
 approved edit masks. This pass commits only this document, the developer helper
 and its tests. No runtime, matcher, renderer, protection, V1 or V3 source behavior
 changed; no Phase 2 work, merge or deployment occurred.
+
+
+## Phase 1.7: provenance-aware ownership (implemented)
+
+Starting audit commit `ccf4016df8a609c2da69ccd28f1a0c0f2715fa91` was pushed before
+implementation. No original diagnostic directory was changed or staged. This
+iteration implements the proposed V4-only lineage layer, not a pitch relaxation.
+
+`RepairProvenance` is a frozen dataclass containing complete raw and repaired
+`SemanticNote` snapshots (including stable IDs, part/measure/staff/voice, onset,
+duration, chord membership and both written/staff pitches), changed-field names,
+`V3_LEDGER_REPAIR` kind, the preexisting source-head ID, raw match status and the
+specific repair-boundary reason. It contains no generated identifiers.
+
+The offline pipeline now:
+
+1. Completes the existing non-pitch cleanup, writes stable `pre-ledger.musicxml`,
+   and runs the unchanged strict matcher on that exact ledger-repair input.
+2. Calls the unchanged V3 `cleanup.fix_missed_ledgers` once. V4 neither implements
+   its ledger predicate nor chooses the corrected pitch/spelling.
+3. Captures before/after records only when event count, stable IDs and every
+   structural event identity remain unchanged; only pitch fields may differ and
+   the observed change count must equal V3's reported repair count.
+4. Runs the existing semantic integrity policy. Fatal note/rhythm/key/unknown
+   failures still stop before repaired ownership transfer or plan construction.
+   Provisional raw evidence is allowed before repair, as required for lineage.
+5. Transfers ownership only after rechecking the raw strict match for this same
+   graph, unique raw/target/record/head claims, exact event snapshots, recognized
+   repair kind, exact changed fields and compatible full event/chord structure.
+   Missing or conflicting evidence yields AMBIGUOUS/UNMATCHED. Changed events
+   cannot acquire an unrelated head by a new direct match.
+6. Reconciles all direct, repaired and unresolved candidate claims globally, then
+   passes the resulting ownership to the existing planner without group-specific
+   changes. SIG pitch, head geometry and confidence are not rewritten.
+
+`NoteMatch.ownership_basis` is `DIRECT` or `REPAIRED_PROVENANCE` for accepted
+matches, null for unowned events. Each provenance match embeds its full record in
+`plan.json`. Summary metrics distinguish direct and provenance counts.
+`semantic-report.json` records raw match counts, repair-count consistency and all
+capture records. The existing chord-integrity warning remains visible and fatal
+integrity policy is unchanged.
+
+The planned movement remains corrected source -> existing V3 target, never raw
+D4 -> target. A regression checks C4 -> B-flat3 as one diatonic step even though
+the raw event was D4. V3's key-dependent correction is also tested: its own repair
+produces C-natural in F and C-sharp in D; V4 merely records that result.
+
+Validation: **189 passed, 1 skipped** in the combined targeted V4 and V3 music/gate
+suite. Tests cover the requested absent/ambiguous provenance, structural changes,
+many-to-one and duplicate head claims, actual duplicate raw candidates, changed
+graph evidence, immutable records, unchanged direct matches, dependent groups,
+corrected-source displacement and deterministic plan/summary/semantic JSON.
+V3 cleanup and guard file hashes remain frozen. No tolerance, nearest-neighbor or
+grade ownership logic was added; the direct matcher changes are result metadata
+and counts only. No source/target edit masks or replacement renderer were added.
+
+The single requested Docker retry uses `jayu.pdf --semitones -2` in the existing
+local image, network disabled, 2 CPUs/4 GiB RAM, with a read-only repository and
+new writable `v4-jayu-provenance-diagnostic/` directory. No tuning or second run is
+permitted based on that result. The single run completed successfully.
+
+
+### Phase 1.7 observed retry result
+
+**READY_FOR_PHASE_2_GATING** means only that note/head lineage is sufficiently
+explained to begin a separate mask-safety gate. **It does not authorize Phase 2,
+erasure, replacement rendering or API exposure.**
+
+| Metric | Phase 1.6 evidence | Phase 1.7 single retry |
+|---|---:|---:|
+| Semantic pitched notes / visual heads | 249 / 249 | 249 / 249 |
+| Direct matches | 244 | 244 |
+| Provenance matches | 0 | 5 |
+| Total matched | 244 | 249 |
+| Ambiguous | 0 | 0 |
+| Unmatched semantic / visual | 5 / 5 | 0 / 0 |
+| Match rate | 97.99196787148594% | 100% |
+| Beams total / uniform / mixed / unresolved | 66 / 64 / 0 / 2 | 66 / 66 / 0 / 0 |
+| Slurs/ties linked / unlinked segments | 62 / 5 | 63 / 4 |
+| Protected intersection pairs / physical components | 30 / 4 | 30 / 4 |
+| Key regions mapped / unmapped | 8 / 0 | 8 / 0 |
+| Invalid/nonfinite geometry | 0 | 0 |
+
+The previous five unmatched semantic IDs exactly equal the new five
+REPAIRED_PROVENANCE IDs. All five records retain raw D4/+5, corrected C4/+6,
+unchanged onset/duration/chord structure and the same uniquely established head:
+
+| Event | Owned raw head | Ownership basis |
+|---|---|---|
+| m1 @ 1/2 | 2334 | REPAIRED_PROVENANCE |
+| m1 @ 3/4 | 2335 | REPAIRED_PROVENANCE |
+| m9 @ 0 | 2602 | REPAIRED_PROVENANCE |
+| m16 @ 3/2 | 2748 | REPAIRED_PROVENANCE |
+| m25 @ 0 | 3124 | REPAIRED_PROVENANCE |
+
+Before repair, the strict raw matcher had 249 unique direct matches, no ambiguities
+and no unused heads. V3 reported exactly five ledger repairs; V4 captured exactly
+five count-consistent records. There was no sheet/measure/head-ID override, new
+pitch tolerance, spatial fallback or recognition/matcher tuning after the retry.
+
+Beam groups 1486/1723 naturally acquired their missing head deltas and now report
+UNIFORM_DELTA. The local slur between heads 2335 and 2307 naturally reports linked.
+Its previous OMR ID was 7225; this new independent Audiveris run assigned 7269.
+Some stem/curve IDs differ between recognition runs, so dependent identity is
+verified by actual relation endpoints, never by hardcoded historical IDs. The four
+remaining unlinked segments (7241, 7253, 7273, 7275 in this run) still represent the
+two cross-system tie continuations; no extension rule was changed.
+
+Protection remains intact: 30 pair alarms, four physical components. No envelope
+was shrunk or waived. Ledger/head pivot uncertainty, connected-symbol ownership,
+articulation/fermata disposition and unsupported constructs remain mask-safety
+blockers. The original bar-32 chord issue is still `overall: warning`,
+`note_rhythm_key: pass`, `chord: fail`; neither full guard failure nor overlay
+warning was suppressed. Complete note correspondence is not proof of recognition
+accuracy or pixel-edit safety.
+
+Artifacts (local and untracked):
+
+- `v4-jayu-provenance-diagnostic/pre-ledger.musicxml`
+- `v4-jayu-provenance-diagnostic/plan.json`
+- `v4-jayu-provenance-diagnostic/graph-summary.json`
+- `v4-jayu-provenance-diagnostic/semantic-report.json`
+- `v4-jayu-provenance-diagnostic/diagnostic-overlay.png`
+- Source raster, raw Audiveris MXL and .omr are retained in that directory.
+
+No renderer, API/frontend or runtime V4 route was added. V1/V3 files and behavior,
+including ledger repair and production integrity policy, are unchanged. There was
+no merge, deployment, feature activation or Phase 2 implementation. Original
+`v4-jayu-chord-details.json`, `v4-jayu-diagnostic/` and
+`v4-jayu-diagnostic-retry/` remain untracked evidence and are not included in git.

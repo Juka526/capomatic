@@ -127,7 +127,9 @@ Option 2 is implemented in `backend/omr_v4/integrity.py`:
 4. Preserve the failing full report. Write `semantic_integrity` into both JSON
    reports, add chord issues to plan blockers, and put a visible chord-integrity
    warning in the overlay's side legend. Fatal cases write a semantic report and
-   stop before matching or diagnostic rendering.
+   stop before final ownership/planning or diagnostic rendering. Phase 1.7 additionally
+   captures provisional raw matching evidence before the ledger repair; it cannot
+   pass that evidence to a plan after a fatal integrity failure.
 
 For this chord the independent result is 33/33 measures, 274/274 note/rest events,
 zero chord symbols and no issues. The full report retains 39/39 harmonies and its
