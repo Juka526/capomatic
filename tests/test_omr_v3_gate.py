@@ -280,3 +280,80 @@ def test_head_export_disagreement_catches_confident_missing_notes():
                                                 low_grade_heads=0))
     assert decision.reason == 'omr:head_export_disagreement'
     assert reliability.decide(None, _signals(heads=100, notes=99)).mode is ProcessingMode.FULL_SCORE
+
+
+def _fragmented_staff_page():
+    image = Image.new('L', (1600, 2000), 255)
+    draw = ImageDraw.Draw(image)
+    for top in (200, 450, 700, 950, 1200, 1450):
+        for line in range(5):
+            # Perspective leaves the first staff horizontal; later long runs disappear.
+            tilt = 0 if top == 200 else 15
+            draw.line((80, top + line * 20, 1520, top + line * 20 + tilt), fill=0, width=2)
+    return image
+
+
+@pytest.mark.parametrize('count', [3, 5])
+def test_chord_coverage_rejects_chords_on_only_one_of_many_staff_regions(count):
+    from backend.omr_v3 import chord_coverage
+    image = _fragmented_staff_page()
+    items = [{'text': 'G', 'confidence': .99,
+              'bbox': [200 + i * 1000 / (count - 1), 160,
+                       230 + i * 1000 / (count - 1), 185]}
+             for i in range(count)]
+    result = chord_coverage.assess(image, items)
+    # The old gate saw one well-covered system and accepted these detections.
+    assert result['systems'] == 1 and result['chords_per_system'] == [count]
+    assert result['horizontal_span_ratios'][0] > .6
+    assert result['uncovered_staff_regions'] >= 4
+    assert not result['accepted'] and result['reason'] == chord_coverage.REASON
+
+
+def test_chord_coverage_accepts_well_distributed_repeated_names(tmp_path):
+    from backend.omr_v3 import chord_coverage
+    image = _staff_page(20)
+    path = tmp_path / 'page.png'
+    image.save(path)
+    items, _ = _coverage_items(path)
+    assert len({item['text'] for item in items}) == 1
+    assert chord_coverage.assess(image, items)['accepted']
+
+
+def test_chord_coverage_accepts_two_chord_simple_score(tmp_path):
+    from backend.omr_v3 import chord_coverage
+    image = _staff_page(20, height=350)
+    path = tmp_path / 'page.png'
+    image.save(path)
+    items, _ = _coverage_items(path)
+    assert len(items) == 2
+    result = chord_coverage.assess(image, items)
+    assert result['staff_regions'] == 1 and result['accepted']
+
+
+@pytest.mark.parametrize('damage', ['almost_empty_system', 'invalid_chord', 'unplaced_chord'])
+def test_chord_coverage_rejects_partial_or_invalid_detections(damage, tmp_path):
+    from backend.omr_v3 import chord_coverage
+    image = _staff_page(20)
+    path = tmp_path / 'page.png'
+    image.save(path)
+    items, _ = _coverage_items(path)
+    if damage == 'almost_empty_system':
+        items.pop()
+    elif damage == 'invalid_chord':
+        items[0]['text'] = 'not a chord'
+    else:
+        items[0]['bbox'] = [200, 1800, 230, 1820]
+    assert not chord_coverage.assess(image, items)['accepted']
+
+
+def test_missed_staff_coverage_is_422_and_never_rendered(tmp_path):
+    image = _fragmented_staff_page()
+    page = tmp_path / 'page.png'
+    image.save(page)
+    items = [{'text': 'G', 'confidence': .99, 'bbox': [x, 160, x + 30, 185]}
+             for x in (200, 700, 1200)]
+    calls = []
+    with pytest.raises(core.ScoreError, match='chord_only:insufficient_chord_coverage') as error:
+        core._chord_only(page, items, 2, _renderer(calls), {}, {}, 0)
+    assert error.value.status == 422 and 'clearer PDF/image' in str(error.value)
+    assert calls == []
