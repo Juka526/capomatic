@@ -332,6 +332,30 @@ Resolve the unmatched head correspondence, protection/geometry ownership and cur
 links before defining approved masks and outside-mask pixel-integrity tests. No
 Phase 2 erasure or local rendering was implemented.
 
+## Phase 1.8 mask safety gate
+
+The diagnostic-only mask layer in `backend/omr_v4/masks.py` separates verified
+source edit ink from conservative target occupancy. It withholds approval when
+symbol-level ink ownership, connected-group completeness, attachment handling or
+protected/structural clearance is unknown. Bboxes are never approved masks.
+Staff crossings retain exact polyline clips as RESTORE_REQUIRED; no restoration
+or replacement rendering occurs. The pixel-integrity validator enforces that any
+hypothetical changed pixel is inside an aligned binary approved mask.
+
+A single gate run on existing jayu artifacts, without Audiveris, produced
+**0 approved / 249 blocked note masks and 0 approved / 66 blocked beam groups**.
+Head ownership remains complete, but real symbol-ink isolation is not implemented.
+Protection remains 30 prior pairs / four physical overlap areas; the new separate
+source/target text-envelope audit reports 11/29 pairs. Four cross-system tie
+segments block two connected groups containing ten notes. All 40 moving attached
+articulation/fermata instances remain unsupported for reconstruction.
+
+The current decision is **NEEDS_MASK_SAFETY_FIXES**; the earlier
+READY_FOR_PHASE_2_GATING result established only correspondence. No Phase 2
+rendering or deployment is authorized. See [the mask safety report](V4_MASK_SAFETY_GATE.md)
+for binary artifacts, accounting units, conditional synthetic approval evidence,
+restoration limitations and remaining blockers.
+
 ## Licensing
 
 Audiveris remains the **AGPL-3.0 dependency already present in V3**. This architecture
