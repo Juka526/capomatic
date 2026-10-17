@@ -8,9 +8,11 @@ import json
 import shutil
 import tempfile
 from pathlib import Path
+from dataclasses import replace
 from xml.etree import ElementTree as ET
 
 from backend.omr_v4.diagnostic import write_diagnostics
+from backend.omr_v4.integrity import classify_integrity
 from backend.omr_v4.matcher import match_notes, read_semantics
 from backend.omr_v4.plan import build_plan
 from backend.omr_v4.visual_graph import load_visual_graph, safe_xml
@@ -34,7 +36,7 @@ def inspect_recognized(
 ) -> dict:
     """Reuse V3 cleanup/transposition/integrity on one recognized development page."""
     from music21 import converter, stream
-    from backend.omr_v3 import cleanup, music_guard
+    from backend.omr_v3 import cleanup
     from backend.omr_v3.geometry import GeometryError, load_geometry
     from backend.omr_v3.transpose import transpose_score, validate_request
 
@@ -74,27 +76,14 @@ def inspect_recognized(
     _stable_export_ids(source_xml)
     _stable_export_ids(target_xml)
     before, after = converter.parse(str(source_xml)), converter.parse(str(target_xml))
-    if len(before.parts) != len(after.parts):
-        raise ValueError('Transposition changed part count')
-    integrity = []
-    # The unchanged V3 guard checks the first part: invoke it for each part.
-    for a, b in zip(before.parts, after.parts):
-        report = music_guard.validate(
-            stream.Score([copy.deepcopy(a)]), stream.Score([copy.deepcopy(b)]), semitones, 'key'
-        )
-        integrity.append(report.to_dict())
-        if not report.ok:
-            raise ValueError(f'V3 semantic integrity failed: {report.issues}')
-    source, target = read_semantics(source_xml), read_semantics(target_xml)
-    matches = match_notes(source, graph)
-    plan = build_plan(graph, source, target, matches)
-    summary = write_diagnostics(raster, graph, plan, out)
+    integrity = classify_integrity(before, after, semitones)
     (out / 'semantic-report.json').write_text(
         json.dumps(
             {
                 'repairs': repairs,
                 'transposition': transposition,
-                'integrity': integrity,
+                'integrity': integrity['full_guard'],
+                'semantic_integrity': integrity,
                 'recognition': 'V3 Audiveris; Audiveris chord text only (no separate Paddle pass)',
                 'purpose': 'Offline diagnostic, not a V3 gate/acceptance or release decision',
             },
@@ -105,7 +94,25 @@ def inspect_recognized(
         + '\n',
         encoding='utf-8',
     )
-    return summary
+    if integrity['overall'] == 'fail':
+        raise ValueError(f"V4 diagnostic semantic integrity failed: {integrity['fatal_issues']}")
+    source, target = read_semantics(source_xml), read_semantics(target_xml)
+    matches = match_notes(source, graph)
+    plan = build_plan(graph, source, target, matches)
+    if integrity['overall'] == 'warning':
+        plan = replace(
+            plan,
+            blockers=tuple(
+                sorted(
+                    set(plan.blockers)
+                    | {
+                        'Chord integrity warning (diagnostic only): ' + issue
+                        for issue in integrity['chord_issues']
+                    }
+                )
+            ),
+        )
+    return write_diagnostics(raster, graph, plan, out, semantic_integrity=integrity)
 
 
 def main() -> None:
@@ -139,6 +146,7 @@ def main() -> None:
         summary = inspect_recognized(raster, book, recognized, args.semitones, out)
         shutil.copy2(raster, out / 'source.png')
         shutil.copy2(book, out / 'recognized.omr')
+        shutil.copy2(recognized, out / ('audiveris' + recognized.suffix))
     print(json.dumps(summary, sort_keys=True, indent=2, allow_nan=False))
 
 

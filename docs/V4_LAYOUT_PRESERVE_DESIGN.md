@@ -247,7 +247,12 @@ python -m scripts.omr_v4.inspect_layout \
 The output directory must be empty/new. The script uses V3 validation,
 rasterization and the isolated Audiveris runner (60-second rasterization command
 limits, 300-second Audiveris limit). It reuses V3 cleanup and semantic transposition,
-then runs the unchanged V3 integrity guard separately for each exported part. It
+then runs the unchanged V3 integrity guard separately for each exported part.
+The V4-only integrity classifier also independently checks chord-free copies.
+Known chord-only failures may continue as explicit diagnostic warnings only when
+notes/rhythm/keys pass; unknown or non-chord failures remain fatal. The full failure
+is retained in both reports, plan blockers and a visible overlay warning. See
+[V4 jayu diagnostic](V4_JAYU_DIAGNOSTIC.md) for the exact policy and evidence. It
 skips the optional spatial cleanup if geometry is invalid. It never invokes MuseScore,
 Paddle, the API, browser tests, a gate/acceptance run or a deployment.
 
@@ -285,12 +290,19 @@ are imported. No V3 runtime changes are needed. Validation completed: **52 V4 te
 1 uniform beam group, 1 linked tie and 1 mapped key region. Those are fixture
 results, not a measured real-sheet match rate.
 
-Docker was unavailable on this development machine, so **no real-sheet diagnostic
-was run**. Unit fixture results are not real-sheet recognition evidence. Before
-Phase 2, run one bounded development-sheet diagnostic, manually audit mapping
-failures without tuning on that result, verify part/measure/voice contracts and
-resolve protection/geometry gaps. Then define mask and outside-mask pixel-integrity
-tests before implementing any erasure or local renderer.
+The initial implementation had no Docker diagnostic. A subsequent single bounded
+`jayu.pdf --semitones -2` retry completed: 244/249 notes matched (97.99%), 0 ambiguous,
+5 unmatched semantic notes and 5 unmatched visual heads. It reports 30 protected
+intersections, 64 uniform/0 mixed/2 unresolved beam groups, 62 linked/5 unlinked
+slurs/ties, 8 mapped/0 unmapped key regions and 0 invalid geometries. An Audiveris
+chord representation conflict remains an explicit warning after the independent
+note/rhythm/key guard passes. Updated tests: 163 passed, 1 skipped (67 V4 and 96 V3).
+Full details and unsupported categories are in [the diagnostic report](V4_JAYU_DIAGNOSTIC.md).
+
+Status: **NEEDS_MAPPING_FIXES**. No matcher tuning was performed from that run.
+Resolve the unmatched head correspondence, protection/geometry ownership and curve
+links before defining approved masks and outside-mask pixel-integrity tests. No
+Phase 2 erasure or local rendering was implemented.
 
 ## Licensing
 

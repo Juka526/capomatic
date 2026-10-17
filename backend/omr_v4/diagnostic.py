@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 from .plan import LayoutEditPlan
 from .visual_graph import VisualScoreGraph
@@ -29,6 +29,7 @@ def write_diagnostics(
     out: Path,
     *,
     page_id: str | None = None,
+    semantic_integrity: dict | None = None,
 ) -> dict:
     """Write plan/summary JSON and a source-preserving annotation composite."""
     if page_id is None:
@@ -94,12 +95,29 @@ def write_diagnostics(
         circle(move.source_x, move.source_y, COLORS['source'], 7)
         circle(move.target_x, move.target_y, COLORS['target'], 4)
     # Put the legend outside the page so titles and margins stay readable.
-    composite = Image.new('RGB', (base.width + 430, max(base.height, 560)), 'white')
+    composite = Image.new(
+        'RGB',
+        (
+            base.width + 430,
+            max(
+                base.height,
+                660 if semantic_integrity and semantic_integrity['overall'] == 'warning' else 560,
+            ),
+        ),
+        'white',
+    )
     composite.paste(Image.alpha_composite(base, layer).convert('RGB'), (0, 0))
     legend = ImageDraw.Draw(composite)
     x, y = base.width + 12, 12
     legend.text((x, y), 'V4 PHASE 1 - DIAGNOSTIC ONLY', fill='black')
     y += 24
+    if semantic_integrity and semantic_integrity['overall'] == 'warning':
+        warning_font = ImageFont.load_default(size=17)
+        legend.rectangle((base.width, y, composite.width, y + 70), fill='#fff0c2')
+        legend.text((x, y + 5), 'CHORD INTEGRITY WARNING', fill='#8a2800', font=warning_font)
+        legend.text((x, y + 30), 'Notes/rhythm/keys: PASS. Chords: FAIL.', fill='#8a2800')
+        legend.text((x, y + 48), 'Diagnostic only. See semantic-report.json.', fill='#8a2800')
+        y += 82
     for label, color in COLORS.items():
         legend.text((x, y), label, fill=color)
         y += 20
@@ -126,6 +144,8 @@ def write_diagnostics(
         blockers=plan.blockers,
         confidence_interpretation='Audiveris grades, not calibrated match probabilities',
     )
+    if semantic_integrity is not None:
+        summary['semantic_integrity'] = semantic_integrity
     (out / 'plan.json').write_text(plan.to_json(), encoding='utf-8')
     (out / 'graph-summary.json').write_text(
         json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + '\n',
