@@ -211,9 +211,11 @@ def panel_label(image, title):
     return canvas
 
 
-def render(inputs, font_path, out):
+def render(inputs, font_path, out, *, glyph_renderer=None):
     from fontTools.ttLib import TTFont
     from music21 import pitch
+
+    place_glyph = glyph if glyph_renderer is None else glyph_renderer
 
     if (
         out.exists()
@@ -284,7 +286,9 @@ def render(inputs, font_path, out):
                 if event['kind'] == 'REST':
                     b = event['bbox']
                     xy = ((b[0] + b[2]) / 2, (b[1] + b[3]) / 2)
-                    parts[ident + ':rest'], info = glyph(size, font, REST, xy, bounds[REST], scale)
+                    parts[ident + ':rest'], info = place_glyph(
+                        size, font, REST, xy, bounds[REST], scale
+                    )
                     head_rows.append(
                         {
                             'semantic_id': ident,
@@ -310,7 +314,7 @@ def render(inputs, font_path, out):
                 )
                 if (target.accidental.alter if target.accidental else 0) != expected_alter:
                     raise ValueError('RENDER_BLOCKED_UNSUPPORTED_NOTATION: accidental required')
-                head, info = glyph(size, font, HEAD, (x, y), bounds[HEAD], scale)
+                head, info = place_glyph(size, font, HEAD, (x, y), bounds[HEAD], scale)
                 parts[ident + ':head'] = head
                 pixels = np.argwhere(np.asarray(head) > 0)
                 up = staff_pos > 0
@@ -347,7 +351,10 @@ def render(inputs, font_path, out):
                         'semantic_source_y': frozen['corrected_semantic_source_staff_y'],
                         'semantic_target_y': y,
                         'expected_displacement': frozen['expected_diatonic_delta_y'],
-                        'notehead_x_deviation': info['font_outline_anchor'][0] - x,
+                        'notehead_x_deviation': info.get(
+                            'requested_anchor', info['font_outline_anchor']
+                        )[0]
+                        - x,
                         'target_pitch_y_deviation': y - expected,
                         'stem_head_shared_ink': int(
                             np.count_nonzero((np.asarray(head) > 0) & (np.asarray(stem) > 0))
@@ -457,7 +464,12 @@ def render(inputs, font_path, out):
     result = {
         'source_sha256': sha(inputs / 'source.png'),
         'font_sha256': sha(font_path),
-        'font_method': 'FreeSerif Unicode musical glyph outline bbox-center anchor, baseline explicitly transformed; no source/reference center calibration',
+        'font_method': (
+            'FreeSerif fixed-phase raster bbox pixel-index anchor; no score-tuned offset'
+            if glyph_renderer is not None
+            else 'FreeSerif Unicode musical glyph outline bbox-center anchor, baseline explicitly transformed; no source/reference center calibration'
+        ),
+        'glyph_renderer_module': place_glyph.__module__,
         'selected_measures': spec['selected'],
         'full_integrity': spec['guards'],
         'metrics': metrics,

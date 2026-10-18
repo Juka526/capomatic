@@ -81,6 +81,8 @@ def evaluate(font_path, out, family, implementation):
         font = ImageFont.truetype(str(font_path), size)
         mask, info = method(tuple(spec['canvas']), font, char, item['target'], units, size / upm)
         measured = observe(mask, item['target'])
+        again, _ = method(tuple(spec['canvas']), font, char, item['target'], units, size / upm)
+        deterministic = again.tobytes() == mask.tobytes()
         # This scorer reads actual pixels, not the implementation's residual field.
         rows.append(
             {
@@ -89,7 +91,8 @@ def evaluate(font_path, out, family, implementation):
                 'outline_center_font_units': [(units[0] + units[2]) / 2, (units[1] + units[3]) / 2],
                 'baseline': info.get('baseline'),
                 'measurement': measured,
-                'pass': all(abs(x) <= 0.5 for x in measured['residual']),
+                'pass': all(abs(x) <= 0.5 for x in measured['residual']) and deterministic,
+                'deterministic': deterministic,
             }
         )
     out.mkdir(parents=True)
@@ -99,6 +102,7 @@ def evaluate(font_path, out, family, implementation):
         'font_sha256': sha(font_path),
         'design_sha256': sha(DESIGN),
         'code_sha256': sha(Path(__file__)),
+        'implementation_sha256': sha(Path(inspect.getfile(method))),
         'case_count': len(rows),
         'pass_count': sum(r['pass'] for r in rows),
         'max_per_axis': [max(abs(r['measurement']['residual'][i]) for r in rows) for i in [0, 1]],
