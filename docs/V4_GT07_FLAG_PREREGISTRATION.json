@@ -8,6 +8,7 @@
   "attachment": "Canonical fixed-phase raster, leftmost occupied column's first ink pixel is the upward-stem attachment anchor. Translate via unchanged GT05 glyph placement. Stem tip integer-rounded with floor(t+.5). Require exact ink contact and zero head/flag intersection.",
   "stem": "RIGHT head-stem relation fixes upward direction. Length max(3.5 interlines, corrected semantic source y minus persisted source stem top). Preserve source x and target semantic pitch y; report actual bitmap centers separately.",
   "anchor_limit_px_per_axis": 0.5,
+  "source_free_controls": "Same fixed font at size 94, requested head (180+phase,230+phase) for phases 0,.125,.5,.875. Derive stem column from head raster, use integer tip y=140, require positive head/stem and stem/flag contact, no head/flag overlap, all actual notehead residuals <=.5. Run before score rendering.",
   "protection": "Unchanged envelopes; report potential contacts, never infer confirmed lyric ownership. No composition or original erasure.",
   "regressions": "Rerender GT05 controls and GT06 atomic beams to separate new directories; all PNGs must be byte-identical to frozen historical PNGs. GT06 protection failure must remain a failure.",
   "reference": "Freeze predictions before development comparison; no target pixels used in construction. No independent human accuracy denominator.",
