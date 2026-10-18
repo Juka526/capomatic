@@ -1,0 +1,33 @@
+{
+  "protocol_id": "v4-chord-representation-reference-v1",
+  "status": "FROZEN_REPLAY_PROTOCOL_NOT_ACCEPTANCE",
+  "base_commit": "974acba9ca4cd7eeb797a6522afbbedba13b07ac",
+  "shared_input_manifest_sha256": "f9e4b3e951e15609051b03530839326d99d7320865f45a82ade7501d0fdc2948",
+  "raw_audiveris_mxl_sha256": "087a7c77b993e76ca03c777191308c8821ea4e5bd7b426a0014119c3fb5f25fd",
+  "fixed_locations_quarter_lengths": [[4, "2"], [20, "0"], [32, "3/4"]],
+  "selection": "previously reported failures; diagnostic cases, not blind holdout",
+  "stages": ["raw Audiveris XML", "pre-ledger XML", "corrected recognized XML", "fresh unchanged transposer in memory", "fresh music21 export/read", "persisted transposed XML"],
+  "expected_transform": {"semitones": -2, "region_source": "F", "region_target": "Eb"},
+  "record": ["original harmony XML", "figure", "chord_text", "parsed quality/extensions", "root", "bass", "kind", "kind text", "degree modifications", "music21 realized pitches", "independent MusicXML degree profile", "unchanged full guard"],
+  "independent_reference": {
+    "authority": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/degree-alter/",
+    "add_degree_basis": "dominant: major/perfect intervals except minor seventh",
+    "profile_scope": "whitelisted MusicXML kinds; integral degrees 1..13; explicit root and slash bass preserved",
+    "unsupported": "fail closed; no equivalence conclusion",
+    "not_an_oracle": ["music21 .pitches", "same-library roundtrip agreement", "V1 display text alone", "pitch-class set alone"]
+  },
+  "future_independent_review": {
+    "reviewers": "two MusicXML-literate reviewers independent of helper author",
+    "first_view": "root/kind/degree/bass XML and specification only; hide guard, music21 pitches and expected outcome",
+    "record": "written root/bass, degree spelling/alteration profiles, ambiguities and confidence",
+    "freeze": "both signed/hash-bound reviews before exposing library or helper results; independent adjudication retains disagreement",
+    "controls": ["genuine natural versus minor seventh", "wrong root interval", "slash-bass loss", "degree identity versus same pitch classes", "equivalent representation aliases", "unknown kind/microtonal rejection"],
+    "status": "PENDING; no fabricated human reviews",
+    "holdout": "freshly selected supported and unsupported harmony encodings, frozen before candidate normalization implementation"
+  },
+  "conclusions_permitted": "bounded representation/implementation classification only; no recognition or renderer accuracy claim",
+  "full_guard_waiver": false,
+  "acceptance_change": false,
+  "implementation_autorun": false,
+  "next_recommendation": "review a canonical import/export boundary design and dependency reproduction; leave production guard unchanged"
+}
