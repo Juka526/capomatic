@@ -1,0 +1,14 @@
+{
+  "study": "GT06-extended-notation-01",
+  "base": "16c43394b3b63aa19e08bd35ae333a7da148d11c",
+  "selection": "First complete beam group in printed system/measure/onset order with exactly two single-head sixteenth notes, two full beams, explicit head-stem and all beam-stem edges, no curve/articulation/fermata/flag/dot/alter attachment. Single printed measure, matched source events only. Do not replace the selected group after rendered results.",
+  "scope": "A bounded atomic group, NOT a complete measure. Display entire original measure separately; list all excluded events. Chords/lyrics never reconstructed. Controls remain entire measures 3 and 32.",
+  "geometry": "Reuse unchanged GT05 raster glyph placement and frozen absolute semantic pitch targets. Stem side from explicit head-stem relation; keep original primary beam slope, source secondary-beam separation and thickness. Re-anchor beam endpoints at rendered stem x; choose vertical intercept so shortest stem reaches at least 3.5 staff interlines. All beams connect to all stems; partial beams/hooks unsupported.",
+  "stroke": "2 px stems/staff/ledgers as GT05; beam thickness rounded from persisted beam geometry, no score-image fitting",
+  "anchor_limit_per_axis_px": 0.5,
+  "checks": ["all required semantic events and beam levels", "actual raster head/stem and every stem/beam contact", "no unrelated symbol ink collisions", "protected envelope and source-dark-ink contacts separately", "page and crop clipping", "unchanged full V3 guards", "unchanged historical controls and source hashes"],
+  "reference_policy": "Freeze all predictions and hashes before reference comparison; no reference data used in selection or placement. Diagnostic development comparison only, no accepted human denominator.",
+  "stop": "Unsupported required notation blocks group. Failed geometry/collision checks remain NEEDS_REFINEMENT, never substitute another excerpt.",
+  "font_sha256": "c1dd2270ff624d66a7f1cd23075b5ce05a662f560be06a70a9599065ce008355",
+  "human_labels": 0
+}
