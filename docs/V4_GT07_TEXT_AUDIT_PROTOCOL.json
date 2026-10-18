@@ -1,0 +1,16 @@
+{
+  "study": "GT07A-text-provenance-01",
+  "base": "cdb50339d89db475f016c922f4a8f6d40e7383fd",
+  "scope": ["sheet#1:4134", "sheet#1:4135"],
+  "categories": {
+    "TEXT_INK_CANDIDATE": "Persisted descendant word glyph support, excluding pixels also referenced by musical glyphs. Not confirmed text ownership.",
+    "MUSIC_INK_CANDIDATE": "Persisted musical Inter glyph support, excluding text-glyph support. Not original-source edit authorization.",
+    "SHARED_OR_AMBIGUOUS": "Exact persisted text/music glyph-support overlap.",
+    "UNCLASSIFIED": "Neither support set; includes background, antialiasing and unrecognized content. Never infer permission from absence."
+  },
+  "independent_confirmed_text": "UNKNOWN until two independent source-only readers and adjudication; never zero by absence",
+  "threshold": "No threshold for classification; grayscale <127 is descriptive only, not admission",
+  "prediction_intersections": "Replay only frozen GT06 component masks; require byte-exact union with frozen alpha PNG and exact reproduction of stored protected intersection counts. Never change predictions or protection.",
+  "human_packet": "All requested parent/descendant source crops; no predictions, OCR text, support masks or coordinator classifications. Original resolution, opaque case IDs, UNKNOWN/MIXED options, separate immutable A/B submissions and separate adjudication after both freezes.",
+  "authorization": "NONE; all existing protections remain active; no source erasure or composite"
+}
