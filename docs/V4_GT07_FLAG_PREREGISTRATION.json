@@ -1,0 +1,15 @@
+{
+  "study": "GT07B-single-up-flag-01",
+  "base": "cdb50339d89db475f016c922f4a8f6d40e7383fd",
+  "selection": "Earliest printed measure/onset singleton eighth note with one FLAG_1, explicit RIGHT head-stem and flag-stem edges, upward MusicXML stem, no beams/ties/articulations/fermatas/dots/explicit accidental or other unsupported attachment. No outcome-based replacement.",
+  "scope": "One isolated flagged eighth-note atomic group, not a whole measure. Other events explicitly excluded. Sixteenth/double flags and downward flags remain unsupported in this run.",
+  "font_sha256": "c1dd2270ff624d66a7f1cd23075b5ce05a662f560be06a70a9599065ce008355",
+  "flag_glyph": "FreeSerif U+1D16E COMBINING FLAG-1, same font size as calibrated notehead. No hand-drawn approximate hook or reference fitting.",
+  "attachment": "Canonical fixed-phase raster, leftmost occupied column's first ink pixel is the upward-stem attachment anchor. Translate via unchanged GT05 glyph placement. Stem tip integer-rounded with floor(t+.5). Require exact ink contact and zero head/flag intersection.",
+  "stem": "RIGHT head-stem relation fixes upward direction. Length max(3.5 interlines, corrected semantic source y minus persisted source stem top). Preserve source x and target semantic pitch y; report actual bitmap centers separately.",
+  "anchor_limit_px_per_axis": 0.5,
+  "protection": "Unchanged envelopes; report potential contacts, never infer confirmed lyric ownership. No composition or original erasure.",
+  "regressions": "Rerender GT05 controls and GT06 atomic beams to separate new directories; all PNGs must be byte-identical to frozen historical PNGs. GT06 protection failure must remain a failure.",
+  "reference": "Freeze predictions before development comparison; no target pixels used in construction. No independent human accuracy denominator.",
+  "stopping": "No threshold/collision relaxation or case reselection after outcomes. Unsupported required notation blocks."
+}
