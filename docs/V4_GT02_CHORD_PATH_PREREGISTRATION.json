@@ -1,0 +1,17 @@
+{
+  "version": "gt02-existing-v3-chord-path/1",
+  "study_type": "post-reference-access development, not blinded validation",
+  "base": "bf5903bba4a00326288c40237a7c84ff9e32183c",
+  "source_sha256": "eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de",
+  "source": "Bb major, PDF page 2, existing GT-01 raster only",
+  "reference_input": "NONE; no A/G raster, transcription or candidate text mounted",
+  "method": "existing detect_chords_hybrid(image, use_ai_fallback=False), then unchanged V3 align/merge/replace in its existing call order",
+  "configuration": "existing production defaults, no parameter search or per-score corrections",
+  "model_policy": "existing local image/dependencies/cached models only; no install, download, external AI or credentials",
+  "preflight": "inspect package versions, configured default model and local cache; if required models are unavailable stop this subtask before OCR",
+  "limits": {"ocr_calls": 1, "timeout_seconds": 180, "memory_gib": 4, "network": "none"},
+  "outputs": "new GT-02 directory, AUDIVERIS_ONLY and EXISTING_V3_CHORD_PATH separate; no GT-01 rewrite",
+  "integrity": "unchanged full V3 guard in memory and after serialization for -1 and -3 if augmented semantics are produced; failures block usability",
+  "truth": "coordinator chord reading and recognizer agreement are candidate evidence; independent A/B human transcriptions and adjudication required",
+  "not_authorized": ["production changes", "GT-01 prediction changes", "ownership promotion", "renderer", "API", "merge", "deployment"]
+}
