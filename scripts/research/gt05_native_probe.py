@@ -1,6 +1,5 @@
 """Single-variable synthetic native inference controls; no score inputs."""
 
-import copy
 import faulthandler
 import importlib.metadata
 import json
@@ -15,6 +14,14 @@ def emit(stage, **values):
 
 
 def configuration(case):
+    if case not in {
+        'recognizer-baseline-trace',
+        'recognizer-omp1',
+        'recognizer-cpu1',
+        'recognizer-newir-off',
+        'detector-newir-off',
+    }:
+        raise ValueError('Unregistered native experiment')
     common = {'enable_mkldnn': False}
     if case == 'recognizer-cpu1':
         common['cpu_threads'] = 1
