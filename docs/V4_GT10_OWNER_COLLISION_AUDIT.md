@@ -28,12 +28,12 @@ There are 442,705 crop-pixel observations but only **216,290 unique page coordin
 
 | Cohort | Historical moving contact total | Owner TEXT region | Owner NON_TEXT region | Owner MIXED | Owner UNKNOWN | Owner CONFLICT | UNMAPPED | Basis |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| GT06 A | 1,982 | 0 | 1,982 | 0 | 0 | 0 | 0 | Exact aggregate implication from homogeneous combined-mask superset; individual moving coordinates unavailable |
-| GT06 G | 2,026 | 0 | 2,026 | 0 | 0 | 0 | 0 | Same implication; individual moving coordinates unavailable |
+| GT06 A | 1,982 | 0 | 1,982 | 0 | 0 | 0 | 0 | Conditional on the historical total and inspected union contract; individual moving coordinates unavailable |
+| GT06 G | 2,026 | 0 | 2,026 | 0 | 0 | 0 | 0 | Same conditional inference; individual moving coordinates unavailable |
 | GT07B A | 24 | 0 | 0 | 0 | 0 | 24 | 0 | Exact frozen music-only mask intersection |
 | GT07B G | 233 | 145 | 0 | 0 | 0 | 88 | 0 | Exact frozen music-only mask intersection |
 
-For GT06 the frozen combined-alpha/protection superset contains **5,128 A / 5,448 G** unique coordinates. Every coordinate in each superset is consistently owner NON_TEXT. The source-inspected, hash-verified GT06 renderer contract (`6f5f191515b7103b9d07e606bb8b4e9b91ecb09ab83c15e58bd44831f02fca31`) defines combined alpha as the maximum union of music, staff and bar masks. Thus moving contacts are a subset of the combined contacts. This implication relies on inspection of that exact frozen source; the helper verifies its hash rather than mechanically proving the renderer’s Python semantics. If a category has `c` of `S` superset coordinates and the historical subset has `N` coordinates, its count is bounded by `[max(0,N-(S-c)), min(N,c)]`. Here those bounds collapse to the table's exact owner aggregates. This is set containment, not recovering missing pixels from geometry or matching a desired total.
+For GT06 the frozen combined-alpha/protection superset contains **5,128 A / 5,448 G** unique coordinates. Every coordinate in each superset is consistently owner NON_TEXT. The source-inspected, hash-verified GT06 renderer contract (`6f5f191515b7103b9d07e606bb8b4e9b91ecb09ab83c15e58bd44831f02fca31`) defines combined alpha as the maximum union of music, staff and bar masks. Thus moving contacts are a subset of the combined contacts. This implication relies on inspection of that exact frozen source; the helper verifies its hash rather than mechanically proving the renderer’s Python semantics. If a category has `c` of `S` superset coordinates and the historical subset has `N` coordinates, its count is bounded by `[max(0,N-(S-c)), min(N,c)]`. Provided the historical moving-contact totals are accurate and the frozen union contract holds, those bounds collapse to the table's owner aggregates. The historical totals themselves have not been independently recalculated from individual moving pixels. This is set containment, not recovering missing pixels from geometry or matching a desired total.
 
 GT06 diagnostic images explicitly show the **combined-mask superset**, not a newly invented 1,982/2,026-pixel mask. Required missing resources are `gt06-output/A-music-only-alpha.png` and `G-music-only-alpha.png`, or an equivalently hash-bound exact moving-contact RLE. They are **not listed in the original freeze**; this is non-persistence, not a claim that an existing file was lost. Staff-only subtraction would destroy shared music/staff pixels, so it was not attempted.
 
@@ -62,7 +62,7 @@ The enlarged image highlights these coordinates with cyan pixel-cell outlines at
 
 ## Safety decisions
 
-- **A — Collision risk more precisely characterized:** yes, with GT07B exact sets and GT06 owner aggregates proved by containment. GT06 exact moving-coordinate/support recomputation and component attribution remain limited.
+- **A — Collision risk more precisely characterized:** yes, with GT07B exact sets and conditional GT06 owner aggregates derived by containment. GT06 exact moving-coordinate/support recomputation and component attribution remain limited.
 - **B — Safe source music removal:** **NOT AUTHORIZED**. No COMPLETE ink evidence or source-removal gate was established or promoted.
 - **C — Lyric-preserving composition:** **NOT AUTHORIZED**. Owner review is not independent ground truth, conflicts remain, and original music-removal evidence is still missing.
 
@@ -84,10 +84,24 @@ Final untracked artifacts under `/private/tmp/capomatic-v4-gt10/gt10-output/`:
 - `comparison-contact-sheet.png`, `enlarged-contact-review.png`.
 - `gt06-a-diagnostic.png`, `gt06-g-diagnostic.png`, `gt07b-a-diagnostic.png`, `gt07b-g-diagnostic.png`.
 
-No copyrighted image, owner RLE or source submission is committed. The final commit is identified by `git log -1 --format=%H -- docs/V4_GT10_OWNER_COLLISION_AUDIT.md` and the final local validation record. Remaining evidence gaps are persisted GT06 music-only/contact masks, exact component support, unresolved owner overlaps and independent text-extent evidence. None was fabricated or resolved by voting. No additional human annotations were requested before completing this computational audit.
+No copyrighted image, owner RLE or source submission is committed. The original computational audit commit is `91f55a489d7474c0bed99aff09ec3340f09534a4`, also bound in its local validation record. Later documentation addenda do not rewrite those experiment artifacts. Remaining evidence gaps are persisted GT06 music-only/contact masks, exact component support, unresolved owner overlaps and independent text-extent evidence. None was fabricated or resolved by voting. No additional human annotations were requested before completing this computational audit.
 
 ## Final validation
 
 Targeted GT06/GT07A/GT08/GT09/GT10 and unchanged V3 music/gate regressions: **202 passed, 1 skipped** (the existing external MuseScore-dependent test). After the final audited-region identity assertion, the **21 GT10 tests** pass again. Synthetic tests cover all four owner categories and conflicts/UNMAPPED, strict export identity/RLE, SHA rather than newest-file selection, page/crop bounds, nested-envelope union, separate region/dark/OMR measurements, sound subset bounds, missing mask/coordinate identity, non-mutating diagnostic copies, deterministic coordinate details and historical-output path rejection.
 
 All 50 input hashes, both complete prototype freezes and the original user Downloads submission pass the final preservation check. GT07B collision RLE decodes to exactly 24/233 unique coordinates, and the detail set has exactly 47 unique coordinates. No missing/duplicated contact pixels, automatic category substitution or modified protection definitions were found in the exact audit. GT06 moving-coordinate uniqueness cannot be rechecked without its missing mask, and is not claimed. Formatting and `git diff --check` pass. No Full Acceptance, Audiveris, OCR, historical prediction rendering, production changes, merge or deployment occurred.
+
+## Secondary technical audit reconciliation — 2026-10-19
+
+The supplied `gt10-independent-audit.zip` is linked by [archive/member SHA-256 binding](V4_GT10_SECONDARY_AUDIT_BINDING.json). Its local path is `/Users/juahnkim/transchord/tmp/gt10-independent-audit.zip`; archive SHA-256 is **`09c8817b8e35f385bcf6b241d47dd3d785a0f952959feca1e996e6b9acd025b9`**. The archive remains local/untracked; no score images, owner labels or binary archive are included in this documentation commit.
+
+The supplied audit's overall evidence-sufficiency verdict is **INSUFFICIENT_EVIDENCE**. It reports reproduction using a separate implementation, not independent human reading. This does not conflict with the original computational decision **OWNER_COLLISION_AUDIT_PARTIALLY_RESOLVED**: reproducible calculations do not make the unavailable GT06 moving masks or independent lyric-ink ownership available.
+
+Read-only reconciliation verified the archive CRC and all **64 input-manifest hashes**, with no missing files or hash differences. The complete **47-coordinate detail set**, **233-coordinate G contact set** and **10,623-coordinate owner-conflict set** match the original GT10 artifacts. GT07B G reproduces **145 owner TEXT-region / 88 CONFLICT** contacts; A reproduces **24 CONFLICT** contacts. The separate implementation was read, not executed during this reconciliation. No confirmed calculation correction was identified within this scope. Its reported 21-test pass is a secondary audit statement; documentation reconciliation did not rerun tests or predictions.
+
+The secondary implementation’s GT06 combined-alpha supersets remain **5,128 / 5,448**, not the historical **1,982 / 2,026** moving-contact sets. NON_TEXT inference for those historical totals remains conditional on their accuracy and the source-inspected union contract. Original dark-support **1,543 / 556** and music-support **1,661 / 652** remain prior aggregates, not newly recomputed moving-set measurements.
+
+The 145 owner-TEXT contacts are not confirmed text ink; their 111 non-dark coordinates are not confirmed background. Among the 47 OMR text-support candidates, 34 are L<127 and the other 13 have gray values **150–221**, not pure white. Support membership, original text-ink ownership and exact head/stem/ledger component masks remain different evidence layers. Neither this reconciliation nor a separate-context explanation review adds independent human ground truth.
+
+No source images, original submission bytes, historical results, protection masks, algorithms, ownership rules or integrity gates were changed. Source music removal and lyric-preserving composition remain **NOT AUTHORIZED**. No merge or deployment occurred. This addendum binds technical reproduction evidence and clarifies its limits; it grants no new implementation authorization.

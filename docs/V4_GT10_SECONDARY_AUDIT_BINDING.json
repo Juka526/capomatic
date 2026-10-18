@@ -1,0 +1,26 @@
+{
+  "archive_local_path": "/Users/juahnkim/transchord/tmp/gt10-independent-audit.zip",
+  "archive_members_sha256": {
+    "gt10-independent-audit/47-coordinates.json": "54d4f8894aa5efdb40028e8e31b6156b80b681b46ef3b047f580de169c6ecaf3",
+    "gt10-independent-audit/REPORT.md": "dbdb8e30c1f690762d088e4fe8bf66d0c65b16fd231f09168295471facc6291c",
+    "gt10-independent-audit/conflict-coordinates.json": "cf9f4b2f9529c99acaf113d10c6561765d5c114fa57afcf3e3fbf2b064baf7dd",
+    "gt10-independent-audit/contact-recalculation.json": "7a6c07f8c706ee0dfd7015fa1c8f75627d0bb169c66033e409f69238c0dd217b",
+    "gt10-independent-audit/gt07b-g-all-233-coordinates.json": "7e85e825b0aa0804871866403dcb7adc9df9026a48441c561450df5baac35dd5",
+    "gt10-independent-audit/independent-47-review.png": "1c8c6a7656184e385f0f8ba40dded322040f17101f7e7615f0e04f6bd80a2cb3",
+    "gt10-independent-audit/independent_audit.py": "b183e4bd37ce1d1b23c70a90518e155d3c67a153b9cfb45fc985dbc1d6342895",
+    "gt10-independent-audit/input-manifest.json": "77e35e5c6acaf03d8aadc0cacdd7368ab5e30d989ab687397c3ca6b5e7a8d1ac",
+    "gt10-independent-audit/original-context.png": "998fd640f1c8f4c06a6356a5180702e438f5da76bfd6788041ed36cd18364853",
+    "gt10-independent-audit/owner-validation.json": "a05637e8e8ef434553b7a04fa7abc987e63feaa52fa34bdd0a9e310b866a69f7",
+    "gt10-independent-audit/run-summary.json": "cb028fcf239279ccde99045e1ea83c9579dcef42ae2bc166c69751d2815ee8b4"
+  },
+  "archive_sha256": "09c8817b8e35f385bcf6b241d47dd3d785a0f952959feca1e996e6b9acd025b9",
+  "audited_commit": "91f55a489d7474c0bed99aff09ec3340f09534a4",
+  "evidence_type": "SECONDARY_TECHNICAL_REPRODUCTION_NOT_INDEPENDENT_HUMAN_READING",
+  "historical_artifacts_regenerated": false,
+  "input_manifest_entries_verified": 64,
+  "lyric_composition_authorized": false,
+  "secondary_evidence_sufficiency": "INSUFFICIENT_EVIDENCE",
+  "source_music_removal_authorized": false,
+  "verification_scope": "Archive CRC/member hashes, 64 current input hashes, and previously compared 47/233/10623 coordinate sets; supplied code read but not executed in this reconciliation",
+  "version": "gt10-secondary-technical-audit-binding/1"
+}
