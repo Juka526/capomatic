@@ -1,0 +1,20 @@
+{
+  "phase": "1.9f Track A offline preregistration",
+  "version": 1,
+  "measurements": ["exact saved guard replay for all PARTIAL groups", "distinct and group-reference intensity/contrast distributions", "BINARY and exact persisted glyph intersections", "8-connected source gray<group-background components before and after staff-context/glyph removal", "geometry-matched translated support controls"],
+  "controls": {
+    "selection_inputs": "graph geometry, processed support geometry and group placement only; never source gray, BINARY values or guard outcome",
+    "exclusion": "any symbol region bbox expanded 6 pixels, staff-context, or processed support; reject entire translated bbox plus 5px ring",
+    "population": "all fully on-page support-bbox origins (8+16k,8+16j), with full 5px ring and no exclusion hit",
+    "samples_per_group": 6,
+    "selection": "three eligible placements nearest original bbox origin by squared distance then y,x; three remaining row-major placements",
+    "geometry": "translate exact support, core, fringe, attachment analysis regions and related attachment support; unchanged radius2/radius4 adjacency and median distance3..5 rectangular ring",
+    "report": "all candidate population sizes, missing samples, placement coordinates, tested guard denominator, trigger rate, source intensity/contrast and BINARY/glyph support; controls are geometric blank candidates, not labeled ground truth",
+    "synthetic": "uniform white must not trigger; one-gray-level connected tail on white must trigger; dark connected tail must trigger"
+  },
+  "categories": "mutually exclusive precedence: exact persisted symbol glyph intersection; remaining BINARY ink; remaining contrast1..7 LOW_CONTRAST_BACKGROUND_CANDIDATE; residual SOURCE_ONLY_UNRESOLVED. No threshold-derived ground truth or ownership. Also export nonexclusive glyph kinds and original attribution.",
+  "connectivity": "8-neighbor gray<each group's background; count remote pixels sharing component with group support and staff, repeat after removing staff-context plus staff glyph. This is topology only, never component ownership.",
+  "decision": "READY_FOR_CONTINUATION_GUARD_FIX only if controls demonstrate non-musical guard triggers and independent support/topology separates every residual category sufficiently to specify a fail-closed structural fix without guessed ownership; otherwise NEEDS_MORE_CONTINUATION_EVIDENCE",
+  "instrumentation": "wall seconds and process peak RSS measured separately from deterministic scientific JSON; no runtime budget estimate presented as measurement",
+  "restrictions": "no admission/guard/ownership changes; no nearest ownership; no FullAcceptance; no runtime replay; no scores edited"
+}
