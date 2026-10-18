@@ -119,3 +119,53 @@ def test_collision_is_envelope_only_and_does_not_establish_ownership():
     assert experiment.overlap((0, 0, 10, 10), (9, 9, 12, 12))
     assert not experiment.overlap((0, 0, 10, 10), (10, 0, 12, 2))
     assert not experiment.overlap(None, (0, 0, 1, 1))
+
+
+def test_candidate_note_comparison_never_supplies_ground_truth_or_fuzzy_match(tmp_path):
+    from music21 import stream, note, key
+
+    source = stream.Score()
+    part = stream.Part()
+    measure = stream.Measure(number=1)
+    measure.append(key.KeySignature(-2))
+    measure.append(note.Note('B-3', quarterLength=1))
+    part.append(measure)
+    source.append(part)
+    left = tmp_path / 'left.musicxml'
+    right = tmp_path / 'right.musicxml'
+    source.write('musicxml', fp=str(left))
+    target = source.transpose(-1)
+    target.write('musicxml', fp=str(right))
+    result = experiment.candidate_compare(left, right, -1)
+    assert result['verified_ground_truth_denominator'] == 0
+    assert result['candidate_interval_agreements'] == 1
+    target.parts[0].measure(1).notes[0].quarterLength = 2
+    target.write('musicxml', fp=str(right))
+    result = experiment.candidate_compare(left, right, -1)
+    assert result['unique_exact_identity_candidates'] == 0
+    assert result['unmatched_left_identities'] == result['unmatched_right_identities'] == 1
+
+
+def test_baseline_signature_and_hashes_are_required_for_evaluation(tmp_path):
+    import subprocess
+    from scripts.research.evaluate_paired_ground_truth_01 import verify_baseline
+    from unittest.mock import patch
+
+    with patch('subprocess.run', side_effect=subprocess.CalledProcessError(1, 'openssl')):
+        with pytest.raises(subprocess.CalledProcessError):
+            verify_baseline(tmp_path)
+    root = tmp_path / 'predictions'
+    root.mkdir()
+    (root / 'output.json').write_text('{}')
+    experiment.dump(
+        tmp_path / 'baseline-manifest.json',
+        {
+            'phase': 'SOURCE_ONLY_PREDICTIONS_FROZEN',
+            'prediction_files': experiment.file_hashes(root),
+        },
+    )
+    with patch('subprocess.run'):
+        verify_baseline(tmp_path)
+        (root / 'output.json').write_text('tampered')
+        with pytest.raises(ValueError):
+            verify_baseline(tmp_path)
