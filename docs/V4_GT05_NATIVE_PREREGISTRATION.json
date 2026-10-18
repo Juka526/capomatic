@@ -1,0 +1,19 @@
+{
+  "version": "gt05-native-controls/1",
+  "base": "d35b6f3d7e5258ef48131c52c1b051b2ee507385",
+  "image": "sha256:fb3c1ff7f6428a499b18aae5dc0b71a5c8b03ee709b10ab82e3ab1f28e332b1e",
+  "models": "Exact GT-03/04 verified SHA-bound existing v6 medium detector/recognizer, copied to new local cache; no downloads or substitutions",
+  "input": "Same GT-04 640x160 white RGB synthetic Latin chord-like text; no score/reference input",
+  "baseline": {"OMP_NUM_THREADS": "2", "cpu_threads": 10, "enable_mkldnn": false, "enable_new_ir": "installed model default", "cpu_limit": 2, "memory_gib": 4, "timeout_seconds": 60, "network": "none"},
+  "observability": "Existing Paddle disable_signal_handler plus Python faulthandler, flushed stage markers, model/predictor option dumps. Same across compared cases. Native core up to 512MiB for initial recognizer only if kernel permits. No debugger/compiler is installed in image; host installed LLDB may inspect retained core. Never install a debugger/model.",
+  "cases": [
+    {"id": "recognizer-baseline-trace", "kind": "recognizer", "single_change": "NONE; observational signal handler/core instrumentation"},
+    {"id": "recognizer-omp1", "kind": "recognizer", "single_change": "OMP_NUM_THREADS=1"},
+    {"id": "recognizer-cpu1", "kind": "recognizer", "single_change": "constructor cpu_threads=1"},
+    {"id": "recognizer-newir-off", "kind": "recognizer", "single_change": "engine_config.paddle_static.enable_new_ir=False"},
+    {"id": "detector-newir-off", "kind": "detector", "single_change": "engine_config.paddle_static.enable_new_ir=False relative to GT-04 detector baseline"}
+  ],
+  "controls": "Do not combine omp1, cpu1 and newir-off. Dump effective predictor configuration to verify single-field changes. If an option is unsupported, record failure; do not substitute flags.",
+  "stop": "At most these five model experiments; no Bb OCR or new runtime versions. Native root cause identified only if stack/effective configuration and controlled outcomes sufficiently explain common failure. A workaround alone is not a proven root cause.",
+  "evidence": "Record exact command, source/model hashes, stage logs, exits, time, limits, peak child RSS where available, and core/debugger outcome. No recognition accuracy claim. No production code change."
+}
