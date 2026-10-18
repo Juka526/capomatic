@@ -1,0 +1,21 @@
+{
+  "version": "gt11-complete-measure/1",
+  "understood_as": "Render fixed Bb source printed measure 3 in A(-1) and G(-3) on new music-only canvases, after freezing an explicit source inventory; retain independent source completeness, recognized-layer rendering completeness, and agent visual quality as three distinct verdicts.",
+  "base": "f3b808d3fb072d521f516ef9e8f50ef54bd59756",
+  "printed_measure": 3,
+  "source_page": 2,
+  "source_key": "Bb",
+  "targets": {"A": -1, "G": -3},
+  "source_selection": "Existing hash-bound GT04 source-only excerpt 3; never choose another target measure",
+  "semantic_authority": "Frozen GT01 corrected recognized MusicXML; existing V3 transposition and unchanged full integrity guard, both in-memory and write/read",
+  "references": "No A/G reference score pages will be read for this run; actual visual comparison is original Bb crop beside newly rendered A/G music layers",
+  "source_inventory_freeze": "Hash-bind source-event-inventory.json and source-completeness-audit.json before any prediction rendering; no independent human labels are available",
+  "render_reuse": "GT04 quarter-note/rest composer using unchanged validated GT05A fixed-phase glyph function; observe copies of all component masks without altering their pixels; preserve GT06/GT07 regression tests",
+  "anchor_limit_per_axis_px": 0.5,
+  "components": "Persist exact per-component, moving-only and full-notation alpha masks plus a component manifest to avoid prior missing-mask evidence gaps",
+  "required_checks": ["physical measure identity", "event IDs/order/onset/duration/voice", "source and target written pitches", "head/stem lineage", "all required recognized components rendered", "actual raster anchors", "head/stem and ledger connectivity", "actual ink collisions", "page/viewport clipping", "source crop byte equality", "historical hashes unchanged"],
+  "visual_review": "Inspect actual PNGs after prediction hash freeze; record AGENT_VISUAL_INSPECTION_NOT_INDEPENDENT_OPTICAL_VALIDATION, never derive it from geometry checks alone",
+  "completion": {"SOURCE_RECOGNITION_COMPLETENESS": ["COMPLETE", "INCOMPLETE", "UNVERIFIED"], "RENDERING_COMPLETENESS": ["COMPLETE", "INCOMPLETE", "BLOCKED"], "VISUAL_QUALITY": ["ACCEPTABLE_FOR_EXPERIMENT", "NEEDS_REFINEMENT", "UNVERIFIED"]},
+  "overall_rule": "Source UNVERIFIED or INCOMPLETE always means COMPLETE_MEASURE_INCOMPLETE even if all recognized music-layer events are rendered",
+  "out_of_scope": ["chord rendering", "lyric rendering or compositing", "source ink removal", "ownership/protection changes", "production B2", "API/frontend", "merge", "deployment"]
+}

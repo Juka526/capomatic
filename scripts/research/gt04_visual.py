@@ -211,7 +211,7 @@ def panel_label(image, title):
     return canvas
 
 
-def render(inputs, font_path, out, *, glyph_renderer=None):
+def render(inputs, font_path, out, *, glyph_renderer=None, parts_observer=None):
     from fontTools.ttLib import TTFont
     from music21 import pitch
 
@@ -362,6 +362,9 @@ def render(inputs, font_path, out, *, glyph_renderer=None):
                         **info,
                     }
                 )
+            # Research observers receive copies and cannot change the rendered layer.
+            if parts_observer is not None:
+                parts_observer(excerpt['number'], key, {n: m.copy() for n, m in parts.items()})
             intersections = ink_intersections(parts)
             ink = np.maximum.reduce([np.array(p) for p in parts.values()])
             music = np.maximum.reduce(
