@@ -1,0 +1,133 @@
+{
+  "base": "85ce5cf39a85cc1fab48f940d47c6e5cc9bc2c6b",
+  "evaluation": "After freeze, associate OCR source bboxes with existing 24 Bb coordinator candidate regions, record misses/extras/ambiguity and literal/parsed differences. Candidates are not independent truth; no final accuracy.",
+  "failure_policy": "No retry, model download, version substitution or threshold change. Record exact error and stop OCR subtask.",
+  "gt01_binding": {
+    "baseline_manifest_sha256": "68f327663cf91011f62b16db770cba4e06aea1323d0b06bade1cbfe2c904ad49",
+    "prediction_revision": "9444b14e108b573f124b7ed6a14207d779aeed7c",
+    "source_pdf_sha256": "1cc64756c0ce47b1db0ea6ac21eefe4685097a04cd4589f954afc712afb605fd"
+  },
+  "image": "sha256:fb3c1ff7f6428a499b18aae5dc0b71a5c8b03ee709b10ab82e3ab1f28e332b1e",
+  "input_sha256": {
+    "audiveris.mxl": "45f6110fb3a70abf29766e163323bd18a308199b28eb9a80d5a865713ff55fe4",
+    "recognized.omr": "857c787b23d4244cb17fbcc9de80c8a3bbfe7de606aabf818643be1fbf9f6638",
+    "source.png": "eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de"
+  },
+  "integrity": "Unchanged full guard in memory and source/target write-read for -1/-3; any failure marks affected artifacts unusable, no waiver.",
+  "limits": {
+    "cpus": 2,
+    "memory_gib": 4,
+    "network": "none",
+    "ocr_calls": 1,
+    "seconds": 180
+  },
+  "method": "Exactly one detect_chords_hybrid(use_ai_fallback=False) call, existing V3 cleanup/alignment/ledger repair/merge/replace call order on original Audiveris MXL. No Audiveris rerun.",
+  "model_approval_basis": "Existing v6-medium default approved in docs/V1_RELEASE_PLAN.md; exact installed PaddleOCR 3.7.0 OCR.yaml defaults medium-rec; existing title helper uses v5-mobile-det/korean-v5-mobile-rec. No replacement versions selected.",
+  "model_provenance": {
+    "PP-OCRv5_mobile_det": {
+      "inference.json": {
+        "cache_etag": "6cd678f39460a27372f8fe570e4e12e7a383418f",
+        "etag_matches_content": true,
+        "repository_commit": "0d63e78e2b680928f6b1747d76a08db6e645efb7",
+        "sha256": "05feef1acb00aa4cd7362b15f7f501fc4f99d7b1fa73c1c871e0c7b1504b0f5c",
+        "size": 229777
+      },
+      "inference.pdiparams": {
+        "cache_etag": "afa1820cb16c1fd0dad589d0f8b389139061c1ef6d68019685fd07be997dda5b",
+        "etag_matches_content": true,
+        "repository_commit": "0d63e78e2b680928f6b1747d76a08db6e645efb7",
+        "sha256": "afa1820cb16c1fd0dad589d0f8b389139061c1ef6d68019685fd07be997dda5b",
+        "size": 4692937
+      },
+      "inference.yml": {
+        "cache_etag": "579d10695d2dd6e85c5ecba02d151ae5c077aa49",
+        "etag_matches_content": true,
+        "repository_commit": "0d63e78e2b680928f6b1747d76a08db6e645efb7",
+        "sha256": "98069072e1b6b37d727fd9d9f11725faa46d6ea0de012f2ed26caea011c37699",
+        "size": 903
+      }
+    },
+    "PP-OCRv6_medium_det": {
+      "inference.json": {
+        "cache_etag": "548f60c00e9303a0323feceeae460256576671a6",
+        "etag_matches_content": true,
+        "repository_commit": "8e0f56fb2ef86b461d99cfc7ac5c137738985f61",
+        "sha256": "0f1a7ec35da36173529c7a60238b7f7919e3831929c3f700ad90ad4896adecd5",
+        "size": 312150
+      },
+      "inference.pdiparams": {
+        "cache_etag": "85218d2e3d98f5a21c58b4220627be923a97aee5db3cc71f39536ab31ac53960",
+        "etag_matches_content": true,
+        "repository_commit": "8e0f56fb2ef86b461d99cfc7ac5c137738985f61",
+        "sha256": "85218d2e3d98f5a21c58b4220627be923a97aee5db3cc71f39536ab31ac53960",
+        "size": 61960476
+      },
+      "inference.yml": {
+        "cache_etag": "1c5c05809877e4c7385f899019fff0ac9017ca80",
+        "etag_matches_content": true,
+        "repository_commit": "8e0f56fb2ef86b461d99cfc7ac5c137738985f61",
+        "sha256": "7298d5ead546584af2504d03355f881ac7a7bc0eb1e282d3e159277c1d0af871",
+        "size": 886
+      }
+    },
+    "PP-OCRv6_medium_rec": {
+      "inference.json": {
+        "cache_etag": "9e0192344de3b69dacdb19dd735efbd06bd852f9",
+        "etag_matches_content": true,
+        "repository_commit": "e5a92bcbc5cc1b494628e458d267778f0704fd7c",
+        "sha256": "0b2e25e990bd072f1bf77d59d67d508bce6c4bd44af6624e0fb27d6da2cd00e8",
+        "size": 221814
+      },
+      "inference.pdiparams": {
+        "cache_etag": "1b01c79a914587933f615569e75de54f2e638ebb5d3f3b3c1b38c24ede8c7319",
+        "etag_matches_content": true,
+        "repository_commit": "e5a92bcbc5cc1b494628e458d267778f0704fd7c",
+        "sha256": "1b01c79a914587933f615569e75de54f2e638ebb5d3f3b3c1b38c24ede8c7319",
+        "size": 76465087
+      },
+      "inference.yml": {
+        "cache_etag": "c53a96fcd315a86cb4748d2746f3d90941e1c6d8",
+        "etag_matches_content": true,
+        "repository_commit": "e5a92bcbc5cc1b494628e458d267778f0704fd7c",
+        "sha256": "991b700facf5b50a7de193468207d5f4255b538dde0d312ae3b7c7a9b6873129",
+        "size": 150580
+      }
+    },
+    "korean_PP-OCRv5_mobile_rec": {
+      "inference.json": {
+        "cache_etag": "7507436977357fe69b5e33c12055824ca15f83e1",
+        "etag_matches_content": true,
+        "repository_commit": "c02ecaf1f22bfd1c618cce154fd19185b47e663a",
+        "sha256": "562404e3c590c50c93778d5f0a94df21b47b5ab8f3ea6d47c7f8a7930c3bc844",
+        "size": 217724
+      },
+      "inference.pdiparams": {
+        "cache_etag": "cac3e5f12cf04aaa77f6a5bc704e4e736ef2908476551891d84b41b4e9090462",
+        "etag_matches_content": true,
+        "repository_commit": "c02ecaf1f22bfd1c618cce154fd19185b47e663a",
+        "sha256": "cac3e5f12cf04aaa77f6a5bc704e4e736ef2908476551891d84b41b4e9090462",
+        "size": 13342671
+      },
+      "inference.yml": {
+        "cache_etag": "ba8f60f36464f8444b71301062ec6bf4f7b2d1e0",
+        "etag_matches_content": true,
+        "repository_commit": "c02ecaf1f22bfd1c618cce154fd19185b47e663a",
+        "sha256": "f757fa1c40e99edcf27e9cce879b93eb2a51fa46f5ef39095689b8c37dd75998",
+        "size": 96039
+      }
+    }
+  },
+  "mounts": "Source-only three-file directory, immutable backend and runner, isolated output/cache; no A/G reference files or coordinator inventories mounted.",
+  "no_production_behavior_change": true,
+  "packages": {
+    "paddleocr": "3.7.0",
+    "paddlepaddle": "3.2.2",
+    "paddlex": "3.7.2"
+  },
+  "parameters": "Unchanged image defaults; CAPOMATIC_OMR_CHORD_MERGE=1 (existing default); no model constructor monkeypatch, parameter or per-score tuning.",
+  "provenance_limit": "Local HF download metadata ETag and commit verified against file bytes. This is local cache provenance, not independent publisher attestation or current production deployment verification.",
+  "runner_sha256": "e047938cb6f4ba4323512192c6180760f095b7add99d2f1c89ed160fbaa8f926",
+  "source_identity": "Bb PDF page 2 only",
+  "study": "POST_REFERENCE_ACCESS_DEVELOPMENT_NOT_ACCURACY",
+  "version": "gt03-source-only-chord-run/1"
+}
