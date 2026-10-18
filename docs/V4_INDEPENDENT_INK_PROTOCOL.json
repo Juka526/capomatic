@@ -1,0 +1,226 @@
+{
+  "protocol_id": "independent-physical-ink-v1",
+  "status": "FROZEN_DESIGN_LABELS_PENDING",
+  "contract_document": "V4_INDEPENDENT_INK_VALIDATION.md",
+  "scope": "development-page evidence design only; no implementation authorization",
+  "source_sha256": "e53c52dd7c31f0196b7c5a99231afd4f77bc522f8a02483277179a79c84dc0cb",
+  "source_dimensions": [
+    2481,
+    3508
+  ],
+  "binding_manifest": "/private/tmp/capomatic-v4-dual-inputs.json",
+  "binding_manifest_sha256": "f9e4b3e951e15609051b03530839326d99d7320865f45a82ade7501d0fdc2948",
+  "binding_count": 28,
+  "seed": "capomatic-independent-ink-v1-2026-10-18",
+  "rank_encoding": "UTF-8, pipe-separated, decimal unpadded integers, lowercase hex source hash",
+  "rank_order": "SHA256 unsigned lexicographic digest bytes, then y, then x",
+  "sampling_forbidden_inputs": [
+    "intensity",
+    "gray_threshold",
+    "BINARY",
+    "graph",
+    "guard",
+    "remote_sets",
+    "classifier",
+    "desired_outcome"
+  ],
+  "prevalence": {
+    "unit": "distinct original source pixel anchor",
+    "population": "all source pixels including edges",
+    "population_size": 8703348,
+    "spatial_grid_columns_rows": [
+      4,
+      4
+    ],
+    "bounds": "floor(c*W/4)<=x<floor((c+1)*W/4); analogous y",
+    "rank_message": "seed|source_sha256|prevalence|c|r|x|y",
+    "quota_per_cell": 6,
+    "maximum_anchors": 96,
+    "replacement": false,
+    "shortfall": "min(quota, cell population); retain and report"
+  },
+  "diagnostic": {
+    "unit": "source-only screener nominated pixel anchor",
+    "screening_tiles": [
+      64,
+      64
+    ],
+    "screening_order": "row-major entire page, edges clipped",
+    "screener_blind_to": [
+      "BINARY",
+      "guard",
+      "semantic_support",
+      "primary_labels"
+    ],
+    "maximum_nominations_per_tile_per_motif": 1,
+    "motif_order": [
+      "apparent_notation_staff_crossing",
+      "apparent_pale_overlay_text_crossing",
+      "apparent_fine_notation_edge",
+      "low_structure_appearance"
+    ],
+    "rank_message": "seed|source_sha256|diagnostic|motif|x|y",
+    "quota_per_motif": 8,
+    "maximum_anchors": 32,
+    "deduplication": "exclude prevalence and earlier selected motif anchors; walk ranked list",
+    "shortfall": "retain; no expanded screening or replacement",
+    "denominators": [
+      "examined_tiles",
+      "unavailable_tiles",
+      "all_nominations_per_motif",
+      "duplicate_exclusions",
+      "eligible_after_exclusions",
+      "selected_unique_anchors"
+    ],
+    "not_prevalence": true,
+    "nominations_frozen_before_ranking": true
+  },
+  "presentation": {
+    "focus_crop": [
+      65,
+      65
+    ],
+    "context_crop": [
+      513,
+      513
+    ],
+    "full_original_page_available": true,
+    "crop_rule": "for odd s: [x-floor(s/2),x+floor(s/2)+1) and analogous y; clip to page, no padding; separate local target coordinate",
+    "image_transform": "none; optional integer nearest-neighbor viewer zoom",
+    "id_and_order_domain": "presentation",
+    "hidden": [
+      "arm",
+      "stratum",
+      "motif",
+      "global_coordinate",
+      "BINARY",
+      "guard",
+      "semantic_labels",
+      "intensity_values"
+    ],
+    "audit_key": "custodian-only file outside annotation packet",
+    "rank_message": "seed|source_sha256|presentation|x|y",
+    "public_id": "p followed by full lowercase hexadecimal SHA256 digest",
+    "order": "ascending unsigned digest bytes, then y,x; same packet order for both annotators",
+    "collision": "distinct-coordinate digest collision halts packet creation"
+  },
+  "independence": {
+    "primary_human_annotators": 2,
+    "independent_adjudicators": 1,
+    "excluded_roles": [
+      "guard_designer",
+      "diagnostic_screener",
+      "packet_maker",
+      "assistant"
+    ],
+    "training": "separate pages and coordinates excluded from all evaluation and holdout",
+    "freeze_sequence": [
+      "protocol_and_roster",
+      "sample_and_packet",
+      "both_independent_source_only_labels",
+      "source_only_adjudication",
+      "unblind_audit_join"
+    ],
+    "label_collection_completed": false,
+    "self_generated_labels_are_independent_truth": false
+  },
+  "annotation": {
+    "target": "anchor pixel only, source context permitted",
+    "physical_content": [
+      "MUSICAL_NOTATION",
+      "STAFF",
+      "TEXT",
+      "WATERMARK_OR_GRAPHIC",
+      "PAPER_OR_BACKGROUND",
+      "UNKNOWN"
+    ],
+    "boundary_contribution": [
+      "INTERIOR",
+      "ANTIALIAS_OR_PARTIAL_COVERAGE",
+      "OVERLAP_OR_CROSSING",
+      "UNKNOWN"
+    ],
+    "certainty": [
+      "RESOLVED",
+      "UNCERTAIN",
+      "ABSTAIN"
+    ],
+    "multi_label": true,
+    "unknown_may_coexist": true,
+    "rationale_required": true,
+    "ownership": {
+      "representation": "possible contributor/owner set plus unresolved boolean",
+      "initial": "empty set, unresolved true",
+      "unique": "singleton set and unresolved false, independent attachment evidence required",
+      "shared": "multiple contributors and unresolved false, independent contribution evidence required",
+      "ambiguous": "unresolved true regardless of contributor set",
+      "implementation_group_ids_hidden_until_freeze": true,
+      "physical_identity_authorizes_editing": false
+    }
+  },
+  "reporting": {
+    "separate_arms": true,
+    "prevalence": "per-cell denominators and page-area-weighted descriptive label fractions; no generalization/CI claim",
+    "uncertainty": "keep all selected rows; report missing/unknown/abstain and worst-case bounds",
+    "pre_adjudication": [
+      "exact_set_agreement",
+      "per_label_2x2",
+      "paired_unpaired_total_denominators",
+      "disagreement_count",
+      "unknown_abstain_per_annotator"
+    ],
+    "overlap": [
+      "unique_anchors",
+      "unique_crop_rectangles",
+      "overlapping_focus_pair_count",
+      "overlapping_context_pair_count",
+      "focus_union_area",
+      "context_union_area"
+    ],
+    "post_freeze_join": [
+      "original_source_intensity",
+      "processed_BINARY_support",
+      "guard_outcomes",
+      "persisted_semantic_support"
+    ],
+    "join_categories": [
+      "resolved_musical_only",
+      "resolved_nonmusical_only",
+      "mixed",
+      "unknown_or_abstain"
+    ],
+    "duplicate_anchor_error": "invalidate sample; regenerate unchanged protocol, do not count as independent"
+  },
+  "stop_rules": {
+    "collection": "fixed quotas or documented shortfalls only",
+    "halt_on": [
+      "hash_mismatch",
+      "blinding_breach",
+      "ineligible_annotator",
+      "missing_provenance",
+      "protocol_mutation"
+    ],
+    "forbidden": [
+      "outcome_based_resampling",
+      "dropping_disagreement",
+      "post_unblind_relabeling_for_rule",
+      "jayu_threshold_tuning"
+    ],
+    "suppression_blocker": "any musical, mixed or unknown case in proposed population",
+    "sample_pass_authorizes_rule": false,
+    "holdout": "separately acquired multi-page source roster and hashes locked before access; candidate and failure criteria fixed before labels unseal; failure/revision needs fresh holdout"
+  },
+  "pending_independent_evidence": [
+    "eligible_human_roster",
+    "training_exclusion_manifest",
+    "source_only_packet",
+    "frozen_diagnostic_nominations",
+    "two_complete_primary_label_files",
+    "independent_source_only_adjudication",
+    "freeze_and_access_records",
+    "independent_attachment_evidence",
+    "separately_acquired_holdout"
+  ],
+  "next_recommendation": "offline packet builder and separate immutable evidence tables; retain guard blocking",
+  "next_phase_autorun": false
+}
