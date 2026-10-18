@@ -204,11 +204,79 @@ def prepare(gt01, gt02, gt06, out):
     return spec
 
 
-def render(inputs, font_path, out):
+def synthetic_controls(font_path, out):
+    if out.exists():
+        raise ValueError('New source-free control directory required')
+    if sha(font_path) != json.loads(DESIGN.read_text())['font_sha256']:
+        raise ValueError('Font changed')
+    tt = TTFont(font_path)
+    units = {
+        char: tuple(
+            getattr(tt['glyf'][tt.getBestCmap()[ord(char)]], k)
+            for k in ['xMin', 'yMin', 'xMax', 'yMax']
+        )
+        for char in [HEAD, FLAG]
+    }
+    font = ImageFont.truetype(str(font_path), 94)
+    rows = []
+    for phase in [0, 0.125, 0.5, 0.875]:
+        xy = (180 + phase, 230 + phase)
+        head, _ = glyph((512, 512), font, HEAD, xy, units[HEAD], 94 / tt['head'].unitsPerEm)
+        pix = np.argwhere(np.asarray(head) > 0)
+        edge = int(pix[:, 1].max() - 1)
+        tip = (edge, 140)
+        flag, info = flag_mask(head.size, font, tip, units[FLAG], 94 / tt['head'].unitsPerEm)
+        stem = Image.new('L', head.size)
+        ImageDraw.Draw(stem).line(
+            [tip, (edge, float(np.median(pix[pix[:, 1] == edge, 0])))], fill=255, width=2
+        )
+        shared = lambda a, b: int(np.count_nonzero((np.asarray(a) > 0) & (np.asarray(b) > 0)))
+        residual = measure_anchor(head, xy)['measured_anchor_residual']
+        rows.append(
+            {
+                'phase': phase,
+                'head_residual': residual,
+                'head_stem_contact': shared(head, stem),
+                'stem_flag_contact': shared(stem, flag),
+                'head_flag_collision': shared(head, flag),
+                'flag_attachment_residual': info['flag_attachment_residual'],
+            }
+        )
+    result = {
+        'rows': rows,
+        'passed': all(
+            max(abs(v) for v in r['head_residual']) <= 0.5
+            and r['head_stem_contact'] > 0
+            and r['stem_flag_contact'] > 0
+            and r['head_flag_collision'] == 0
+            and r['flag_attachment_residual'] == [0, 0]
+            for r in rows
+        ),
+        'font_sha256': sha(font_path),
+        'protocol_sha256': sha(DESIGN),
+        'glyph_algorithm_sha256': sha(Path(__file__).with_name('gt05_raster_anchor.py')),
+        'code_sha256': sha(Path(__file__)),
+    }
+    dump(out / 'flag-controls.json', result)
+    return result
+
+
+def render(inputs, font_path, out, controls):
     from music21 import pitch
 
     if out.exists() or inputs.resolve() in out.resolve().parents:
         raise ValueError('New output directory required')
+    if controls is None:
+        raise ValueError('Source-free flag controls required')
+    gate = json.loads((controls / 'flag-controls.json').read_text())
+    if (
+        not gate['passed']
+        or gate['font_sha256'] != sha(font_path)
+        or gate['protocol_sha256'] != sha(DESIGN)
+        or gate['code_sha256'] != sha(Path(__file__))
+        or gate['glyph_algorithm_sha256'] != sha(Path(__file__).with_name('gt05_raster_anchor.py'))
+    ):
+        raise ValueError('Source-free flag controls failed or changed')
     spec = json.loads((inputs / 'selection.json').read_text())
     design = json.loads(DESIGN.read_text())
     if (
@@ -457,9 +525,10 @@ def render(inputs, font_path, out):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('mode', choices=['prepare', 'render'])
+    p.add_argument('mode', choices=['prepare', 'controls', 'render'])
     p.add_argument('--inputs', type=Path)
     p.add_argument('--out', type=Path, required=True)
+    p.add_argument('--controls', type=Path)
     a = p.parse_args()
     if a.mode == 'prepare':
         r = prepare(
@@ -469,10 +538,17 @@ if __name__ == '__main__':
             a.out,
         )
         print(r['event']['id'])
+    elif a.mode == 'controls':
+        r = synthetic_controls(
+            Path('/private/tmp/capomatic-v4-gt04-visual/ground-truth-04-output/font/FreeSerif.ttf'),
+            a.out,
+        )
+        print({'passed': r['passed']})
     else:
         r = render(
             a.inputs,
             Path('/private/tmp/capomatic-v4-gt04-visual/ground-truth-04-output/font/FreeSerif.ttf'),
             a.out,
+            a.controls,
         )
         print(r['decision'])

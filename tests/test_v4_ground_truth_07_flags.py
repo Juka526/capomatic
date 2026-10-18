@@ -114,3 +114,16 @@ def test_flag_clipping_and_nonfinite_fail_closed():
         flag_mask((100, 100), font, (99, 99), (0, 0, 20, 40), 0.04, char='f')
     with pytest.raises(ValueError):
         flag_mask((100, 100), font, (math.nan, 20), (0, 0, 20, 40), 0.04, char='f')
+
+
+def test_score_render_requires_frozen_source_free_controls_before_input_or_font_access(tmp_path):
+    import json
+    from scripts.research.gt07_flags import render
+
+    with pytest.raises(ValueError, match='controls required'):
+        render(tmp_path / 'input', tmp_path / 'no-font', tmp_path / 'output', None)
+    gate = tmp_path / 'gate'
+    gate.mkdir()
+    (gate / 'flag-controls.json').write_text(json.dumps({'passed': False}))
+    with pytest.raises(ValueError, match='controls failed'):
+        render(tmp_path / 'input', tmp_path / 'no-font', tmp_path / 'output', gate)
