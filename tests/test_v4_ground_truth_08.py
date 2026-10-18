@@ -430,3 +430,11 @@ def test_new_neutral_template_does_not_contain_suggested_answers_or_old_labels(p
     assert all(
         value not in INSTRUCTIONS for value in ['1982', '2026', '233', '4135', '47 candidate']
     )
+
+
+def test_private_custody_template_never_attests_to_a_human_or_observation(packet):
+    from scripts.research.gt08_review import custody_template
+
+    d = custody_template(packet)
+    assert d['packet_sha256'] == sha(packet / 'packet.json')
+    assert all(v is None for k, v in d.items() if k not in {'version', 'packet_sha256'})

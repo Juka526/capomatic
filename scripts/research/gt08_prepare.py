@@ -14,6 +14,7 @@ from scripts.research.gt08_review import (
     COORDINATES,
     read_json,
     template,
+    custody_template,
     write_json,
     exclusive,
 )
@@ -237,6 +238,7 @@ def prepare(gt01, a, b, gt06, out):
             'trust_registration': 'Human task owner must verify/pin external custodian public key. Agent must not create keys, attestations or human observations.',
         },
     )
+    write_json(out / 'custodian-receipt-template.json', custody_template(packet))
     exclusive(
         out / 'CUSTODIAN.txt',
         b'No eligible reviewers are currently assigned. WAITING_FOR_HUMAN_REVIEW. Do not fill, sign or freeze synthetic/agent labels. Register trusted human custodian key externally before collection. Separate A/B sessions; verify human identities, independence, exclusions and no automated labeling. Sign custody receipts bound to exact raw submission and packet hashes; preserve all originals. A third independent human adjudicates only after both primary freezes; reviewer-facing distribution excludes every diagnostic and custodian-only file. File hashes/signatures prove custody only, not human personhood or correct observations. No source removal or composition is authorized.\n',

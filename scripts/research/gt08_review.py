@@ -153,6 +153,28 @@ def template(packet, role):
     return data
 
 
+def custody_template(packet):
+    """A blank private form, never a human attestation or an accepted receipt."""
+    verify_packet(packet)
+    return {
+        'version': 'gt08-human-custody/1',
+        'packet_sha256': sha(Path(packet) / 'packet.json'),
+        **dict.fromkeys(
+            [
+                'submission_sha256',
+                'role',
+                'person_id',
+                'custodian_id',
+                'verified_at',
+                'human_identity_verified',
+                'independence_exclusions_verified',
+                'non_automated_observations_verified',
+                'verification_evidence_sha256',
+            ]
+        ),
+    }
+
+
 def decode_case(row, case):
     exact(row, {'case_id', 'category_runs', 'uncertainty_status', 'uncertainty_note'})
     require(nonempty(row['uncertainty_note']), 'Explicit uncertainty explanation required')
