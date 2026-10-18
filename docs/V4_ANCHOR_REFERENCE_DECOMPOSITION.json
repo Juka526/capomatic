@@ -1,0 +1,156 @@
+{
+  "input_manifest_sha256": "f9e4b3e951e15609051b03530839326d99d7320865f45a82ade7501d0fdc2948",
+  "repairs": [
+    {
+      "detected_xy": [
+        355.0,
+        558.0
+      ],
+      "expected": {
+        "absolute_minus_old_plan_px": 7.399999999999977,
+        "absolute_target_y": 576.05,
+        "corrected_semantic_ideal_y": 565.4,
+        "old_plan_target_y": 568.65,
+        "raw_semantic_ideal_y": 554.75
+      },
+      "interline": 21.299999999999997,
+      "middle_polyline": [
+        [
+          83.0,
+          501.5
+        ],
+        [
+          2398.0,
+          501.5
+        ]
+      ],
+      "semantic_id": "p1:m0:n1",
+      "semantic_positions": [
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "detected_xy": [
+        402.0,
+        558.0
+      ],
+      "expected": {
+        "absolute_minus_old_plan_px": 7.399999999999977,
+        "absolute_target_y": 576.05,
+        "corrected_semantic_ideal_y": 565.4,
+        "old_plan_target_y": 568.65,
+        "raw_semantic_ideal_y": 554.75
+      },
+      "interline": 21.299999999999997,
+      "middle_polyline": [
+        [
+          83.0,
+          501.5
+        ],
+        [
+          2398.0,
+          501.5
+        ]
+      ],
+      "semantic_id": "p1:m0:n2",
+      "semantic_positions": [
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "detected_xy": [
+        256.0,
+        1326.0
+      ],
+      "expected": {
+        "absolute_minus_old_plan_px": 7.25,
+        "absolute_target_y": 1343.875,
+        "corrected_semantic_ideal_y": 1333.25,
+        "old_plan_target_y": 1336.625,
+        "raw_semantic_ideal_y": 1322.625
+      },
+      "interline": 21.25,
+      "middle_polyline": [
+        [
+          83.0,
+          1269.5
+        ],
+        [
+          2398.0,
+          1269.5
+        ]
+      ],
+      "semantic_id": "p1:m8:n0",
+      "semantic_positions": [
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "detected_xy": [
+        2027.0,
+        1710.0
+      ],
+      "expected": {
+        "absolute_minus_old_plan_px": 7.25,
+        "absolute_target_y": 1727.875,
+        "corrected_semantic_ideal_y": 1717.25,
+        "old_plan_target_y": 1720.625,
+        "raw_semantic_ideal_y": 1706.625
+      },
+      "interline": 21.25,
+      "middle_polyline": [
+        [
+          83.0,
+          1653.5
+        ],
+        [
+          2398.0,
+          1653.5
+        ]
+      ],
+      "semantic_id": "p1:m15:n0",
+      "semantic_positions": [
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "detected_xy": [
+        256.0,
+        2862.0
+      ],
+      "expected": {
+        "absolute_minus_old_plan_px": 7.530026997840196,
+        "absolute_target_y": 2880.18627699784,
+        "corrected_semantic_ideal_y": 2869.53002699784,
+        "old_plan_target_y": 2872.65625,
+        "raw_semantic_ideal_y": 2858.87377699784
+      },
+      "interline": 21.3125,
+      "middle_polyline": [
+        [
+          83.0,
+          2805.6
+        ],
+        [
+          2398.0,
+          2805.5
+        ]
+      ],
+      "semantic_id": "p1:m24:n0",
+      "semantic_positions": [
+        5,
+        6,
+        7
+      ]
+    }
+  ],
+  "status": "DERIVED_DIAGNOSTIC_NOT_INDEPENDENT_REFERENCE"
+}
