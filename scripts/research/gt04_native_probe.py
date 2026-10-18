@@ -62,10 +62,10 @@ def main(stage):
         emit('before_recognizer_predict')
         emit('recognizer_returned', result=list(model.predict(x)))
     elif stage == 'pipeline_predict':
-        from backend.ocr.paddle_ocr import _get_ocr
+        from backend.ocr.paddle_ocr import get_ocr
 
         emit('before_pipeline_init')
-        model = _get_ocr()
+        model = get_ocr()
         emit('pipeline_initialized')
         emit('before_pipeline_predict')
         emit('pipeline_returned', result=list(model.predict(x)))
