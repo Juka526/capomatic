@@ -123,3 +123,19 @@ def test_probe_calls_existing_production_factory_without_score_inputs():
     ]
     assert imports == ['get_ocr']
     assert 'recognized.musicxml' not in source and 'source.png' not in source
+
+
+def test_reference_comparison_checks_frozen_pixels_before_opening_references(tmp_path):
+    from scripts.research.gt04_reference_compare import compare
+
+    prototype = tmp_path / 'prototype'
+    prototype.mkdir()
+    (prototype / 'prototype-freeze.json').write_text(
+        json.dumps({'files': {'predicted-a.png': 'wrong'}})
+    )
+    with pytest.raises(ValueError, match='Frozen prototype'):
+        compare(
+            prototype, Path('no-reference-access'), Path('no-reference-access'), tmp_path / 'out'
+        )
+    with pytest.raises(ValueError, match='immutable'):
+        compare(prototype, tmp_path / 'gt01', tmp_path / 'gt02', tmp_path / 'gt01/new-output')
