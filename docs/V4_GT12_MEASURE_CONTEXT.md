@@ -54,6 +54,25 @@ The GT-11 music-layer renderer and its contracts are unchanged and available for
 
 Text verification would not authorize source ink removal, protection-envelope relaxation, lyric-pixel compositing or promotion of Track A PARTIAL ownership. No GT-13/14 or production milestone is authorized by these review materials.
 
+## Normalized review awaiting explicit owner confirmation
+
+A subsequent submitted review is classified **ASSISTANT_VISUAL_REVIEW / NOT_INDEPENDENT_GROUND_TRUTH**. It is retained separately, without changing the original owner candidate or prior GT-12 artifacts. It is not an owner confirmation. The source review sheet SHA-256 is `3ff4e49da99865ee93dcd1bea483d267cdfedc0377ef7bb84673ef78943e2ccf`; its image bytes remain unchanged.
+
+The normalized checklist at `gt12-output/owner-confirmation/normalized-source-checklist.json` presents these items for explicit owner confirmation:
+
+| Scope | Review statement, still pending owner confirmation |
+|---|---|
+| Events | Quarter rest, Bb3, C4, F4, each quarterLength 1; frozen OMR onsets 0, 1, 2, 3 |
+| Pitch context | Absolute names rely on existing source clef/key context, not visible within this crop |
+| Chord | Visible F, interpreted as major; no visible suffix, slash bass or alteration |
+| Chord placement | Preserve its source location near the measure beginning; do not attach it automatically to the first pitched note. Exact source placement coordinates still require source-only measurement. |
+| Upper lyrics | 주 / 님 / 의, associated respectively with the three pitched notes |
+| Lower lyrics | 사 / 막 / 의, associated respectively with the three pitched notes |
+| Initial rest | No associated syllable in either row |
+| Additional notation | No accidental, tie, slur, beam, flag or articulation identified in the visible target measure; neighboring measure content is excluded |
+
+The exact submitted assistant review, the normalized record and a preservation check are retained under the untracked `owner-confirmation/` directory. All previous GT-12 file hashes, including the original owner candidate, remain unchanged. Every normalized owner-confirmation field is false/pending; independent ground-truth labels remain 0. The F→E/D mapping remains conditional, and neither predicted image is generated. A later explicit owner confirmation may establish OWNER_VERIFIED_SOURCE within its stated scope; it cannot establish independent ground truth or authorize source ink removal.
+
 ## Outputs and use
 
 Untracked output directory: `/private/tmp/capomatic-v4-gt12/gt12-output/`.
