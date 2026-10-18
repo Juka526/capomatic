@@ -1,0 +1,13 @@
+{
+  "version": "gt08-text-review/1",
+  "understood_as": "Prepare source-only independent review and byte-preserving submission validation; do not supply labels or execute adjudicated collision analysis without real independently verified humans.",
+  "base": "feeb33bec47b73d5e32f042bc9a5561944ed6314",
+  "gt07b_read_only": "f3b808d3fb072d521f516ef9e8f50ef54bd59756",
+  "cases": "Exactly the historical five GT07A cases and original PNG bytes, no reselection. New neutral response envelope is separate from historical forms.",
+  "categories": ["CONFIRMED_TEXT", "CONFIRMED_NON_TEXT", "MIXED", "UNKNOWN"],
+  "coordinates": "crop-local pixel-index centers: first (0,0), x right/y down, native dimensions. RLE [row,left,right_exclusive], integer pixels only. Every crop pixel must have exactly one explicit category; no default/fill/rescale.",
+  "custody": "Separate A/B raw-byte freezes. A human custodian externally verifies identity, independence/exclusions and absence of AI-generated labels, then signs an attestation bound to raw submission and packet hashes. Trusted public-key fingerprint must be supplied externally, never auto-created by the agent. Files/signatures do not independently prove human personhood or observation correctness.",
+  "adjudication": "Different third human after both verified A/B freezes, bound to both freeze hashes. Original A/B bytes retained. Contradictory overlapping-case labels stay unresolved; no forced truth.",
+  "current_status": "WAITING_FOR_HUMAN_REVIEW until actual eligible reader submissions and external custody evidence arrive",
+  "composition": "Never authorized by text review alone. Music removal still requires independent COMPLETE ownership, separate future authorization and preregistered safety proof. No protection changes."
+}
