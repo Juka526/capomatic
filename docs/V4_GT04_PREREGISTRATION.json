@@ -1,0 +1,25 @@
+{
+  "version": "gt04-native-and-visual/1",
+  "base": "4a2e1eddc74f1d67b4598da7325e55cac13c7718",
+  "study": "POST_REFERENCE_ACCESS_DEVELOPMENT_NOT_BLINDED",
+  "native": {
+    "image": "sha256:fb3c1ff7f6428a499b18aae5dc0b71a5c8b03ee709b10ab82e3ab1f28e332b1e",
+    "models": "Exact GT-03 SHA-bound model copies; no download/substitution",
+    "stages": ["environment", "tensor", "detector_init", "detector_predict", "recognizer_predict", "pipeline_predict", "hybrid_predict"],
+    "input": "640x160 white RGB with synthetic Latin chord-like text only; no scores",
+    "execution": "Serial isolated processes; 60 seconds each; memory 4GiB, CPUs 2, network none; existing default backend enable_mkldnn=False",
+    "score_ocr_calls": 0,
+    "failure_policy": "Capture stage markers/logs/exit; no parameter/model/version sweep or score OCR retry"
+  },
+  "visual": {
+    "selection": "Earliest two non-system-initial printed Bb measures with pitched notes, one-to-one physical registration, all DIRECT or explicit provenance ownership, complete 4/4 stream of undotted quarter notes and quarter rests; no beam/flag/tie/slur/augmentation/tuplet/grace/explicit accidental/moving articulation/fermata or ending/repeat in scope. Record all earlier rejected candidates. Only source-side evidence used. No reselection after render.",
+    "chords": "Missing source chords remain INCOMPLETE; permitted MUSIC-ONLY layer, never a complete score. Do not derive missing chord text from reference.",
+    "geometry": "Original page/staff polylines/measure bounds/source x; absolute semantic target y from frozen GT-01 geometry, independently cross-checked with written pitch. Do not modify existing planner.",
+    "engraving": "Existing locally installed FreeSerif musical Unicode glyphs if present, else block. Glyph E.M. fixed from font outline black-notehead width = 1.25 staff interline; notehead anchor = font outline bbox center, separately measured raster residual. Quarter rest anchor = source rest bbox center; stems geometric tangent, length 3.5 interlines; ledger line width 1.75 interline at logical staff positions. No reference-based font calibration.",
+    "context": "Non-system-initial excerpt; G clef and target key supplied as explicit external context label, not silently claiming standalone score. Required in-scope structural/attachment symbols not supported block complete excerpt.",
+    "composition": "New notation canvas only. Untouched original crop shown alongside. No lyric cut/paste into target and no source-pixel erasure.",
+    "checks": "Per-symbol rendered alpha masks; exact pairwise ink intersections separated into intended notehead/stem/ledger/staff contacts and unexpected collisions. Protected-source dark-ink intersections reported separately from bbox envelopes. Pixel grid anchor residual <=0.5px per axis. No page/measure clipping. No missing/duplicated selected semantic events.",
+    "freeze": "Hash all prototype PNGs, metrics and limitations before accessing A/G reference comparison; never retune this run.",
+    "limits": "Technical excerpt only; no production B2 gate completion, no independent musical denominator"
+  }
+}
