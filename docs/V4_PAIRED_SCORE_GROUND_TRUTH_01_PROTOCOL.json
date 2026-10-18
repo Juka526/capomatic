@@ -1,0 +1,17 @@
+{
+  "version": "paired-score-ground-truth-01/1.0",
+  "base": "04687ce6ac65eb4d9505365b92aa96c886c88530",
+  "source_pdf_sha256": "1cc64756c0ce47b1db0ea6ac21eefe4685097a04cd4589f954afc712afb605fd",
+  "source_page_1_based": 2,
+  "source_key_declared": "Bb major",
+  "targets": [{"page": 1, "key": "A major", "semitones": -1}, {"page": 3, "key": "G major", "semitones": -3}],
+  "raster": {"dpi": 72, "mode": "L", "width": 2520, "height": 3564, "tool": "pdftoppm 26.09.0", "no_later_scaling": true},
+  "isolation": "Prediction container mounts source-only raster, code read-only and initially empty output. No original PDF, reference rasters, host home, Docker socket, or network. Coordinator has access to original; not a blinded human study.",
+  "recognition": {"audiveris_commit": "7a36078e7ba0c006052c1f661b949cf9b729f505", "timeout_seconds_per_page": 300, "source_runs": 1, "reference_runs_after_freeze": 2, "paddle_chord_detection": false, "recognition_output_is_not_truth": true},
+  "guards": "Unchanged V3 full guard in memory and after serialization. Any failure blocks usability. Failed diagnostics may be frozen, never waived.",
+  "track_a": "Unchanged 1.9c source ownership + COMPLETE-only 1.8 masks. No handoff tuning, no 1.10, no editing.",
+  "track_b": "B1 absolute staff coordinate analysis only; preserve original x/staff/system/measure geometry. Separate detected center, corrected semantic coordinate, absolute target coordinate, UNDEFINED replacement anchor. No B2.",
+  "evaluation": {"automated_note_correspondence": "Exact unique semantic identity candidates only; unmatched is UNKNOWN. Report raw counts, no accuracy denominator.", "cross_reference_interval": -2, "visual_spot_check_fixed_before_predictions": "Opening key signature, first three pitched notes, first two chord symbols in printed reading order on each page. Single coordinator visual check, not independent human ground truth.", "geometry": "Graph/detector correspondence is candidate evidence only; no detector output is verified physical truth. No musically correct result penalized for engraving layout differences.", "full_verified_ground_truth_denominator": 0},
+  "stop": ["missing PDF", "uncertain source page identity", "recognition failure freezes affected failure", "guard failure blocks usability", "ambiguous correspondence remains UNKNOWN"],
+  "recommendation_choices": ["CONTINUE_BOTH", "TRACK_A_MORE_PROMISING", "TRACK_B_MORE_PROMISING", "INSUFFICIENT_EVIDENCE"]
+}
