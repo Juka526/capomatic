@@ -54,3 +54,16 @@ def test_bbox_centroid_and_optical_center_are_not_equated():
     result = observe(image, (15, 15))
     assert result['bbox_center_index'] == [15, 15]
     assert result['coverage_centroid'][0] < 15
+
+
+def test_score_rerun_requires_passed_gate_and_cannot_write_into_history(tmp_path):
+    import json
+    from scripts.research.gt05_anchor_gate import score_run
+
+    gate = tmp_path / 'gate'
+    gate.mkdir()
+    (gate / 'gate.json').write_text(json.dumps({'passed': False}))
+    with pytest.raises(ValueError, match='gate'):
+        score_run(tmp_path / 'font', gate, tmp_path / 'old', tmp_path / 'new')
+    with pytest.raises(ValueError, match='historical'):
+        score_run(tmp_path / 'font', gate, tmp_path / 'old', tmp_path / 'old/new')
