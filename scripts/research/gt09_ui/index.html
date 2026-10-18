@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="review-token" content="__TOKEN__"><title>GT-09 소유자 텍스트 검토</title><link rel="stylesheet" href="/style.css"></head>
+<body><header><h1>GT-09 소유자 텍스트 검토</h1><strong>OWNER_REVIEW · NOT_INDEPENDENT_GROUND_TRUTH</strong><p>원본 픽셀은 바뀌지 않습니다. 표시는 별도 주석입니다. 보호 마스크 변경·악보 합성을 허용하지 않습니다.</p></header>
+<main><aside inert><label>원본 사례 <select id="cases" disabled></select></label><p id="identity"></p>
+<fieldset><legend>분류</legend><div id="legend"></div></fieldset>
+<label>도구 <select id="tool"><option value="brush">브러시</option><option value="rect">사각형</option><option value="polygon">다각형</option><option value="pan">이동</option></select></label>
+<label>브러시 반경 (원본 px) <input id="radius" type="number" min="0" max="40" value="3"></label>
+<div class="row"><button id="polyDone">다각형 적용</button><button id="cancel">선택 취소</button></div>
+<div class="row"><button id="undo">실행 취소</button><button id="redo">다시 실행</button></div>
+<button id="unknown">직접 선택: 전체 UNKNOWN</button><p class="hint">처음에는 미검토입니다. 전체 UNKNOWN은 불확실성 선언이며 완료된 관찰을 뜻하지 않습니다.</p>
+<label>확대 <input id="zoom" type="range" min="50" max="800" step="25" value="100"><output id="zoomValue">100%</output></label><button id="native">원본 100%</button>
+<label>주석 투명도 <input id="opacity" type="range" min="0" max="90" value="40"></label><label><input id="show" type="checkbox" checked> 주석 보기 (해제하면 원본만)</label>
+<section aria-label="검토 커버리지"><h2>현재 픽셀 커버리지</h2><div id="coverage"></div><p id="finalState"></p></section>
+<label><input id="ack" type="checkbox"> 위 UNKNOWN·MIXED·미검토 수량을 확인했습니다.</label><button id="finalize">현재 사례 검토 확정</button>
+<button id="save">저장 / 이어하기</button><button id="export">5개 확정본 RLE 내보내기</button><p id="status" role="status" aria-live="polite">원본 해시 확인 중…</p></aside>
+<section class="workspace"><p>브러시/사각형: 드래그 · 다각형: 꼭짓점 클릭 후 적용 · 이동 도구 또는 Space+드래그 · Ctrl/⌘+Z: 취소 · Ctrl/⌘+Shift+Z: 다시 실행 · 휠: 스크롤</p><div id="viewport" tabindex="0" aria-label="원본 이미지와 수동 주석 캔버스"><div id="stage"><canvas id="source"></canvas><canvas id="overlay" tabindex="0" aria-label="수동 픽셀 주석"></canvas><canvas id="guide"></canvas></div></div></section></main><dialog id="confirmDialog"><p id="confirmText"></p><div class="row"><button id="confirmYes">확인하여 적용</button><button id="confirmNo">취소</button></div></dialog><script type="module" src="/app.js"></script></body></html>
