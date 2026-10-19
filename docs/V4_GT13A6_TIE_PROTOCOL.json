@@ -1,0 +1,14 @@
+{
+  "base": "20af28ea54d45d980da57ec3084790a2001b4d4e",
+  "source": "Original Bb PDF page 2 only; no target reference access",
+  "real_score_gate": "Explicit OWNER_CONFIRMED destination required; prior OMR graph or semantic tie is not owner approval",
+  "renderer_scope": "Synthetic-tested separate below-tie curve masks; real whole-note anchor and cross-system composition remain unvalidated",
+  "geometry": "Original page coordinates; outgoing/incoming cubic curves are separate components in vertically disjoint system viewports. No pixels may join the system gap.",
+  "reuse": "GT13A2 curve_mask and translated_curve; same 65-sample cubic and width2; no new note renderer",
+  "attachment": "Outgoing curve[0] and incoming curve[-1] must match declared head-anchor plus attachment-offset per axis <=0.5px. An explicit below-head offset is required. This checks declared geometry, not independent optical truth.",
+  "safety": "Finite monotonic-x cubics; all control points and sampled ink inside each system viewport with stroke margin; disallow any actual alpha overlap with unrelated obstacle ink; reject ambiguous role or missing endpoint",
+  "targets": "Bb3 to A3 (-1); Bb3 to G3 (-3); preserve onset/duration/tie roles",
+  "preservation": "No GT13A5 lyric or music mask changes; notehead <=0.5px criterion unchanged",
+  "owner_collection": "One source-only confirmation question; preserve actual reply verbatim; never infer from silence",
+  "no_real_continuation_before_confirmation": true
+}
