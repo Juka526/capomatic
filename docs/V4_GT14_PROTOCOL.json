@@ -1,0 +1,14 @@
+{
+  "base": "4b3aabda905f2f56f3e2c181f724f80a94db1b7f",
+  "fixed_scope": "Original Bb page2, entire second printed system m5-8; no A/G reference access",
+  "source_status": "Only m5 Bb3 whole-note tied stop is OWNER_VERIFIED_SOURCE. All other events remain OMR_RECOGNIZED and OMR_PROVISIONAL when drawn. Agent source candidates are not owner or independent ground truth.",
+  "review": "Native raw second-system crop and each measure, with complete lyric baselines; neutral source-only review images, compact coordinator checklist separate from image pixels",
+  "music": "Reuse GT05A glyph, GT06 beam_geometry for explicit two-sixteenth pair, GT13A2 mixed_layout for two three-stem groups, curve_mask/translated_curve for explicit same-pitch local ties, and GT13A6 whole_head. No production helper changes",
+  "unsupported_policy": "Whole rest, ending1 bracket, final backward repeat, unknown articulation/fermata interpretation and unverified chord/lyric source content remain explicit omissions/blockers. Do not silently reinterpret or promote them.",
+  "ties": "m4->m5 incoming/outgoing masks and m5 whole-note/ledger/context reused byte-for-byte from Phase2. New local ties use actual source head relations and target bbox-bottom displacements, preserving source curves and <=0.5px attachment registration",
+  "context": "Original staff2 polylines and source measure boundaries; extend persisted m5 context, render no invented opening repeat/time",
+  "lyric_chord_policy": "Inventory source-only agent candidates and OMR outputs separately; no new chord/lyric raster until owner verification. Collision-aware positioning not executed on unverified text",
+  "checks": "Actual nonzero alpha, explicit intended head/stem/ledger and beam/stem contacts only, no clipping, <=0.5px notehead residual, full V3 guard unchanged",
+  "preview": "Separate first-plus-second incomplete diagnostic preview allowed only if registered source geometry and event mappings are unique; new music amber, confirmed material black; full-score completion forbidden",
+  "result_policy": "Freeze source audit and protocol before target renders, then freeze targets before assistant visual review. No retuning to reference pages or visual result. If unexpected contacts occur report NEEDS_REFINEMENT without relaxing rules."
+}
