@@ -1,0 +1,23 @@
+{
+  "base": "9b44157a38964179a375dfc6a0ce6645e6e8e413",
+  "scope": "Original Bb PDF page2 first system, printed m1-4; A -1 and G -3",
+  "source_music": "26 OWNER_VERIFIED_SOURCE events and two confirmed chords imported unchanged from frozen GT13A3; no reference pages",
+  "lyric_review": "Confirmed strings reused. Proposed note associations are ASSISTANT_PROPOSED_ASSOCIATION, OWNER_REVIEW_PENDING. Tied stop receives no new syllable, candidate extender continues prior syllable. No association promotion without actual owner response.",
+  "outgoing_tie": "Inspect explicit 4818<->4798 extension relations, two head IDs, source pitches and MusicXML tie roles. Next-system source crop only. OMR_SUPPORTED_CANDIDATE_PENDING_OWNER; do not render completion.",
+  "font": "Existing pinned FreeSerif.ttf only; no new fonts. Treble U+1D11E, sharp U+266F, two real numeral4 glyphs, source-backed bars/dots.",
+  "clef_anchor": "Fixed font-design lower-bowl anchor (331,160) units of 1000 UPM, derived from lower-bowl outer bounds x120..542 and y-12..332 of the isolated FreeSerif outline, before score rendering. Anchor to actual G4 staff line (polyline index3), source clef center x200. Font outline height 7 interlines. Not a SMuFL or independently validated optical anchor.",
+  "sharp_anchor": "Fixed canonical raster bbox center; target pitch F5,C5,G5 order for A and F5 for G. Height 2.6 interlines, source key-left236, spacing1.1interlines. <=0.5px raster/anchor registration.",
+  "header_layout": "Source original repeat thick285..295, thin301..304, dots311..318. Shift entire repeat block right only as needed to leave 0.5interline after target key ink. 4/4 center=max(source338, repeat-dot-right+0.5interline+digit-half-width), digit height1.8interlines, staff-space centers at polyline1 and3. All must fit before existing first rest; actual ink intersection blocks.",
+  "staff_scaffold": "Preserve original polylines and physical measure boundaries; omit only old diagnostic DUMMY start-frame at x160 from the NEW standalone scaffold. Actual opening repeat is engraved. Every previous note/rest/chord/lyric mask unchanged.",
+  "validation": "Synthetic interlines14/18/24 and integer/fractional origins frozen before score output; clef semantic anchor and notehead standard0.5px, exact sharp count/pitches, time4/4, repeat two dots/right-facing, actual component contacts, unchanged native m3 and all prior music masks. No threshold widening.",
+  "final_status": "FULL_SYSTEM_INCOMPLETE unless unresolved required associations and cross-system tie receive explicit source confirmation and rendering contract",
+  "production_or_source_edits": false,
+  "owner_association_followup": {
+    "approval_file": "docs/evidence/GT13A4_OWNER_ASSOCIATION_REPLY.json",
+    "approval_sha256": "749a3fde004677ac85056cab41cc51921264fdfc82bcd6a3987c17862a5ef97e",
+    "context": "Owner explicitly confirmed proposed m1/2/4 associations; expressly withheld tie destination. Preserve original header-only freeze and producer snapshot.",
+    "new_run": "gt13a4-confirmed-lyrics-output",
+    "lyric_contract": "Unchanged GT12 AppleGothic44 text_mask; source m3 row baselines and original note x; m3 cached lyric pixels unchanged. Exact confirmed syllables on SYLLABLE_START; tied-stop has no new token, Unicode U+2014 continuation mark at tied-note x via same text renderer. No complete outgoing extender.",
+    "collision_policy": "Actual nonzero alpha music/lyric and lyric/lyric intersections measured. Keep source-derived baseline fixed and do not retune after seeing result. Any contacts block visual safety; diagnostic output still INCOMPLETE. No moving notes or relaxing collision rules."
+  }
+}
