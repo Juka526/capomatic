@@ -1,0 +1,16 @@
+{
+  "base": "2be100658f716f766270cde676d65fa80e38f176",
+  "phase": "DECLARED_BEFORE_NEW_LAYOUT_PREDICTIONS",
+  "evidence": "OWNER_VERIFIED_SOURCE; not independent ground truth",
+  "alpha_support": "Every alpha value >0, without threshold relaxation",
+  "allowed_transform": "Integer dy>=0 only; same dy for both rows and continuation marks in each group; exact alpha translation, no rerasterization",
+  "viewport": [130,310,2430,720],
+  "clearance": "No lyric support within Chebyshev distance <=1 of any fixed score ink; minimum pixel-center distance >=2. This dilation is a spacing test only, not added ink or ownership.",
+  "optimizer": "Enumerate complete finite dy domain 0..viewport_bottom-group_bottom. Cross-correlate translated lyric support against fixed spacing obstacle and baseline neighboring lyric support. Select minimum feasible dy; report every forbidden smaller dy. No iterative post-result adjustment.",
+  "local": "Group by printed measure. Move only groups failing original spacing predicate. Neighbors remain baseline obstacles; validate all final pairwise lyric masks and fail closed on any conflict. Measure 3 is immutable and must already satisfy spacing.",
+  "global": "Translate all 40 lyric components by one minimal feasible dy. This new alternative explicitly changes measure 3 when dy>0; historical outputs never change.",
+  "final_selection": "Use local candidate if all checks pass; otherwise BLOCKED, no fallback retuning. Global remains separately labeled alternative.",
+  "required": "Zero lyric/music and lyric/lyric contacts, no clipping or lost alpha, unchanged x anchors, row spacing and associations; unchanged full V3 guard; anchor criterion <=0.5 per axis",
+  "inspection": "Agent inspection after prediction freeze; not independent human optical validation",
+  "unresolved": "Outgoing cross-system tie remains unrendered; no destination invention"
+}
