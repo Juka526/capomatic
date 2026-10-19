@@ -1,0 +1,12 @@
+{
+  "base": "681f4a2dec0eb0dccc8e46eac6aac19f88c44fa9",
+  "understood_as": "Audit the fixed entire first Bb system and render only existing source-confirmed content, with explicit gaps rather than invented or silently omitted source notation.",
+  "system": 1,
+  "printed_measures": [1, 2, 3, 4],
+  "source_only_crop": [130, 310, 2430, 720],
+  "source_note_confirmation_scope": "Only printed measure 3 from the actual GT12 owner confirmation",
+  "rendering_policy": "Keep full original staff polylines and frozen physical measure candidates. Reuse exact GT12 m3 music/chord/lyric masks. Leave all other musical content as labeled gaps. No newly inferred lyrics/chords or source-pixel composition.",
+  "unsupported_header": "Clef/key glyph placement, time-signature and forward-repeat engraving have no validated renderer contract; use explicit missing-context label, not substitute glyphs.",
+  "geometry_policy": "Retain GT12/GT02 physical boundary candidates; report the separate 0-1px OMR-boundary disagreement without correcting it.",
+  "visual_review": "Freeze actual PNGs first, then agent inspection; neither source candidates nor visual review are independent human truth."
+}
