@@ -1,0 +1,18 @@
+{
+  "rendering_baseline": "20af28ea54d45d980da57ec3084790a2001b4d4e",
+  "phase1_revision": "596c8d716301d5c5bfc927f9a9d63652b65fa38c",
+  "scope": "Standalone two-system tie context; full first system plus owner-confirmed measure5 whole-note endpoint only; not full-score completion",
+  "confirmation": "Actual GT13A6_OWNER_SOURCE_CONFIRMATION record and four packet hashes, source SHA, source-curve identities and review freeze must match; preserve bytes",
+  "evidence_classification": "OWNER_VERIFIED_SOURCE; NOT_INDEPENDENT_GROUND_TRUTH",
+  "font_sha256": "c1dd2270ff624d66a7f1cd23075b5ce05a662f560be06a70a9599065ce008355",
+  "whole_note": "FreeSerif U+1D15D; GT05A canonical raster placement unchanged; same font size rule as existing black heads; no stem on whole note; preserved transparent center",
+  "synthetic_controls": "Before score outputs: whole-note glyph at interlines14/18/24 and phases0/0.25/0.5/0.75; <=0.5px per axis measured bbox center; open center, deterministic bitmap and no rescaling",
+  "incoming_position": "x from source head1923 bbox center, y from target diatonic pitch and exact staff2 middle polyline/interline; source physical center separately recorded",
+  "outgoing_position": "Use unchanged frozen GT13A2/13A5 final head1852 rendered bounds and anchor; do not rerasterize any first-system event",
+  "ties": "Reuse raw source cubic x/control geometry, uniform vertical displacement per segment from source head bbox bottom to target raster bbox bottom. Retain source attached-end horizontal/vertical offset. Compare declared target attachment per axis <=0.5px; preserve source length/curvature; separate masks in original system viewports",
+  "staff_and_context": "Source staff2 polylines clipped exactly at m5 original right boundary639; existing header clef and target-key glyphs only, without repeat/time at system2; no invented other measures, chords or lyrics",
+  "ledgers": "Existing ledger width2 and pitch-position rule; cover whole-note bbox plus4px to either side, preserving holes in head alpha; intentional head/ledger contacts counted separately",
+  "collision": "Every nonzero alpha counts; no exact contact with existing fixed first-system score or new unrelated second-system context. Report nearest distances. Reject clipping, missing endpoints, pitch/role disagreement or gap bridge",
+  "pixel_integrity": "All differences against generated before-tie canvas must lie inside new tie alpha only; first-system layer bytes remain unchanged. This is not source-ink edit authorization",
+  "result_policy": "Freeze new predictions before assistant visual review; do not tune to target references; no target reference access; rendering and visual verdicts separate from source confirmation"
+}

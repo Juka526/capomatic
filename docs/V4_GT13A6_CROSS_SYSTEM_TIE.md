@@ -87,3 +87,7 @@ Reproduce with retained historical local inputs, using a fresh output directory:
 Next action is the single requested owner source review. If uncertain or rejected, preserve that result and stop promotion. If confirmed, bind the actual answer to the frozen packet and validate incoming whole-note anchoring before a separately frozen real continuation trial. No full-system completion is claimed.
 
 No source edit, original ink removal, lyric-pixel compositing, protection-mask change, Track A promotion, V1/V3 production change, API/frontend work, merge or deployment. Only research helpers, tests, protocol and report are committed; copyrighted source crops and diagnostic artifacts remain untracked.
+
+## Subsequent owner-confirmed rendering study
+
+The pending status above is the preserved Phase1 result. The actual later owner-confirmation record and newly authorized two-segment A/G context rendering are documented separately in [GT-13A.6 Phase2](V4_GT13A6_CROSS_SYSTEM_TIE_RENDERING.md). Historical packets and pending checklists remain unchanged; that later result is not full-score completion.
