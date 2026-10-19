@@ -1,0 +1,167 @@
+CAPOMATIC V4 — GT-13A.3
+OWNER SOURCE CONFIRMATION AND GT-13A.4 PREPARATION
+
+Repository:
+Juka526/capomatic
+
+Starting SHA:
+fe8d7cbfaff53233b0c4f8a1a418cdde4ceb61b9
+
+Branch:
+experiment/v4-gt13a3-owner-verification
+
+OWNER CONFIRMATION
+
+The owner explicitly approved the previously
+presented source-image interpretation for
+printed measures 1, 2 and 4.
+
+Classification:
+
+OWNER_VERIFIED_SOURCE
+
+NOT_INDEPENDENT_GROUND_TRUTH
+
+Preserve the actual owner approval message
+and its review context verbatim.
+
+Do not fabricate a new independent label.
+
+==================================================
+CONFIRMED MEASURE 1
+==================================================
+
+Quarter rest, onset 0, duration 1
+Bb3, onset 1, duration 1
+C4, onset 2, duration 1
+F4, onset 3, duration 1
+
+Chord:
+Bb major
+
+No added suffix or slash bass.
+
+Preserve the original chord placement.
+
+==================================================
+CONFIRMED MEASURE 2
+==================================================
+
+Quarter rest: onset 0, duration 1
+Eighth rest: onset 1, duration 1/2
+
+F3: onset 1.5, duration 1/2
+D4: onset 2, duration 1/2
+C4: onset 2.5, duration 1/4
+C4: onset 2.75, duration 1/4
+C4: onset 3, duration 1/4
+Bb3: onset 3.25, duration 1/2
+C4: onset 3.75, duration 1/4
+
+Internal tie:
+C4 at onset 2.75 to C4 at onset 3
+
+No newly printed chord symbol identified
+in this measure.
+
+Do not infer a new chord event.
+
+==================================================
+CONFIRMED MEASURE 3
+==================================================
+
+Preserve the existing GT-12
+OWNER_VERIFIED_SOURCE evidence and rendering.
+
+Do not modify or replace its original
+confirmation record.
+
+==================================================
+CONFIRMED MEASURE 4
+==================================================
+
+Quarter rest: onset 0, duration 1
+Eighth rest: onset 1, duration 1/2
+
+F3: onset 1.5, duration 1/2
+D4: onset 2, duration 1/2
+C4: onset 2.5, duration 1/4
+C4: onset 2.75, duration 1/4
+C4: onset 3, duration 1/4
+Bb3: onset 3.25, duration 1/2
+Bb3: onset 3.75, duration 1/4
+
+Internal tie:
+C4 at onset 2.75 to C4 at onset 3
+
+Outgoing tie:
+Starts at final Bb3.
+
+Its destination note and complete
+cross-system geometry remain UNVERIFIED.
+
+No newly printed chord symbol identified
+in this measure.
+
+Do not invent an additional chord.
+
+==================================================
+KOREAN LYRICS
+==================================================
+
+Previously confirmed lyric strings for
+measures 1–4 remain valid.
+
+Do not request duplicate confirmation
+of the lyric transcription.
+
+Exact note-to-syllable associations
+in measures 2 and 4 remain pending.
+
+Do not silently promote them to verified.
+
+==================================================
+NEXT IMPLEMENTATION TASK
+==================================================
+
+1. Bind the explicit owner confirmation
+   to the frozen source image and checklist.
+
+2. Update evidence classifications for
+   the 22 previously provisional music events.
+
+3. Preserve all original GT-13A.2 predictions
+   and their hashes.
+
+4. Create a new, separately frozen render
+   using the confirmed event inventory.
+
+5. Add the confirmed measure-1 Bb chord:
+   A target: A major
+   G target: G major
+
+6. Preserve existing music-event geometry.
+
+7. Do not invent missing lyrics,
+   syllable associations or tie endpoints.
+
+8. Keep header, key/time/repeat notation
+   and the unresolved outgoing tie explicit
+   as remaining engineering blockers.
+
+9. Generate A/G comparison PNGs.
+
+10. Run all existing regression tests
+    and V3 semantic integrity gates.
+
+No source PDF changes.
+No original ink removal.
+No protection-mask relaxation.
+No production changes.
+No merge or deployment.
+
+Report final SHA, PNG paths,
+updated verification coverage
+and remaining blockers.
+
+STOP.

@@ -1,0 +1,24 @@
+{
+  "base": "fe8d7cbfaff53233b0c4f8a1a418cdde4ceb61b9",
+  "scope": "Bb page 2 first system printed measures 1-4; targets A -1 and G -3",
+  "approval": "docs/evidence/GT13A3_OWNER_APPROVAL.txt, verbatim user message, not an independent label or cryptographic owner signature",
+  "binding": "Post-approval coordinator binding to frozen source SHA, native source crop SHA, previous checklist SHA and render freeze. Does not assert the owner signed these hashes.",
+  "notes": "22 events now OWNER_VERIFIED_SOURCE, checked individually against explicit user pitch/onset/duration/tie checklist; m3 confirmation kept by original GT12 reference",
+  "lyrics": "OWNER_CONFIRMED_LYRIC_TRANSCRIPTION; m2/4 associations pending. m1 earlier provisional placement is retained and not promoted by musical-event confirmation.",
+  "chord": "Confirmed m1 Bb major inserted in separate owner-augmented research semantics at onset0 as measure-start context; no first-pitched-note attachment. Print placement uses source-only fixed window [380,350,450,414] and GT12 FreeSerif40 left/top ink contract. Targets A/G via unchanged V3 chord/transposition code.",
+  "geometry": "Reuse frozen GT13A2 component PNGs; no re-engraving or note/rhythm geometry changes. Notes recolored black for source verification; m1 lyric placement amber to preserve its unverified-association status.",
+  "m3": "Original GT12 source approval and combined alpha unchanged; new chord and other components must not intersect m3 region or cached alpha",
+  "guards": "Unchanged full V3 guards in memory and serialized, plus zero-shift source roundtrip; compare all note/rest signatures to frozen A/G and preserve lyric signatures",
+  "annotations": "All diagnostic ink in separate header/footer, no notation-viewport pixels. Reuse GT13A2 alpha-contact and actual musical pixel-distance measurement. Report new chord contacts independently.",
+  "outgoing_tie": "Start confirmed; destination and full cross-system geometry UNVERIFIED. No stub/destination added.",
+  "result": "FULL_SYSTEM_INCOMPLETE: header/repeat, outgoing tie, lyric associations and general engraving validation remain blockers",
+  "reference_access": false,
+  "source_ink_edit_permission": false,
+  "owner_message_sha256": "d1de1184e0bae4af1d55656e6cd61c372ddfc4f0462087131f0abbcd472c1ec8",
+  "source_chord_window": [
+    380,
+    350,
+    450,
+    414
+  ]
+}
