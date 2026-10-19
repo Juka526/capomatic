@@ -1,0 +1,17 @@
+{
+  "base": "37a90281ce2bc8da81cfb9b605226f64c300e536",
+  "scope": "Owner-confirmed standalone second-system context continuation, no production or original-ink composition",
+  "approval": "Actual user message and preceding candidate text preserved; hash-bound to immutable GT14 review sheet, checklist, inventory and freeze. No signatures or timestamps invented.",
+  "ambiguity_exclusions": ["sheet#1:5686", "sheet#1:5699", "sheet#1:5747", "sheet#1:5762"],
+  "exclusion_policy": "Retain exact original IDs/bboxes/relations as AMBIGUOUS_UNVERIFIED. No TENUTO/FERMATA glyph rendered, no automatic reclassification as lyric strokes. No dash glyphs at excluded-object sites; held syllables receive no new token.",
+  "music_geometry": "Reuse all cached GT14 note/rest/stem/beam/hook/ledger/tie alpha bytes. Existing first system and cross-system tie unchanged. Promote event evidence in new derived records only.",
+  "whole_rest": "FreeSerif U+1D13B, same note font scale as GT13A2; font-specific upper-bar center anchor (191,560) on original staff line index1. GT05A canonical raster translated only; <=0.5px anchor per axis; no scaling.",
+  "ending_repeat": "Owner-confirmed ending1 and backward repeat must also agree with existing MusicXML. Bracket from raw ending5201 leg/top geometry, width2 joined at source top y. Numeral1. FreeSerif40 at source digit bbox. Thin/heavy bars and two dots from persisted source geometries, dots left of thin left of heavy.",
+  "chord_source_windows": [[270,705,410,765],[630,705,780,765],[1598,705,1710,765]],
+  "ending_digit_window": [1968,730,2030,770],
+  "lyric_source_windows": [[900,930,1580,973],[900,976,1580,1018]],
+  "text": "GT12 AppleGothic44/text_mask and FreeSerif40 chord text; source windows measure display alignment only, no ink ownership. Confirmed lyrics only at m6 onsets1.5/1.75/2/2.5/2.75/3.25/3.75. Onset3 has no new syllable. No m5/m7 extender glyphs inferred from ambiguous objects.",
+  "lyric_layout": "Fixed x at associated source head bbox center. Both rows move together downward by minimal integer dy from complete GT13A5 displacement-domain test. Require zero actual contacts and one-pixel Chebyshev neighborhood clearance, <=1030 bottom; no font shrink or horizontal move. If no feasible dy, keep baseline as BLOCKED diagnostic, never silently approve.",
+  "preservation": "Freeze all new outputs independently; original GT14 records remain unchanged. Source/target V3 guards and full lyric signatures checked through serialization; source notes/ties unchanged.",
+  "verdict": "INCOMPLETE_UNRESOLVED_SYMBOLS even when every confirmed component is rendered. Actual PNG inspection is assistant review, not independent optical truth. No A/G reference use."
+}

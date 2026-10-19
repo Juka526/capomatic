@@ -1,0 +1,67 @@
+CAPOMATIC GT-14.1 — SOURCE REVIEW CANDIDATE
+
+Source:
+Original Bb PDF page 2
+Printed measures 5–8
+
+Evidence classification:
+ASSISTANT_VISUAL_REVIEW
+OWNER_VERIFICATION_PENDING
+NOT_INDEPENDENT_GROUND_TRUTH
+
+CHORD CANDIDATES
+
+m5: Gm
+m6: Bb/D
+m7: Eb
+m8: No newly printed chord
+
+LYRICS — m6
+
+Upper:
+내 / 가 / 있 / 길 / 원 / 하 / 네
+
+Lower:
+주 / 의 / 놀 / 라 / 운 / 손 / 길
+
+Associations:
+Onsets 1.5, 1.75, 2, 2.5,
+2.75, 3.25, 3.75
+
+Onset 3:
+Tied continuation, no new syllable.
+
+MUSIC
+
+Preserve the frozen OMR event inventory
+for measures 6–8 as review candidates.
+
+m6:
+Quarter rest, eighth rest,
+eight notes, local tie and outgoing tie.
+
+m7:
+Bb3 whole note, tie STOP.
+
+m8:
+Whole-measure rest.
+
+ENDING
+
+m8:
+First-ending bracket and backward repeat.
+
+AMBIGUOUS SYMBOLS
+
+Do not automatically classify disputed
+TENUTO or FERMATA candidates as genuine
+musical articulations.
+
+Request explicit owner review.
+
+Do not promote this candidate packet to
+OWNER_VERIFIED_SOURCE automatically.
+
+No production changes.
+No source ink removal.
+No merge or deployment.

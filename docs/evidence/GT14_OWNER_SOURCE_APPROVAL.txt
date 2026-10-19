@@ -1,0 +1,84 @@
+CAPOMATIC GT-14 — OWNER SOURCE APPROVAL
+
+The project owner explicitly approved
+the source-review candidates for
+printed measures 5–8, subject to
+the ambiguity exclusions below.
+
+Classification:
+OWNER_VERIFIED_SOURCE
+
+NOT_INDEPENDENT_GROUND_TRUTH
+
+CONFIRMED:
+
+1. Frozen musical note/rest events,
+   pitches, onsets, durations and ties
+   for measures 6 and 7.
+
+2. Measure 8 whole-measure rest.
+
+3. Printed chords:
+   m5 Gm
+   m6 Bb/D
+   m7 Eb
+   m8 no newly printed chord symbol.
+
+4. Both Korean lyric strings and the
+   proposed note-onset associations.
+
+5. Onset 3 is a tied continuation,
+   not a new syllable.
+
+6. Measure 8 first-ending bracket
+   and backward repeat.
+
+7. Preserve the previously confirmed
+   m4-to-m5 cross-system tie.
+
+REMAINING UNVERIFIED:
+
+The disputed TENUTO and FERMATA
+objects have not been individually
+classified by the owner.
+
+Do not promote them to verified
+musical articulations.
+
+Do not automatically discard them
+as lyric strokes either.
+
+Retain their original object IDs,
+bounding boxes, relations and
+ambiguous classification.
+
+EVIDENCE REQUIREMENTS:
+
+Preserve the actual owner approval
+message and source-review context.
+
+Bind approval to the frozen GT-14
+source-review sheet and checklist.
+
+Do not fabricate independent labels,
+reviewer signatures or timestamps.
+
+Do not modify historical GT-14 evidence.
+
+NEXT AUTHORIZED DEVELOPMENT:
+
+Create a separate experimental continuation
+to render the newly confirmed chords,
+Korean lyrics, whole rest and ending/repeat.
+
+Preserve existing note and tie geometry.
+
+Validate actual lyric/music pixel collisions.
+
+If unresolved symbols affect correctness,
+retain explicit incomplete status.
+
+No source ink removal.
+No protection-mask changes.
+No production modifications.
+No merge or deployment.

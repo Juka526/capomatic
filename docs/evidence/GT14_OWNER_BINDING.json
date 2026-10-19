@@ -1,0 +1,22 @@
+{
+  "approval_file": "GT14_OWNER_SOURCE_APPROVAL.txt",
+  "approval_sha256": "fbef609331e158c09078ac3262da886f462cb68d6386a1e5fe58d2371b704f16",
+  "classification": "OWNER_VERIFIED_SOURCE",
+  "excluded_objects": [
+    "sheet#1:5686",
+    "sheet#1:5699",
+    "sheet#1:5747",
+    "sheet#1:5762"
+  ],
+  "excluded_status": "AMBIGUOUS_UNVERIFIED_NOT_RENDERED_NOT_DISCARDED",
+  "historical_base_sha": "37a90281ce2bc8da81cfb9b605226f64c300e536",
+  "independent_ground_truth": false,
+  "prediction_freeze_sha256": "8c74d2a400da22407c1a69ba26108be3704cbc12c90fa8180b60dfd29e62a389",
+  "provenance": "Actual user approval and preceding user candidate message copied verbatim as text; coordinator hash binding; no invented signature/reviewer/timestamp",
+  "review_checklist_sha256": "e7349c17aa69d66d449187f3a1f4c9a765894d8b06612a1293b286313c630fd3",
+  "review_context_file": "GT14_SOURCE_REVIEW_CANDIDATE.txt",
+  "review_context_sha256": "3f37d1694fe5f5486d44984d022ccf52d035f7d4ce09b542eca8ac76034ca4b3",
+  "review_sheet_sha256": "f9bc8c5b951a0e5bcf393b8a2111c1bca4fdfcea6495a2083770cea769fd7b33",
+  "source_inventory_sha256": "f975c3f717cfab4f9dbac8dfb5fa9ca6cf5d40a3502a60d1108e78c889e5b6f6",
+  "source_sha256": "eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de"
+}
