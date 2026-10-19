@@ -1,0 +1,17 @@
+{
+  "study": "GT12_OWNER_VERIFIED_STANDALONE_CONTEXT_RUN_01",
+  "understood_as": "Use actual owner-confirmed source content only, reuse frozen GT11 music masks, and newly typeset chord and both Korean rows on white diagnostic canvases. No source-pixel replacement.",
+  "selection": "Bb PDF page 2, printed measure 3 only",
+  "music_renderer": "Unchanged GT11 exact producer alpha masks, verified against frozen semantic transpositions",
+  "anchor_limit_per_axis_px": 0.5,
+  "source_chord_measurement_window": [1390, 350, 1450, 414],
+  "source_lyric_row_measurement_windows": [[1480, 588, 1730, 632], [1480, 635, 1730, 688]],
+  "measurement_method": "Source L<127 bbox inside fixed source-only windows, for display alignment only, never ownership or removal evidence",
+  "chord_font": "Existing frozen FreeSerif.ttf, size 40; preserve measured source ink left/top, do not attach to first pitched note",
+  "lyric_font": "/System/Library/Fonts/Supplemental/AppleGothic.ttf, size 44; no font download or bundling",
+  "lyric_placement": "GT05 fixed-phase bitmap registration. Each syllable ink center x aligned to corresponding source note x; common row baseline from source row ink-bottom minus canonical font descent",
+  "collision_rule": "All new text/music component alpha overlaps are unexpected and block acceptance; clipping blocks acceptance",
+  "source_completeness": "Raw OMR remains incomplete for chords/lyrics; owner-confirmed augmented source content is distinct from independent ground truth",
+  "reference_pages": "Not read, used or compared in this run",
+  "source_pixel_composition": false
+}

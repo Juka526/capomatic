@@ -1,105 +1,103 @@
-# GT-12: source-only measure-context review
+# GT-12: owner-verified standalone measure context
 
-**Combined rendering: BLOCKED — WAITING_FOR_OWNER_SOURCE_CONFIRMATION.** The complete source review materials are prepared. No A/G chord-and-lyric canvases were generated. This is the authorized fallback when source confirmation is unavailable, not a completed context renderer.
+**GT12_STANDALONE_CONTEXT_RENDERED_WITH_LIMITATIONS.** Actual A/G PNGs now include the owner-confirmed four music events, chord and both Korean lyric rows on separate white experimental canvases. They do not replace source ink or preserve original lyric pixels.
 
-## Scope and provenance
-
-Base: `9d83c868b350b4435a8d775be655e0b23fc6cedd` (GT-11). Branch: `experiment/v4-gt12-measure-context`; worktree: `/private/tmp/capomatic-v4-gt12`. The final immutable commit SHA is provided in delivery. No experiment branches were merged.
-
-Fixed source: original Bb PDF page 2, printed measure 3. Targets remain A major (-1 semitone) and G major (-3). No target reference-page content was used to read, repair or position source material. No PDF extraction, recognition or OCR rerun was needed.
-
-The original RGB source raster remains 2520×3564, SHA-256 `eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de`. GT-11's inventory and all frozen prediction hashes were verified, and the full GT-11 output file tree was hash-compared before/after this preparation. The local GT-12 validation summary binds every GT-11 output hash; it does not overwrite historical evidence.
-
-## Original-resolution review image
-
-The new crop is page bbox **[1300,330,1860,720)**, 560×390 pixels, containing the full measure's horizontal bounds [1374,1782], chord region, both visible Korean lyric rows, neighboring notation on both sides and margin below the lyric baseline. This fixes GT-11's lower-row clipping without editing any historical crop. Bounds were selected from source pixels only, not reference targets.
-
-`original-bb.png` is the exact source crop. `source-review-sheet.png` adds an 82px header outside it; the source image below that header remains pixel-identical and unscaled. Crop-local `(x,y)` maps to original page `(x+1300,y+330)`. Review-sheet source pixels start at sheet y=82. This crop is review context, not a text-ownership or protection mask. The agent opened the actual sheet and confirmed both visible lyric rows fit inside it; that inspection is not independent human transcription.
-
-## Source checklist and evidence boundaries
-
-| Item | OMR / agent observation | Owner-confirmed |
-|---|---|---|
-| Rest | Quarter rest, onset 0, duration 1 | Pending |
-| First note | Bb3 (`B-3`), onset 1, duration 1 | Pending |
-| Second note | C4, onset 2, duration 1 | Pending |
-| Third note | F4, onset 3, duration 1 | Pending |
-| Attachments / additional symbols | No extra required attachment identified in recognized stream; owner must check visible source | Pending |
-| Chord | Agent reads candidate F; selected-measure OMR harmonies: 0 | Pending, including quality/inversion/alteration |
-| Upper lyric row | Agent candidate: 주 / 님 / 의 | Pending |
-| Lower lyric row | Agent candidate: 사 / 막 / 의 | Pending |
-| Lyric association | Candidate: each row maps left-to-right to the three notes, not the rest | Pending |
-
-Durations/onsets above are quarterLength values from GT-11's recognized stream. Four units do not independently establish the printed time signature. Source event IDs, unspecified voice, detected physical positions and unverified status are retained in `source-checklist.json`.
-
-Owner replies retained as unverified review candidates: **1**. Visually confirmed source submissions: **0**; no source fields are visually confirmed. The owner explicitly returned `OWNER_REVIEW_CANDIDATE`, `SOURCE_COMPLETENESS_UNVERIFIED`, `F_MAJOR_CANDIDATE / EXACT_SUFFIX_UNVERIFIED`, both lyric rows as `OWNER_PROPOSED_NOT_VISUALLY_VERIFIED`, and `OWNER_VERIFIED_SOURCE: PENDING_VISUAL_CONFIRMATION`. The reply is retained verbatim as untracked `owner-review-candidate.txt`, with its SHA bound in the checklist. It confirms no source event, exact chord suffix, lyric reading or absence of additional printed symbols. No blank form, agent observation, candidate reply or OMR agreement is promoted to a visually confirmed human source label.
-
-Any later visual confirmation must also be retained as received and bound to this image/checklist identity, without replacing the candidate reply. Its normalized confirmed fields must remain separate from candidates and OMR. A sufficiently confirmed reply could carry **OWNER_VERIFIED_SOURCE**, never **INDEPENDENT_GROUND_TRUTH**. Independent ground-truth labels remain 0. This uncertain reply leaves all confirmed source fields unresolved.
-
-## Chord and lyric rendering gate
-
-`chord-audit.json` records the missing OMR chord candidate and pending human confirmation. The conditional F→E / F→D mapping is the requested future transposition, not a recovered source chord or a rendered prediction. Quality, bass and alterations must be confirmed before using that mapping.
-
-`lyric-audit.json` records zero selected-measure MusicXML lyric items and the unconfirmed agent candidates. Exact syllables, both rows and syllable-to-note associations are required human inputs. A later authorized standalone canvas would newly typeset confirmed Korean text; it would **not preserve original lyric pixels**. No missing words are completed, inferred from targets, translated or paraphrased.
-
-Current three-level state:
-
-| Level | Result |
+| Evidence / completion level | Final result |
 |---|---|
-| SOURCE_RECOGNITION_COMPLETENESS | UNVERIFIED; four recognized events, no owner-confirmed events |
-| RENDERING_COMPLETENESS for GT-12 combined canvas | BLOCKED; no combined prediction exists |
-| VISUAL_QUALITY for GT-12 combined canvas | UNVERIFIED; no combined image to inspect |
+| SOURCE_RECOGNITION_COMPLETENESS | INCOMPLETE for raw OMR: the F chord and six lyric items were missing |
+| OWNER_VERIFIED_SOURCE_CONTENT | COMPLETE within the owner's confirmed printed-measure scope; not independent ground truth |
+| RENDERING_COMPLETENESS | COMPLETE for that contextual measure scope: 4 music events, 1 chord, 6 lyric syllables per target |
+| VISUAL_QUALITY | ACCEPTABLE_FOR_EXPERIMENT, from agent inspection of actual PNGs; not independent optical validation |
 
-The GT-11 music-layer renderer and its contracts are unchanged and available for reuse after sufficient source review. Newly typeset Korean font/baseline placement, chord width/placement and their collisions have not yet been validated or implemented in this preparation pass. Any additional owner-identified notation must also be accounted for before a complete-rendering claim.
+## Revision and source identity
 
-Text verification would not authorize source ink removal, protection-envelope relaxation, lyric-pixel compositing or promotion of Track A PARTIAL ownership. No GT-13/14 or production milestone is authorized by these review materials.
+Original GT-12 base: `9d83c868b350b4435a8d775be655e0b23fc6cedd` (GT-11). This continuation starts at `30a32adfed3cbe043fa4a0759a09abfb06ffd30b`. Branch: `experiment/v4-gt12-measure-context`; worktree: `/private/tmp/capomatic-v4-gt12`. The commit containing this report is delivered with its immutable SHA, rather than embedding a self-referential final hash.
 
-## Normalized review awaiting explicit owner confirmation
+The review scope is fixed to **Bb source PDF page 2, printed measure 3**. Targets remain A major (-1) and G major (-3). No target reference pages, new OCR/Audiveris recognition or source repairs were used. Original raster: 2520×3564 RGB, SHA-256 `eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de`.
 
-A subsequent submitted review is classified **ASSISTANT_VISUAL_REVIEW / NOT_INDEPENDENT_GROUND_TRUTH**. It is retained separately, without changing the original owner candidate or prior GT-12 artifacts. It is not an owner confirmation. The source review sheet SHA-256 is `3ff4e49da99865ee93dcd1bea483d267cdfedc0377ef7bb84673ef78943e2ccf`; its image bytes remain unchanged.
+The original-resolution source crop is [1300,330,1860,720), 560×390 pixels, containing both complete visible lyric rows and neighboring context. Page coordinates equal crop-local coordinates plus (1300,330). The source review sheet adds an 82px header outside the unchanged crop. Its SHA-256 remains `3ff4e49da99865ee93dcd1bea483d267cdfedc0377ef7bb84673ef78943e2ccf`. All frozen GT-11 artifacts remain unchanged.
 
-The normalized checklist at `gt12-output/owner-confirmation/normalized-source-checklist.json` presents these items for explicit owner confirmation:
+## Source verification and historical stages
 
-| Scope | Review statement, still pending owner confirmation |
-|---|---|
-| Events | Quarter rest, Bb3, C4, F4, each quarterLength 1; frozen OMR onsets 0, 1, 2, 3 |
-| Pitch context | Absolute names rely on existing source clef/key context, not visible within this crop |
-| Chord | Visible F, interpreted as major; no visible suffix, slash bass or alteration |
-| Chord placement | Preserve its source location near the measure beginning; do not attach it automatically to the first pitched note. Exact source placement coordinates still require source-only measurement. |
-| Upper lyrics | 주 / 님 / 의, associated respectively with the three pitched notes |
-| Lower lyrics | 사 / 막 / 의, associated respectively with the three pitched notes |
-| Initial rest | No associated syllable in either row |
-| Additional notation | No accidental, tie, slur, beam, flag or articulation identified in the visible target measure; neighboring measure content is excluded |
+The first GT-12 preparation correctly returned BLOCKED. One owner candidate reply explicitly declined visual confirmation. A subsequent submitted review was classified ASSISTANT_VISUAL_REVIEW, NOT_INDEPENDENT_GROUND_TRUTH, and was also kept pending. Neither was promoted into source verification.
 
-The exact submitted assistant review, the normalized record and a preservation check are retained under the untracked `owner-confirmation/` directory. All previous GT-12 file hashes, including the original owner candidate, remain unchanged. Every normalized owner-confirmation field is false/pending; independent ground-truth labels remain 0. The F→E/D mapping remains conditional, and neither predicted image is generated. A later explicit owner confirmation may establish OWNER_VERIFIED_SOURCE within its stated scope; it cannot establish independent ground truth or authorize source ink removal.
+The owner then explicitly stated that they directly compared and confirmed the entire checklist, including notes/rhythm, F major and both lyric rows with their note associations. That actual reply is retained verbatim in untracked `confirmed-context/owner-visual-confirmation.txt`, bound by SHA in `confirmed-context/confirmed-source.json` and the prediction freeze. Its classification is **OWNER_VERIFIED_SOURCE**, not independent human ground truth. Actual independent reference labels remain 0.
 
-## Outputs and use
+Every prior GT-12 artifact was archived byte-for-byte before superseding current metadata, under `/private/tmp/capomatic-v4-gt12/gt12-output-pre-confirmed-context/`. Earlier source-only and pre-candidate packets remain in their existing directories. The old candidate reply, source crop and source review image retain their original bytes and hashes. Historical BLOCKED reports remain available in that archive; they describe the earlier state, not the final result.
+
+| Source event | Onset / duration, quarterLength | Owner-confirmed content | Rendering |
+|---|---|---|---|
+| `p1:m2:r0` | 0 / 1 | Quarter rest, no syllable | Quarter-rest glyph |
+| `p1:m2:n0` | 1 / 1 | Bb3; upper 주, lower 사 | A3 / G3, stems and ledgers |
+| `p1:m2:n1` | 2 / 1 | C4; upper 님, lower 막 | B3 / A3, stems and ledgers |
+| `p1:m2:n2` | 3 / 1 | F4; upper 의, lower 의 | E4 / D4, stems |
+
+Absolute source pitches rely on existing source treble-clef/Bb-key context, which is outside this cropped image. Timing follows the frozen OMR and the owner's explicit confirmation; four quarterLength units are not an independent optical certification of a printed time signature.
+
+The owner confirmed the reviewed absence of additional accidental, tie, slur, beam, flag or articulation in this measure. Neighboring notation is shown only in the original source context panel and is excluded from targets. The F chord is major with no suffix, slash bass or alteration. It belongs near the measure beginning, not at the first pitched note. The original rest has no associated syllable in either row.
+
+## Research-only augmented semantics
+
+Raw OMR remains unchanged: four selected-measure music events, zero harmonies and zero MusicXML lyric items. The experiment adds one owner-confirmed F harmony at onset 0 and six numbered lyric items to an in-memory research copy, then writes a separately named `owner-augmented-source.musicxml`. This is a disclosed human-supported augmentation, not improved recognition or a repair of GT-01/11 predictions.
+
+Unchanged V3 `transpose_score` and `music_guard.validate` handle the augmented source. F→E and F→D use the existing V1/V3 chord path, preserving major quality, absence of alterations and absence of slash bass. Source/target harmony offset remains 0. Visual chord placement is separately retained from the source image; it is never inferred from the first pitched note's x position.
+
+Full V3 guards pass for the augmented source write/read and for A/G both in memory and after serialization: 37/37 measures, 169/169 music events, 8/8 harmonies, no issues. The earlier unaugmented GT-11 had 7 harmonies; these denominators are deliberately separate. Additional checks preserve both lyric numbers/texts, their event associations, rest silence, source ordering, durations and voices. Target music-event signatures exactly match frozen GT-11.
+
+## Frozen rendering contract
+
+[The rendering protocol](V4_GT12_RENDER_PROTOCOL.json) was written before the actual visual run. Only confirmed source content and source-only display-alignment measurements enter it. No reference-page comparison or tuning was performed.
+
+The renderer reuses GT-11's exact full-resolution producer alpha masks: calibrated heads/rests, stems, ledgers, staff polylines and original measure boundaries. It does not reimplement note rendering or modify pitch geometry. The original 0.5px per-axis notehead raster-bbox criterion remains unchanged. Physical detected centers, semantic source/target staff coordinates and rendered bitmap anchors remain distinct.
+
+Text is newly typeset using existing local fonts: FreeSerif size 40 for chords and macOS AppleGothic size 44 for Korean. Font file hashes are recorded in `rendering-metrics.json`. No fonts were downloaded or bundled; the local macOS font dependency means this tool does not claim portable identical rendering across machines.
+
+For display alignment only, fixed source windows are measured with L<127: chord [1390,350,1450,414), upper row [1480,588,1730,632), lower row [1480,635,1730,688). These are not text-ownership masks, confirmed ink extents or removal evidence. They do not change any protection mask. Measured source chord bbox is [1406,372,1426,399); its ink left/top (1406,372) is preserved for both targets. E has measured ink width 24px and advance 24px; D has ink width 28px and advance 29px. Actual font widths are measured, not inferred from character count.
+
+The measured source row bottoms are 628 and 674. Fixed-phase GT-05 bitmap registration aligns each new syllable's ink-center x with the corresponding original note x. Common new baselines are 624 and 670. Both rows remain associated with the same three pitched events; no syllable is attached to the rest. This is retypesetting with a visibly different font, not original-pixel fidelity.
+
+## Actual outputs and measured results
 
 Untracked output directory: `/private/tmp/capomatic-v4-gt12/gt12-output/`.
 
-- `source-review-sheet.png`: labeled native-resolution source review.
-- `original-bb.png`: untouched source crop.
-- `source-checklist.json`: separated OMR, agent and pending owner fields.
-- `owner-review-candidate.txt`: actual owner candidate reply, not a source-confirmation attestation.
-- `chord-audit.json`, `lyric-audit.json`, `completeness-report.json`: blockers and missing source recognition.
-- `semantic-regression.json`, `validation-summary.json`: regression results and historical hash binding.
+- `original-bb.png` and `source-review-sheet.png`: unchanged source review images.
+- `predicted-a.png`, `predicted-g.png`: actual standalone newly rendered music/chord/lyric canvases.
+- `comparison-contact-sheet.png`: frozen original source context beside both predictions.
+- `comparison-contact-sheet-clarified.png`: post-freeze diagnostic derivative clarifying only the source-panel footer; all notation and source-crop pixels unchanged.
+- `source-checklist.json`, `chord-audit.json`, `lyric-audit.json`, `completeness-report.json`: current owner-confirmed content and recognized-versus-added provenance.
+- `confirmed-context/`: confirmation, augmented/target MusicXML, full semantic guards and exact text/music alpha layers.
+- `confirmed-context/source-clef-key-context.png`: additional unchanged source-only crop [130,330,1860,720) for subsequent musician review of the clef/key context outside the measure crop.
+- `rendering-metrics.json`, `confirmed-context/prediction-freeze.json`: measured geometry and hashes frozen before image inspection.
+- `visual-inspection-report.json`, `final-validation-summary.json`: separate post-freeze review and authoritative final decisions. Pre-review `validation-summary.json` remains unchanged after freeze and intentionally says pending visual review.
 
-`predicted-a.png`, `predicted-g.png` and `comparison-contact-sheet.png` are deliberately absent because source verification is pending. An earlier exploratory source-only crop is preserved untracked in `gt12-initial-source-review/`; the pre-reply packet is retained in `gt12-pre-owner-review/`. Final review images have the same bytes as the pre-reply packet; only candidate-submission provenance was added to the final checklist/audits.
+| Metric | A | G |
+|---|---:|---:|
+| Music events rendered | 4 | 4 |
+| Transposed chord | E | D |
+| Newly typeset lyric syllables | 6, two rows | 6, two rows |
+| Maximum notehead raster residual per axis | 0.5px | 0.5px |
+| Music alpha compared with GT-11 | Unchanged | Unchanged |
+| Staff / measure geometry deviation | 0px | 0px |
+| New text/music and inter-text alpha collision pairs | 0 | 0 |
+| Clipped components | 0 | 0 |
+| Missing/duplicated confirmed music events | 0 / 0 | 0 / 0 |
 
-Reproduce preparation only into a new output directory, with the frozen local GT-11 artifacts present:
+Measured run time was 2.18 seconds locally, excluding test execution and later visual inspection. Memory was not profiled. Music component connections inherit the saved GT-11 checks; text collision checks use actual nonzero-alpha pixels of every new syllable/chord and the exact music union. Bounding-box overlap is not substituted for ink contact.
+
+The agent opened the actual contact sheet and both individual predictions after freeze. Chords appear near the original measure beginning, both Korean rows are readable, note/lyric order is coherent, and no music/text contact or new notation clipping is visible. **VISUAL_QUALITY=ACCEPTABLE_FOR_EXPERIMENT** is an agent judgment, not independent optical validation. Optical typography and professional engraving quality remain unvalidated.
+
+These are contextual mid-system excerpts: treble-clef and key context are supplied by captions, not engraved glyphs. Therefore they are not self-contained performance scores. All panels carry developer-only/no-performance warnings. The frozen comparison source panel used the common footer about newly typeset lyrics; that statement applies only to predictions. A separately hashed post-freeze diagnostic derivative clarifies that footer without changing any source crop or notation pixels. The original frozen comparison remains untouched. No claim of source-pixel replacement or original lyric fidelity follows from either comparison.
+
+## Reproduction and validation
+
+Preparation remains available via `scripts.research.gt12_measure_context`; it never authenticates a candidate or unlocks rendering. For an explicitly confirmed new standalone run, `scripts.research.gt12_render_context` accepts the actual confirmation record, validates its source sheet/checklist hashes and refuses to overwrite predictions. It requires the preserved local GT-01/11 artifacts and fonts. Do not rerun it over this frozen directory.
+
+Targeted regressions: **197 passed, 1 skipped**, with the existing skip requiring external MuseScore. Command:
 
 ```sh
-python -m scripts.research.gt12_measure_context --out NEW-review-output
-# Optional: retain an actual candidate reply without accepting it as confirmation.
-python -m scripts.research.gt12_measure_context --out NEW-review-with-candidate --owner-candidate ACTUAL-reply.txt
+python -m pytest tests/test_v4_ground_truth_12_context.py tests/test_v4_ground_truth_12.py tests/test_v4_ground_truth_11.py tests/test_v4_ground_truth_04.py tests/test_v4_ground_truth_05_anchor.py tests/test_v4_ground_truth_06.py tests/test_v4_ground_truth_07_flags.py tests/test_v4_ground_truth_07_flag_contacts.py tests/test_omr_v3_music.py tests/test_omr_v3_gate.py -q
 ```
 
-The helper refuses to overwrite an existing directory. It prepares evidence only: it neither authenticates a filled form as visually confirmed human evidence nor unlocks rendering. To continue GT-12, obtain actual visual confirmation, retain that reply separately, validate its complete scope, then implement and test the confirmed chord/Korean-text layer using GT-11's unchanged note masks. Reference targets must not supply any missing source answers.
+New tests cover candidate rejection, independent-ground-truth claim rejection, source mismatch, F→E/D full semantics, onset-0 chord versus onset-1 first note, rest/lyric relationships, common baselines, fixed-phase text placement, actual-alpha collisions and source-image immutability. These synthetic tests are not source annotations. Formatting, `git diff --check`, pre-review freeze hashes, prior GT-12 archive and GT-11 historical hashes are checked before commit. No Full Acceptance.
 
-## Validation and preservation
-
-Targeted regressions: **187 passed, 1 skipped** (existing external MuseScore dependency). The test command covered GT-12, GT-11, GT-04, GT-05A, GT-06, both GT-07 flag suites, and V3 music/gate regressions. New tests check pending/fabricated forms cannot authorize rendering, verbatim candidate-byte retention without source confirmation, fixed measure identity, native crop/sheet pixel equality, deterministic images, explicit image mode, invalid crop geometry and refusal to overwrite evidence.
-
-Unchanged V3 transposition and full musical-integrity guards were also executed for A/G in memory and against the frozen GT-11 serialized targets. All passed: 37/37 measures, 169/169 recognized events, 7/7 recognized harmonies, no issues. These results do not validate an F chord missing from recognition or certify source completeness. No new score prediction or renderer run was performed. Historical hashes remained unchanged. `git diff --check` and research Python formatting are checked before commit; no Full Acceptance.
-
-No V1/V3 or API/frontend changes, source PDF/raster edits, original music erasure, protection-mask changes, Track A promotion, integrity-gate relaxation, production B2, merge or deployment occurred.
+The concrete next step is musician review of this complete owner-supported contextual measure, including chord placement, lyric alignment and typeface quality. Safe old-music removal, production composition, independent whole-score correctness and page expansion remain separate unpassed gates. No V1/V3 production, ownership or integrity rules, protection masks, source PDF/raster, API/frontend, production B2, merge or deployment were changed.
