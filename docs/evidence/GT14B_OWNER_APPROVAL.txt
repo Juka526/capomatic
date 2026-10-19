@@ -1,0 +1,99 @@
+CAPOMATIC V4 — GT-14B
+OWNER-CONFIRMED SYMBOL RECLASSIFICATION
+
+Repository:
+Juka526/capomatic
+
+Starting SHA:
+e90499333b53846d039f34b6774536b9554f0a3e
+
+Create branch:
+experiment/v4-gt14b-lyric-extenders
+
+OBJECTIVE
+
+Apply the owner's explicit classification
+of four previously ambiguous OMR objects.
+
+OWNER CONFIRMATION
+
+sheet#1:5686
+TENUTO -> LYRIC_EXTENDER
+
+sheet#1:5699
+TENUTO -> LYRIC_EXTENDER
+
+sheet#1:5747
+FERMATA_BELOW -> KOREAN_LYRIC_GLYPH_STROKE
+
+sheet#1:5762
+TENUTO -> LYRIC_EXTENDER
+
+Evidence:
+OWNER_VERIFIED_SOURCE
+
+Not independent ground truth.
+
+TASKS
+
+1. Preserve the owner's actual approval
+   and bind it to the original source
+   review image and frozen evidence hashes.
+
+2. Verify each object's source bounding box,
+   associated lyric row and musical context.
+
+3. Keep historical OMR classifications
+   unchanged as original observations.
+
+4. Create a separate owner-confirmed
+   interpretation layer.
+
+5. Do not render the four objects as
+   TENUTO or FERMATA music symbols.
+
+6. Implement the confirmed lyric extenders
+   on standalone A/G experimental canvases.
+
+7. Determine exact extender placement
+   from verified source evidence.
+
+8. Do not duplicate existing lyric extenders
+   or invent additional syllables.
+
+9. Preserve all 13 confirmed events,
+   3 chords and 14 Korean lyric syllables.
+
+10. Verify:
+    - Actual lyric/music pixel contacts
+    - Lyric/lyric collisions
+    - Extender attachment and alignment
+    - Clipping
+    - Preservation of pitch/rhythm/ties
+    - Historical output hashes
+
+11. Generate actual A/G comparison PNGs.
+
+12. Run regression tests and unchanged
+    V3 semantic integrity guards.
+
+13. Write:
+    docs/V4_GT14B_LYRIC_EXTENDERS.md
+
+14. Commit and push research-only changes.
+
+SAFETY
+
+No original ink removal.
+No original PDF modification.
+No protection mask changes.
+No production changes.
+No merge or deployment.
+
+Do not claim complete score readiness
+without separate visual validation.
+
+Return final SHA, actual PNG paths,
+collision measurements and remaining blockers.
+
+STOP.

@@ -1,0 +1,23 @@
+{
+  "approval_capture": "Verbatim user message content, UTF-8 with terminal newline; no invented timestamp/signature",
+  "approval_file": "GT14B_OWNER_APPROVAL.txt",
+  "approval_sha256": "a311aef8b1afc666979559e4b0f88d0a74bb750ffd216d6cbd732ba8f282997a",
+  "classification": "OWNER_VERIFIED_SOURCE",
+  "files": {
+    "/private/tmp/capomatic-v4-ground-truth-01/ground-truth-01-output/predictions/baseline-exec/source/recognized.omr": "857c787b23d4244cb17fbcc9de80c8a3bbfe7de606aabf818643be1fbf9f6638",
+    "/private/tmp/capomatic-v4-ground-truth-01/ground-truth-01-output/predictions/baseline-exec/source/source.png": "eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de",
+    "/private/tmp/capomatic-v4-ground-truth-01/ground-truth-01-output/predictions/baseline-exec/source/visual-graph.json": "f8725c39beaaecc877ccf48b803b79a419c2d6e60aa73bc9428a39de11596508",
+    "/private/tmp/capomatic-v4-gt14a/gt14a-output/ambiguous-objects.json": "908de8398764e8e9348765d3bf08801cfa07fbe52968f04dfea3d48b41e0de47",
+    "/private/tmp/capomatic-v4-gt14a/gt14a-output/ambiguous-source-5686.png": "52d47c827527ead0867799909997242b6bdee1caee0c6cd03d222986b7714184",
+    "/private/tmp/capomatic-v4-gt14a/gt14a-output/ambiguous-source-5699.png": "5a539957b131a7f24db27c7ad338d7f1ffc8de3e12cb5af3d43efeeac5e9c867",
+    "/private/tmp/capomatic-v4-gt14a/gt14a-output/ambiguous-source-5747.png": "e35828b69a6046bad4f041eb1a03265d72eadede629bba89d62fee1935cf654d",
+    "/private/tmp/capomatic-v4-gt14a/gt14a-output/ambiguous-source-5762.png": "9a6c7acdca57ff665e68c524f0d955c94af52e41974cea13537e5d01be3835d5",
+    "/private/tmp/capomatic-v4-gt14a/gt14a-output/ambiguous-source-case-map.json": "ae205ff40beb2ca69dfca296abc6e546f5d66a1807e46caea596589f1dee10fb",
+    "/private/tmp/capomatic-v4-gt14a/gt14a-output/ambiguous-source-review.png": "019260c402dcdf35cc582b6996f8aa900510276b04d58120473a337786a9dcb7",
+    "/private/tmp/capomatic-v4-gt14a/gt14a-output/owner-verified-inventory.json": "a426b8e909924a09744c83686ea79d539380af134aab4d885bdefd35236e7073",
+    "/private/tmp/capomatic-v4-gt14a/gt14a-output/pre-render-freeze.json": "89944d7a0480d7c775f002922d869b59cb87c1f2827f1f3b5594f8bc08f418f5",
+    "/private/tmp/capomatic-v4-gt14a/gt14a-output/prediction-freeze.json": "96e6aa50749da0ca157d19cc60140c465acaffac39c6dddc030de8f3f41e71e6",
+    "/private/tmp/capomatic-v4-gt14a/gt14a-output/rendering-validation.json": "b23e33f266d3215f41498c675578ab0d324b281365bc2e54d808bf25d1ca294f"
+  },
+  "independent_ground_truth": false
+}

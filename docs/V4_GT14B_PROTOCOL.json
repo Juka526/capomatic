@@ -1,0 +1,86 @@
+{
+  "clipping_policy": "full stroke must fit original second-system viewport",
+  "collision_policy": "all nonzero alpha pixels; zero extender/fixed and extender/lyric and extender/extender contacts; positive ink-center clearance; fail closed, never relayout old layers",
+  "declared_before_target_render": true,
+  "geometry": "New horizontal 2px strokes; source bbox x and width retained; y = floor((top+bottom-1)/2), plus frozen GT14A whole-row dy. No source raster pixels copied. This is typeset geometry, not source-ink ownership.",
+  "interpretations": [
+    {
+      "held_syllable": "는",
+      "interpretation": "LYRIC_EXTENDER",
+      "measure": 5,
+      "onset": "0",
+      "original_shape": "TENUTO",
+      "row": 2,
+      "source_bbox": [
+        298,
+        987,
+        335,
+        993
+      ],
+      "syllable_onset": "15/4",
+      "syllable_source_measure": 4,
+      "symbol_id": "sheet#1:5686",
+      "tie_relation": "sheet#1:4798"
+    },
+    {
+      "held_syllable": "원",
+      "interpretation": "LYRIC_EXTENDER",
+      "measure": 6,
+      "onset": "3",
+      "original_shape": "TENUTO",
+      "row": 1,
+      "source_bbox": [
+        1330,
+        942,
+        1368,
+        948
+      ],
+      "syllable_onset": "11/4",
+      "syllable_source_measure": 6,
+      "symbol_id": "sheet#1:5699",
+      "tie_relation": "sheet#1:4784"
+    },
+    {
+      "existing_component": "lyric-1-13_4",
+      "held_syllable": "하",
+      "interpretation": "KOREAN_LYRIC_GLYPH_STROKE",
+      "measure": 6,
+      "new_glyph": false,
+      "onset": "13/4",
+      "original_shape": "FERMATA_BELOW",
+      "row": 1,
+      "source_bbox": [
+        1410,
+        931,
+        1435,
+        957
+      ],
+      "symbol_id": "sheet#1:5747"
+    },
+    {
+      "held_syllable": "네",
+      "interpretation": "LYRIC_EXTENDER",
+      "measure": 7,
+      "onset": "0",
+      "original_shape": "TENUTO",
+      "row": 1,
+      "source_bbox": [
+        1620,
+        942,
+        1658,
+        948
+      ],
+      "syllable_onset": "15/4",
+      "syllable_source_measure": 6,
+      "symbol_id": "sheet#1:5762",
+      "tie_relation": "sheet#1:4772"
+    }
+  ],
+  "scope": "Only the three owner-reclassified extenders. Other visible row continuation strokes are not inferred or silently generated. 5747 maps to existing upper 하, no extra glyph.",
+  "source_bbox_convention": "integer pixel edges, right/bottom exclusive",
+  "source_only": true,
+  "source_row_assignment": "source-only original review crop vertical position; rows retain 45px separation",
+  "stroke_width_px": 2,
+  "unchanged_music": "Reuse exact GT14A combined alpha and cached music; add three masks only",
+  "version": 1
+}
