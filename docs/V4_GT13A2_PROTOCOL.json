@@ -1,0 +1,22 @@
+{
+  "base": "00b7d5a0110d569c44571cbee78a6cfd4afeafda",
+  "scope": "Bb page 2 first system printed measures 1-4; A -1, G -3",
+  "evidence": "m3 exact GT12 OWNER_VERIFIED alpha; m1/2/4 OMR_PROVISIONAL; lyric strings OWNER_CONFIRMED, associations provisional",
+  "reference_access": false,
+  "head": "Unchanged GT05 canonical raster bbox registration, <=0.5px per axis",
+  "rest": "FreeSerif U+1D13D quarter / U+1D13E eighth, same head-calibrated font size; source rest bbox center",
+  "beams": "Explicit SIG head-stem/beam-stem and MusicXML level membership must agree. Preserve primary source slope, beam thickness and secondary spacing; primary intercept makes every stem at least 3.5 interlines long. Hooks retain source length and explicit direction. Up stems only.",
+  "ties": "Local explicit LEFT/RIGHT slur-head and semantic start/stop same pitch required. Translate original cubic control points by interpolated semantic diatonic displacement; no cross-system endpoint invention. 64 segments width2 diagnostic curve.",
+  "lyrics": "GT12 AppleGothic44 fixed baseline contract; m1 one syllable per pitched event provisional association; m2/4 strings shown separately in caption, associations withheld",
+  "chords": "Only cached owner-confirmed m3 E/D; m1 Bb candidate not engraved",
+  "collisions": "Count actual alpha intersections, intentional staff/head-stem/beam-stem/ledger contacts separately; report unexpected collisions without widening limits",
+  "missing_context": "Clef/key/time/repeat glyphs absent, outgoing tie unresolved; incomplete warning mandatory",
+  "source_pixels_in_targets": false,
+  "final_refinement": {
+    "music": "No geometry changes. Every previous per-component and provisional-union PNG must match the frozen prior GT13A2 bytes.",
+    "annotations": "All diagnostic ink only in a 250px header and 160px footer outside the unchanged 2300x410 notation viewport.",
+    "clearance": "Euclidean distance transform of all nonzero musical glyph alpha; min center distance and conservative unit-square gap lower bound max(0,d-sqrt(2)). Also measure against all score ink including staff/chord/lyrics. No alpha threshold or tolerance relaxation.",
+    "tie": "UNSUPPORTED_OR_UNRESOLVED; preserve serialized start/extension evidence, no stub rendered in this scope.",
+    "classification": "FULL_SYSTEM_INCOMPLETE; OWNER_CONFIRMED_LYRIC_TRANSCRIPTION never promotes note associations."
+  }
+}
