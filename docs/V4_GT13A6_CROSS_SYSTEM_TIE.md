@@ -18,6 +18,9 @@ No new independent human ground-truth labels exist. The previous owner response 
 
 Original Bb PDF page 2 raster SHA-256:
 `eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de`.
+Original PDF SHA-256 (rechecked against the retained PDF):
+`1cc64756c0ce47b1db0ea6ac21eefe4685097a04cd4589f954afc712afb605fd`.
+The retained provenance identifies page 2, rasterized at 72 dpi to 2520×3564 pixels. The PDF page is 2520×3564 points; native crop here means unchanged frozen raster pixels, not a newly rendered higher-DPI PDF. The original frozen raster and OMR input have the same hash. No PDF page was rerendered and no A/G reference image was opened for this review.
 Existing recognized.omr SHA-256:
 `857c787b23d4244cb17fbcc9de80c8a3bbfe7de606aabf818643be1fbf9f6638`.
 
@@ -46,7 +49,9 @@ All raw crop files retain native RGB pixels with no scaling, overlay or annotati
 | source-outgoing-closeup.png | [2300,480,2420,600] | 120×120 |
 | source-incoming-closeup.png | [245,840,390,960] | 145×120 |
 
-`source-tie-review-sheet.png` places the unchanged crops on a labeled review canvas at 1:1 resolution. It includes clef/key context, the full first system, beginning of the next system and neighboring notes. No A/G reference image or predicted notation appears. Review-sheet SHA-256: `ba1969b67ac83d539c79150a8e47701c0bdaef2ce92fbd2abdee20675e2c47cf`.
+`source-tie-review-sheet.png` places the unchanged system crops side by side on a 3280×650 labeled review canvas at 1:1 resolution, with both closeups below. It includes clef/key context, the full first system, beginning of the next system and neighboring notes. No A/G reference image or predicted notation appears. The checklist records the current sheet hash and exact placement rectangles; every pasted region is checked for pixel equality. The older stacked review packet remains unchanged in `gt13a6-output/` and is not the current owner review sheet.
+
+For owner review, locate the rightmost note in the left crop (end of the first system), then the first whole note after the clef/key in the right crop (start of the next system). The crop does not print measure-number labels; m4/m5 are the physical measure mapping described above. Inspect the printed curves at those two notes rather than inferring a tie from matching pitches. Answer the single checklist question in the chat with OWNER_CONFIRMED, OWNER_REJECTED or OWNER_UNCERTAIN. The current checklist remains pending; any later answer must be stored in a separate record bound to its review-sheet hash.
 
 ## Separately tested renderer contract
 
@@ -62,7 +67,7 @@ After destination confirmation, actual target use still needs a validated **inco
 
 ## Validation
 
-**265 passed, 1 skipped**: GT-13A.6 synthetic/raw-record/semantic tests plus GT-13A.5 and earlier rendering regressions and V3 music/gate tests. Existing skip is external MuseScore availability. No Full Acceptance.
+**325 passed, 1 skipped**: all `test_v4_ground_truth_*.py`, paired-ground-truth tests, V3 music/gate tests and V4 integrity tests. Existing skip is external MuseScore availability. No Full Acceptance. The packet generator was also run successfully against the retained inputs, including PDF hash, reciprocal raw relations, endpoint checks, full V3 guards, crop/sheet pixel equality and frozen historical directory checks.
 
 Unchanged full V3 guard passes for A/G in-memory transposition and the frozen serialized targets; full lyric signatures remain equal. Endpoint pitch, order, onset, duration and tie roles are separately checked. A failing semantic control rejects changed pitch, duration or STOP role.
 
@@ -70,8 +75,8 @@ Frozen GT-13A.5 and GT-13A.4 manifests match; their entire artifact directories 
 
 ## Outputs and next step
 
-Untracked directory: `/private/tmp/capomatic-v4-gt13a6/gt13a6-output/`.
-Required outputs are present: review sheet, outgoing/incoming crops, `tie-source-evidence.json`, pending `tie-owner-checklist.json`, `tie-rendering-protocol.json`, `validation-summary.json`. Additional closeups, semantic results, input/review freezes, `final-validation.json` and synthetic-only control masks/report are retained.
+Current delivery directory: `/Users/juahnkim/Documents/Codex/2026-10-19/referenced-chatgpt-conversation-this-is-an-2/outputs/gt13a6-source-review/`.
+Required outputs are present: review sheet, outgoing/incoming crops, `tie-source-evidence.json` and pending `tie-owner-checklist.json`. Additional native closeups, semantic results, validation summary and input/review freezes are included. The current packet contains no synthetic-control images or transposed target PNGs. The earlier untracked `gt13a6-output/` directory is preserved separately.
 
 Reproduce with retained historical local inputs, using a fresh output directory:
 

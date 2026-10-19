@@ -116,6 +116,14 @@ def run(out):
     history = {str(p): file_hashes(p) for p in (PREVIOUS, OLD)}
     require(sha(SOURCE) == read(OLD / 'input-freeze.json')['source_sha256'], 'Source hash mismatch')
     omr = SOURCE_DIR / 'recognized.omr'
+    provenance_path = SOURCE_DIR.parents[2] / 'coordinator/pdf-provenance.json'
+    provenance = read(provenance_path)
+    require(provenance['source_page'] == 2, 'Wrong PDF source page')
+    require(sha(Path(provenance['path'])) == provenance['sha256'], 'Original PDF hash mismatch')
+    require(
+        sha(SOURCE_DIR.parents[2] / 'source-only/source.png') == sha(SOURCE),
+        'Frozen PDF raster and OMR input differ',
+    )
     graph_path = SOURCE_DIR / 'visual-graph.json'
     graph = read(graph_path)
     with zipfile.ZipFile(omr) as z:
@@ -171,18 +179,22 @@ def run(out):
         crop.save(out / name)
         require(crop.size == (box[2] - box[0], box[3] - box[1]), 'Crop geometry')
         tiles.append((name, crop))
-    sheet = Image.new('RGB', (2350, 1200), 'white')
+    sheet = Image.new('RGB', (3280, 650), 'white')
     d = ImageDraw.Draw(sheet)
     d.text((20, 10), 'OWNER SOURCE REVIEW - ORIGINAL Bb PAGE 2 ONLY', font=font, fill='black')
-    y = 55
-    for name, crop in tiles[:2]:
-        d.text((20, y), name + ' / native 1:1 pixels', font=font, fill='black')
-        sheet.paste(crop, (20, y + 30))
-        y += crop.height + 70
+    placements = {}
+    for x, (name, crop) in zip((20, 2350), tiles[:2]):
+        d.text((x, 55), name + ' / native 1:1 pixels', font=font, fill='black')
+        sheet.paste(crop, (x, 85))
+        placements[name] = [x, 85, x + crop.width, 85 + crop.height]
+    y = 455
     for i, (name, crop) in enumerate(tiles[2:]):
         x = 20 + i * 700
         d.text((x, y), name + ' / native 1:1', font=font, fill='black')
         sheet.paste(crop, (x, y + 35))
+        placements[name] = [x, y + 35, x + crop.width, y + 35 + crop.height]
+    for name, crop in tiles:
+        require(sheet.crop(placements[name]).tobytes() == crop.tobytes(), 'Review pixels differ')
     sheet.save(out / 'source-tie-review-sheet.png')
     crop_binding = {
         n: {'bbox': b, 'sha256': sha(out / n), 'size': Image.open(out / n).size}
@@ -197,6 +209,8 @@ def run(out):
             'owner_response': None,
             'source_sha256': sha(SOURCE),
             'review_sheet_sha256': sha(out / 'source-tie-review-sheet.png'),
+            'review_sheet_layout': 'SIDE_BY_SIDE_NATIVE_1_TO_1',
+            'review_sheet_placements': placements,
             'crops': crop_binding,
             'classification': 'OWNER_REVIEW_NOT_INDEPENDENT_GROUND_TRUTH',
             'actual_prior_reply': '아직 미확인 — 목적지는 보류',
@@ -210,6 +224,9 @@ def run(out):
             'source_sha256': sha(SOURCE),
             'omr_sha256': sha(omr),
             'graph_sha256': sha(graph_path),
+            'source_pdf_provenance': provenance,
+            'source_pdf_provenance_sha256': sha(provenance_path),
+            'source_pdf_hash_verified': True,
             'raw_member': 'sheet#1/sheet#1.xml',
             'raw_member_sha256': __import__('hashlib').sha256(raw).hexdigest(),
             'raw_records': records,
