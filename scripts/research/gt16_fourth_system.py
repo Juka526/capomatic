@@ -56,11 +56,11 @@ TEXT = {
 }
 
 
-def inventory(score, graph, rows, source):
-    staff = next(s for s in graph['staves'] if s['id'] == 'sheet#1:4')
+def measure_inventory(score, graph, rows, staff, numbers, candidates):
+    """Bind persisted physical events to semantics without assigning source verification."""
     mm = list(score.parts[0].getElementsByClass(stream.Measure))
     records = []
-    for number in range(13, 17):
+    for number in numbers:
         measure = mm[number - 1]
         rr = sorted(
             [r for r in rows if r['omr_measure_index'] == number - 1],
@@ -139,10 +139,17 @@ def inventory(score, graph, rows, source):
                 'recognized_harmonies': [
                     chord_text(c) for c in measure.getElementsByClass(harmony.ChordSymbol)
                 ],
-                'agent_candidates': TEXT[number],
+                'agent_candidates': candidates[number],
                 'candidate_status': 'AGENT_VISUAL_CANDIDATE',
             }
         )
+    return records
+
+
+def inventory(score, graph, rows, source):
+    staff = next(s for s in graph['staves'] if s['id'] == 'sheet#1:4')
+    records = measure_inventory(score, graph, rows, staff, range(13, 17), TEXT)
+    mm = list(score.parts[0].getElementsByClass(stream.Measure))
     marks = []
     for number, row, onset, x in [
         (14, 1, '0', 892),

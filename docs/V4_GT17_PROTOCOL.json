@@ -1,0 +1,49 @@
+{
+  "acceptance": {
+    "clipping": 0,
+    "first_four_frozen_layers": "EXACT",
+    "independent_ground_truth_count": 0,
+    "missing_connections": 0,
+    "notehead_residual_per_axis_max": 0.5,
+    "unexpected_alpha_contacts": 0
+  },
+  "base_sha": "4da717a8e8675db84ea6a6b941bec3d4dacc86a5",
+  "beam_policy": "Existing single-level beam only; no automatic GT16C supersampling or mixed-group extension",
+  "branch": "experiment/v4-gt17-fifth-system",
+  "canvas_size": [
+    2520,
+    2110
+  ],
+  "fifth_view": [
+    130,
+    1740,
+    2430,
+    2050
+  ],
+  "font_sha256": "c1dd2270ff624d66a7f1cd23075b5ce05a662f560be06a70a9599065ce008355",
+  "integrated_view": [
+    130,
+    310,
+    2430,
+    2050
+  ],
+  "layout_approval": {
+    "approval_context_verbatim": "The project owner subsequently approved GT-16C as an experimental research baseline.\n\nRecord that approval as:\n\n`OWNER_APPROVED_EXPERIMENTAL_LAYOUT`\n\nThis does not authorize production deployment, automatic adoption of its layout heuristics across all systems, or claims of independent musician validation.",
+    "classification": "OWNER_APPROVED_EXPERIMENTAL_LAYOUT",
+    "new_source_approval": false,
+    "source": "Current GT-17 user instruction; no invented signature or timestamp"
+  },
+  "measures": [
+    17,
+    18,
+    19
+  ],
+  "new_text_ownership": "UNVERIFIED",
+  "render_scope": "9 OMR provisional note/rest cores,2 ties,1 single beam,1 single flag, recognized m18 harmony, source second-ending bracket; no fifth lyrics or Bb/D insertion",
+  "repeat_route": "UNRESOLVED_NO_JUMPS_ADDED",
+  "source_only": true,
+  "stop_after": "Provisional preview and owner review packet",
+  "text_music_safety": "NOT_EVALUABLE_NO_NEW_LYRIC_TEXT",
+  "whole_note_contract": "Reuse GT13A6 calibrated whole glyph with separate semantic pitch coordinate; retain historical A3/G3 tie wrapper restrictions",
+  "whole_rest_contract": "Reuse GT14A hanging whole-rest glyph only with WHOLE_REST and explicit MusicXML fullMeasure=true"
+}

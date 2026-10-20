@@ -77,6 +77,11 @@ def confirmed_record(record_path, packet):
 def whole_head(size, staff, x, target_pitch, font_path=FONT):
     """Same fixed-phase raster placement and head font scale as GT13A2, open glyph."""
     require(target_pitch in ('A3', 'G3'), 'Unsupported endpoint pitch')
+    return calibrated_whole_head(size, staff, x, target_pitch, font_path)
+
+
+def calibrated_whole_head(size, staff, x, target_pitch, font_path=FONT):
+    """Existing whole glyph at an explicit semantic staff coordinate; no tie identity."""
     tt = TTFont(font_path)
     upm = tt['head'].unitsPerEm
     black = font_units(tt, HEAD)

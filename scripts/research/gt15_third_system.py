@@ -26,6 +26,7 @@ from scripts.research.gt13a5_lyric_layout import union, contacts
 from scripts.research.gt13a_full_system import scaffold
 from scripts.research.gt13a6_tie_review import SOURCE, SOURCE_DIR, GT02
 from scripts.research.gt14_second_system import local_tie
+from scripts.research.gt14a_notation import whole_rest
 from scripts.research.gt14c_continuation_audit import dark_support_bbox, save_native
 from scripts.research.gt14e_two_system_validation import GT14A
 from scripts.research.gt15_notation import half_symbol, font_contract, single_beam
@@ -247,7 +248,9 @@ def inventory(score, graph, rows, source):
     }
 
 
-def render_music(inv, score, target, graph, *, size=SIZE, viewport=VIEW):
+def render_music(
+    inv, score, target, graph, *, size=SIZE, viewport=VIEW, whole_note_renderer=whole_head
+):
     st = inv['staff']
     inter = st['interline']
     tt, font, scale = font_contract(inter)
@@ -266,11 +269,23 @@ def render_music(inv, score, target, graph, *, size=SIZE, viewport=VIEW):
         owners[name] = owner
 
     for m in inv['measures']:
+        require(
+            len(m['events']) == len(events_of(mm[m['printed_measure'] - 1])),
+            'Render inventory event-count mismatch',
+        )
         for e, n in zip(m['events'], events_of(mm[m['printed_measure'] - 1])):
             b = e['source_bbox']
             x = (b[0] + b[2]) / 2
             if n.isRest:
-                if e['duration'] == '2':
+                if e['duration'] == '4':
+                    require(
+                        graph['symbols'][e['symbol_id']]['shape'] == 'WHOLE_REST'
+                        and n.fullMeasure is True,
+                        'Whole rest requires explicit full-measure lineage',
+                    )
+                    p, info = whole_rest(size, st, x)
+                    info['anchor_residual'] = info['semantic_anchor_residual']
+                elif e['duration'] == '2':
                     p, info = half_symbol(size, inter, (x, (b[1] + b[3]) / 2), rest=True)
                 else:
                     require(e['duration'] in ('1', '1/2'), 'Unsupported rest')
@@ -306,7 +321,7 @@ def render_music(inv, score, target, graph, *, size=SIZE, viewport=VIEW):
                         and graph['symbols'][e['symbol_id']]['shape'] == 'WHOLE_NOTE',
                         'Unsupported whole-note lineage',
                     )
-                    p, info = whole_head(size, st, x, n.pitch.nameWithOctave)
+                    p, info = whole_note_renderer(size, st, x, n.pitch.nameWithOctave)
                 elif e['duration'] == '2':
                     p, info = half_symbol(size, inter, (x, y))
                 else:
