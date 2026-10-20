@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "understood_as": "Source-only two-row census and review packet; retain three owner-confirmed marks and 하, identify additional visible strokes independently in raster, never render or promote new candidates.",
+  "base_sha": "5ff71fa2ec6f4f738fb674d442af2a6960653470",
+  "source_sha256": "eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de",
+  "coordinate_convention": "Original page pixel edges; integer x/y; right and bottom exclusive; crop-local (0,0) maps to page bbox left/top; no scaling",
+  "inspection_domain": [159, 925, 2397, 1016],
+  "row_inspection_strips": [[159,925,2397,970],[159,970,2397,1016]],
+  "measurement_policy": "After source-only visual identification, record the tight L<127 dark-support bbox inside each independently selected local window, plus the full window and its unchanged native pixels. This is a reproducible diagnostic bbox, not complete antialias extent or ink ownership. No fixed threshold is used to confirm meaning or grant editing.",
+  "new_candidates": [
+    {"id":"GT14C-m5-upper","measure":5,"row":1,"window":[285,933,350,958],"review_crop":[245,840,380,1020],"onset":"0","associated_syllable_candidate":"곳","syllable_measure":4,"syllable_onset":"15/4","tie_id":"sheet#1:4798"},
+    {"id":"GT14C-m6-lower","measure":6,"row":2,"window":[1315,978,1380,1003],"review_crop":[1280,840,1420,1020],"onset":"3","associated_syllable_candidate":"운","syllable_measure":6,"syllable_onset":"11/4","tie_id":"sheet#1:4784"},
+    {"id":"GT14C-m7-lower","measure":7,"row":2,"window":[1605,978,1670,1003],"review_crop":[1580,840,1700,1020],"onset":"0","associated_syllable_candidate":"길","syllable_measure":6,"syllable_onset":"15/4","tie_id":"sheet#1:4772"}
+  ],
+  "noncandidate_context":"m6 has 7 confirmed syllables per row, with continuation between the fourth and fifth syllables; m8 has no newly observed lyric continuation stroke. Empty/unobserved regions are visual observations, not independently established absence.",
+  "renderer_policy":"No predictions or alpha masks are regenerated, edited, or added. New candidate rendering is blocked pending explicit owner approval.",
+  "coverage_policy":"Inspect all 8 measure-row regions, including spaces between marks, and record negative observations separately from ownership and renderer completeness. Agent census is not independent completeness proof."
+}
