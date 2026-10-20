@@ -1,0 +1,50 @@
+{
+  "base_sha": "13b2313cf79bee39508a5f12994be6b5a8c378f3",
+  "branch": "experiment/v4-gt15-third-system",
+  "local_output_directory": "/private/tmp/capomatic-v4-gt15/gt15-final-output",
+  "artifact_sha256": {
+    "prediction-freeze.json": "9b28e37748d08035f275a8808abd5aff5c7ae57010b6cb7eb6085bb110e0828b",
+    "final-validation.json": "d904297b0ea32d967ca81ceeb36644ef5a3089b1686f0f977764f22cf320d281",
+    "rendering-validation.json": "ec36780dd5dc4250952a831af2e9cb553f56dde1023b9b2cb2aa0a8c1d4f85d9",
+    "semantic-integrity.json": "aac2118ff711639158fe57c8a2d20c34972d469a1b03815ac3449aa0d8d95fcc",
+    "preservation-verification.json": "800a17d9c011ff5018a603596940b46fcb860faf0f79b45245c936f68ac6927d",
+    "visual-inspection-report.json": "9828d8ddd7055fe5924cc8741aabbdf093f4f2353759b7118e8d3f001755ff83",
+    "owner-review/owner-packet-freeze.json": "65014b88d7a091bbc68dbd30263c3e660e85bf3041d999fd027961090278545c",
+    "predicted-a-third-system.png": "30ba6c86aedb661ffef00c759bf1c25265ae411911cb3453b3b64e3b7b59af68",
+    "predicted-g-third-system.png": "9048ff506f2c28cc93307b3a6845e3a61315d635bdd0e21dc28c8479d210d84f",
+    "third-system-comparison.png": "012440221e8a4133a8f2be4c2b66df060f1ed8a3d698c20bc8d01661188caeb1",
+    "A-three-systems.png": "aa78b59dcccf4f466671c5085bae75b8a6ee5acec5235398c43dd3c2e473a41b",
+    "G-three-systems.png": "db936b686e14140d97420d53d32c2d544d4fe0792801cc22229c427e17209628"
+  },
+  "validation": {
+    "clipping": 0,
+    "full_V3_guards": "PASS",
+    "header_ending_actual_contacts": 0,
+    "max_anchor_residual_px": 0.5,
+    "missing_connections": 0,
+    "new_chords_syllables_extenders_rendered": [
+      0,
+      0,
+      0
+    ],
+    "new_displayed_event_cores": 20,
+    "new_lyric_music_validation": "NOT_EVALUABLE_WITHHELD",
+    "new_owner_verified_events": 0,
+    "new_recognized_events": 20,
+    "new_unverified_candidates": {
+      "chords": 2,
+      "continuation_marks": 11,
+      "disputed_SIG_objects": 5,
+      "syllables": 20
+    },
+    "retained_owner_verified_events": 39,
+    "source_ink_or_production_authorization": false,
+    "status": "THIRD_SYSTEM_PROVISIONAL_MUSIC_PREVIEW_WITH_SOURCE_REVIEW_PENDING",
+    "tests_passed": 462,
+    "tests_skipped": 1,
+    "total_displayed_event_cores": 59,
+    "unexpected_music_core_contacts": 0
+  },
+  "review_type": "AGENT_VISUAL_REVIEW_NOT_INDEPENDENT_OPTICAL_VALIDATION",
+  "production_or_source_edit_authorized": false
+}
