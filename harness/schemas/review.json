@@ -1,0 +1,47 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "task_id": {
+      "minLength": 1,
+      "title": "Task Id",
+      "type": "string"
+    },
+    "snapshot_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Snapshot Sha256",
+      "type": "string"
+    },
+    "verdict": {
+      "enum": [
+        "pass",
+        "revise",
+        "block"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    },
+    "findings": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Findings",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "summary": {
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    }
+  },
+  "required": [
+    "task_id",
+    "snapshot_sha256",
+    "verdict",
+    "findings",
+    "summary"
+  ],
+  "title": "Review",
+  "type": "object"
+}

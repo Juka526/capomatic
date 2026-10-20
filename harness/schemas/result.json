@@ -1,0 +1,40 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "task_id": {
+      "minLength": 1,
+      "title": "Task Id",
+      "type": "string"
+    },
+    "summary": {
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "changed_paths": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Changed Paths",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "status": {
+      "enum": [
+        "implemented",
+        "blocked"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "task_id",
+    "summary",
+    "changed_paths",
+    "status"
+  ],
+  "title": "Result",
+  "type": "object"
+}

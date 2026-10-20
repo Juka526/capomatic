@@ -1,0 +1,26 @@
+{
+  "run_id": "8b4afde42dd5488f8482098ce8174f6f",
+  "mode": "mock",
+  "state": "COMPLETED",
+  "tasks": [
+    {
+      "id": "8b4afde42dd5488f8482098ce8174f6f:readiness-note",
+      "attempts": 2,
+      "status": "ACCEPTED",
+      "checkpoint": "f4d7b95e96522ecbe142309c5e3630f320a25e62"
+    },
+    {
+      "id": "8b4afde42dd5488f8482098ce8174f6f:validation-followup",
+      "attempts": 2,
+      "status": "ACCEPTED",
+      "checkpoint": "26104806290dfe6b1ca871888be6fe1666abb32b"
+    }
+  ],
+  "review_count": 4,
+  "revision_count": 2,
+  "actions": 10,
+  "reserved_synthetic_usd": 0.8,
+  "paid_workers_invoked": false,
+  "remote_push": false,
+  "evidence_directory": ".harness-state/demonstration/evidence"
+}

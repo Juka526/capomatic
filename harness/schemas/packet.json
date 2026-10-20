@@ -1,0 +1,92 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+    },
+    "manifest": {
+      "additionalProperties": {
+        "pattern": "^[a-f0-9]{64}$",
+        "type": "string"
+      },
+      "minProperties": 1,
+      "title": "Manifest",
+      "type": "object"
+    },
+    "candidate_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Candidate Ids",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "images": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Images",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "interpretations": {
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minProperties": 1,
+      "title": "Interpretations",
+      "type": "object"
+    },
+    "owner_answer": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Owner Answer"
+    },
+    "owner_corrections": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Owner Corrections"
+    },
+    "withheld": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Withheld",
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "id",
+    "manifest",
+    "candidate_ids",
+    "images",
+    "interpretations",
+    "owner_answer",
+    "owner_corrections",
+    "withheld"
+  ],
+  "title": "Packet",
+  "type": "object"
+}

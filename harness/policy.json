@@ -1,0 +1,20 @@
+{
+  "version": "0.1",
+  "baseline": "6cc1dd558d13b7c56799c0cfda49fafbaca8ccd4",
+  "allowed_prefix": "research/harness_tasks/",
+  "max_run_seconds": 28800,
+  "max_tasks": 6,
+  "max_task_seconds": 5400,
+  "max_attempts": 2,
+  "max_active_builders": 1,
+  "aggregate_usd": 2.0,
+  "builder_usd": 1.0,
+  "reviewer_usd": 1.0,
+  "auto_push": false,
+  "level3_enabled": false,
+  "scope": {"events": 77, "chords": 10, "syllables": 84, "continuations": 28, "systems": 4, "measures": [1, 16]},
+  "classification": "OWNER_VERIFIED_SOURCE",
+  "independent_ground_truth": false,
+  "withheld": ["ten unresolved SIG objects", "full repeat playback route"],
+  "gates": ["v4", "v3", "frozen", "provenance", "preservation", "diff", "paths", "secrets", "review"]
+}

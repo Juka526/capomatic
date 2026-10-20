@@ -1,0 +1,65 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "minLength": 1,
+      "title": "Request Id",
+      "type": "string"
+    },
+    "packet_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Packet Sha256",
+      "type": "string"
+    },
+    "owner_identity": {
+      "minLength": 1,
+      "title": "Owner Identity",
+      "type": "string"
+    },
+    "answer": {
+      "enum": [
+        "approve",
+        "correct",
+        "reject"
+      ],
+      "title": "Answer",
+      "type": "string"
+    },
+    "corrections": {
+      "title": "Corrections",
+      "type": "string"
+    },
+    "candidate_ids": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Candidate Ids",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "response_text": {
+      "minLength": 1,
+      "title": "Response Text",
+      "type": "string"
+    },
+    "source_response_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Source Response Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "packet_sha256",
+    "owner_identity",
+    "answer",
+    "corrections",
+    "candidate_ids",
+    "response_text",
+    "source_response_sha256"
+  ],
+  "title": "Approval",
+  "type": "object"
+}

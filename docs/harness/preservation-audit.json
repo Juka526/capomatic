@@ -1,0 +1,14 @@
+{
+  "baseline": {
+    "passed": true,
+    "count": 620
+  },
+  "approved_packet": {
+    "passed": true,
+    "count": null
+  },
+  "historical_artifacts": {
+    "passed": true,
+    "count": 49
+  }
+}
