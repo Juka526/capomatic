@@ -1,0 +1,32 @@
+{
+  "python": "3.12.2",
+  "platform": "Darwin",
+  "credentials_present": {
+    "OPENAI_API_KEY": true,
+    "ANTHROPIC_API_KEY": false
+  },
+  "cli": {
+    "codex": {
+      "path": "/opt/homebrew/bin/codex",
+      "version": "codex-cli 0.163.0",
+      "missing_flags": []
+    },
+    "claude": {
+      "path": "/Users/juahnkim/.local/bin/claude",
+      "version": "2.1.300 (Claude Code)",
+      "missing_flags": []
+    }
+  },
+  "blockers": [
+    "OS containment unavailable in this environment",
+    "ANTHROPIC_API_KEY unavailable to isolated reviewer; subscription auth not imported",
+    "Codex hard per-worker cost cap requires an external metered gateway",
+    "OS worker/verifier launcher not qualified; live dispatch disabled in 0.2"
+  ],
+  "os_sandbox_probe": {
+    "exit_code": 71,
+    "stderr": "sandbox-exec: sandbox_apply: Operation not permitted"
+  },
+  "real_pilot_ready": false,
+  "level3_ready": false
+}

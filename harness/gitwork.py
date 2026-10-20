@@ -47,6 +47,24 @@ class Worktrees:
         target.chmod(0o555)
         return target, before
 
+    def review_snapshot(self, worktree, paths, name):
+        """Expose only policy-checked task files, never repository credentials or owner messages."""
+        from .policy import Policy
+        policy = Policy()
+        target = self.state / 'snapshots' / name
+        target.mkdir(parents=True, exist_ok=False)
+        for name in paths:
+            policy.path(name, worktree)
+            policy.content((worktree / name).read_bytes())
+            destination = target / name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes((worktree / name).read_bytes())
+        files = manifest(target)
+        for path in sorted(target.rglob('*'), reverse=True):
+            path.chmod(0o555 if path.is_dir() else 0o444)
+        target.chmod(0o555)
+        return target, files
+
     def checkpoint(self, root, paths, task_id):
         marker = f'Harness-Task: {task_id}'
         found = git(root, 'log', '--all', '--format=%H', '--fixed-strings', '--grep', marker)

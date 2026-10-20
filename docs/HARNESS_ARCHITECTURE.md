@@ -1,41 +1,41 @@
-# Harness 0.1 architecture
+# Capomatic Harness 0.2 architecture
 
-Harness 0.1 is a bounded, mocked controller with live CLI adapters and a fail-closed pilot admission gate. It is not an operational autonomous development system. `start --mode pilot` records blockers without launching either paid worker. No command activates Level 3.
+The Python Controller owns tasks, permissions, budgets, state transitions, source provenance, approvals and verified checkpoints. Herdr owns terminals, project/worktree presentation, named agents, prompt submission, lifecycle observation and native session restoration. The default CLI start is a complete **Herdr-mocked** run. Real workers and Level 3 remain disabled.
 
-The baseline is `6cc1dd558d13b7c56799c0cfda49fafbaca8ccd4`. The exact baseline file hashes are in [baseline-sha256.json](harness/baseline-sha256.json). The canonical runtime permissions and limits are [policy.json](../harness/policy.json). Owner-confirmed scope and withheld content are preserved from [GT-16B](V4_GT16B_CONFIRMED_FOURTH_SYSTEM.md); neither mock agreement nor review agreement creates source verification.
+The implementation starts at `bc9db2ca8decd1b900107905a4c4984907a3f330`. The [security policy](../harness/policy.json) is unchanged from 0.1. Existing [0.1 validation](HARNESS_VALIDATION.md) and historical evidence are retained. Current execution evidence is in [Harness 0.2 validation](HARNESS_02_VALIDATION.md).
 
-## Components
+## Reused and new responsibilities
 
-| Module | Responsibility |
+| Component | Responsibility |
 |---|---|
-| `controller.py` | Bounded scheduling, phase transitions, gate orchestration, recovery |
-| `state.py` | SQLite WAL/FULL transactions, action keys, local process lock, control flags, event journal |
-| `reports.py` | Run/event report projection with owner response text excluded |
-| `planner.py` | Two controller-defined research tasks and complete prompts using accepted checkpoints, actual results, blockers, approved scope, remaining time and reservations |
-| `policy.py`, `policy.json` | Strict text-only research path permissions, dependency checks, provenance and sensitive-content rejection |
-| `schemas.py`, `schemas/` | JSON Schema validation for tasks, implementation responses, reviews, source packets and owner responses |
-| `codex.py` | Argument-array `codex exec`, explicit workspace-write sandbox, ephemeral session and structured result |
-| `claude.py` | Separate `claude -p` review, read tools only, no shell/write tools, no MCP, restricted settings and structured review |
-| `containment.py`, `doctor.py` | Credential minimization, capability audit and hard denial of unqualified live dispatch |
-| `process.py`, `budget.py` | Process-group timeout/cancellation, bounded output, control polling and worst-case cost reservations |
-| `verify.py` | Actual controller-owned subprocess gates and file hashes, no reliance on agent test claims |
-| `gitwork.py` | Detached worktrees, separate readonly snapshots, byte manifests and research checkpoint commits |
-| `approvals.py` | Source-only packets and terminal-attested owner responses bound to exact hashes |
+| Herdr workspace/worktree APIs | Workspace creation and reuse; worktree creation and presentation; no second Git worktree creation by the native adapter |
+| Herdr agent APIs | Start named Codex/Claude in existing panes, submit prompts, observe lifecycle; no PTY or screen scraper in Python |
+| Herdr native session references | Reassociate resumed sessions; never infer that an in-flight tool or process survived |
+| Existing Controller/planner | Bounded scheduling, immutable policy validation, revision prompts, remaining dependencies, accepted checkpoints and gate results |
+| Existing SQLite/approvals/budget | Durable workflow authority, transaction boundaries, owner-response binding, cost reservations and deadlines |
+| Existing snapshot/verifier/checkpoint code | Independent file checks, source provenance, V3/V4 gates and research-only commits |
+| `herdr_audit.py` | Local version/schema/help and integration/config audit; live session audit only inside inherited Herdr context |
+| `herdr_adapter.py` | JSON transport, installed-protocol qualification, role mappings, named startup, prompt receipts, notifications and owned-resource cleanup |
+| `herdr_runtime.py` | Controller-authorized role dispatch, outbox selection, structured results, snapshot separation and durable queue |
+| `artifacts.py` | Strict run/task/dispatch/base/input/output/evidence binding; stale, malformed and missing result rejection |
+| `herdr_mock.py` | Explicit fake Herdr service, fake agents and restart/disconnection fault injection; isolated Git worktrees are real |
 
-## State and evidence
+No live socket is contacted without inherited `HERDR_ENV=1` and `HERDR_SOCKET_PATH`. The CLI transport validates protocol 22 and required installed help syntax. Unsupported versions fail closed until requalified; it does not update Herdr or agent settings. The checked-in method inventory is a small extraction from the installed 0.9.0 schema, not a replacement API specification.
 
-The normal lifecycle is `PLANNING → POLICY_CHECK → IMPLEMENTING → REVIEWING → VERIFYING → CHECKPOINTING → NEXT_TASK`. A failed gate enters `REVISING → IMPLEMENTING` within the attempt bound. Owner-dependent tasks enter `WAITING_OWNER_APPROVAL`; the scheduler may consider unrelated permitted tasks. Errors can enter `BLOCKED`, `FAILED` or `BUDGET_EXCEEDED`. Exhausting the bounded configured demonstration enters `COMPLETED`; that means the mock demonstration completed, never musical or operational readiness.
+## Roles and dispatch
 
-Durable SQLite state, worktrees, snapshots, prompts and gate evidence live under `.harness-state/`, outside `/private/tmp`. A controller lock permits one active builder. Unique action keys claim dispatches and commits before execution. A finished action is never dispatched again. After a crash, an uncertain started action or interrupted phase blocks for manual reconciliation. This conservatively prevents duplicate operations; 0.1 does not automatically reconcile a commit that finished just before its SQLite receipt was saved. Mock checkpoint commits remain detached and are identified by an exact run/task trailer. There is no runtime push, merge or deployment implementation.
+CONTROLLER is the current caller pane in a future admitted native run; it is never owned for cleanup. In a mock it has a simulated workspace. Each BUILDER has a Herdr worktree workspace. Each REVIEWER gets a separate minimal readonly snapshot containing only policy-checked task files, without repository source, owner messages, credentials or `.git`. Each VERIFIER has a different complete readonly candidate snapshot. Several workspaces make different filesystem roots explicit rather than starting the reviewer in the builder's checkout.
 
-The mock deliberately injects one verification failure per task. The second implementation adds the requested blocker text. A revision prompt records gate feedback. Mock review and preservation evidence is labeled simulated. Actual worktree creation, hashes, schema checks, whitespace checks, commits and SQLite recovery are exercised. Synthetic cost reservations test arithmetic; they are not API usage measurements.
+Every role dispatch requires the corresponding persisted Controller phase. The Controller writes a durable QUEUED request before agent prompt delivery, with an expected outbox chosen by the Controller. A manifest binds run ID, task ID, dispatch ID, role, base SHA, input SHA-256, output hashes, payload hash, completion receipt and simulated/real classification. JSON artifacts, not terminal text, are collected. Herdr `idle`, `done`, `blocked` and `unknown` observations never constitute PASS.
 
-## Trust boundaries
+In the mock, the fake service manages workspaces, worktrees and lifecycle responses. Synthetic builder/reviewer artifacts are explicitly marked simulated. The deterministic file/policy/whitespace gates execute in the Python Controller against the verifier snapshot; the mock verifier pane records its command without executing a terminal process. The live verifier entry point refuses execution pending qualification. There is no claim of independent pane verification or real model review from this demonstration.
 
-The controller and its policy are outside the autonomous edit allowlist. Workers may propose only bounded `.md` or `.txt` research additions under `research/harness_tasks/`. Existing tracked bytes, production, original PDFs, protected masks, source evidence and historical outputs are frozen. No production or rendering changes are admitted, so alpha collision/clipping gates are inapplicable to the 0.1 task class. Expanding to image or rendering tasks requires controller-defined actual-alpha gates and a reviewed policy release.
+## Persistence and recovery
 
-Repository text is untrusted data in the prompt. A prompt instruction is not containment. Independent schema, path, operation, byte-preservation and approval checks reject authority expansion. A reviewer gets a separate byte snapshot without `.git`; POSIX readonly bits and post-review hashes detect writes but do not stop a same-UID adversary from chmod. The live gate therefore remains closed until an OS-enforced launcher is independently qualified. The verifier currently runs trusted unchanged tests; an isolated OS verifier launch is also unqualified.
+SQLite gains `herdr_resources` and `herdr_dispatches` through additive `CREATE TABLE IF NOT EXISTS` migration. Existing 0.1 runs and approvals remain readable. Resource records bind exact returned workspace, terminal and pane IDs, cwd, native session identity and inherited server context. Agent start and prompt mutations have durable action keys and request hashes. A key cannot be reused for different prompt text.
 
-## Deferred live execution
+Reconnect is read-only reconciliation. Exact terminal identity can recover a disconnected live pane; after a simulated restart, exact native session identity plus workspace and cwd can map a new pane ID. Missing, duplicated, changed or stale identities block. No shell fallback automatically restarts a lost task. A mutation whose response was lost stays uncertain and is never blindly resent, even if Herdr says the agent is ready. An interrupted Controller phase stays BLOCKED for owner reconciliation.
 
-The adapters are implemented and their argument arrays can be tested with fake CLI processes. They are deliberately not reachable from an admitted live task in 0.1. Required work before a live pilot: qualify OS-enforced builder/reviewer/verifier containment; isolate per-worker homes and selected API credentials; enforce a hard Codex cost cap through a metered gateway; validate actual process receipts and independent review on a harmless task; verify interruption recovery against real process trees; then obtain owner authorization for the tested configuration. Installed CLI flags alone do not establish any of these properties.
+Detach/reattach and native resume are delegated to Herdr. The harness does not stop, replace or restart the user's server, enable handoff, replay screens or install hooks. Native conversation restoration is insufficient to prove the original OS sandbox, credentials or cost limits survived. Those properties require separate qualification before any real pilot.
+
+The existing worktree manager remains the local mock compatibility backend and snapshot/checkpoint utility. Only the fake Herdr service uses direct Git worktree commands in tests; native provisioning uses Herdr. There is no runtime remote push, merge or deployment.

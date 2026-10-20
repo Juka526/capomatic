@@ -1,0 +1,88 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "minLength": 1,
+      "title": "Run Id",
+      "type": "string"
+    },
+    "task_id": {
+      "minLength": 1,
+      "title": "Task Id",
+      "type": "string"
+    },
+    "dispatch_id": {
+      "minLength": 1,
+      "title": "Dispatch Id",
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "builder",
+        "reviewer",
+        "verifier"
+      ],
+      "title": "Role",
+      "type": "string"
+    },
+    "base_sha": {
+      "pattern": "^[a-f0-9]{40}$",
+      "title": "Base Sha",
+      "type": "string"
+    },
+    "input_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Input Sha256",
+      "type": "string"
+    },
+    "output_hashes": {
+      "additionalProperties": {
+        "pattern": "^[a-f0-9]{64}$",
+        "type": "string"
+      },
+      "title": "Output Hashes",
+      "type": "object"
+    },
+    "payload_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Payload Sha256",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "reported",
+        "blocked"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "completion_evidence": {
+      "additionalProperties": {
+        "pattern": "^[a-f0-9]{64}$",
+        "type": "string"
+      },
+      "minProperties": 1,
+      "title": "Completion Evidence",
+      "type": "object"
+    },
+    "simulated": {
+      "title": "Simulated",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "run_id",
+    "task_id",
+    "dispatch_id",
+    "role",
+    "base_sha",
+    "input_sha256",
+    "output_hashes",
+    "payload_sha256",
+    "status",
+    "completion_evidence",
+    "simulated"
+  ],
+  "title": "TaskManifest",
+  "type": "object"
+}

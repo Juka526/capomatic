@@ -1,2 +1,2 @@
-"""Capomatic research controller, version 0.1."""
-__version__ = "0.1.0"
+"""Capomatic research controller with a Herdr-native runtime, version 0.2."""
+__version__ = "0.2.0"

@@ -15,11 +15,12 @@ def main():
     parser.add_argument('--state-dir', type=Path, default=Path.cwd() / '.harness-state')
     sub = parser.add_subparsers(dest='command', required=True)
     sub.add_parser('doctor')
+    sub.add_parser('herdr-audit')
     for name in ('plan', 'status', 'pause', 'resume', 'stop', 'report'):
         p = sub.add_parser(name)
         p.add_argument('--run-id')
     start = sub.add_parser('start')
-    start.add_argument('--mode', choices=['mock', 'pilot'], default='mock')
+    start.add_argument('--mode', choices=['mock', 'pilot', 'herdr-mock', 'herdr-pilot'], default='herdr-mock')
     start.add_argument('--max-tasks', type=int, choices=range(1, 7), default=2)
     approval = sub.add_parser('approvals')
     approval.add_argument('--enqueue', type=Path)
@@ -29,6 +30,10 @@ def main():
     approve.add_argument('--evidence', type=Path, required=True)
     approve.add_argument('--source-root', type=Path, required=True)
     args = parser.parse_args()
+    if args.command == 'herdr-audit':
+        from .herdr_audit import audit
+        print(json.dumps(audit(), indent=2))
+        return
     if args.command == 'doctor':
         print(json.dumps(doctor(), indent=2))
         return

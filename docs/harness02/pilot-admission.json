@@ -1,0 +1,15 @@
+{
+  "state": "BLOCKED",
+  "paid_workers_invoked": false,
+  "live_herdr_requests": 0,
+  "blockers": [
+    "OS containment unavailable in this environment",
+    "ANTHROPIC_API_KEY unavailable to isolated reviewer; subscription auth not imported",
+    "music21 unavailable for V4/V3 gates",
+    "Codex hard per-worker cost cap requires an external metered gateway",
+    "OS worker/verifier launcher not qualified; live dispatch disabled in 0.2",
+    "HERDR_ENV=1 absent; socket/session/plugin inventory not inspected",
+    "isolated worker settings must preserve reviewed native-session hooks",
+    "real Herdr pilot not explicitly authorized"
+  ]
+}

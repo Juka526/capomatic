@@ -54,11 +54,11 @@ def check_history(root):
             checked += 1
     return checked
 
-def check_paths(root, frozen, task, policy):
+def check_paths(root, frozen, task, policy, git_root=None):
     actual = manifest(root)
     changed = {n for n in set(actual) | set(frozen) if actual.get(n) != frozen.get(n)}
     tracked_changes = subprocess.check_output(
-        ['git', '-C', str(root), 'diff', '--name-only', '-z', 'HEAD']).decode().split('\0')
+        ['git', '-C', str(git_root or root), 'diff', '--name-only', '-z', 'HEAD']).decode().split('\0')
     changed.update(name for name in tracked_changes if name)
     if not changed or not changed <= set(task['paths']):
         raise PolicyError(f'changed-file allowlist failed: {sorted(changed)}')
@@ -74,12 +74,12 @@ def check_paths(root, frozen, task, policy):
     return sorted(changed)
 
 
-def verify(root, frozen, task, policy, review, snapshot_sha, mock=False):
+def verify(root, frozen, task, policy, review, snapshot_sha, mock=False, git_root=None):
     validate('review', review)
     if review['task_id'] != task['id'] or review['snapshot_sha256'] != snapshot_sha or review['verdict'] != 'pass' or review['findings']:
         raise PolicyError('review does not approve this exact snapshot')
-    changed = check_paths(root, frozen, task, policy)
-    diff = git(root, 'diff', '--check')
+    changed = check_paths(root, frozen, task, policy, git_root)
+    diff = git(git_root or root, 'diff', '--check')
     evidence = {'paths': changed, 'diff': diff, 'review': review, 'simulated': mock}
     if mock:
         evidence['gates'] = {'synthetic_preservation': True}

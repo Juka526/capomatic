@@ -1,4 +1,4 @@
-"""Persisted bounded controller. Live dispatch remains fail-closed in release 0.1."""
+"""Persisted bounded controller. Live dispatch remains fail-closed in release 0.2."""
 import hashlib
 import json
 from pathlib import Path
@@ -10,7 +10,7 @@ from .gitwork import Worktrees, git, manifest
 from .planner import next_task, compile_prompt
 from .policy import Policy, PolicyError
 from .schemas import validate
-from .verify import freeze, verify
+from .verify import freeze, verify, check_paths
 
 
 def tree_sha(files):
@@ -19,12 +19,13 @@ def tree_sha(files):
 
 class Controller:
     def __init__(self, repo, store):
+        self.runtime = None
         self.repo, self.store, self.policy = repo.resolve(), store, Policy()
         self.worktrees = Worktrees(repo, store.directory)
 
     def create(self, mode='mock'):
-        if mode not in ('mock', 'pilot'):
-            raise PolicyError('Level 3 activation is not available in 0.1')
+        if mode not in ('mock', 'pilot', 'herdr-mock', 'herdr-pilot'):
+            raise PolicyError('Level 3 activation is not available in 0.2')
         run_id = uuid.uuid4().hex
         with self.store.db:
             self.store.db.execute('INSERT INTO runs VALUES(?,?,?,?,?,?)',
@@ -34,7 +35,7 @@ class Controller:
 
     def context(self, run_id):
         accepted = [dict(r) for r in self.store.db.execute(
-            "SELECT id,checkpoint FROM tasks WHERE run_id=? AND status='ACCEPTED'", (run_id,))]
+            "SELECT id,checkpoint FROM tasks WHERE run_id=? AND status='ACCEPTED' ORDER BY started,id", (run_id,))]
         evidence = [dict(r) for r in self.store.db.execute(
             "SELECT kind,payload FROM events WHERE run_id=? AND kind IN ('CHECKPOINTING','GATE_FAILURE')",
             (run_id,))]
@@ -42,7 +43,8 @@ class Controller:
                 'approved_scope': self.policy.data['scope'],
                 'withheld': self.policy.data['withheld'],
                 'blockers': ['independent optical completeness unproven', 'repeat playback withheld'],
-                'budget': dict(self.store.db.execute('SELECT COALESCE(SUM(usd),0) spent FROM reservations').fetchone()),
+                'budget': dict(self.store.db.execute('SELECT COALESCE(SUM(usd),0) spent FROM reservations WHERE key LIKE ?',
+                                                           (run_id + ':%',)).fetchone()),
                 'seconds_remaining': max(0, self.policy.data['max_run_seconds'] -
                                          (time.time() - self.store.run(run_id)['started']))}
 
@@ -68,7 +70,7 @@ class Controller:
                 self.store.transition(run_id, 'BLOCKED', {'reason': 'ambiguous interrupted action',
                                                         'actions': [r['key'] for r in pending]})
             return
-        if run['state'] not in ('PLANNING', 'NEXT_TASK', 'BLOCKED'):
+        if run['state'] not in ('PLANNING', 'NEXT_TASK', 'BLOCKED', 'WAITING_OWNER_APPROVAL'):
             self.store.transition(run_id, 'BLOCKED', {'reason': 'interrupted phase requires evidence reconciliation'})
 
     def control(self, run_id, action):
@@ -89,12 +91,20 @@ class Controller:
                 return self.store.report()
             if run['control'] != 'RUN':
                 return self.store.report()
-            if run['mode'] == 'pilot':
+            if run['mode'] in ('pilot', 'herdr-pilot'):
                 audit = doctor()
+                if run['mode'] == 'herdr-pilot':
+                    from .herdr_audit import audit as herdr_audit
+                    audit['blockers'] += herdr_audit()['blockers']
+                    audit['blockers'].append('real Herdr pilot not explicitly authorized')
                 self.store.transition(run_id, 'BLOCKED', {'pilot_blockers': audit['blockers']})
                 return self.store.report()
             budget = Budget(self.store, self.policy, run_id)
             try:
+                if run['mode'] == 'herdr-mock':
+                    from .herdr_runtime import HerdrRuntime
+                    self.runtime = HerdrRuntime(self.repo, self.store, run_id)
+                    self.runtime.reconcile_all()
                 for _ in range(min(max_tasks, self.policy.data['max_tasks'])):
                     if self.store.run(run_id)['control'] != 'RUN':
                         break
@@ -105,9 +115,14 @@ class Controller:
                         raise BudgetExceeded('task count exhausted')
                     if self.store.run(run_id)['state'] == 'NEXT_TASK':
                         self.store.transition(run_id, 'PLANNING')
+                    if self.store.run(run_id)['state'] == 'WAITING_OWNER_APPROVAL':
+                        self.store.transition(run_id, 'PLANNING')
                     plan = self.plan(run_id)
                     if plan['task'] is None:
-                        self.store.transition(run_id, 'COMPLETED', {'reason': 'bounded backlog exhausted'})
+                        waiting = self.store.db.execute(
+                            "SELECT 1 FROM tasks WHERE run_id=? AND status='WAITING_OWNER_APPROVAL'", (run_id,)).fetchone()
+                        self.store.transition(run_id, 'WAITING_OWNER_APPROVAL' if waiting else 'COMPLETED',
+                                              {'reason': 'no permitted dependency-ready tasks'})
                         break
                     self._task(run_id, plan, budget)
                     if self.store.run(run_id)['state'] == 'WAITING_OWNER_APPROVAL':
@@ -116,7 +131,10 @@ class Controller:
                     if self.store.run(run_id)['state'] != 'NEXT_TASK':
                         break
                 if self.store.run(run_id)['state'] == 'NEXT_TASK':
-                    self.store.transition(run_id, 'COMPLETED', {'reason': 'configured 0.1 task bound reached'})
+                    waiting = self.store.db.execute(
+                        "SELECT 1 FROM tasks WHERE run_id=? AND status='WAITING_OWNER_APPROVAL'", (run_id,)).fetchone()
+                    self.store.transition(run_id, 'WAITING_OWNER_APPROVAL' if waiting else 'COMPLETED',
+                                          {'reason': 'configured bounded task count reached'})
             except BudgetExceeded as exc:
                 self.store.transition(run_id, 'BUDGET_EXCEEDED', {'reason': str(exc)})
             except Exception as exc:
@@ -134,6 +152,8 @@ class Controller:
                 self.store.db.execute('INSERT INTO tasks(id,run_id,spec,status) VALUES(?,?,?,?)',
                                       (key, run_id, json.dumps(task), 'WAITING_OWNER_APPROVAL'))
             self.store.transition(run_id, 'WAITING_OWNER_APPROVAL')
+            if self.runtime:
+                self.runtime.adapter.notify('Owner review required', task['id'])
             return
         self.policy.task(task, {r['id'].split(':')[-1] for r in self.context(run_id)['accepted']})
         started = time.time()
@@ -142,7 +162,8 @@ class Controller:
                                   (key, run_id, json.dumps(task), 'ACTIVE', started))
         accepted = self.context(run_id)['accepted']
         base = accepted[-1]['checkpoint'] if accepted else git(self.repo, 'rev-parse', 'HEAD')
-        worktree = self.worktrees.create(key.replace(':', '-'), base)
+        worktree = (self.runtime.builder_worktree(task['id'], base) if self.runtime else
+                    self.worktrees.create(key.replace(':', '-'), base))
         frozen = freeze(worktree)
         evidence_dir = self.store.directory / 'evidence' / key.replace(':', '-')
         evidence_dir.mkdir(parents=True, exist_ok=True)
@@ -157,16 +178,23 @@ class Controller:
             budget.reserve(dispatch, 'builder', 0.1)
             with self.store.db:
                 self.store.db.execute('UPDATE tasks SET attempts=? WHERE id=?', (attempt, key))
-            # Deterministic mock exercises the controller, never represents a paid agent.
-            target = worktree / task['paths'][0]
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text('Synthetic research note.\n' + (
-                'Korean lyric validation and repeat playback remain unresolved.\n' if attempt > 1 else ''))
-            result = validate('result', {'task_id': task['id'], 'summary': 'simulated implementation',
-                                        'changed_paths': task['paths'], 'status': 'implemented'})
+            if self.runtime:
+                prompt = plan['prompt'] if attempt == 1 else (evidence_dir / 'revision-prompt.txt').read_text()
+                result = self.runtime.implement(task, attempt, base, worktree, prompt)
+            else:
+                # Deterministic mock exercises the controller, never represents a paid agent.
+                target = worktree / task['paths'][0]
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text('Synthetic research note.\n' + (
+                    'Korean lyric validation and repeat playback remain unresolved.\n' if attempt > 1 else ''))
+                result = validate('result', {'task_id': task['id'], 'summary': 'simulated implementation',
+                                            'changed_paths': task['paths'], 'status': 'implemented'})
             self.store.finish(dispatch, result)
             self.store.transition(run_id, 'REVIEWING')
-            snapshot, snap_files = self.worktrees.snapshot(worktree, f'{key.replace(":", "-")}-{attempt}')
+            check_paths(worktree, frozen, task, self.policy)
+            candidate_files = manifest(worktree)
+            snapshot, snap_files = self.worktrees.review_snapshot(
+                worktree, task['paths'], f'{key.replace(":", "-")}-{attempt}')
             snapshot_hash = tree_sha(snap_files)
             review_key = f'{key}:review:{attempt}'
             if not self.store.claim(review_key):
@@ -174,13 +202,22 @@ class Controller:
             budget.reserve(review_key, 'reviewer', 0.1)
             review = validate('review', {'task_id': task['id'], 'snapshot_sha256': snapshot_hash,
                 'verdict': 'pass', 'findings': [], 'summary': 'simulated independent review'})
+            if self.runtime:
+                review = self.runtime.review(task, attempt, base, snapshot, snapshot_hash)
             if manifest(snapshot) != snap_files:
                 raise PolicyError('reviewer modified its snapshot')
             self.store.finish(review_key, review)
             (evidence_dir / f'review-{attempt}.json').write_text(json.dumps(review, indent=2))
             self.store.transition(run_id, 'VERIFYING')
             budget.check_time(started)
-            evidence = verify(worktree, frozen, task, self.policy, review, snapshot_hash, mock=True)
+            verifier_snapshot, verifier_files = self.worktrees.snapshot(
+                worktree, f'{key.replace(":", "-")}-{attempt}-verifier')
+            gate = lambda: verify(verifier_snapshot, frozen, task, self.policy, review, snapshot_hash,
+                                  mock=True, git_root=worktree)
+            evidence = (self.runtime.verify(task, attempt, base, verifier_snapshot, tree_sha(verifier_files), gate)
+                        if self.runtime else gate())
+            if manifest(verifier_snapshot) != verifier_files or manifest(worktree) != candidate_files:
+                raise PolicyError('candidate or verifier snapshot changed during gates')
             # A controller-injected gate failure tests bounded revision and feedback.
             if attempt == 1:
                 with self.store.db:
@@ -193,6 +230,10 @@ class Controller:
                 raise PolicyError('verification changed reviewer snapshot')
             evidence['snapshot_sha256'] = snapshot_hash
             (evidence_dir / 'verification.json').write_text(json.dumps(evidence, indent=2))
+            budget.check_time(started)
+            self.policy.unchanged()
+            if self.store.run(run_id)['control'] != 'RUN':
+                raise PolicyError('workflow paused or stopped before checkpoint')
             self.store.transition(run_id, 'CHECKPOINTING', evidence)
             commit_key = f'{key}:commit'
             if not self.store.claim(commit_key):
@@ -202,5 +243,12 @@ class Controller:
             with self.store.db:
                 self.store.db.execute("UPDATE tasks SET status='ACCEPTED',checkpoint=? WHERE id=?", (sha, key))
             self.store.transition(run_id, 'NEXT_TASK', {'checkpoint': sha, 'simulated': True})
+            if self.runtime:
+                from .herdr_adapter import Disconnected
+                try:
+                    self.runtime.adapter.notify('Capomatic checkpoint', f'{task["id"]}: {sha[:12]}')
+                except (Disconnected, PolicyError):
+                    with self.store.db:
+                        self.store.event(run_id, 'NOTIFICATION_UNAVAILABLE', {'task_id': task['id']})
             return
         self.store.transition(run_id, 'FAILED', {'reason': 'revision limit exhausted'})

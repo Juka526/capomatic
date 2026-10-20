@@ -1,0 +1,26 @@
+{
+  "run_id": "6eb42d8efb09453fbac96b5cf430890e",
+  "state": "COMPLETED",
+  "mode": "herdr-mock",
+  "tasks": [
+    {
+      "id": "6eb42d8efb09453fbac96b5cf430890e:readiness-note",
+      "attempts": 2,
+      "status": "ACCEPTED",
+      "checkpoint": "a134f27fc59b6c2204a624375f78080b4dd16f0e"
+    },
+    {
+      "id": "6eb42d8efb09453fbac96b5cf430890e:validation-followup",
+      "attempts": 2,
+      "status": "ACCEPTED",
+      "checkpoint": "b022d0ca12e34cda129d46960bb8e3e248851124"
+    }
+  ],
+  "role_dispatches": 12,
+  "collected": 12,
+  "review_count": 4,
+  "revision_count": 2,
+  "completed_restart_actions_unchanged": 39,
+  "paid_workers_invoked": false,
+  "live_herdr_socket_contacted": false
+}
