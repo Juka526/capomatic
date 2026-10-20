@@ -1,0 +1,79 @@
+{
+  "artifact_sha256": {
+    "A-four-systems.png": "6296c7c27f1ffebdb9272963b2b598d3e31e1c5b8f9cf8f06d81fe8f64f0c273",
+    "Bb-A-G-comparison.png": "2189f3f934dcd7a311f4090d7d8010ec29b2eae3b6e2e626a0ba0451a44cb9ac",
+    "G-four-systems.png": "17b24a6cd03bf0679f2003ba8ef7f95b12f380283691b9afdb8d8026c3da0c01",
+    "owner-interpretation-layer.json": "135bf3af29725ac9d7f1e7e6c539b6cdcc8f89269035b742317e049eb06db1b3",
+    "pre-render-freeze.json": "55d2e221fd71e5eca2c014ee707e041b35328fa9b2266e0159c969ea56338a77",
+    "prediction-freeze.json": "7b83582528dcdcd958ea175e301fa0df8e9e7dbb05399fb4674981f99abfd0a2",
+    "preservation-verification.json": "72bee4f382186206b1dfc1f3b7fc3a55ecc443e76329edb4faa1f172891ebd8e",
+    "rendering-validation.json": "fe15185fbfb79662ccf0c29f9c0228fd6ff9ec0f3ce336c18b090baf7ef04259",
+    "semantic-integrity.json": "1604fc178c2ef689264a02be72eec1a033a0bafb4bcb3bf299994dbcd0a39182",
+    "validation-summary.json": "a52842dce5c775f1969fde49687d0b93d7779020bf54de8e051345ab9a25ffca",
+    "visual-inspection-report.json": "411404f638641eb108e1b28660cff1eb38360b3dd877d4c6de67bc78c1beb05c"
+  },
+  "base_sha": "83863d4366290bd3e804a90483721dba09b556ce",
+  "branch": "experiment/v4-gt16b-confirmed-fourth-system",
+  "confirmed_chords": 10,
+  "confirmed_events": 77,
+  "confirmed_syllables": 84,
+  "continuation_marks": 28,
+  "independent_labels": 0,
+  "new_chords": 3,
+  "new_events": 18,
+  "new_marks": 7,
+  "new_syllables": 14,
+  "new_ties": 5,
+  "output_directory": "/private/tmp/capomatic-v4-gt16b/gt16b-final-output",
+  "rendering_completeness": "ALL_APPROVED_SCOPE_RENDERED_NOT_FULL_SCORE_COMPLETE",
+  "repeat_playback_route": "EXPLICITLY_WITHHELD",
+  "semantic_consistency": "UNCHANGED_FULL_V3_GUARDS_PASS",
+  "skip_reason": "Existing external MuseScore integration dependency; Full Acceptance not run.",
+  "source_ink_or_composition_authorized": false,
+  "source_recognition_completeness": "UNRESOLVED_SIG_AND_UNATTESTED_ABSENCE",
+  "source_verification": "OWNER_VERIFIED_SOURCE_WITH_EXPLICIT_EXCLUSIONS_NOT_INDEPENDENT",
+  "status": "OWNER_CONFIRMED_FOURTH_SCOPE_RENDERED_WITH_LIMITATIONS",
+  "targets": [
+    {
+      "clipping": [],
+      "lyric_dy": 4,
+      "lyric_music_contact_pixels": 0,
+      "lyric_pair_contacts": [],
+      "max_anchor_residual_px": 0.5,
+      "minimum_chord_notation_ink_center_distance_px": 10.0,
+      "minimum_lyric_fixed_ink_center_distance_px": 2.0,
+      "missing_connections": [],
+      "prior_three_system_RGB_body_identical": true,
+      "target": "A"
+    },
+    {
+      "clipping": [],
+      "lyric_dy": 13,
+      "lyric_music_contact_pixels": 0,
+      "lyric_pair_contacts": [],
+      "max_anchor_residual_px": 0.5,
+      "minimum_chord_notation_ink_center_distance_px": 10.0,
+      "minimum_lyric_fixed_ink_center_distance_px": 2.0,
+      "missing_connections": [],
+      "prior_three_system_RGB_body_identical": true,
+      "target": "G"
+    }
+  ],
+  "tests_passed": 501,
+  "tests_skipped": 1,
+  "visual_quality": "NEEDS_REFINEMENT_AGENT_INSPECTION_ONLY",
+  "withheld_new_SIG": [
+    5927,
+    5948,
+    5949,
+    5975,
+    5984
+  ],
+  "withheld_prior_SIG": [
+    5833,
+    5841,
+    5896,
+    5902,
+    5903
+  ]
+}

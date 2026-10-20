@@ -1,0 +1,131 @@
+CAPOMATIC V4 — GT-16B
+OWNER-CONFIRMED FOURTH-SYSTEM RENDERING
+
+Repository: Juka526/capomatic
+
+Starting SHA:
+83863d4366290bd3e804a90483721dba09b556ce
+
+Create branch:
+experiment/v4-gt16b-confirmed-fourth-system
+
+OBJECTIVE
+
+Render the owner-confirmed fourth printed
+system, measures 13–16, in A major and
+G major, preserving all previous results.
+
+OWNER APPROVAL
+
+The owner explicitly approved the
+previously reviewed source candidates:
+
+- 18 note/rest events
+- 5 tie relationships
+- m13: no new chord
+- m14: Gm7
+- m15: Bb/D
+- m16: Eb
+- 14 Korean lyric syllables
+- Their proposed note-onset associations
+- 7 lyric continuation strokes
+- First-ending notation spanning m15–16
+
+Evidence:
+OWNER_VERIFIED_SOURCE
+NOT_INDEPENDENT_GROUND_TRUTH
+
+EXPLICITLY WITHHELD
+
+- The overall repeat playback route
+- SIG objects 5927, 5948, 5949,
+  5975 and 5984
+
+Do not classify or render the five
+withheld objects as articulations.
+
+Do not infer extra syllables, chord events,
+continuation marks or repeat jumps.
+
+EVIDENCE PRESERVATION
+
+Retain the owner's exact approval message
+and preceding review proposal together
+as an attributable approval context.
+
+Bind them to the frozen GT-16 source
+review packet and input hashes.
+
+Do not rewrite historic OMR candidates.
+
+RENDERING
+
+1. Reuse GT-16's validated fourth-system
+   notation masks.
+
+2. Preserve GT-15B's first three systems,
+   including 59 confirmed events,
+   7 chords, 70 syllables and 21 extenders.
+
+3. Add confirmed fourth-system chords:
+   A: F#m7, A/C#, D
+   G: Em7, G/B, C
+
+4. Add the approved Korean lyrics
+   and their exact note associations.
+
+5. Render the seven confirmed lyric
+   continuation marks.
+
+6. Do not create lyrics where the
+   source shows no new syllable.
+
+7. Preserve five approved ties and
+   the existing first-ending notation.
+
+8. Do not change the original notehead,
+   beam, rest, tie or staff geometry.
+
+9. Apply collision-aware lyric positioning
+   without relaxing existing safety rules.
+
+10. Validate actual nonzero-alpha
+    text/music and text/text contacts,
+    clearance, clipping and readability.
+
+11. Run the full unchanged V3 guards,
+    regression tests and preservation checks.
+
+12. Create real A/G four-system PNGs
+    and the original/A/G comparison.
+
+13. Report semantic correctness,
+    visual quality, rendering completeness
+    and remaining unresolved source
+    classifications separately.
+
+DELIVERABLES
+
+- A-four-systems.png
+- G-four-systems.png
+- Bb-A-G-comparison.png
+- owner-interpretation-layer.json
+- rendering-validation.json
+- visual-inspection-report.json
+- docs/V4_GT16B_CONFIRMED_FOURTH_SYSTEM.md
+
+Commit and push research-only changes.
+
+PROHIBITIONS
+
+No original ink removal.
+No source PDF/raster modification.
+No protection-mask changes.
+No V1/V3 production modifications.
+No merge or deployment.
+
+Maintain INCOMPLETE / DEVELOPER-ONLY
+status until separately validated.
+
+Return final SHA, PNG paths,
+tests and remaining blockers.

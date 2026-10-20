@@ -1,0 +1,28 @@
+GT-16 커밋·푸시 완료했습니다.
+
+- 브랜치: `experiment/v4-gt16-fourth-system`
+- 최종 SHA: `83863d4366290bd3e804a90483721dba09b556ce`
+- 범위: 인쇄 **13–16마디**
+- 신규 이벤트 **18/18개 표시**, 모두 잠정 상태이며 신규 소유자 확인은 0개입니다.
+- 기존 **59개 확인 이벤트·7개 코드·70음절·21개 연장선**과 세 시스템의 렌더링 픽셀을 보존했습니다.
+
+검증 결과:
+
+- 테스트 **492 통과, 1 건너뜀**
+- 변경 없는 V3 의미 무결성 가드 통과
+- 음표 앵커 잔차 최대 **0.5px**
+- 예상 밖 실제 알파 접촉·클리핑 **0건**
+- 연결 검사 **25/25 통과**
+- `git diff --check` 통과
+
+실제 이미지:
+
+- [A장조 네 시스템](/private/tmp/capomatic-v4-gt16/gt16-final-output/A-four-systems.png)
+- [G장조 네 시스템](/private/tmp/capomatic-v4-gt16/gt16-final-output/G-four-systems.png)
+- [원본/A/G 비교](/private/tmp/capomatic-v4-gt16/gt16-final-output/fourth-system-comparison.png)
+- [원본 소유자 검토 시트](/private/tmp/capomatic-v4-gt16/gt16-final-output/source-fourth-system-review-sheet.png)
+- [기술 보고서](/private/tmp/capomatic-v4-gt16/docs/V4_GT16_FOURTH_SYSTEM.md)
+
+**미완성 상태를 유지합니다.** 신규 가사 14음절·연장선 7개·코드 후보 2개는 미렌더링이며, 새 SIG 객체 5개와 반복 구조 해석도 확인이 필요합니다. 신규 가사를 표시하지 않았으므로 가사/음악 충돌 안전성은 평가되지 않았습니다. 실제 PNG는 에이전트가 시각 검사했으며 독립 인간 검증은 아닙니다.
+
+원본·보호 마스크·프로덕션은 변경하지 않았습니다. 원본 잉크 제거, merge, deployment도 수행하지 않았습니다.

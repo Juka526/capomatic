@@ -1,0 +1,18 @@
+{
+  "base_sha": "83863d4366290bd3e804a90483721dba09b556ce",
+  "size": [2520,1800],
+  "fourth_view": [130,1395,2430,1800],
+  "integrated_view": [130,310,2430,1800],
+  "lyric_source_windows": [[580,1640,635,1680],[580,1680,635,1725]],
+  "lyric_font_size": 44,
+  "chord_font_size": 40,
+  "font_contract": "Reuse exact GT15B FreeSerif and AppleGothic hashes; GT12 text_mask; GT14B 2px extender; no font substitutions.",
+  "layout": "GT15B layout_text uses GT13A5 finite displacement_domain: translate all 14 syllables and seven marks together by minimum feasible nonnegative integer dy. Fixed x at approved source head center. Preserve row spacing, all mask bytes and associations. Require zero actual text/music and text/text contacts, minimum ink-center distance >=2px, no clipping or lost alpha. Display bottom1800, before next source staff1845.5; no music-position or font-size adjustment if blocked.",
+  "chords": {"14":{"source":"Gm7","symbol":"sheet#1:4230"},"15":{"source":"Bb/D","symbol":"sheet#1:4235"},"16":{"source":"Eb","symbol":"sheet#1:4237"}},
+  "expected_targets": {"A":["F#m7","A/C#","D"],"G":["Em7","G/B","C"]},
+  "music": "Load all frozen GT16 component PNGs listed by rendering-validation (heads/stems/rests/ledgers/beams/flags/ties), source scaffold and clef/key/ending context. Verify union equals GT16 fourth alpha. Never rerender historical notation. Keep frozen Gm7 chord mask byte-identical. Add only two previously missing chords, 14 newly typeset syllables and seven confirmed marks.",
+  "source": "Owner-confirmed scope only, not independent completeness. Separate interpretation layer; old candidate answers untouched. Withhold SIG5927/5948/5949/5975/5984 and all prior withheld IDs. Repeat first-ending span approved but playback route withheld.",
+  "semantic": "New research augmented source adds Bb/D and Eb harmony at measure onset0 (harmony event timing convention, NOT attaching to first note), replaces only m13-16 raw merged lyric observations with approved associations. Full unchanged V3 guards source roundtrip and A/G memory/serialized; full event/tie/voice and repeat signatures unchanged. Prior lyrics/harmonies identical. Extenders separately represented visually; no production serializer modification.",
+  "freeze": "Bind actual owner instruction and preceding review message to GT16 packet hash, checklist, inventory, source and code. Freeze predictions before agent visual inspection. No target-reference access or score OCR. All historical directory hashes checked after run.",
+  "verdict": "DEVELOPER_ONLY_INCOMPLETE_UNRESOLVED_SIG_AND_REPEAT_PLAYBACK; source verification, semantic consistency, rendering coverage and agent visual inspection are separate; no independent optical or performance readiness claim."
+}

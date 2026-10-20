@@ -1,0 +1,26 @@
+{
+  "base_sha": "83863d4366290bd3e804a90483721dba09b556ce",
+  "capture": "Exact current owner instruction and preceding assistant review message, UTF-8 with terminal newline. No invented signature or timestamp. Frozen proposal checklist/inventory retained separately.",
+  "classification": "OWNER_VERIFIED_SOURCE",
+  "files": {
+    "/private/tmp/capomatic-v4-gt16/gt16-final-output/owner-review-checklist.json": "ff50314f68f42f96e0ed98e89e97f07654b1d3b57b111b3125a84da5f72b0ab0",
+    "/private/tmp/capomatic-v4-gt16/gt16-final-output/owner-review/packet-freeze.json": "1cece726612f8c2594dc7c0e492fbc85510ab307d24b52a857b8bd91c66a9049",
+    "/private/tmp/capomatic-v4-gt16/gt16-final-output/source-event-inventory.json": "646eb704634bcc325af691dddd3f8b6e93d193c071df35c11efa483112d2266b",
+    "/private/tmp/capomatic-v4-gt16/gt16-final-output/source-fourth-system-review-sheet.png": "d5a273f38d314e372a516d16f0a674c28ba6dd971d8f9e2608655d6b677ffbe8",
+    "docs/V4_GT16_FOURTH_SYSTEM.md": "c640ba9246bd9e0eefec21bec1e6a6395a4d555dddb5dc53bc127f812870145e",
+    "docs/V4_GT16_VALIDATION.json": "ae948b9325f35fca5dd1f26743de824e4a8c3ab0788a2deae910a3849e477440",
+    "docs/evidence/GT16B_OWNER_APPROVAL.txt": "3d606a10a19a09855fe9354154f75ccb8447ed06beb257548a89ed64062c6db9",
+    "docs/evidence/GT16B_PRECEDING_REVIEW_MESSAGE.txt": "bc98f02cd464928dd1c1f558bb7183ec8fc12838336348cdd04f0fb4a43af2ee"
+  },
+  "independent_ground_truth": false,
+  "repeat_playback_route": "EXPLICITLY_WITHHELD",
+  "source_ink_replacement_authorized": false,
+  "source_sha256": "eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de",
+  "withheld_SIG_ids": [
+    "sheet#1:5927",
+    "sheet#1:5948",
+    "sheet#1:5949",
+    "sheet#1:5975",
+    "sheet#1:5984"
+  ]
+}
