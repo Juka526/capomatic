@@ -1,0 +1,134 @@
+{
+  "agent_document_cold_read": "minor gaps; owner onset convention/workdir/acceptance pointers clarified, not factual or musical validation",
+  "artifact_sha256": {
+    "A-full-score-clean-style.png": "9700e5fca5bcec1582a814031fc748cb6339496c2ac9cbf28016b87fd207a1f0",
+    "A-full-score-experimental.pdf": "09d1ebdc0a7edac78b690be7388dbe656df0453f4a5e08395b2c18cc0b7fc4fe",
+    "A-full-score.png": "fcad8a726dcc547744205729fd9d3387845246477017f73ffec5a526d2051547",
+    "Bb-A-G-full-score-comparison.png": "7b7e880a4e7dbac830dda7af4d7d080b92bf202783eeee0fdc94a8748f2154dd",
+    "G-full-score-clean-style.png": "33ae32ae6790efcdce91ba19b374959e13084d9664915f90911b12906e94d45d",
+    "G-full-score-experimental.pdf": "15ed14965d43ab53813e49538fee1483670996437c0589787daaf450cda4e306",
+    "G-full-score.png": "0bf3edf96096ff7c8f588156610a6f5aeb157c3a72db2098e2a8724147dad29f",
+    "full-score-preservation-verification.json": "fdc78de71d85ff980a320801285e11c849145f059f5cba2343af7ae3783643e8",
+    "full-score-rendering-validation.json": "4d650aaef75927452a3593478127084360dd4e5be12fb2e6c425f08da8152e19",
+    "full-score-semantic-integrity.json": "5d7fc5daac72332d8ec936aa7d510526f76b7570170ae557cca8a1488df10f10",
+    "full-score-visual-review.json": "f60eb2b25b9ae462cc2be6fae2b0a7c98b4e84ebb3ef2a74a7729c98e001fb0b",
+    "full-source-coverage-matrix.json": "cbb31d8f9b57c022da567c184dbf839c08dafd42504ca70fa61b9c5535c48c56",
+    "full-source-event-inventory.json": "7a9b8381b0c87431c92ae361837a35093248ba9d8e2d23494c27dc630aa46ab9",
+    "full-source-owner-review-checklist.json": "12256319f02bc76359946d7771fdfca1e436b44cb9557207078025f254d0e23f",
+    "full-source-owner-review-sheet.png": "5af0fcd8637b507abb71c4ecfdf0944c506fcda35545d6f4db24f6f1d11e504f",
+    "full-source-system-map.json": "463295088f6e6d61154a782074e59bee904f813cfa37cde94e41ffd21f6ce055",
+    "measure-level-uncertainty-manifest.json": "cbd7e6fa66161c5ffa8f431180b0d7370b58a0685d806b7ef256fe1d1778d7d8",
+    "owner-interpretation-layer.json": "03fff2d84567d71871306d32d43815477359d282d5749d2b082f44d6ea7f1b23",
+    "owner-review/packet-freeze.json": "ea28fb7eeee05b1d936a97bb2666e829b594b4fd7e870482d871277e2edaca1e",
+    "post-freeze-semantic-audit/audit-freeze.json": "2f53158450b0e2932feab6376ab33e5303fd3273954e1181edacb80be5c23346",
+    "post-freeze-semantic-audit/semantic-comparison.json": "bcce50d4985a6417b78692ce39cd2ac87ac766c16957eb402af82948a198ba80",
+    "prediction-freeze.json": "d78a74c8624a76e7dd86bf9903730c513022db0654da815bbfdc052b03f49347",
+    "unresolved-source-objects.json": "171f55bc077caf3acd1140c7b4ce83714589c2225362a2a792869c7bb3a6e823",
+    "validation-summary.json": "1c5908b7bf5981c06f5ce4f33e6a50a749feebdd068c9e7a33dbc6f74d245421"
+  },
+  "base_sha": "36a6b153aa40f44986b30ca112e73114e8c8ec79",
+  "branch": "experiment/v4-gt17b-full-score-rendering",
+  "cv2": "4.11.0",
+  "font_sha256": {
+    "AppleGothic": "def69dc2b5e12746049a5dcb189f95341ec460589f47587938567313af3020b1",
+    "FreeSerif": "c1dd2270ff624d66a7f1cd23075b5ce05a662f560be06a70a9599065ce008355"
+  },
+  "output_directory": "/private/tmp/capomatic-v4-gt17b/gt17b-final-output",
+  "owner_answer_fields_all_empty": true,
+  "pdf_encoding_runtime": {
+    "A": {
+      "coordinate_transform": "PNG x/y scaled72/300; header140px outside source registration",
+      "encoding": "/FlateDecode",
+      "page_size_points": [
+        604.8,
+        888.96
+      ],
+      "pages": 1,
+      "pixel_size": [
+        2520,
+        3704
+      ],
+      "pypdf": "6.18.1",
+      "raster_dpi": 300,
+      "rgb_sha256": "2b6436c8f496ae14e31de3b66a17901eb506bf480a09b3c6633cade540c0a30b",
+      "runtime": "/opt/anaconda3/bin/python",
+      "title": "DEVELOPER-ONLY EXPERIMENTAL PROTOTYPE / INCOMPLETE - NOT FOR PERFORMANCE OR PRINTING"
+    },
+    "G": {
+      "coordinate_transform": "PNG x/y scaled72/300; header140px outside source registration",
+      "encoding": "/FlateDecode",
+      "page_size_points": [
+        604.8,
+        888.96
+      ],
+      "pages": 1,
+      "pixel_size": [
+        2520,
+        3704
+      ],
+      "pypdf": "6.18.1",
+      "raster_dpi": 300,
+      "rgb_sha256": "90dc3b41e9883afc61f9257767dd56856deaca34a2f1a1813ca3c6cfc58d4a70",
+      "runtime": "/opt/anaconda3/bin/python",
+      "title": "DEVELOPER-ONLY EXPERIMENTAL PROTOTYPE / INCOMPLETE - NOT FOR PERFORMANCE OR PRINTING"
+    }
+  },
+  "post_freeze_provisional_semantic_guards_pass": true,
+  "prediction_freeze_verified_after_visual_review": true,
+  "producer_versions": {
+    "Pillow": "12.3.0",
+    "fonttools": "4.67.0",
+    "music21": "9.9.1",
+    "numpy": "1.26.4",
+    "pytest": "9.1.1"
+  },
+  "protocol_sha256": "39efa3df160453d67634c8d3ced35d5c7d42c5693c7a19307d6b01f4ab159bc2",
+  "python": "3.12.2 | packaged by conda-forge | (main, Feb 16 2024, 20:54:21) [Clang 16.0.6 ]",
+  "scope": {
+    "base_sha": "36a6b153aa40f44986b30ca112e73114e8c8ec79",
+    "deployment": false,
+    "displayed_chords": 24,
+    "displayed_continuation_marks": 50,
+    "displayed_music_events_per_target": 169,
+    "displayed_syllables": 167,
+    "independent_musician_reviews": 0,
+    "merge": false,
+    "new_owner_labels_beyond19": 0,
+    "numerical_layout_safety": "PASS_WITH_EXPLICIT_TIE_BARLINE_CONTEXT_CONTACTS",
+    "owner_confirmed_chords": 12,
+    "owner_confirmed_events": 86,
+    "owner_confirmed_marks": 30,
+    "owner_confirmed_syllables": 88,
+    "printed_measures": 37,
+    "production_changes": false,
+    "provisional_events": 83,
+    "recognized_music_events": 169,
+    "rendering_completeness": "INCOMPLETE_ATTACHMENTS_AND_METADATA",
+    "semantic_consistency": "PASS_FROZEN_16_AND_DIAGNOSTIC_24_HARMONY_GUARDS",
+    "source_editing": false,
+    "source_recognition_completeness": "UNVERIFIED",
+    "systems": 9,
+    "tests_passed": 570,
+    "tests_skipped": 1,
+    "visual_quality": "NEEDS_REFINEMENT"
+  },
+  "source_packet_contains_target_predictions": false,
+  "source_registration": {
+    "canvas": [
+      2520,
+      3564
+    ],
+    "pdf_page_points": [
+      604.8,
+      888.96
+    ],
+    "png_warning_header_px": 140
+  },
+  "tests": {
+    "full_acceptance": false,
+    "new_synthetic_tests": 25,
+    "passed": 570,
+    "skipped": 1
+  },
+  "visual_review_is_independent": false
+}

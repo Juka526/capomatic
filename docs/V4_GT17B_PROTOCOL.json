@@ -1,0 +1,15 @@
+{
+  "base_sha": "36a6b153aa40f44986b30ca112e73114e8c8ec79",
+  "branch": "experiment/v4-gt17b-full-score-rendering",
+  "source": "Original Bb page2 frozen raster/OMR only; no A/G reference input",
+  "source_canvas": [2520,3564],
+  "classification": "OWNER_VERIFIED_SOURCE m1-19 only within explicit approvals; m20-37 OMR_PROVISIONAL/AGENT_VISUAL_CANDIDATE",
+  "musical_rules": "No octave changes, source note x retained. Target staff y from semantic diatonic pitch and persisted staff polylines. All original OMR observations remain immutable. Missing ties and disputed SIG objects withheld and individually listed. Explicit serialized equal-pitch START/STOP ties spanning adjacent measures may intersect their own shared barline, as notation context; those actual contact pixels are counted separately. This never admits unrelated music, text or other structural contacts.",
+  "new_renderer": "Reuse calibrated note/whole/half/rest glyphs, GT07 flag bitmap, GT13A2 cubic curves and line beams. New source-backed bidirectional stem/beam groups require matching semantic levels and SIG membership. Down flag is a vertical reflection of single-flag bitmap; stem span is at least bitmap upward span plus half an interline beyond the lowest actual notehead ink pixel so it cannot touch its own head.",
+  "layout": "No automatic GT16C 6px or supersampling outside frozen systems1-4. Coupled lyric rows translate by the least finite nonnegative integer dy with actual alpha contacts0 and ink-center clearance >=2px, preserving source note x, row spacing, all lyric pixels and associations. Search at most40px within the explicit source-system allocation; if none fits, withhold the row and report a blocked region. Target key groups alone may translate minimally left (finite0..-40px) to retain >=2px actual-ink clearance from source repeat bars and clef; target sharp y, note x/y, glyph bytes and order unchanged. New chords at original source windows with exact V3 text transposition, measured widths and clipping checks. Standalone newly typeset lyrics, never original-pixel composition.",
+  "acceptance": {"notehead_per_axis_max_px":0.5,"unexpected_alpha_contacts":0,"missing_attachments":0,"clipping":0},
+  "development_control": "One preliminary synthetic/source-backed stem/beam probe found a four-pixel down-flag/own-head contact. The span-derived down-stem rule is declared before production of frozen full-page predictions, and tested independently. This is development, not blinded evaluation.",
+  "style": "Source-registered diagnostic black confirmed/blue provisional; separate all-black clean-style candidate prominently INCOMPLETE/PROVISIONAL; optional extra-spacing candidate declares per-system translations and does not alter pitch.",
+  "freeze": "Freeze actual predictions and hashes before agent visual inspection. All human answers beyondm19 empty. Agent review never counts as independent musician validation.",
+  "stop": "Full provisional score and consolidated source-only owner packet, no promotion of m20-37 until actual owner reply"
+}
