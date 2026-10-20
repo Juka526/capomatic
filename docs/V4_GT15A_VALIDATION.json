@@ -1,0 +1,29 @@
+{
+  "all_owner_answers_empty": true,
+  "base_sha": "08a9af470907f7bb54733585a18f7bd7d509752e",
+  "branch": "experiment/v4-gt15a-owner-review",
+  "checklist_sha256": "118bc607105e5b553697eda9ea9a8b7fea5204615d3a8242eccb2a68bcb98528",
+  "evidence_verification_sha256": "6e80b27092d815eeb6df6932c72dcb92be5c076fd0539669cdd7fae3fabda77a",
+  "helper_sha256": "03a6a962b63c09c34f7556d58aa56741350c05d04fca2e57b1163f9434cc1fe5",
+  "independent_labels": 0,
+  "packet_directory": "/private/tmp/capomatic-v4-gt15a/gt15a-owner-packet",
+  "packet_freeze_sha256": "86bd23157b16423db4f61a58e5bde3fb34d65235b99af4880a371cc5d66746ff",
+  "review_items": 72,
+  "scope": {
+    "ambiguous_SIG_objects": 5,
+    "chord_or_absence_items": 4,
+    "continuation_strokes": 11,
+    "events": 20,
+    "syllable_associations": 20,
+    "ties": 6
+  },
+  "source_review_image_sha256": "9ef42f4ceac37b769f718b5178aee5ce2ecb39b81e72f2befcc86e51cabd9020",
+  "source_status": "UNVERIFIED",
+  "status": "OWNER_REVIEW_PENDING",
+  "target_rendering_executed": false,
+  "tests": {
+    "new_tests": 9,
+    "passed": 471,
+    "skipped": 1
+  }
+}
