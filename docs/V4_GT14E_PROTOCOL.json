@@ -1,0 +1,16 @@
+{
+  "version":1,
+  "base_sha":"c300e0217f1a36cecb930c55d67a2dd75408ea12",
+  "understood_as":"Integrate unchanged frozen first-system plus GT14D second-system layers in original page coordinates, validate collisions and inspect readability; no new notation or source corrections.",
+  "canvas_size":[2520,1100],
+  "viewport":[130,310,2430,1030],
+  "split_page_y":700,
+  "assembly":"Copy y<700 from frozen GT13A6 two-system alpha and y>=700 from GT14D combined alpha; require the full union to equal GT14D combined alpha byte for byte. This boundary lies in empty inter-system space and does not move either system.",
+  "collision":"Use independent frozen event/header/chord/tie masks and conservative actual-alpha staff bands as notation obstacles; never subtract lyrics from notation to infer no collision. Intentional staff/head/stem/beam/ledger contacts remain separately described rather than called unexpected.",
+  "first_lyrics":"Load frozen 40 lyric components, apply only the previously frozen GT13A5 integer displacements; require union byte equality with frozen local lyric alpha. No new glyph rasterization or layout search.",
+  "second_lyrics":"Reuse 14 frozen syllables plus all 6 owner-confirmed extenders.",
+  "rules":"Zero text/text and text/notation alpha contacts, zero cross-system component contacts or clipping, preserved coordinate registration and existing 0.5px head criterion. Do not fix discovered deficiencies in this validation run.",
+  "reference_policy":"Original Bb raster only; no A/G reference page access or retuning.",
+  "visual_policy":"Inspect frozen actual integrated PNG and native G low-register details. Agent inspection only, not independent optical validation.",
+  "source_verification":"OWNER_VERIFIED_SCOPED_CONTENT_NOT_INDEPENDENT_COMPLETENESS"
+}

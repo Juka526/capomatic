@@ -1,0 +1,151 @@
+{
+  "base_sha": "c300e0217f1a36cecb930c55d67a2dd75408ea12",
+  "coarse_notation_contact_audit": [
+    {
+      "classification": "INTENTIONAL_SAME_M5_NOTE_HEAD_LEDGER_CONTACT_VERIFIED_AGAINST_FROZEN_GT13A6",
+      "independent_coarse_layer_contacts": [
+        {
+          "a": "A-whole-note-alpha.png",
+          "b": "A-whole-ledger-alpha.png",
+          "pixels": 44
+        }
+      ],
+      "method": "Exact nonzero-alpha contacts across independent frozen notation layer masks. Conservative actual-alpha staff bands are excluded because they duplicate existing ink.",
+      "target": "A",
+      "unexpected_coarse_layer_contact_pairs": 0,
+      "within_union_symbol_contacts": "NOT_SEPARATELY_ENUMERATED; intentional connected note/stem/beam/staff contacts inherit existing validated components"
+    },
+    {
+      "classification": "INTENTIONAL_SAME_M5_NOTE_HEAD_LEDGER_CONTACT_VERIFIED_AGAINST_FROZEN_GT13A6",
+      "independent_coarse_layer_contacts": [
+        {
+          "a": "G-whole-note-alpha.png",
+          "b": "G-whole-ledger-alpha.png",
+          "pixels": 15
+        }
+      ],
+      "method": "Exact nonzero-alpha contacts across independent frozen notation layer masks. Conservative actual-alpha staff bands are excluded because they duplicate existing ink.",
+      "target": "G",
+      "unexpected_coarse_layer_contact_pairs": 0,
+      "within_union_symbol_contacts": "NOT_SEPARATELY_ENUMERATED; intentional connected note/stem/beam/staff contacts inherit existing validated components"
+    }
+  ],
+  "final_validation": {
+    "MusicXML_lyric_extender_export": "GAP_0_EXTEND_ELEMENTS_FOR_10_VISUAL_MARKS",
+    "independent_labels": 0,
+    "production_modified": false,
+    "rendering_completeness": "FROZEN_TWO_SYSTEM_INVENTORY_RETAINED_NOT_FULL_SCORE",
+    "semantic_correctness": "UNCHANGED_V3_GUARDS_AND_SIGNATURES_PASS",
+    "source_removal_or_composition_authorized": false,
+    "source_verification": "OWNER_VERIFIED_SCOPED_CONTENT_NOT_INDEPENDENT_COMPLETENESS",
+    "status": "TWO_SYSTEM_PREVIEW_VALIDATED_WITH_VISUAL_LIMITATIONS",
+    "tests_passed": 437,
+    "tests_skipped": 1,
+    "visual_readability": {
+      "A": "ACCEPTABLE_FOR_EXPERIMENT_WITH_LIMITATIONS",
+      "G": "READABLE_BUT_NEEDS_VISUAL_REFINEMENT_REVIEW"
+    }
+  },
+  "outputs_sha256": {
+    "A-integrated-alpha.png": "6440ae912a2178e8173c4feded0e2cb11fbed6bac89c08f149107c4c60c40bea",
+    "A-two-systems.png": "8b343a26a432a9d5e872224ec295fb20ddb383abc7114cff88cf2f8cdd440761",
+    "Bb-A-G-two-system-comparison.png": "56d27449923542ee6c303cb1015d6a2ee894779d45bfd4a1726d9429ec059caf",
+    "G-detail-m2-ledger-tie-lyrics.png": "655395f5de399c2c452d069023d2586cf1999ee8bae6ed5219371e4f7647a36a",
+    "G-detail-m4-outgoing.png": "aac8c82f7aeab2dcb38d4d67e3429681056a7b74d69ca7e41c2c4b7705b986c9",
+    "G-detail-m5-incoming.png": "20572fe8ab8a00e9931db70f729dfb7f58e539075be6fddf62f7451fcd98ad33",
+    "G-detail-m6-m7-ledger-tie-lyrics.png": "47cba9f6c4ec09dbc45783ca792805f16cc5dd08d52cf95d83f4c57644212ec8",
+    "G-integrated-alpha.png": "7088b6a3b18a30dbf67faddbc2cc9b43b8279dcbc43424320c8ff2593a17cf5b",
+    "G-two-systems.png": "0a0f4658ee5e090e4881537edfabe75795c11795699eb2470ba8f268b3f16b84"
+  },
+  "protocol_sha256": "96ad4bc8431a42c4cb26ee00e2a97ebee0000db14c714ea5ffa65ecff6e4fa9c",
+  "source_sha256": "eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de",
+  "target_measurements": [
+    {
+      "clipping": [],
+      "confirmed_chords": 5,
+      "confirmed_syllables": 50,
+      "continuation_mark_components": 10,
+      "events_inherited_displayed": 39,
+      "geometry_integration_deviation_px": 0,
+      "integrated_alpha_equals_GT14D": true,
+      "middle_staff_spacing_px": {
+        "1200": 350.09975070247145,
+        "200": 350.0999901813654,
+        "2300": 350.0994872756881
+      },
+      "minimum_text_notation_ink_center_distance_px": 2.0,
+      "second_system_confirmed_extenders": 6,
+      "system_ink_edge_vertical_gap_px": 46,
+      "target": "A",
+      "text_notation_unique_contact_pixels": 0,
+      "text_text_contacts": []
+    },
+    {
+      "clipping": [],
+      "confirmed_chords": 5,
+      "confirmed_syllables": 50,
+      "continuation_mark_components": 10,
+      "events_inherited_displayed": 39,
+      "geometry_integration_deviation_px": 0,
+      "integrated_alpha_equals_GT14D": true,
+      "middle_staff_spacing_px": {
+        "1200": 350.09975070247145,
+        "200": 350.0999901813654,
+        "2300": 350.0994872756881
+      },
+      "minimum_text_notation_ink_center_distance_px": 2.0,
+      "second_system_confirmed_extenders": 6,
+      "system_ink_edge_vertical_gap_px": 37,
+      "target": "G",
+      "text_notation_unique_contact_pixels": 0,
+      "text_text_contacts": []
+    }
+  ],
+  "tests": {
+    "passed": 437,
+    "skipped": 1
+  },
+  "visual_review": {
+    "criteria": [
+      "Both original system registrations retained",
+      "First and second system event/chord/text streams present",
+      "Outgoing and incoming tie segments separate with no bridge",
+      "All six second-system extenders present",
+      "No visible clipping or duplicate glyphs",
+      "Assess low-register ledger/tie/lyric crowding independently of zero-contact checks"
+    ],
+    "findings": [
+      "G m2 D3 above 마 and m4 D3 above 시 remain tightly spaced at the inherited 2px minimum; actual contact count is zero but optical breathing room is limited",
+      "G m2/m4 adjacent Korean syllables look crowded at preserved horizontal anchors; no layout retuning authorized in this run",
+      "G m5 open head/ledger/incoming tie and upper/lower continuation marks are distinct in the native detail",
+      "G m6-m7 local ties, six continuation marks and lyric rows remain distinguishable; ledger/tie area is dense",
+      "Both systems retained their original vertical relationship; no line is drawn across the system gap",
+      "Inherited sloped beam raster edges appear uneven in native close-up; no beam shape was retuned in this integration"
+    ],
+    "limits": [
+      "Not musician acceptance, independent ground truth, or professional optical validation",
+      "Within-union note/stem/beam contacts inherit earlier component gates; no new exhaustive per-symbol optical audit",
+      "No full-score/performance-ready claim"
+    ],
+    "nonmusical_source_context_not_recreated": [
+      "Source section label",
+      "Composer/transcriber credit",
+      "Printed measure-number label"
+    ],
+    "review_type": "AGENT_VISUAL_INSPECTION_NOT_INDEPENDENT_OPTICAL_VALIDATION",
+    "source_comparison": "Original Bb crop compared against both integrated predictions only after prediction freeze; A/G reference pages not accessed",
+    "target_verdicts": {
+      "A": "ACCEPTABLE_FOR_EXPERIMENT_WITH_LIMITATIONS",
+      "G": "READABLE_BUT_NEEDS_VISUAL_REFINEMENT_REVIEW"
+    },
+    "viewed_files": [
+      "A-two-systems.png",
+      "G-two-systems.png",
+      "G-detail-m2-ledger-tie-lyrics.png",
+      "G-detail-m4-outgoing.png",
+      "G-detail-m5-incoming.png",
+      "G-detail-m6-m7-ledger-tie-lyrics.png",
+      "Bb-A-G-two-system-comparison.png"
+    ]
+  }
+}
