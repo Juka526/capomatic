@@ -1,0 +1,15 @@
+{
+  "exit_code": 0,
+  "test_cases": 653,
+  "passed": 652,
+  "failures": 0,
+  "errors": 0,
+  "skipped": [
+    {
+      "name": "test_musicxml_fast_path_skips_gate_and_passes_integrity",
+      "reason": "MuseScore not installed"
+    }
+  ],
+  "junit_sha256": "69b1c80f9389a65a865ae43b3cc6ea59dde15c2b8419b55a3a6a9f8d2cebb21a",
+  "mandatory_gate": "BLOCKED"
+}

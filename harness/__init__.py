@@ -1,2 +1,2 @@
-"""Capomatic research controller with a Herdr-native runtime, version 0.2."""
-__version__ = "0.2.0"
+"""Capomatic runtime qualification and bounded pilot preparation, version 0.3."""
+__version__ = "0.3.0"

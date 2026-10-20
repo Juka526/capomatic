@@ -1,9 +1,39 @@
-# Harness 0.2 operator runbook
+# Harness 0.3 operator runbook
 
-The experimental build worktree in this checkout is `/Users/juahnkim/transchord/.harness-02`, branch `experiment/capomatic-harness-02-herdr`. Use Python 3.12+. A minimal isolated setup for mock execution is:
+The Harness 0.3 research worktree is `/Users/juahnkim/transchord/.harness-03`, branch `experiment/capomatic-harness-03-runtime`. Paid execution is blocked and Level 3 is disabled. Read [runtime qualification](HARNESS_03_RUNTIME_QUALIFICATION.md) before any pilot preparation.
 
 ```bash
-cd /Users/juahnkim/transchord/.harness-02
+python -m harness --state-dir .harness-state/runtime-qualification qualify
+python -m harness.runtime_demo --repo "$PWD" --state-dir "$PWD/.harness-state/runtime-recovery"
+python -m pytest tests/harness -q
+```
+
+For the clean Python 3.12/macOS ARM test environment, use the hash-checked setup in the [MuseScore/dependency report](HARNESS_03_MUSESCORE.md). A venv and passing Python package checks do not establish VM isolation or native renderer readiness.
+
+`qualify` records local versions, inherited Herdr caller checks, synthetic sandbox probes, credential-presence metadata and spending qualification. It writes a uniquely named observation under `STATE_DIR/qualifications/` and never authorizes or launches a paid task. Do not forge Herdr context or start/stop the user's server to bypass an absent caller environment.
+
+`runtime_demo` runs only trusted local Python fixtures plus one pytest process. It simulates a Controller interruption after a real process receipt is durably sealed, then recovers it without repeating the write. Its JSON report distinguishes local subprocess evidence from AI-worker operation. No Codex or Claude CLI is launched. It also proves same-UID chmod can bypass readonly bits; detection of that mutation is not a secure Reviewer boundary.
+
+For an existing capture, use the exact Controller state directory and capture ID from the report:
+
+```bash
+python -m harness --state-dir STATE_DIR recover-artifact --capture-id CAPTURE_ID
+```
+
+This validates the private Controller receipt and sealed files; it does not rerun a command or advance/commit an agent task. Controller state must be private, same-owner and disjoint from diagnostic inputs. Back up `state.sqlite3`, `controller-receipt.key`, process-captures, workspaces and evidence together. Never publish the signing key. A missing key for existing work is an incident; no replacement is minted. Tampered, missing, failed or unfinished evidence blocks without replay. Do not clear ledger rows to force a retry or kill an old PID without establishing current process identity.
+
+For a consistent backup, first stop the relevant workflow and establish that all capture writers and known child processes have ended. A stale RUNNING row or old PID is not proof of a live process. Select a private encrypted backup directory outside every worker mount and public Git. Copy the signing key, sealed capture files, queue/evidence, and each registered workspace; record original-to-backup path mappings. Use Python's `sqlite3.Connection.backup()` for the database instead of copying a potentially active SQLite/WAL pair. For example, with writers stopped, open `STATE_DIR/state.sqlite3`, open `BACKUP_DIR/state.sqlite3`, and call `source.backup(destination)`; then close both. Keep the file copies and DB snapshot from that same stopped state. No backup destination is created automatically.
+
+To restore, stop all relevant Controllers, restore the coherent key/database/files/workspaces to their recorded original paths with private ownership and permissions, and run `recover-artifact` for finished receipts. Do not regenerate a lost key, edit signed paths, resend incomplete operations or automatically resume agents. The project owner records the disposition of unfinished actions before permitting a fresh run. This backup procedure was documented, not tested as a full machine/VM disaster recovery.
+
+An actual worker pilot requires verified Herdr ownership, OS denial tests, scoped worker authentication, account-bound monetary enforcement including in-flight allowance, qualified live artifact recovery, mandatory skip-free regression/preservation and a separate explicit owner authorization. The prepared plan is one task, one Codex implementation and one independent Claude review, followed by deterministic gates. No automatic second task or paid-authorization override flag exists. Existing `herdr-pilot` remains an admission check that launches no worker.
+
+## Compatibility mock operations
+
+The mock orchestration commands below are retained from Harness 0.2; run them from the 0.3 research worktree. Use Python 3.12+. A minimal isolated setup for mock execution is:
+
+```bash
+cd /Users/juahnkim/transchord/.harness-03
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r harness/requirements.txt pytest
@@ -71,6 +101,6 @@ The owner must inspect the exact packet, supply an attributable genuine response
 
 ## Real pilot and Level 3
 
-`start --mode herdr-pilot --max-tasks 1` records admission blockers and dispatches no worker. This request did not authorize a real pilot. Do not bypass the gate, copy production credentials, alter shared hooks, install plugins or enable automatic resume as a substitute for qualified containment. The live verifier command also refuses execution.
+`start --mode herdr-pilot --max-tasks 1` records admission blockers and dispatches no worker. The conditional qualification request did not authorize paid execution. Do not bypass the gate, copy production credentials, alter shared hooks, install plugins or enable automatic resume as a substitute for qualified containment. The live verifier command also refuses execution.
 
-Before requesting a real pilot, resolve every item in [security readiness](HARNESS_02_SECURITY.md), including OS-enforced execution and socket isolation, separate credentials, hard-cost enforcement, restored-process restrictions and the MuseScore skip. Herdr does not provide those security guarantees. There is no Level 3 activation command in 0.2.
+Before requesting a real pilot, resolve every item in [security readiness](HARNESS_02_SECURITY.md), including OS-enforced execution and socket isolation, separate credentials, hard-cost enforcement, restored-process restrictions and the MuseScore skip. Herdr does not provide those security guarantees. There is no Level 3 activation command in 0.3.

@@ -1,0 +1,21 @@
+{
+  "original_source_baseline": {
+    "passed": true,
+    "count": 620
+  },
+  "approved_source_packet": {
+    "passed": true,
+    "count": null
+  },
+  "historical_artifacts": {
+    "passed": true,
+    "count": 49
+  },
+  "security_policy": {
+    "passed": true,
+    "sha256": "2efe80144d9d54fa3cb9d40118a47d7beb17a177dda909d8bf4028f553ba2028"
+  },
+  "agent_settings": {
+    "passed": true
+  }
+}

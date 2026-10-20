@@ -1,0 +1,117 @@
+{
+  "case_directory": "/Users/juahnkim/transchord/.harness-03/.harness-state/runtime-recovery/fc5455e7b659435d8b390feb03d68452",
+  "base_sha": "3bf1e9ff9b8f53cb7bb219eff6a17a859a7ce71b",
+  "paid_workers_invoked": 0,
+  "classification": "ACTUAL_LOCAL_PROCESS_FIXTURES_NOT_AI_WORKERS",
+  "builder": {
+    "capture_id": "a73d60b8ea846b4e92329436ff3919f75f9163521a79ca515fb295ecb2e76a12",
+    "receipt": {
+      "run_id": "80e014be7e0f49de8822933fdcb75063",
+      "task_id": "runtime-capture-note",
+      "attempt_id": "50350af6718547148f72d95706ebe9aa",
+      "role": "builder",
+      "kind": "fixture_process",
+      "base_sha": "3bf1e9ff9b8f53cb7bb219eff6a17a859a7ce71b",
+      "request_sha256": "ac35f5206a45c8bc0ae8f85731e1a95c5200c89d7248f5a806e30dfd35f6a854",
+      "input_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "output_sha256": "1d720d6dc71eaadfe5e1d4018687c944f190f24e1b51d9d2fb3c65bed23134de",
+      "payload_sha256": "768f98c70d4f85172d2c948fb195b0979d3a3800bd38c111beee386044926b4f",
+      "stdout_sha256": "08719ca89743c3017bbf8b0d03f70b7e88f1aac3270f163265960cff946f0abc",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0,
+      "pid": 85890,
+      "started": 1792536667.210191,
+      "finished": 1792536667.313517,
+      "changed": {
+        "research/harness_tasks/runtime-capture.md": "added"
+      }
+    },
+    "payload": {
+      "changed_paths": [
+        "research/harness_tasks/runtime-capture.md"
+      ],
+      "status": "implemented",
+      "summary": "actual Python fixture; no Codex invoked",
+      "task_id": "runtime-capture-note"
+    }
+  },
+  "reviewer": {
+    "capture_id": "eb6febe48ea777544398d62858eb13a9525162c8d3c196b6d227f01bd9281c99",
+    "receipt": {
+      "run_id": "80e014be7e0f49de8822933fdcb75063",
+      "task_id": "runtime-capture-note",
+      "attempt_id": "a0a30e5dee9c454495d7b886f2701308",
+      "role": "reviewer",
+      "kind": "fixture_process",
+      "base_sha": "3bf1e9ff9b8f53cb7bb219eff6a17a859a7ce71b",
+      "request_sha256": "0bd992d9a30b616f02d7fc934f5dbcf7d59a00ec00e6484bb32d7968fb3d5055",
+      "input_sha256": "aaac3601711cd450bfb2e6f4387fbc9d6bdad592b67b9155c4ee59ea3ec3fd07",
+      "output_sha256": "aaac3601711cd450bfb2e6f4387fbc9d6bdad592b67b9155c4ee59ea3ec3fd07",
+      "payload_sha256": "ef1defa98deef7f8421059d3ae338e657f36652dff00bef4573bd77a86e17435",
+      "stdout_sha256": "ca6a5fc487e2b232e05573558e6c5886c36704c3bb70fba38ce70068a09a574d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0,
+      "pid": 85891,
+      "started": 1792536667.32766,
+      "finished": 1792536667.4314759,
+      "changed": {}
+    },
+    "payload": {
+      "findings": [],
+      "snapshot_sha256": "aaac3601711cd450bfb2e6f4387fbc9d6bdad592b67b9155c4ee59ea3ec3fd07",
+      "summary": "deterministic Python schema fixture; no Claude invoked",
+      "task_id": "runtime-capture-note",
+      "verdict": "pass"
+    }
+  },
+  "verifier": {
+    "capture_id": "2a19390a70c3f4490f202326e89d33d899c1df0380524f71f3102324a3020771",
+    "receipt": {
+      "run_id": "80e014be7e0f49de8822933fdcb75063",
+      "task_id": "runtime-capture-note",
+      "attempt_id": "45d7e48415614324b2b289d997e353d9",
+      "role": "verifier",
+      "kind": "deterministic_test",
+      "base_sha": "3bf1e9ff9b8f53cb7bb219eff6a17a859a7ce71b",
+      "request_sha256": "be493eb2a33b816a823addff6333af447dd132d417a0b3e35bab255451e37858",
+      "input_sha256": "f81f75a8f1f3de8c8e16b88a9eba99085b25fa7fa44b24661ae5c3084e5d1cf9",
+      "output_sha256": "f81f75a8f1f3de8c8e16b88a9eba99085b25fa7fa44b24661ae5c3084e5d1cf9",
+      "payload_sha256": "0f1c7d7085853ff5b9402646d9a431196dc47650b8a1f91d5efb338132c7285f",
+      "stdout_sha256": "4bcefcc9f6c645923b9993ccf73ad92e6b400ca25458ea14e095857fc2131342",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exit_code": 0,
+      "pid": 85892,
+      "started": 1792536667.438164,
+      "finished": 1792536667.6432068,
+      "changed": {}
+    },
+    "payload": {
+      "actual_exit_code": 0,
+      "kind": "deterministic_test"
+    }
+  },
+  "crash_after_seal_reconciled": true,
+  "duplicate_side_effect_count": 1,
+  "same_uid_readonly_write_denied": false,
+  "same_uid_mutation_detected": true,
+  "live_worker_recovery_qualified": false,
+  "false_pass_process": {
+    "exit_code": 7,
+    "status": "BLOCKED"
+  },
+  "credential_environment": {
+    "parent_presence": {
+      "OPENAI_API_KEY": true,
+      "ANTHROPIC_API_KEY": false,
+      "HERDR_SOCKET_PATH": false,
+      "PRODUCTION_PASSWORD": false
+    },
+    "child_presence": {
+      "OPENAI_API_KEY": false,
+      "ANTHROPIC_API_KEY": false,
+      "HERDR_SOCKET_PATH": false,
+      "PRODUCTION_PASSWORD": false
+    },
+    "scope": "local diagnostic only; no isolated worker authentication"
+  }
+}

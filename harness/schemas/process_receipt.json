@@ -1,0 +1,117 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "minLength": 1,
+      "title": "Run Id",
+      "type": "string"
+    },
+    "task_id": {
+      "minLength": 1,
+      "title": "Task Id",
+      "type": "string"
+    },
+    "attempt_id": {
+      "minLength": 1,
+      "title": "Attempt Id",
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "builder",
+        "reviewer",
+        "verifier"
+      ],
+      "title": "Role",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "fixture_process",
+        "deterministic_test"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "base_sha": {
+      "pattern": "^[a-f0-9]{40}$",
+      "title": "Base Sha",
+      "type": "string"
+    },
+    "request_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Request Sha256",
+      "type": "string"
+    },
+    "input_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Input Sha256",
+      "type": "string"
+    },
+    "output_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Output Sha256",
+      "type": "string"
+    },
+    "payload_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Payload Sha256",
+      "type": "string"
+    },
+    "stdout_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Stdout Sha256",
+      "type": "string"
+    },
+    "stderr_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Stderr Sha256",
+      "type": "string"
+    },
+    "exit_code": {
+      "title": "Exit Code",
+      "type": "integer"
+    },
+    "pid": {
+      "exclusiveMinimum": 0,
+      "title": "Pid",
+      "type": "integer"
+    },
+    "started": {
+      "title": "Started",
+      "type": "number"
+    },
+    "finished": {
+      "title": "Finished",
+      "type": "number"
+    },
+    "changed": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Changed",
+      "type": "object"
+    }
+  },
+  "required": [
+    "run_id",
+    "task_id",
+    "attempt_id",
+    "role",
+    "kind",
+    "base_sha",
+    "request_sha256",
+    "input_sha256",
+    "output_sha256",
+    "payload_sha256",
+    "stdout_sha256",
+    "stderr_sha256",
+    "exit_code",
+    "pid",
+    "started",
+    "finished",
+    "changed"
+  ],
+  "title": "ProcessReceipt",
+  "type": "object"
+}

@@ -50,8 +50,8 @@ def doctor():
     if not importlib.util.find_spec('music21'):
         report['blockers'].append('music21 unavailable for V4/V3 gates')
     # No installed Codex flag bounds monetary usage before an API call.
-    report['blockers'].append('Codex hard per-worker cost cap requires an external metered gateway')
-    report['blockers'].append('OS worker/verifier launcher not qualified; live dispatch disabled in 0.2')
+    report['blockers'].append('Codex CLI has no qualified dollar cap; provider/project enforcement and overshoot allowance unverified')
+    report['blockers'].append('OS worker/verifier launcher not qualified; live dispatch disabled in 0.3')
     report['real_pilot_ready'] = not report['blockers']
     report['level3_ready'] = False
     return report

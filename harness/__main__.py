@@ -16,6 +16,9 @@ def main():
     sub = parser.add_subparsers(dest='command', required=True)
     sub.add_parser('doctor')
     sub.add_parser('herdr-audit')
+    sub.add_parser('qualify')
+    recover = sub.add_parser('recover-artifact')
+    recover.add_argument('--capture-id', required=True)
     for name in ('plan', 'status', 'pause', 'resume', 'stop', 'report'):
         p = sub.add_parser(name)
         p.add_argument('--run-id')
@@ -39,7 +42,14 @@ def main():
         return
     store = Store(args.state_dir)
     ctl = Controller(args.repo, store)
-    if args.command == 'start':
+    if args.command == 'qualify':
+        from .qualification import qualify
+        print(json.dumps(qualify(args.repo, store), indent=2))
+    elif args.command == 'recover-artifact':
+        from .capture import Capture
+        with store.lock():
+            print(json.dumps(Capture(store).recover(args.capture_id), indent=2))
+    elif args.command == 'start':
         run_id = ctl.create(args.mode)
         ctl.run(run_id, args.max_tasks)
         print(json.dumps(store.run(run_id), indent=2))

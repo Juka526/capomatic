@@ -1,4 +1,4 @@
-"""Fail-closed live-worker admission boundary for release 0.2."""
+"""Fail-closed live-worker admission boundary for release 0.3."""
 import os
 from pathlib import Path
 from .policy import PolicyError
@@ -27,4 +27,4 @@ def admit_live(audit):
     if not audit.get('real_pilot_ready') or audit.get('blockers'):
         raise PolicyError('live dispatch denied: ' + '; '.join(audit.get('blockers', ['unqualified environment'])))
     # Deliberately a code-level gate: owner must review a qualified launcher release.
-    raise PolicyError('Harness 0.2 has no qualified OS launcher; use mock mode')
+    raise PolicyError('Harness 0.3 has no qualified OS launcher; use mock mode')
