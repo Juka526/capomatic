@@ -1,0 +1,81 @@
+{
+  "artifact_sha256": {
+    "A-four-systems.png": "50288ce8a09c33a467de874aafcc1400b31b7cc59b2bbd2bb73ae51a7d24a144",
+    "G-four-systems.png": "a1ed3040bca872d651d2ee9e57cceae1ec629b5a64ff90d1bbc12a1ad32f69ee",
+    "fourth-system-comparison.png": "2e4e36b75d0c5fc2547b4176721a64d952587dc6aa9284af615d563e8c9a1031",
+    "historical-renderer-regression.json": "672ca83ddf2805bcb0729c46ffcdefe1dce5e624ba402d47da41e9d18b8318e0",
+    "owner-review-checklist.json": "ff50314f68f42f96e0ed98e89e97f07654b1d3b57b111b3125a84da5f72b0ab0",
+    "owner-review/packet-freeze.json": "1cece726612f8c2594dc7c0e492fbc85510ab307d24b52a857b8bd91c66a9049",
+    "post-render-measurements.json": "914e312a2ed1de53dd584956375c57a1f75eee25d972be61f8ae98eec0b4b61d",
+    "prediction-freeze.json": "92f5faefe4cc8db96115c56b3a60d253423564fdb7a525ae820487c40d089fd8",
+    "preservation-verification.json": "edcfc361f591306e78e8dd662eb75297d486e26a47babe121b8dbf8d41993995",
+    "rendering-validation.json": "a73ab7e8468735e927b88630c4fea94524b39fa832b982bef86f6feda03dbea8",
+    "repeat-preservation.json": "6a6d27f3b89c4d168d2fe9120c5397af341acbc6b93e9534737ff528d328b8d4",
+    "semantic-integrity.json": "4265d2036f6d40ba19363f9b00209994fa65c6cd397ad1a3274f410586c8b335",
+    "source-event-inventory.json": "646eb704634bcc325af691dddd3f8b6e93d193c071df35c11efa483112d2266b",
+    "source-fourth-system-review-sheet.png": "d5a273f38d314e372a516d16f0a674c28ba6dd971d8f9e2608655d6b677ffbe8",
+    "visual-inspection-report.json": "e4945f4e0c8ca9d8b988ca377bcfd5dbc2e53fb87d7ef4d8d36cf023b45dacaa"
+  },
+  "base_sha": "3762aaaaecdbcd42433556089489c674fe57cccb",
+  "branch": "experiment/v4-gt16-fourth-system",
+  "independent_labels": 0,
+  "local_output_directory": "/private/tmp/capomatic-v4-gt16/gt16-final-output",
+  "new_ambiguous_SIG_objects": 5,
+  "new_candidate_marks": 7,
+  "new_candidate_syllables": 14,
+  "new_marks_rendered": 0,
+  "new_owner_confirmations": 0,
+  "new_recognized_events": 18,
+  "new_rendered_event_cores": 18,
+  "new_syllables_rendered": 0,
+  "new_tests": 7,
+  "prior_confirmed_chords": 7,
+  "prior_confirmed_continuation_marks": 21,
+  "prior_confirmed_events": 59,
+  "prior_confirmed_syllables": 70,
+  "source_completeness": "UNVERIFIED",
+  "status": "FOUR_SYSTEM_PREVIEW_INCOMPLETE_PROVISIONAL_FOURTH_SYSTEM",
+  "targets": [
+    {
+      "clipping": [],
+      "context_contact_pairs": [],
+      "max_head_residual": 0.5,
+      "missing_connections": [],
+      "new_chord_contacts": 0,
+      "new_chord_text": "F#m7",
+      "old_new_system_contact_pixels": 0,
+      "old_three_system_RGB_body_byte_identical": true,
+      "prior_withheld_ids": [
+        "sheet#1:5833",
+        "sheet#1:5841",
+        "sheet#1:5896",
+        "sheet#1:5902",
+        "sheet#1:5903"
+      ],
+      "target": "A",
+      "unexpected_intersections": []
+    },
+    {
+      "clipping": [],
+      "context_contact_pairs": [],
+      "max_head_residual": 0.5,
+      "missing_connections": [],
+      "new_chord_contacts": 0,
+      "new_chord_text": "Em7",
+      "old_new_system_contact_pixels": 0,
+      "old_three_system_RGB_body_byte_identical": true,
+      "prior_withheld_ids": [
+        "sheet#1:5833",
+        "sheet#1:5841",
+        "sheet#1:5896",
+        "sheet#1:5902",
+        "sheet#1:5903"
+      ],
+      "target": "G",
+      "unexpected_intersections": []
+    }
+  ],
+  "tests_passed": 492,
+  "tests_skipped": 1,
+  "total_displayed_cores": 77
+}

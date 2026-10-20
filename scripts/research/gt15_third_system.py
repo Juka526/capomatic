@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from backend.omr_v3.music_guard import validate
 from backend.omr_v3.transpose import transpose_score
-from scripts.research.gt04_visual import HEAD
+from scripts.research.gt04_visual import HEAD, REST
 from scripts.research.gt05_raster_anchor import glyph
 from scripts.research.gt07_flags import FLAG, flag_mask
 from scripts.research.gt11_complete_measure import FONT, read, require, events_of, event_signature
@@ -29,6 +29,7 @@ from scripts.research.gt14_second_system import local_tie
 from scripts.research.gt14c_continuation_audit import dark_support_bbox, save_native
 from scripts.research.gt14e_two_system_validation import GT14A
 from scripts.research.gt15_notation import half_symbol, font_contract, single_beam
+from scripts.research.gt13a6_tie_rendering import whole_head
 from scripts.research.paired_ground_truth_01 import dump, sha, file_hashes, line_y
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -246,7 +247,7 @@ def inventory(score, graph, rows, source):
     }
 
 
-def render_music(inv, score, target, graph):
+def render_music(inv, score, target, graph, *, size=SIZE, viewport=VIEW):
     st = inv['staff']
     inter = st['interline']
     tt, font, scale = font_contract(inter)
@@ -270,21 +271,24 @@ def render_music(inv, score, target, graph):
             x = (b[0] + b[2]) / 2
             if n.isRest:
                 if e['duration'] == '2':
-                    p, info = half_symbol(SIZE, inter, (x, (b[1] + b[3]) / 2), rest=True)
+                    p, info = half_symbol(size, inter, (x, (b[1] + b[3]) / 2), rest=True)
                 else:
-                    require(e['duration'] == '1/2', 'Unsupported rest')
+                    require(e['duration'] in ('1', '1/2'), 'Unsupported rest')
+                    char = REST if e['duration'] == '1' else EIGHTH_REST
                     p, info = glyph(
-                        SIZE,
+                        size,
                         font,
-                        EIGHTH_REST,
+                        char,
                         (x, (b[1] + b[3]) / 2),
-                        font_units(tt, EIGHTH_REST),
+                        font_units(tt, char),
                         scale,
                     )
                 add(e['id'] + ':rest', p, e['id'])
             else:
                 require(
-                    e['stem_direction'] == 'up' and not e['articulations'] and not e['expressions'],
+                    (e['stem_direction'] == 'up' or e['duration'] == '4')
+                    and not e['articulations']
+                    and not e['expressions'],
                     'Unsupported note stream attachment/direction',
                 )
                 expected = ({'F': 1, 'C': 1, 'G': 1} if target == 'A' else {'F': 1}).get(
@@ -296,43 +300,56 @@ def render_music(inv, score, target, graph):
                 )
                 pos = 35 - n.pitch.diatonicNoteNum
                 y = line_y(st['lines'][2], x) + pos * inter / 2
-                if e['duration'] == '2':
-                    p, info = half_symbol(SIZE, inter, (x, y))
+                if e['duration'] == '4':
+                    require(
+                        not e['stem_ids']
+                        and graph['symbols'][e['symbol_id']]['shape'] == 'WHOLE_NOTE',
+                        'Unsupported whole-note lineage',
+                    )
+                    p, info = whole_head(size, st, x, n.pitch.nameWithOctave)
+                elif e['duration'] == '2':
+                    p, info = half_symbol(size, inter, (x, y))
                 else:
                     require(e['duration'] == '1/2', 'Unsupported note duration')
-                    p, info = glyph(SIZE, font, HEAD, (x, y), font_units(tt, HEAD), scale)
+                    p, info = glyph(size, font, HEAD, (x, y), font_units(tt, HEAD), scale)
                 add(e['id'] + ':head', p, e['id'])
-                require(len(e['stem_ids']) == 1, 'One explicit stem required')
-                sid = e['stem_ids'][0]
-                hs = [
-                    r
-                    for r in rel
-                    if r['source'] == e['symbol_id']
-                    and r['target'] == sid
-                    and r['kind'] == 'head-stem'
-                ]
-                require(
-                    len(hs) == 1 and dict(hs[0]['attributes']).get('head-side') == 'RIGHT',
-                    'Unsupported head-stem attachment',
-                )
-                px = np.argwhere(np.asarray(p) > 0)
-                edge = int(px[:, 1].max() - 1)
-                attach = float(np.median(px[px[:, 1] == edge, 0]))
-                source_line = graph['symbols'][sid]['geometry']['line']
-                require(len(source_line) == 2, 'Missing persisted stem line')
-                length = max(3.5 * inter, (b[1] + b[3]) / 2 - min(v[1] for v in source_line))
-                tip = y - length
-                nodes[sid] = {'x': edge, 'y': y, 'attachment': attach, 'tip': tip, 'event': e}
+                if e['duration'] != '4':
+                    require(len(e['stem_ids']) == 1, 'One explicit stem required')
+                    sid = e['stem_ids'][0]
+                    hs = [
+                        r
+                        for r in rel
+                        if r['source'] == e['symbol_id']
+                        and r['target'] == sid
+                        and r['kind'] == 'head-stem'
+                    ]
+                    require(
+                        len(hs) == 1 and dict(hs[0]['attributes']).get('head-side') == 'RIGHT',
+                        'Unsupported head-stem attachment',
+                    )
+                    px = np.argwhere(np.asarray(p) > 0)
+                    edge = int(px[:, 1].max() - 1)
+                    attach = float(np.median(px[px[:, 1] == edge, 0]))
+                    source_line = graph['symbols'][sid]['geometry']['line']
+                    require(len(source_line) == 2, 'Missing persisted stem line')
+                    length = max(3.5 * inter, (b[1] + b[3]) / 2 - min(v[1] for v in source_line))
+                    tip = y - length
+                    nodes[sid] = {'x': edge, 'y': y, 'attachment': attach, 'tip': tip, 'event': e}
                 heads[e['symbol_id']] = {
                     'event': e,
                     'bbox': p.getbbox(),
                     'target_pitch': n.pitch.nameWithOctave,
                 }
-                led = Image.new('L', SIZE)
+                led = Image.new('L', size)
                 d = ImageDraw.Draw(led)
                 for pp in range(6, pos + 1, 2):
                     yy = line_y(st['lines'][2], x) + pp * inter / 2
-                    d.line([(x - 0.875 * inter, yy), (x + 0.875 * inter, yy)], fill=255, width=2)
+                    ends = (
+                        (p.getbbox()[0] - 4, p.getbbox()[2] + 3)
+                        if e['duration'] == '4'
+                        else (x - 0.875 * inter, x + 0.875 * inter)
+                    )
+                    d.line([(ends[0], yy), (ends[1], yy)], fill=255, width=2)
                 if led.getbbox():
                     add(e['id'] + ':ledger', led, e['id'])
                 info.update(
@@ -390,16 +407,16 @@ def render_music(inv, score, target, graph):
             )
             tip = math.floor(tip + 0.5)
             node['tip'] = tip
-            p, info = flag_mask(SIZE, font, (node['x'], tip), font_units(tt, FLAG), scale)
+            p, info = flag_mask(size, font, (node['x'], tip), font_units(tt, FLAG), scale)
             add(e['id'] + ':flag', p, e['id'])
             flags.append({'event_id': e['id'], 'symbol_id': flagids[0], **info})
-        stem = Image.new('L', SIZE)
+        stem = Image.new('L', size)
         ImageDraw.Draw(stem).line(
             [(node['x'], node['attachment']), (node['x'], tip)], fill=255, width=2
         )
         add(e['id'] + ':stem', stem, e['id'])
     for b in beams:
-        p = Image.new('L', SIZE)
+        p = Image.new('L', size)
         ImageDraw.Draw(p).line([tuple(q) for q in b['line']], fill=255, width=b['thickness'])
         add(b['id'], p, b['id'])
         for s in b['members']:
@@ -409,7 +426,7 @@ def render_music(inv, score, target, graph):
         if c['system'] == st['system'] and c['kind'] == 'slur':
             require('tie="true"' in c['source_xml'], 'Unsupported non-tie slur')
             cp, info = local_tie(c, rel, heads)
-            add(c['id'], curve_mask(SIZE, cp), c['id'])
+            add(c['id'], curve_mask(size, cp), c['id'])
             curves.append(info)
     connections = []
     for s, node in nodes.items():
@@ -442,14 +459,14 @@ def render_music(inv, score, target, graph):
     clip = [
         n
         for n, p in parts.items()
-        if p.getbbox()[0] < VIEW[0]
-        or p.getbbox()[2] > VIEW[2]
-        or p.getbbox()[1] < VIEW[1]
-        or p.getbbox()[3] > VIEW[3]
+        if p.getbbox()[0] < viewport[0]
+        or p.getbbox()[2] > viewport[2]
+        or p.getbbox()[1] < viewport[1]
+        or p.getbbox()[3] > viewport[3]
     ]
     return parts, {
         'target': target,
-        'recognized_events': 20,
+        'recognized_events': sum(len(m['events']) for m in inv['measures']),
         'displayed_note_rest_cores': len(metrics),
         'owner_verified_new_events': 0,
         'provisional_events': len(metrics),

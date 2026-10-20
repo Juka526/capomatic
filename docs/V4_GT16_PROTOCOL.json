@@ -1,0 +1,20 @@
+{
+  "base_sha": "3762aaaaecdbcd42433556089489c674fe57cccb",
+  "understood_as": "Source-only fourth-system audit and provisional standalone music/context expansion. Preserve all GT15B body pixels and confirmed evidence; no new owner answers or source repair.",
+  "fixed_measures": [13,14,15,16],
+  "size": [2520,1800],
+  "fourth_view": [130,1395,2430,1740],
+  "integrated_view": [130,310,2430,1740],
+  "source_sha256": "eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de",
+  "renderer": "Reuse GT15 music renderer with explicit size/viewport keyword parameters and unchanged historical defaults. Compose validated GT13A6 whole_head for A3/G3 and GT04/13A2 quarter-rest glyph; no new glyph placement algorithm. All historical GT15 head/stem/beam/flag/tie component pixels must reproduce byte-for-byte before fourth-system targets.",
+  "anchor_limit_per_axis_px": 0.5,
+  "new_evidence": "All 18 note/rest events, 5 ties, 3 beams, 2 flags and contextual clef/key are OMR_PROVISIONAL; no new OWNER_VERIFIED_SOURCE. Render only those supported classes. Fail closed on unknown attachment, accidental, beam membership or missing endpoint.",
+  "chords": "Render only persisted MusicXML m14 Gm7 with explicit raw chord-name4230 and source bbox860/1421/928/1452. Use existing FreeSerif40 text_mask and V3 chord transposition. Source-visible m15 Bb/D and m16 Eb remain AGENT_VISUAL_CANDIDATE and unrendered, not silently repaired from reference pages.",
+  "lyrics": "Source-only review inventory: 14 candidate syllables and 7 individually inspected continuation strokes; no new text or extender rendering before source confirmation. Retain sparse/merged OMR observations. Do not mirror upper/lower dashes or fill blank lower m15/m16.",
+  "ending": "Provisional source ending5203 spans m15-m16 with both source legs. Digit1. from source word4234 is a visual candidate; persisted ending-sentence points to Eb text and is retained as a provenance discrepancy. Existing MusicXML RepeatBracket1 spans15/16, RepeatBracket2 spans17; no new backward-repeat glyph at16 and no invented playback path.",
+  "context": "Printed source number13 from word4232 via FreeSerif36, ending numeral FreeSerif40. No new section label observed, do not repeat prior Pre-Chorus label.",
+  "collision_policy": "All nonzero alpha counts. Preserve established intentional same-note/beam-stem attachments only. Report unexpected core contacts, context/chord contacts, actual clipping and old/new-system contacts. New lyric/music safety NOT EVALUABLE because new lyrics withheld.",
+  "preservation": "All GT15B masks/images/owner interpretation and historical files unchanged. New fourth-system ink may not enter y<1408; common first-three-system RGB preview body must equal frozen GT15B. Keep five old SIG IDs5833/5841/5896/5902/5903 explicitly withheld.",
+  "reference_policy": "No target A/G reference raster, notation or recognition read; Bb source and existing source-only OMR rows only. No OCR or Audiveris execution.",
+  "stopping": "Freeze new predictions before agent visual inspection, report source/rendering/optical verdicts separately, stop after provisional preview and blank owner-review packet. No full-score/performance claim."
+}
