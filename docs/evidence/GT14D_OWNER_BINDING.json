@@ -1,0 +1,29 @@
+{
+  "approval_file": "GT14D_OWNER_APPROVAL.txt",
+  "approval_sha256": "9f03c16f195cea8ebee7b5bafccba4a17b1f2cfb318eec47a724e41e8bc3ea51",
+  "approved_ids": [
+    "GT14C-m5-upper",
+    "GT14C-m6-lower",
+    "GT14C-m7-lower"
+  ],
+  "capture": "Exact user Markdown content as UTF-8 with terminal newline; no invented signature or timestamp",
+  "classification": "OWNER_VERIFIED_SOURCE",
+  "independent_ground_truth": false,
+  "packet_files": {
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/GT14C-m5-upper-native.png": "52d47c827527ead0867799909997242b6bdee1caee0c6cd03d222986b7714184",
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/GT14C-m6-lower-native.png": "5a539957b131a7f24db27c7ad338d7f1ffc8de3e12cb5af3d43efeeac5e9c867",
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/GT14C-m7-lower-native.png": "9a6c7acdca57ff665e68c524f0d955c94af52e41974cea13537e5d01be3835d5",
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/audit-freeze.json": "92b23e8305a9e5c8d311fa1d2d2f20718e7689f2d5ab00e25af84f36d07b76c3",
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/input-preservation.json": "b195a1f1cf75c591f0f04fb7efaaa5c7055a3c38233137c14daa86d962e21676",
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/lyric-continuation-inventory.json": "9bad11a243eb40dc1c16d91c1af9d67095733209cac1d39bf4bfdc03c2100e36",
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/owner-review-checklist.json": "8fd4f8b92321f342f364cd16c191e52bfcfea384a8b7b3b3ba4817bc1a35f506",
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/post-audit-verification.json": "9d123f9b4a4e9f633e835bb5fe2e7b8aed64104747863272877c9ffb4a70528d",
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/semantic-integrity.json": "d648e9f1db93b68a23a203f4dd3ce0f50b84227404463a29175e5ff784c0bc0b",
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/source-row-1-native.png": "74d6d1bb9256fbb2279ae06931c32fff7eb385b47f52d11acf765faa51567f71",
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/source-row-2-native.png": "ef9d6568365dd61c7e9562a281bd1a48893787786dcd093b4a03913f967f92dc",
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/source-second-system-native.png": "0fa1a3d269f339de1d7f1f49bad1ad3fe9a3b5625eda87b8176f6d2691ec71c1",
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/source-two-row-extender-review.png": "983a43cc887de32f5d95acd9ccd0e3d99b8aa0885b9b54eca55473d4a38439f8",
+    "/private/tmp/capomatic-v4-gt14c/gt14c-final-output/validation-summary.json": "8f99c6390bc59e683492d41282d64dc154c5ab2d773444a192f988c0c62cb729"
+  },
+  "source_ink_replacement_authorized": false
+}

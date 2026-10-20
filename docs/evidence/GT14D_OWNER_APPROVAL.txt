@@ -1,0 +1,55 @@
+**CAPOMATIC V4 — GT-14D: CONFIRMED LYRIC CONTINUATION RENDERING**
+
+Repository: `Juka526/capomatic`
+
+Starting SHA: `3df64a6e7b3eed080fad7ebb8301f34f7b658c84`
+
+Create branch: `experiment/v4-gt14d-confirmed-extenders`
+
+**OWNER APPROVAL**
+
+The owner explicitly approves all three GT-14C lyric continuation candidates:
+
+- `GT14C-m5-upper`: upper ‘곳’, continued from measure 4 into measure 5.
+- `GT14C-m6-lower`: lower ‘운’, continued at the tied note in measure 6.
+- `GT14C-m7-lower`: lower ‘길’, continued from measure 6 into measure 7.
+
+Classification: `OWNER_VERIFIED_SOURCE`.
+
+This is not independent ground truth or source-ink replacement authorization.
+
+Preserve the exact approval message, source review packet hashes, existing GT-14B confirmed extenders, and the interpretation of object `5747` as part of the existing Korean syllable ‘하’.
+
+**IMPLEMENTATION**
+
+1. Reuse the frozen GT-14B A/G canvases.
+2. Add only the three newly approved lyric extenders.
+3. Verify each extender's source location, lyric row, syllable association and tie context.
+4. Preserve all 13 confirmed music events, 3 chords, 14 lyric syllables and existing tie geometry.
+5. Do not duplicate previously rendered extenders or Korean glyphs.
+6. Preserve the established A/G lyric baselines and collision-aware layout, unless a separately documented experimental alternative becomes necessary.
+7. Validate actual alpha-pixel collisions, clearance, clipping and component integrity.
+8. Preserve all historical output hashes.
+9. Inspect actual A/G comparison PNGs.
+10. Report source verification, rendering completeness and visual quality separately.
+
+**REQUIRED OUTPUTS**
+
+- `predicted-a.png`
+- `predicted-g.png`
+- `comparison-contact-sheet.png`
+- `lyric-extender-validation.json`
+- `visual-inspection-report.json`
+- `docs/V4_GT14D_CONFIRMED_EXTENDERS.md`
+
+Run regression tests, unchanged V3 semantic integrity gates and `git diff --check`.
+
+Commit and push experimental research files only.
+
+No original PDF modification, source ink removal, protection-mask changes, production changes, merge or deployment.
+
+Do not claim independent source completeness or a finished performance-ready score.
+
+Return final SHA, actual PNG paths, collision measurements and remaining blockers.
+
+**STOP.**

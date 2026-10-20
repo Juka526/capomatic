@@ -1,0 +1,15 @@
+{
+  "baseline_displacement": {
+    "A": 0,
+    "G": 8
+  },
+  "collision_policy": "Every nonzero alpha counts, zero new/old and text/music contacts, zero lyric/lyric contacts; strictly positive Euclidean ink-center clearance; fail closed without moving old layers.",
+  "complete_scope": "Six inventoried lyric continuation marks, not independently complete source or performance-ready score",
+  "declared_before_new_target_render": true,
+  "geometry": "Reuse GT14B extender helper unchanged: 2px horizontal stroke, source bbox x/width, top y=floor((source_top+source_bottom-1)/2)+frozen paired-row displacement. New GT14C boxes are dark-support measurements, not original-ink ownership.",
+  "no_new_layout_search": true,
+  "semantic_policy": "Unchanged V3 full guards with frozen source and targets; exact existing note/tie and lyric signatures. No new syllables/chords/events.",
+  "source_verification": "OWNER_VERIFIED_SOURCE_NOT_INDEPENDENT_GROUND_TRUTH",
+  "understood_as": "Apply explicit owner approval in a separate layer; add only three new strokes to frozen GT14B canvases, preserve all old pixels and original candidate records.",
+  "version": 1
+}
