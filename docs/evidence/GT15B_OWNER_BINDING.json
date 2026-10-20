@@ -1,0 +1,39 @@
+{
+  "approval_file": "GT15B_OWNER_APPROVAL.txt",
+  "approval_sha256": "b57862fca48a79df88876558a9da5da802ba146c5f7cc518e144f688deff2a17",
+  "approved_kinds": [
+    "MUSIC_EVENT",
+    "TIE",
+    "CHORD_OR_ABSENCE",
+    "LYRIC_ASSOCIATION",
+    "CONTINUATION_STROKE",
+    "REPEAT_ENDING",
+    "NEGATIVE_OBSERVATION"
+  ],
+  "base_sha": "584b03f1ea5624c6d9d03ac57878d8d8d0b5a6a5",
+  "capture": "Exact current user message UTF-8 text with terminal newline; no invented signature or timestamp.",
+  "checklist_sha256": "118bc607105e5b553697eda9ea9a8b7fea5204615d3a8242eccb2a68bcb98528",
+  "classification": "OWNER_VERIFIED_SOURCE",
+  "correction": {
+    "id": "m11-row1-syllable-3",
+    "new": "은",
+    "old": "을",
+    "onset": "3"
+  },
+  "independent_ground_truth": false,
+  "not_auto_approved": [
+    "SOURCE_COMPLETENESS"
+  ],
+  "packet_directory": "/private/tmp/capomatic-v4-gt15a/gt15a-owner-packet",
+  "packet_freeze_sha256": "86bd23157b16423db4f61a58e5bde3fb34d65235b99af4880a371cc5d66746ff",
+  "source_ink_replacement_authorized": false,
+  "source_review_image_sha256": "9ef42f4ceac37b769f718b5178aee5ce2ecb39b81e72f2befcc86e51cabd9020",
+  "source_sha256": "eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de",
+  "withheld_ids": [
+    "sheet#1:5833",
+    "sheet#1:5841",
+    "sheet#1:5896",
+    "sheet#1:5902",
+    "sheet#1:5903"
+  ]
+}

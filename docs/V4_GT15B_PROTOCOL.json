@@ -1,0 +1,63 @@
+{
+  "base_sha": "584b03f1ea5624c6d9d03ac57878d8d8d0b5a6a5",
+  "baseline_rule": "GT14A ink_bbox display measurement (L<127) bottom minus maximum canonical descent of confirmed syllables. Fixed x at associated original head bbox center. Not ownership segmentation.",
+  "chord_source_windows": {
+    "10": [
+      825,
+      1068,
+      895,
+      1128
+    ],
+    "12": [
+      1885,
+      1068,
+      1960,
+      1128
+    ]
+  },
+  "collision": "All nonzero alpha counts; require zero new-text/fixed-ink contacts and zero pairwise text contacts. Require min ink-center distance>=2px. No clipping or lost translated glyph alpha. Existing GT15 intentional music connections remain frozen.",
+  "extenders": "Reuse GT14B 2px extender at each of 11 independently approved source dark-support bboxes; one component per approved mark. Same whole-system dy as BOTH lyric rows. Negative m10 upper onset1 remains undrawn.",
+  "font": "Reuse hash-bound GT12 FreeSerif chord size40; AppleGothic lyric size44; note bitmap masks from GT15 without rerendering.",
+  "font_sha256": "c1dd2270ff624d66a7f1cd23075b5ce05a662f560be06a70a9599065ce008355",
+  "integrated_view": [
+    130,
+    310,
+    2430,
+    1408
+  ],
+  "korean_font_sha256": "def69dc2b5e12746049a5dcb189f95341ec460589f47587938567313af3020b1",
+  "layout": "Reuse GT13A5 displacement_domain: exhaustive nonnegative integer dy, minimum feasible, one-pixel Chebyshev clearance from all fixed music/chord/section pixels; no font shrink, x shift or source-dependent threshold tuning. Move both new lyric rows plus all 11 marks together. Bound below at next source ending starts y1408. If no feasible dy, report blocked rather than relax.",
+  "lyric_source_windows": [
+    [
+      550,
+      1280,
+      620,
+      1330
+    ],
+    [
+      550,
+      1330,
+      620,
+      1380
+    ]
+  ],
+  "preservation": "GT14E integrated alpha and GT15 third-system alpha exact. Adding source section label may occupy blank source-derived band y1015..1030 but must contact no existing first/second-system ink. No full prefix RGB equality claimed across that new label. All old files remain unchanged.",
+  "section_label": "User-authorized source Pre-Chorus, raw word4183 bbox preserved. FreeSerif33 left/top of source word. Border width2 at source frame support measurement [145,1015,370,1070]. No copied lyric pixels. Long-label-only measured Pillow bbox allocation with integer baseline phase and unscaled bitmap translation; synthetic comparisons against existing GT12 short text must be pixel-identical. Existing music and short-text contracts unchanged.",
+  "semantic": "Add only owner-confirmed Eb/F harmony events at source measure onset0; replace four sparse raw OMR third-system lyric observations in a NEW augmented source with confirmed 20 syllable associations. Preserve original score separately. Full unchanged V3 memory/serialized guards plus full event/tie/lyric/ending signatures; known MusicXML lyric-extend serialization gap remains explicit.",
+  "size": [
+    2520,
+    1450
+  ],
+  "targets": {
+    "A": -1,
+    "G": -3
+  },
+  "third_view": [
+    130,
+    1015,
+    2430,
+    1408
+  ],
+  "understood_as": "New owner-confirmed third-system standalone text layer over frozen GT15 music; preserve first two system masks, no source pixels or raw candidate edits. Five SIG objects remain unclassified.",
+  "verdict": "INCOMPLETE_UNRESOLVED_SIG_OBJECTS_NOT_PERFORMANCE_READY. Owner-scoped source confirmation is not independent musical or optical ground truth. Freeze predictions before agent visual inspection; no target reference access."
+}

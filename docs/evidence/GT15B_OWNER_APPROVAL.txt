@@ -1,0 +1,97 @@
+CAPOMATIC V4 — GT-15B
+OWNER-CONFIRMED THIRD SYSTEM RENDERING
+
+Repository: Juka526/capomatic
+
+Starting SHA:
+584b03f1ea5624c6d9d03ac57878d8d8d0b5a6a5
+
+Branch:
+experiment/v4-gt15b-confirmed-third-system
+
+OWNER APPROVAL
+
+The owner approved the GT-15A review
+recommendations including the lyric correction,
+while explicitly withholding classification
+of five ambiguous SIG objects.
+
+OWNER_VERIFIED_SOURCE:
+- 20 note/rest events
+- 6 tie relationships
+- 4 chord/absence decisions
+- 20 Korean lyric associations
+- 11 lyric continuation marks
+- m8/m9 first/second ending relationship
+- Previously reviewed m10 upper onset 1
+  absence of a continuation dash
+
+CORRECTION:
+m11-row1-syllable-3
+'을' -> '은'
+Keep onset 3 unchanged.
+
+LYRIC STRINGS:
+
+Upper:
+풀은 마르고 꽃은 시드나
+
+Lower:
+전능하신 주 거룩하신 왕
+
+KEEP UNRESOLVED:
+sheet#1:5833
+sheet#1:5841
+sheet#1:5896
+sheet#1:5902
+sheet#1:5903
+
+Do not promote or render those five
+as independent musical articulations.
+
+EVIDENCE
+
+Preserve the owner's actual approval message,
+the correction and GT-15A packet hashes.
+
+Record approved and withheld cases
+in a new interpretation layer.
+
+Do not rewrite frozen candidate records.
+
+RENDERING
+
+1. Preserve GT-14E first two systems.
+2. Preserve third-system note geometry.
+3. Add confirmed transposed chords.
+4. Render both Korean lyric rows.
+5. Render 11 confirmed continuation marks.
+6. Preserve six confirmed ties.
+7. Preserve m9 second-ending notation.
+8. Include the source Pre-Chorus section label.
+9. Avoid duplicate source strokes.
+10. Validate all actual alpha collisions,
+    spacing, clipping and readability.
+11. Run full unchanged V3 semantic guards.
+12. Preserve original and historical hashes.
+
+DELIVERABLES
+
+- A-three-systems.png
+- G-three-systems.png
+- Bb-A-G-comparison.png
+- Owner evidence binding
+- Rendering validation JSON
+- Visual inspection report
+- docs/V4_GT15B_CONFIRMED_THIRD_SYSTEM.md
+
+Commit and push research-only changes.
+
+No source ink removal, original PDF edits,
+protection-mask changes, production changes,
+merge or deployment.
+
+Maintain developer-only incomplete labeling.
+
+Return final SHA, PNG paths,
+test results and outstanding blockers.
