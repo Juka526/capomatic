@@ -1,0 +1,97 @@
+{
+  "artifact_sha256": {
+    "A-original-vs-refined.png": "ae4a5952fed22429d5393a190b33e7feb07eb7f15e0eaa163db5f69ae6327b2b",
+    "A-refined-four-systems.png": "ea125b63e8021356b18f717223b5303ee6920353549e3da47ea9e85ba20a10d5",
+    "G-m13-lyric-clearance-detail.png": "9cb322539b18ce864047377d4b7be2fc3f543b76efb6cc8d22db29cf56b7caf7",
+    "G-original-vs-refined.png": "1c7952d7aea64e9e11e7a4a7aefd6ed6849eb4477d3f0588816e3c0742e9d18a",
+    "G-refined-four-systems.png": "4636a15aebc8019eeb92d45023c792ca80be4e30edbe0515581421fb29a1c00f",
+    "adaptive-engraving-design.md": "4d5d900039d043537c305b523f7fd58342ae20eaa8143f314cbd030e160448e4",
+    "all-head-anchor-preservation.json": "0f1e8cd5a6bdaea7794f56539dc1e5cfca472c56400e84b1db0e1cf947f3a28f",
+    "beam-quality-metrics.json": "bc2141c2bffcc1ac7fb8006acb69c466f70baf9d0556bd148a16637ab5cbd7fa",
+    "determinism-and-runtime.json": "b17ec3267957c450caeba0dded6526f7b958b5f2e64f11a5becc41c7438e7265",
+    "diagonal-beam-before-after.png": "39ae2af69c891e95d92309d465167dfa643ead5d30338d3f5abf4488d9ecd5b0",
+    "input-freeze.json": "52f19715951496f5284ce9d22a9277901bf5ebb69a942ee55dd5458e6f4e3581",
+    "optical-baseline-audit.json": "755890c2e66f286270597fc6a9cf2129aab50d437cc5859821a8f4c23d907b9e",
+    "optical-spacing-metrics.json": "265234fb24993f0c49cc4459e16ce8d3eff8598ed1585211650f15d70118a2c5",
+    "prediction-freeze.json": "0687eb87072346543dc147f8e0bb4fc29722f51ebebd77019619ba334105ddb1",
+    "preservation-verification.json": "038ac74e66c8452b0915e9ac89843b2fd9c7b7395e293e518e38832f58da7b1c",
+    "semantic-integrity.json": "1604fc178c2ef689264a02be72eec1a033a0bafb4bcb3bf299994dbcd0a39182",
+    "validation-summary.json": "e5c89c41f5c1aa442bd52b8e0f517b4ddae2b28d219f207406bb798440eabb0b",
+    "visual-validation.json": "eda180db5718b7d3361436564438a81ec5812f8c2b65de9dd97032cd246045da"
+  },
+  "base_sha": "6cc1dd558d13b7c56799c0cfda49fafbaca8ccd4",
+  "branch": "experiment/v4-gt16c-adaptive-optical-engraving",
+  "changed_sounding_octaves": 0,
+  "freeze_recommendation": "READY_TO_FREEZE_AS_INCOMPLETE_RESEARCH_BASELINE_NOT_PRODUCTION",
+  "independent_musician_reviews": 0,
+  "new_8va_8vb_symbols": 0,
+  "new_synthetic_tests": 22,
+  "output_directory": "/private/tmp/capomatic-v4-gt16c/gt16c-final-output",
+  "rendering_completeness": "77EVENTS_10CHORDS_84SYLLABLES_28MARKS_PRESERVED_NOT_FULL_SCORE",
+  "runtime": {
+    "all_frozen_files_byte_identical": 95,
+    "frozen_file_count": 97,
+    "max_child_rss_bytes": 596246528,
+    "pngs_byte_identical": 90,
+    "producer_exit_code": 0,
+    "timing_note": "Initial /usr/bin/time -l reported36.54s but its own kern.clockrate sysctl was denied after producer completed. This independent repeat uses Python timing/resource and explicit child exit status.",
+    "wall_seconds": 44.220361582993064
+  },
+  "semantic_consistency": "UNCHANGED_FULL_V3_MEMORY_SERIALIZED_AND_SIGNATURES_PASS",
+  "source_verification": "UNCHANGED_OWNER_VERIFIED_SCOPED_CONTENT_NOT_INDEPENDENT_COMPLETENESS",
+  "targets": [
+    {
+      "audited_regions": 9,
+      "changed_beam_groups": 2,
+      "chord_ink_checks": 10,
+      "head_checks": 60,
+      "initially_crowded_regions": 6,
+      "lyric_dy_per_system": [
+        5,
+        4,
+        4,
+        4
+      ],
+      "max_head_residual": 0.5,
+      "native_canvas_height": 1800,
+      "regions_with_greater_center_distance": 8,
+      "remaining_below6px": 0,
+      "system_offsets": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "target": "A",
+      "zero_actual_contacts": true
+    },
+    {
+      "audited_regions": 9,
+      "changed_beam_groups": 2,
+      "chord_ink_checks": 10,
+      "head_checks": 60,
+      "initially_crowded_regions": 6,
+      "lyric_dy_per_system": [
+        6,
+        5,
+        4,
+        4
+      ],
+      "max_head_residual": 0.5,
+      "native_canvas_height": 1800,
+      "regions_with_greater_center_distance": 8,
+      "remaining_below6px": 0,
+      "system_offsets": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "target": "G",
+      "zero_actual_contacts": true
+    }
+  ],
+  "tests_passed": 523,
+  "tests_skipped": 1,
+  "visual_verdict": "MODEST_READABILITY_IMPROVEMENT_WITH_REMAINING_LIMITATIONS"
+}

@@ -1,0 +1,76 @@
+{
+  "base_sha": "6cc1dd558d13b7c56799c0cfda49fafbaca8ccd4",
+  "baseline_domain_correction": "Revision1 mistakenly reused fixed-notation split y1015 as lyric bottom for system2. Frozen GT16B G system2 syllables extend to1020 (A1012). This made even known-safe baseline text out of domain. GT14E source-derived VIEW bottom is1030. Preserve fixed notation strip boundaries and use separate legacy lyric bottom1030 for both keys, without changing contact/clearance criteria, source geometry or selecting by target success. All revision1 development artifacts retained; none were visually inspected or frozen as final.",
+  "baseline_reconstruction": "Use GT14E load_components for frozen first/second text and GT15B/GT16B text placements for third/fourth. Reconstruct112=84syllables+28marks and their exact union. Separate generated fixed notation only after verifying disjointness and lossless recomposition. No source raster segmentation or mask modification.",
+  "beam_candidates": "2x/3x/4x fixed subpixel-area sampling with BOX averaging, no ringing or nonzero-alpha threshold. Sample subpixel centers on page pixel-center grid. Vertical strip width equals persisted thickness and centerline equals frozen line; x cap edges half a pixel beyond frozen endpoint centers retain endpoint column coverage. No endpoint retuning. Compare full nonzero-alpha support, attachments, geometric profiles and unrelated contacts. Select highest4x if safe and detrended coverage-centroid RMS improves over old; otherwise3x then2x, otherwise retain frozen beam with explicit failure. Geometry remains fixed, bitmap byte equality intentionally not required.",
+  "beam_recomposition": "Reconstruct exact third music/context union using existing source-context scaffold/header/ending functions and frozen music components, then replace only selected beam masks. Fourth context already frozen individually. Restore every nonbeam component and prove equality before substitution; no subtractive inference of original source ink.",
+  "beam_scope": "Only diagonal, single-level eighth beam groups in systems3/4 with frozen individual masks and persisted line/endpoints/stem memberships. Keep mixed beams/hooks in systems1/2 and all horizontal beams unchanged; explicitly report residual stair-steps. No ties/heads/stems/flags moved or rerasterized.",
+  "controls": "Synthetic integer/fractional placements and positive/negative slopes; horizontal controls; explicit broken-attachment, unrelated-contact, clipping and infeasible-layout controls; deterministic repeat. Freeze design before real candidate generation.",
+  "hard_safety": "All nonzero alpha counts: zero lyric/music, lyric/lyric and cross-system contacts; unchanged notes/chords/lyrics/ties/repeat signatures; anchor<=0.5px. Optical goal does not replace hard checks. Actual pixel-edge distance uses axis-aligned closed unit pixel squares, not centroid distance or conservative proxy alone.",
+  "lyric_allocation_bottoms": [
+    720,
+    1030,
+    1408,
+    1800
+  ],
+  "lyric_allocation_evidence": {
+    "VIEW": [
+      130,
+      310,
+      2430,
+      1030
+    ],
+    "producer": "scripts/research/gt14e_two_system_validation.py:VIEW"
+  },
+  "metrics": "Per priority measure and system: center and exact pixel-square edge clearance, nearest pixel pairs and matching actual notation component IDs where available, component boxes, available integer vertical domain, shifts, contact/clipping checks. Beam per-column alpha-weighted coverage-centroid error and detrended error, intermediate-alpha pixels, nonzero and coverage area, connected components, stem contacts. Report native and50percent-display agent inspection separately from independent musician review (none unless actual submission).",
+  "optical_targets_px": [
+    6,
+    10,
+    14
+  ],
+  "preservation": "Hash every loaded historical directory and all GT16B prediction/metadata/owner-bound files before and after. Read only Bb source graph and existing semantics, no target reference access. Serialize diagnostic copies only, full unchanged V3 guards plus event/chord/lyric/repeat signatures. Extender MusicXML gap,10SIG exclusions and withheld playback unchanged.",
+  "previous_protocol_sha256": "87383074eb03972eb48933fd9c1cfd0e3293824114676468825263ca1af38faf",
+  "priority_measures": [
+    2,
+    4,
+    6,
+    9,
+    10,
+    11,
+    13,
+    14,
+    15
+  ],
+  "revision": 2,
+  "selection": "Choose6px first; evaluate10/14 diagnostic alternatives. Native lyric domains end at720/1030/1408/1800. Fixed notation strips end720/1015/1408/1800. If a target is infeasible, evaluate120px extra per system, explicitly translating whole-system context and separate tie segments. Never call an artificial split failure physical page insufficiency.",
+  "size": [
+    2520,
+    1800
+  ],
+  "stopping": "Freeze candidate PNG/mask hashes before agent visual inspection. Outcome is an incomplete research preview, not professional engraving or independently verified accuracy. No retuning after inspection. No merge/deploy/Full Acceptance.",
+  "system_allocations_y": [
+    [
+      310,
+      720
+    ],
+    [
+      720,
+      1015
+    ],
+    [
+      1015,
+      1408
+    ],
+    [
+      1408,
+      1800
+    ]
+  ],
+  "understood_as": "New standalone optical layout and beam raster candidates only; identical semantic artifacts and owner evidence. GT16B stays immutable. No new source interpretation, horizontal movement, octave change or production work.",
+  "view": [
+    130,
+    310,
+    2430,
+    1800
+  ]
+}
