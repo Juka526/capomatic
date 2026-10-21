@@ -1,0 +1,53 @@
+{
+  "artifact_sha256": {
+    "field-coverage-matrix.json": "9bbade2c222b3c80ff218bc47f68334cf0b3b41dc33e1c85388bc43f288b5e65",
+    "owner-approval-record.json": "14f8e5ea87d14fb00c4aefee6da2a5ae15d326fe569513e225a43ee877245efc",
+    "owner-interpretation-layer.json": "d5d4a10459cd8fa203c5aac50a76eeccfe7226975055121714c954e93a6f57a3",
+    "preservation-verification.json": "8862922585495ab77080935277150b1df9de99b59482d00e20ee2ee64f62e212",
+    "remaining-owner-review-summary.md": "15121e286593e3ef6b8aa4f494ec382f7f217aecf43c2ad8ed60317684128267",
+    "remaining-review-plan.json": "ee6a2647097ea38098e990bfb0b01589d5739a488e23b5902c2ef99e2e2aca71",
+    "semantic-validation.json": "d0cf35deeb5c07d690697c932fbf96a1e641131c1a2b7060dcce852f83be992e"
+  },
+  "branch": "experiment/v4-gt17e-owner-event-confirmation",
+  "cold_read": "Stands on own with minor gaps; added explicit pending-workload equation. Commit SHA supplied at delivery. No musical or independent human validation by reviewer.",
+  "coverage": {
+    "approved_chords": 24,
+    "approved_lyric_wording_rows": 167,
+    "independent_ground_truth": 0,
+    "owner_confirmed_event_cores": 169,
+    "provisional_continuations": 20,
+    "provisional_event_cores": 0,
+    "provisional_lyric_onsets": 39,
+    "recognized_event_cores": 169,
+    "unresolved_raw_sig_cases": 27,
+    "verified_continuations": 30,
+    "verified_lyric_onsets": 128
+  },
+  "historical_files_unchanged": true,
+  "output_directory": "/private/tmp/capomatic-v4-gt17e/gt17e-delivery-output",
+  "output_freeze_sha256": "75e7ed90ce06610945597568998c8c830c97e4fe6c86ccf928359cfb0bf91652",
+  "payload_reproducibility": "Byte-identical payloads across two isolated executions",
+  "png_or_xml_regenerated": false,
+  "producer_sha256": "943697a86112b351c90ebfeab92cde6c0c023dc4168a55caeecb8ad2050fe51a",
+  "production_changes": false,
+  "remaining_review": {
+    "coherent_groups": 16,
+    "field_items": 87,
+    "lyric_onsets": 39,
+    "m28_unresolved": 1,
+    "playback_decisions": 1,
+    "provisional_events": 0,
+    "raw_sig_cases": 27,
+    "visually_supported_continuations": 19
+  },
+  "rendering_completeness": "INCOMPLETE",
+  "source_completeness": "UNVERIFIED",
+  "starting_sha": "55b72a2fb2162ee4ba913b99310932fbb26fcfab",
+  "tests": {
+    "full_acceptance_run": false,
+    "new_tests": 28,
+    "passed": 652,
+    "skip_reason": "Existing MuseScore not installed test_omr_v3_gate.py:190",
+    "skipped": 1
+  }
+}
