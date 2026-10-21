@@ -1,0 +1,130 @@
+# CAPOMATIC V4 — GT-17B OWNER APPROVAL INTEGRATION
+## Full-Score Source Correction and Verification
+
+Repository: `Juka526/capomatic`
+
+Starting SHA:
+`1c532c4a6cfa332a50e889740088aed064511996`
+
+Create branch:
+`experiment/v4-gt17b-owner-integration`
+
+### OBJECTIVE
+
+Integrate the owner's explicit review approval for printed measures 20–37 into a separate evidence-bound interpretation layer.
+
+Correct source-supported music relationships, preserve the original OMR observations, and regenerate A/G full-score experimental renderings.
+
+### OWNER-APPROVED SCOPE
+
+The owner reviewed the original B-flat full score and enlarged source systems 6–9 and explicitly approved the preceding review proposal.
+
+The approval covers:
+
+1. Twelve source chord symbols and their visible measure placements.
+2. Korean lyric wording and upper/lower row distinctions identified in the source review.
+3. Chorus and Tag section labels.
+4. Visible first/second-ending and repeat-sign locations.
+5. Tie interpretation for the reviewed curves at m21→22, m33 and m35.
+6. Slur interpretation, NOT tie interpretation, for the reviewed m31 unequal-pitch curve.
+
+Store the exact owner response and preceding review scope as approval provenance.
+
+Bind them to the frozen GT-17B source review packet, source images, candidate inventory, object IDs and hashes.
+
+### IMPORTANT APPROVAL LIMITS
+
+Do not promote all 83 provisional note/rest events to OWNER_VERIFIED_SOURCE.
+
+Do not automatically certify the individual onset associations of all 79 candidate syllables or all 20 candidate continuation strokes.
+
+Owner approval of lyric wording is not proof of exact note alignment.
+
+The four reviewed curve classifications are approved, but exact endpoint identity, pitch relationships and attachment geometry must still be checked before semantic changes are committed.
+
+Preserve every original OMR and SIG observation.
+
+Do not interpret approval of the visible repeat notation as approval of the complete playback route.
+
+INDEPENDENT_GROUND_TRUTH remains zero.
+
+### SOURCE AND SEMANTIC CORRECTIONS
+
+1. Add owner-approved chord interpretations to the separate augmented source layer.
+2. Preserve all chord inversions and extensions.
+3. Verify correct A/G transposition for each approved chord.
+4. Preserve approved Korean text and lyric row distinctions.
+5. Investigate the four reviewed curve relationships using exact original source IDs, endpoint note IDs and geometry.
+6. Correct the m31 relationship as a slur only if source evidence supports the precise endpoints.
+7. Add source-supported missing ties for m21→22, m33 and m35 only after verifying equal pitch, tie roles and linkage.
+8. If any endpoint relationship remains ambiguous, preserve the owner's interpretation and mark the exact semantic attachment unresolved.
+9. Preserve visible ending and repeat notation without inventing a playback route.
+10. Preserve unresolved objects and document remaining source completeness questions.
+
+### FULL-SCORE RENDERING
+
+Regenerate full-score A-major and G-major experimental PNG/PDF previews from the revised interpretation layer.
+
+Retain:
+
+- All 9 systems and 37 measures
+- Previous confirmed source evidence
+- Historical GT-16B/16C/17 frozen outputs
+- Original source and protection-mask hashes
+- Correct musical transposition
+- Source-supported chords and lyrics
+- Explicit provisional markings for unverified content
+
+Do not silently change sounding octave, delete source ink or invent missing notation.
+
+### VALIDATION
+
+Run:
+
+- Unchanged V3 semantic integrity guards
+- Existing V4 regression suite
+- Original and historical SHA-256 preservation checks
+- Event, chord and lyric lineage verification
+- Tie/slur semantic consistency checks
+- MusicXML serialization checks
+- Actual alpha collision checks
+- Clipping and anchor checks
+- `git diff --check`
+
+Report verified and provisional coverage separately.
+
+Do not claim full recognition completeness or independent musical accuracy.
+
+### DELIVERABLES
+
+- Revised owner interpretation layer
+- Source correction and uncertainty report
+- Full-score A/G PNGs
+- Full-score A/G experimental PDFs
+- Before/after musical correction comparison
+- Updated source coverage matrix
+- Remaining unresolved items
+- Verification and preservation reports
+- `docs/V4_GT17B_OWNER_INTEGRATION.md`
+
+Commit and push research-only changes.
+
+Return final SHA, tests, actual artifact paths, revised verification totals and remaining owner-review blockers.
+
+### STRICT RESTRICTIONS
+
+No original PDF/raster modification.
+
+No original source ink removal.
+
+No protection-mask modification.
+
+No historical output overwrite.
+
+No production changes.
+
+No merge or deployment.
+
+Maintain DEVELOPER-ONLY / INCOMPLETE status.
+
+STOP after source-approved corrections and experimental full-score regeneration.

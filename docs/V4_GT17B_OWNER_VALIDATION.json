@@ -1,0 +1,59 @@
+{
+  "approval_text_sha256": "a9ff2615b6f14db507ebc5f4d005e69a39b574642f4ddcf4db14353542b85e43",
+  "artifact_sha256": {
+    "A-full-score-experimental.pdf": "87f23b163c0f152c53aa8898e9e499bbd48586e2c0fe0f175d6ff111f16489ce",
+    "A-full-score.png": "5d29b606861ed5c8c3cd3162a93a6bb244a899d17f4b3e51c78504f46fec9a29",
+    "Bb-A-G-full-score-comparison.png": "68e7ac4f6ec4b7f26d5e20aa5ff6d6a2e4067d7c6cc2cd28ca34697e1dda83b2",
+    "G-full-score-experimental.pdf": "20515884a565edd028d2e4ecd969f05290c905b8b4d08ed1a585c107f3e063a5",
+    "G-full-score.png": "103e7777c07aff9e3c46ccec8c8fdc7e0b51404eda835ed9afef72bd8eb32116",
+    "curve-before-after-comparison.png": "33fb43ef262f8e41217d7c8dcd95d451b800f3944ec636963a401b8d88b42072",
+    "owner-interpretation-layer.json": "6aa842dd270655cc5036967c57e98c4ad6a3b8af1fd42e31e9d33c2410bf932a",
+    "preservation-verification.json": "deab1a895074140368675c16f2bc68c961d10e0774c07eee14a95dfbf476457d",
+    "rendering-validation.json": "b377a25e126c3e87661b4b69b6ac09962717e4afcfb92f8efed5c1bf28f72adb",
+    "semantic-integrity.json": "c0966418b2bbb9cef908654f47991dc0d030078d560659f98dde5c27bc446411",
+    "source-correction-and-uncertainty.json": "899e52f3ec64918513e00c91c4c886040e863fb5bda6c51a20c20d2d43b60c37",
+    "source-coverage-matrix.json": "59e0ba6f0277e8f404fa00e8aaed3b6c3b8097ad3c2ed0a20d7bf85069da310c",
+    "validation-summary.json": "2ed3a26e24c7b2d3aefe0f64e39c8ca9170d0a1c438f55bba33d8a98e2dfaa6c",
+    "visual-inspection-report.json": "322fb0f793286b36caea1d113d71e3414f8034cef9c2a28f967765a1d1b82142"
+  },
+  "branch": "experiment/v4-gt17b-owner-integration",
+  "changed_tie_endpoint_count": 6,
+  "counts": {
+    "approved_chords": 24,
+    "approved_continuations": 30,
+    "approved_lyric_wordings": 167,
+    "events": 169,
+    "new_slurs": 1,
+    "new_ties": 3,
+    "owner_event_cores": 86,
+    "provisional_continuations": 20,
+    "provisional_events": 83,
+    "provisional_lyric_onsets": 79,
+    "unresolved_source_objects": 28,
+    "verified_lyric_onsets": 88
+  },
+  "documentation_cold_read": "Minor gaps addressed: overlapping review lists, prerequisite paths, named freeze version, association wording. Not musical validation.",
+  "historical_preservation": "PASS",
+  "independent_ground_truth": 0,
+  "original_source_changed": false,
+  "output_directory": "/private/tmp/capomatic-v4-gt17b-owner-output/final-v2",
+  "prediction_freeze_sha256": "446b450bf5b2ab8e8db9f47254658d73a1de3cde09cab5e1b36d3f2aa7e23575",
+  "producer_sha256": "f8a528dacbf2656151221f97a0fa5948496658bc954a70ac131b3b8e3993a8f4",
+  "rendering_completeness": "INCOMPLETE",
+  "semantic_guards_pass": true,
+  "serialized_note_voice_fields_unchanged": true,
+  "source_completeness": "UNVERIFIED",
+  "source_hashes": {
+    "recognized.omr": "857c787b23d4244cb17fbcc9de80c8a3bbfe7de606aabf818643be1fbf9f6638",
+    "source.png": "eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de",
+    "visual-graph.json": "f8725c39beaaecc877ccf48b803b79a419c2d6e60aa73bc9428a39de11596508"
+  },
+  "starting_sha": "1c532c4a6cfa332a50e889740088aed064511996",
+  "tests": {
+    "full_acceptance_run": false,
+    "passed": 592,
+    "skip_reason": "Existing MuseScore not installed test_omr_v3_gate.py:190",
+    "skipped": 1
+  },
+  "visual_quality": "NEEDS_REFINEMENT"
+}
