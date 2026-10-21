@@ -113,11 +113,13 @@ def approved_scope(plan, inventory):
     return approved
 
 
-def lyric_scope(plan, inventory):
+def lyric_scope(
+    plan, inventory, group_id='SYS6_LYRIC_ONSET', count=40, measure_range=range(20, 25)
+):
     groups = unique_by(plan['groups'], 'group_id')
-    require('SYS6_LYRIC_ONSET' in groups, 'Missing lyric approval group')
-    items = groups['SYS6_LYRIC_ONSET']['items']
-    require(len(items) == 40, 'Lyric group count mismatch')
+    require(group_id in groups, 'Missing lyric approval group: ' + group_id)
+    items = groups[group_id]['items']
+    require(len(items) == count, 'Lyric group count mismatch')
     unique_by(items, 'id')
     lyrics = unique_by(inventory['lyrics'], 'id')
     events = unique_by(inventory['events'], 'id')
@@ -130,7 +132,7 @@ def lyric_scope(plan, inventory):
         require(
             item['candidate'] == {k: lyric[k] for k in ['onset', 'row', 'text']}
             and item['measure'] == lyric['measure']
-            and 20 <= item['measure'] <= 24,
+            and item['measure'] in measure_range,
             'Lyric field scope mismatch',
         )
         require(lyric['event_id'] in events, 'Missing lyric event')

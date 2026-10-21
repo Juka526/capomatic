@@ -1,0 +1,58 @@
+{
+  "artifact_sha256": {
+    "approval-validation.json": "10047c71644e459483e88a2c2fe97da73690faa04d618f99bfb7a3e01dd18286",
+    "field-coverage-matrix.json": "9e6ff487ec79e51fb0c06b841c6aa528d27ab600d95055c3242d07f2b3b203ac",
+    "owner-approval-record.json": "ab1cfa7755b1de2f859a9512892a6b8605aa2464a909512988911389a8a19067",
+    "owner-interpretation-layer.json": "f1592036dfddd4a9678a42cd13131e482d382551d1da91162c767ba99f56791f",
+    "preservation-verification.json": "a18e95de64f6cc9acf49599660277268087df61fd6490f4f620e99e4a910c31c",
+    "remaining-owner-review-summary.md": "8858f117d07106bf8ea800fb28d60ae109942b262b7617f0e09daf426e26bdc5",
+    "remaining-review-plan.json": "fe81d2edaedc48cd546304855f9e620a521d071cea2a182e5a0a3040cf73e420"
+  },
+  "branch": "experiment/v4-gt17f-owner-lyric-confirmation",
+  "cold_read": "Stands on own with minor delivery gaps; documented local retention and report location. Final commit supplied at delivery. No musical or independent human validation by reviewer.",
+  "coverage": {
+    "approved_chords": 24,
+    "approved_lyric_wording_rows": 167,
+    "independent_ground_truth": 0,
+    "owner_confirmed_event_cores": 169,
+    "provisional_continuations": 20,
+    "provisional_event_cores": 0,
+    "provisional_lyric_onsets": 0,
+    "recognized_event_cores": 169,
+    "unresolved_raw_sig_cases": 27,
+    "verified_continuations": 30,
+    "verified_lyric_onsets": 167
+  },
+  "exact_association_status_changes": 39,
+  "historical_files_unchanged": true,
+  "independent_ground_truth": 0,
+  "inherited_prior_associations": 88,
+  "lyric_resolver_sha256": "39bb46382b27113cafb71a1069bc7ee07df50a967ca54d881dff1d3f1912feff",
+  "output_directory": "/private/tmp/capomatic-v4-gt17f/gt17f-final-output",
+  "output_freeze_sha256": "411f17bea189b8e9465b253755309f0422f210e9412c205e9112c7c84066cef8",
+  "payload_reproducibility": "Byte-identical payloads across two isolated executions",
+  "previous_event_coverage_unchanged": true,
+  "prior_sys6_40_records_unchanged": true,
+  "producer_sha256": "0c30726d7f556817d3014b9882b311ad1b66b350e62d07b363537d82cc2f8deb",
+  "production_changes": false,
+  "remaining_review": {
+    "coherent_groups": 13,
+    "field_items": 48,
+    "lyric_onsets": 0,
+    "m28_unresolved": 1,
+    "playback_decisions": 1,
+    "provisional_events": 0,
+    "raw_sig_cases": 27,
+    "visually_supported_continuations": 19
+  },
+  "scores_regenerated": false,
+  "source_completeness": "UNVERIFIED",
+  "starting_sha": "ad0a249e3621d4755b70ee82dbd20e79f48a1c7a",
+  "tests": {
+    "full_acceptance_run": false,
+    "new_tests": 21,
+    "passed": 673,
+    "skip_reason": "Existing MuseScore not installed test_omr_v3_gate.py:190",
+    "skipped": 1
+  }
+}
