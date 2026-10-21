@@ -1,0 +1,118 @@
+{
+  "FULL_REPEAT_PLAYBACK": "UNRESOLVED",
+  "M28_CONTINUATION_LINEAGE": "UNRESOLVED",
+  "artifact_sha256": {
+    "A-corrected.musicxml": "9dbcb7fb9c23aa7cf59bf04cda01a05ba40cf68246369a6154899828bcda54a4",
+    "A-full-score-unchanged.png": "5d29b606861ed5c8c3cd3162a93a6bb244a899d17f4b3e51c78504f46fec9a29",
+    "G-corrected.musicxml": "c64ba9e166c9f38b911d8c436bf3f7c0a8e3f5e16e38c264af6a740dd6b582be",
+    "G-full-score-unchanged.png": "103e7777c07aff9e3c46ccec8c8fdc7e0b51404eda835ed9afef72bd8eb32116",
+    "before-after-semantic-diff.json": "6adbc4a020759411d393ef8fae3348c334c77e8eb3ffed97db83085f9bfbd594",
+    "corrected-source.musicxml": "e755f7b01182a183b3c382ffa3f2a1169dc7e4b2ae1c760ba33bb23765c3dcb0",
+    "owner-approved-4867-correction.json": "110082b05eeebb8172d5d30923c836e003e73c4cd3ccc48a3c958ef50bf97847",
+    "owner-review-summary.md": "3b9a2e82f58889bab5ea9475fc0cc901bcd4dbc567d675ad9d2e7d58ef6cea0a",
+    "preservation-verification.json": "34f137f0710825054bc187fb45dfc2b2172b84e3b1868367228b553c223efd8b",
+    "remaining-review-plan.json": "edb471a511799b226d686a4b39dbc46a3b12aa55b2b2c52df13e8dd3f1ef5dad",
+    "semantic-validation.json": "27e248e142739cb6969e997cb129053cf82211a647b14a5290116d3e2acaf06c"
+  },
+  "branch": "experiment/v4-gt17d-owner-correction",
+  "cold_read_findings_addressed": [
+    "Defined A/G target intervals",
+    "Qualified unchanged picture claim to frozen standalone renderer",
+    "Explained group principle and reply format"
+  ],
+  "historical_files_changed": false,
+  "independent_ground_truth": 0,
+  "new_owner_note_or_lyric_verifications": 0,
+  "new_rerender_performed": false,
+  "original_pdf_sha256_verified": "1cc64756c0ce47b1db0ea6ac21eefe4685097a04cd4589f954afc712afb605fd",
+  "other_ties_and_slurs_preserved": true,
+  "output_directory": "/private/tmp/capomatic-v4-gt17d/gt17d-delivery-output",
+  "output_freeze_sha256": "9c2b5019d0c9311010c93d3e6431ccd98cbf2cc3186216c20b1c763f0ebfc439",
+  "owner_approved_interpretation_count": 1,
+  "producer_sha256": "014c381f56dac7e6794806ad5fbc630c3ee315f73123579c9a2844a4b7fc35bd",
+  "production_changes": false,
+  "remaining_review": {
+    "all_provisional_event_cores": 83,
+    "attachment_corrected_but_core_unverified": 2,
+    "coherent_groups": 21,
+    "field_items": 210,
+    "lyric_onsets": 79,
+    "m28_unresolved": 1,
+    "nonconflicting_event_candidates": 81,
+    "playback_decisions": 1,
+    "raw_sig_cases": 27,
+    "visually_supported_continuations": 19
+  },
+  "removed_semantic_relationships": 1,
+  "removed_source_slur_nodes": 2,
+  "reproducibility": {
+    "A-corrected.musicxml": {
+      "all_content_equal_except_generated_instrument_ids": true,
+      "byte_equal": false,
+      "sha256": "9dbcb7fb9c23aa7cf59bf04cda01a05ba40cf68246369a6154899828bcda54a4"
+    },
+    "G-corrected.musicxml": {
+      "all_content_equal_except_generated_instrument_ids": true,
+      "byte_equal": false,
+      "sha256": "c64ba9e166c9f38b911d8c436bf3f7c0a8e3f5e16e38c264af6a740dd6b582be"
+    },
+    "corrected-source.musicxml": {
+      "all_content_equal_except_generated_instrument_ids": true,
+      "byte_equal": true,
+      "sha256": "e755f7b01182a183b3c382ffa3f2a1169dc7e4b2ae1c760ba33bb23765c3dcb0"
+    }
+  },
+  "scope": {
+    "events": 169,
+    "measures": 37,
+    "owner_chords": 24,
+    "owner_events": 86,
+    "owner_lyric_wording_rows": 167,
+    "provisional_events": 83,
+    "provisional_lyric_onsets": 79,
+    "provisional_marks": 20,
+    "systems": 9,
+    "verified_lyric_onsets": 88,
+    "verified_marks": 30
+  },
+  "serialized_xml_voice_fields_unchanged": {
+    "A-corrected.musicxml": true,
+    "G-corrected.musicxml": true,
+    "corrected-source.musicxml": true
+  },
+  "source_completeness": "UNVERIFIED",
+  "source_slurs_before_after": [
+    2,
+    1
+  ],
+  "standalone_png_preservation": [
+    {
+      "4867_music_component_exists": false,
+      "exact_file_and_pixels_equal": true,
+      "frozen_component_map_sha256": "1760172ea18bd53e103f0267c79386303ec07a1c3b44e66f6cd2d63cf6907e54",
+      "frozen_png_sha256": "5d29b606861ed5c8c3cd3162a93a6bb244a899d17f4b3e51c78504f46fec9a29",
+      "method": "Byte-exact standalone PNG copy; not an independent rerender or optical validation.",
+      "new_copy_sha256": "5d29b606861ed5c8c3cd3162a93a6bb244a899d17f4b3e51c78504f46fec9a29",
+      "target": "A"
+    },
+    {
+      "4867_music_component_exists": false,
+      "exact_file_and_pixels_equal": true,
+      "frozen_component_map_sha256": "344afc591fd923a75088e2fc66777aa60abeeb757e6b58b26b6ae7ebe176447a",
+      "frozen_png_sha256": "103e7777c07aff9e3c46ccec8c8fdc7e0b51404eda835ed9afef72bd8eb32116",
+      "method": "Byte-exact standalone PNG copy; not an independent rerender or optical validation.",
+      "new_copy_sha256": "103e7777c07aff9e3c46ccec8c8fdc7e0b51404eda835ed9afef72bd8eb32116",
+      "target": "G"
+    }
+  ],
+  "starting_sha": "477b418d982c95c430531ba46d999cd40448e2e2",
+  "tests": {
+    "full_acceptance_run": false,
+    "new_synthetic_tests": 12,
+    "passed": 624,
+    "skip_reason": "Existing MuseScore not installed test_omr_v3_gate.py:190",
+    "skipped": 1
+  },
+  "unique_source_overlap_links": 9,
+  "visual_quality": "UNCHANGED_GT17B_NEEDS_REFINEMENT"
+}
