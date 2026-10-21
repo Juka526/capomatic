@@ -1,0 +1,68 @@
+Additional owner approvals, explicitly confirmed in the conversation:
+
+### Approved visible lyric-continuation classifications — 19
+
+SYS6:
+
+- continuation-m21-r1-stroke-3
+- continuation-m21-r2-stroke-3
+- continuation-m22-r1-stroke-0
+- continuation-m22-r2-stroke-0
+- continuation-m23-r1-stroke-3
+- continuation-m23-r2-stroke-3
+- continuation-m24-r1-stroke-0
+- continuation-m24-r2-stroke-0
+
+SYS7:
+
+- continuation-m25-r1-stroke-3
+- continuation-m25-r2-stroke-3
+- continuation-m26-r1-stroke-0
+- continuation-m26-r2-stroke-0
+- continuation-m27-r1-stroke-0
+
+SYS8:
+
+- continuation-m31-r1-stroke-2
+- continuation-m31-r1-stroke-3
+- continuation-m33-r1-stroke-2
+- continuation-m33-r1-stroke-3
+
+SYS9:
+
+- continuation-m34-r1-stroke-0
+- continuation-m35-r1-stroke-3
+
+### Approved raw SIG classifications — 27
+
+LYRIC_CONTINUATION_STROKE:
+
+5591, 5649, 5833, 5841, 5902, 5903, 5927, 5949, 5975, 5984, 6058, 6067, 6185, 6191, 6199, 6218, 6219, 6228, 6233
+
+KOREAN_LYRIC_GLYPH_STROKE:
+
+5660, 5896, 5948, 6127, 6150, 6189
+
+ENDING_NUMERAL_PUNCTUATION:
+
+6184, 6198
+
+Retain full original `sheet#1:` identifiers.
+
+Preserve raw SIG observations unchanged and store approvals in a separate evidence-bound interpretation layer.
+
+Link overlapping visual continuation and raw SIG records by actual source identity or observed source region, never by numeric count alone.
+
+Do not duplicate graphical strokes.
+
+Do not reopen or restore the previously removed false slur 4867.
+
+### Explicitly NOT approved
+
+- Exact held-syllable ancestry of the measure-28 continuation
+- Full repeat performance traversal
+- Any uncertain extender start/continue/stop event association
+- Independent source-recognition completeness
+- Production readiness
+
+Do not manufacture owner approval.

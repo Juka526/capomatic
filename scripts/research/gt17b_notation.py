@@ -202,6 +202,12 @@ def render(inv, score, target, graph, size, all_events):
                         'Unverified full rest lineage',
                     )
                     p, info = whole_rest(size, st, x)
+                elif dur == 2:
+                    require(
+                        graph['symbols'][e['symbol_id']]['shape'] == 'HALF_REST',
+                        'Half-rest lineage mismatch',
+                    )
+                    p, info = half_symbol(size, inter, (x, (b[1] + b[3]) / 2), rest=True)
                 else:
                     require(dur in (1, Fraction(1, 2)), 'Unsupported rest')
                     char = REST if dur == 1 else EIGHTH_REST

@@ -1,0 +1,79 @@
+{
+  "actual_agent_visual_inspection": true,
+  "all_original_and_bound_frozen_hashes_preserved": true,
+  "approval_coverage": {
+    "chords": 24,
+    "event_cores": 169,
+    "independent_ground_truth": 0,
+    "known_visible_marks": 50,
+    "korean_wording_rows_and_onsets": 167,
+    "new_raw_sig_classifications": 27,
+    "new_visible_continuation_classifications": 19,
+    "owner_classified_visible_marks": 49
+  },
+  "artifact_manifest": {
+    "inventory_files": 1688,
+    "sha256": "f2f67661f6d8138f382962106c753072f549b18ae5b918cd5c899ded150c894e",
+    "size_bytes": 277030
+  },
+  "base_sha": "dab7562fa504130be9f13f7a9df8ca7afca9b847",
+  "branch": "experiment/v4-gt17-final",
+  "code_and_test_sha256": {
+    "scripts/research/gt17_final.py": "697d29eb95f0fea5640153c3b4a87190b86de21072195f824624a0992cf65083",
+    "scripts/research/gt17_final_consumer.py": "255e3c854de54e8d87436d951aac1c95944a005adfdf9b2c93dd9eb103539a76",
+    "scripts/research/gt17_final_render.py": "3f1906511597a39b19a61b4e2414fe8a59319664fed0f58fd4e2ec3b7e34259b",
+    "scripts/research/gt17_final_semantics.py": "507b729d003da33a54f93756403cebec75d165802ec5c1a86d7f5f427fd8f6c2",
+    "scripts/research/gt17b_notation.py": "4118faa06856ee78380d3ab832db65e4dc955752aaf0ccd5d5c2e73edcd3f9a8",
+    "tests/test_v4_gt17_final.py": "d65ed3beea6364959be098e241daa58353487a3be707618729816e0bf25d5537"
+  },
+  "extension_spans": 49,
+  "historical_bound_files": 1298,
+  "independent_musician_reviews": 0,
+  "max_head_anchor_residual_px": 0.5,
+  "minimum_center_clearance_px": 6,
+  "minimum_pixel_square_edge_clearance_px": 5,
+  "output_directory": "/private/tmp/capomatic-v4-gt17-final/gt17-final-output",
+  "prediction_frozen_files": 1655,
+  "raw_music21_extension_roundtrip_loss": true,
+  "raw_native_consumer_endpoint_loss": true,
+  "report_sha256": "4e0b0953290fa37f08903ed594a95230282e016fc1732fce5c42be734361f7b7",
+  "research_lineage_adapters_pass": true,
+  "states": {
+    "FULL_REPEAT_PLAYBACK_VERIFIED_OR_UNRESOLVED": "UNRESOLVED",
+    "GT17_RESEARCH_WORKFLOW_COMPLETED": true,
+    "MUSICXML_SEMANTIC_COVERAGE_PARTIAL_OR_COMPLETE": "PARTIAL",
+    "PERFORMANCE_READY_FALSE": true,
+    "PRINTED_SCORE_EXPERIMENTAL_OUTPUT_READY": true,
+    "SOURCE_COMPLETENESS_VERIFIED_OR_UNVERIFIED": "UNVERIFIED"
+  },
+  "tests": {
+    "full_acceptance": "NOT_RUN_DEPENDENCY_BLOCKED_AUDIVERIS_JAVA_AND_RECOGNITION_STACK_NOT_AVAILABLE_IN_EXISTING_IMAGE",
+    "v3": {
+      "image_sha256": "fb3c1ff7f6428a499b18aae5dc0b71a5c8b03ee709b10ab82e3ab1f28e332b1e",
+      "log": "native-consumer/v3-regressions.log",
+      "passed": 165,
+      "skipped": 0
+    },
+    "v4": {
+      "log": "v4-regressions.log",
+      "passed": 780,
+      "skipped": 0
+    },
+    "xsd_consumer_adapted_files": 3,
+    "xsd_final_files": 3
+  },
+  "unbound_historical_additions": [
+    {
+      "path": "/private/tmp/capomatic-v4-gt17c/gt17c-frozen-output/.Rhistory",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "UNBOUND_NON_EVIDENCE_DIRECTORY_ADDITION_NOT_USED_AS_INPUT"
+    }
+  ],
+  "unexpected_contacts": 0,
+  "unserialized_exception": "continuation-m28-r1-stroke-0",
+  "xml_role_counts_per_key": {
+    "continue": 0,
+    "start": 49,
+    "stop": 49
+  }
+}

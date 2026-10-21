@@ -1,0 +1,31 @@
+{
+  "scope": "One final research branch; standalone generated notation only",
+  "source": "Frozen Bb page 2 only; no A/G reference inputs",
+  "anchor_limit_per_axis_px": 0.5,
+  "lyric_layout": {
+    "horizontal_displacement": 0,
+    "group": "Both Korean rows and all continuation marks together per staff system",
+    "minimum_music_ink_center_clearance_px": 6,
+    "candidate_vertical_displacements_px": [
+      0,
+      48
+    ],
+    "selection": "Smallest uniform integer system dy satisfying every measure, actual alpha safety and >=max(6px, frozen measured prior clearance where available); otherwise block",
+    "inter_system_minimum_ink_center_clearance_px": 24,
+    "preserve_prior_measured_minimum": true
+  },
+  "raster_refinement": {
+    "beam_samples": 4,
+    "curve_samples": 4,
+    "filter": "BOX; no Lanczos ringing in notation masks",
+    "curve_control_points": "Unchanged source-derived/transposed points",
+    "beam_endpoints": "Unchanged existing renderer specifications",
+    "selection": "Refine only if component connectivity, endpoint geometry and no new unexpected contacts pass; otherwise retain measured baseline and report fallback"
+  },
+  "musicxml": "Explicit verified tie/slur paths and approved syllable onsets only; m28 ancestry excluded",
+  "repeat_playback": "Visible score preserved; no owner-approved complete route",
+  "warning": "DEVELOPER-ONLY EXPERIMENTAL PROTOTYPE / INCOMPLETE - NOT FOR PERFORMANCE OR PRINTING",
+  "revision": 2,
+  "local_candidate_archive": "/private/tmp/gt17-final-local-candidate-frozen",
+  "local_candidate_rejected_for_final": "Per-measure baseline steps and some existing clearance reductions; no musical content defect"
+}
