@@ -1,0 +1,402 @@
+{
+  "accuracy_percentage": null,
+  "artifact_sha256": {
+    "accuracy-audit-matrix.json": "30cf82a66afd8b74efc1808c1bcd162452cfb1d93f97de68a101199bf5a7b6d6",
+    "continuation-review.json": "4d78c607a9856cbcfef27607a74907fb3e7600ded44e6a52e301b414aba66473",
+    "frozen-render-validation.json": "93048099c5508c6c20c8ada815868869661abd8abf62ca5bce70a8ff25321c9d",
+    "lyric-onset-review.json": "d369b29c70597cdd01da69ca7342511e39a92aa278918e922d12edec00e9e6ea",
+    "musicxml-semantic-audit.json": "f6c142e661a1ef9a14d506e045a7e2b39a5acf9392be6654a485b0f1f4ad7a75",
+    "owner-approval-checklist.json": "09366e3eecd2f66b9fd37bdfae049b86d771fa764be6418191d240c981059ee8",
+    "owner-review-guide.md": "26b11c4a71b959a4e208b4155e4420230497304dbb0ccf809f5401ea67576ef3",
+    "preservation-verification.json": "e17f01cd44ea29f9870657044a9d7e9fd4b97f07f749874c83ac8b7a2a23e387",
+    "provisional-event-review.json": "16d4d60939542c0559b74512df2863d286862b4c7362982a6abe56d732275b0b",
+    "repeat-playback-review.json": "e1799bd37191ab7738be51cfb6210669d11eb045bcde5cd05b6c1ab5a5086b5b",
+    "source-review-delta-sheet.png": "7121d972840b98b44163a6d7cbbcd5939084da40d53057146194f9470cba1044",
+    "unresolved-sig-review.json": "9e56eb511d4f480e0cf5a0209ee39f4d25c1f72d383f7b6f56b62fa709be5632",
+    "validation-summary.json": "9e8e5eecbcc8eea259579cc30366cc458f1ffcac243730fac92e9d50045e3347"
+  },
+  "audit_freeze_sha256": "e0d7658448a34d4fa5999a887cc71b27a10958e6288f535b540f5d532f6d34c8",
+  "branch": "experiment/v4-gt17c-accuracy-audit",
+  "cold_read_findings_addressed": [
+    "field-specific owner scope",
+    "playback deferral/format",
+    "partial-review rule and priority",
+    "test counts/metadata pointer",
+    "explicit dependency paths"
+  ],
+  "counts": {
+    "continuations": {
+      "PASS_CANDIDATE": 19,
+      "UNRESOLVED": 1
+    },
+    "events": {
+      "DISAGREEMENT": 2,
+      "PASS_CANDIDATE": 81
+    },
+    "lyric_onsets": {
+      "PASS_CANDIDATE": 79
+    },
+    "sig_objects": {
+      "DISAGREEMENT": 1,
+      "UNRESOLVED": 27
+    }
+  },
+  "fresh_geometry": [
+    {
+      "fresh_lyric_lyric_contacts": 0,
+      "fresh_lyric_music_contacts": 0,
+      "fresh_missing_stem_beam_flag_connections": 0,
+      "fresh_notehead_bbox_checks": 67,
+      "fresh_viewport_clipping": 0,
+      "max_per_axis_residual": 0.5,
+      "new_curve_contacts": [
+        {
+          "actual_contacts": [
+            {
+              "classification": "INTENTIONAL_STAFF_OR_OWN_BARLINE",
+              "component": "staff",
+              "pixels": 16
+            },
+            {
+              "classification": "INTENTIONAL_STAFF_OR_OWN_BARLINE",
+              "component": "sheet#1:102",
+              "pixels": 8
+            }
+          ],
+          "case": "missing-tie-m21-15/4",
+          "clipped": false,
+          "endpoint_geometry": "PRESERVED_SOURCE_RELATIVE_OFFSETS",
+          "endpoint_head_center_clearances_px": [
+            6.0,
+            6.324555320336759
+          ],
+          "kind": "tie",
+          "target_curve": [
+            [
+              1206,
+              2217.0
+            ],
+            [
+              1222,
+              2200.0
+            ],
+            [
+              1259,
+              2200.0
+            ],
+            [
+              1275,
+              2217.0
+            ]
+          ],
+          "unexpected_contacts": 0
+        },
+        {
+          "actual_contacts": [
+            {
+              "classification": "INTENTIONAL_STAFF_OR_OWN_BARLINE",
+              "component": "staff",
+              "pixels": 16
+            }
+          ],
+          "case": "missing-tie-m31-5/2",
+          "clipped": false,
+          "endpoint_geometry": "PRESERVED_SOURCE_RELATIVE_OFFSETS",
+          "endpoint_head_center_clearances_px": [
+            6.0,
+            15.132745950421556
+          ],
+          "kind": "slur",
+          "target_curve": [
+            [
+              1144,
+              2917.5
+            ],
+            [
+              1160,
+              2900.6111111111113
+            ],
+            [
+              1200,
+              2900.8888888888887
+            ],
+            [
+              1216,
+              2918.0
+            ]
+          ],
+          "unexpected_contacts": 0
+        },
+        {
+          "actual_contacts": [
+            {
+              "classification": "INTENTIONAL_STAFF_OR_OWN_BARLINE",
+              "component": "staff",
+              "pixels": 16
+            }
+          ],
+          "case": "missing-tie-m33-5/2",
+          "clipped": false,
+          "endpoint_geometry": "PRESERVED_SOURCE_RELATIVE_OFFSETS",
+          "endpoint_head_center_clearances_px": [
+            6.0,
+            6.324555320336759
+          ],
+          "kind": "tie",
+          "target_curve": [
+            [
+              2186,
+              2918.5
+            ],
+            [
+              2202,
+              2901.274647887324
+            ],
+            [
+              2241,
+              2900.725352112676
+            ],
+            [
+              2257,
+              2917.5
+            ]
+          ],
+          "unexpected_contacts": 0
+        },
+        {
+          "actual_contacts": [
+            {
+              "classification": "INTENTIONAL_STAFF_OR_OWN_BARLINE",
+              "component": "staff",
+              "pixels": 16
+            }
+          ],
+          "case": "missing-tie-m35-11/4",
+          "clipped": false,
+          "endpoint_geometry": "PRESERVED_SOURCE_RELATIVE_OFFSETS",
+          "endpoint_head_center_clearances_px": [
+            6.0,
+            6.324555320336759
+          ],
+          "kind": "tie",
+          "target_curve": [
+            [
+              1321,
+              3268.5
+            ],
+            [
+              1337,
+              3251.5
+            ],
+            [
+              1376,
+              3251.5
+            ],
+            [
+              1392,
+              3268.5
+            ]
+          ],
+          "unexpected_contacts": 0
+        }
+      ],
+      "previous_first_five_systems": "Unchanged frozen hashes; earlier safety reports retained, not independent re-recognition.",
+      "target": "A"
+    },
+    {
+      "fresh_lyric_lyric_contacts": 0,
+      "fresh_lyric_music_contacts": 0,
+      "fresh_missing_stem_beam_flag_connections": 0,
+      "fresh_notehead_bbox_checks": 67,
+      "fresh_viewport_clipping": 0,
+      "max_per_axis_residual": 0.5,
+      "new_curve_contacts": [
+        {
+          "actual_contacts": [
+            {
+              "classification": "INTENTIONAL_STAFF_OR_OWN_BARLINE",
+              "component": "staff",
+              "pixels": 45
+            },
+            {
+              "classification": "INTENTIONAL_STAFF_OR_OWN_BARLINE",
+              "component": "sheet#1:102",
+              "pixels": 8
+            }
+          ],
+          "case": "missing-tie-m21-15/4",
+          "clipped": false,
+          "endpoint_geometry": "PRESERVED_SOURCE_RELATIVE_OFFSETS",
+          "endpoint_head_center_clearances_px": [
+            6.0,
+            6.324555320336759
+          ],
+          "kind": "tie",
+          "target_curve": [
+            [
+              1206,
+              2226.00625
+            ],
+            [
+              1222,
+              2209.00625
+            ],
+            [
+              1259,
+              2209.00625
+            ],
+            [
+              1275,
+              2226.00625
+            ]
+          ],
+          "unexpected_contacts": 0
+        },
+        {
+          "actual_contacts": [
+            {
+              "classification": "INTENTIONAL_STAFF_OR_OWN_BARLINE",
+              "component": "staff",
+              "pixels": 60
+            }
+          ],
+          "case": "missing-tie-m31-5/2",
+          "clipped": false,
+          "endpoint_geometry": "PRESERVED_SOURCE_RELATIVE_OFFSETS",
+          "endpoint_head_center_clearances_px": [
+            7.0,
+            15.132745950421556
+          ],
+          "kind": "slur",
+          "target_curve": [
+            [
+              1144,
+              2926.5
+            ],
+            [
+              1160,
+              2909.6111111111113
+            ],
+            [
+              1200,
+              2909.8888888888887
+            ],
+            [
+              1216,
+              2927.0
+            ]
+          ],
+          "unexpected_contacts": 0
+        },
+        {
+          "actual_contacts": [
+            {
+              "classification": "INTENTIONAL_STAFF_OR_OWN_BARLINE",
+              "component": "staff",
+              "pixels": 54
+            }
+          ],
+          "case": "missing-tie-m33-5/2",
+          "clipped": false,
+          "endpoint_geometry": "PRESERVED_SOURCE_RELATIVE_OFFSETS",
+          "endpoint_head_center_clearances_px": [
+            5.0,
+            7.280109889280518
+          ],
+          "kind": "tie",
+          "target_curve": [
+            [
+              2186,
+              2927.5
+            ],
+            [
+              2202,
+              2910.274647887324
+            ],
+            [
+              2241,
+              2909.725352112676
+            ],
+            [
+              2257,
+              2926.5
+            ]
+          ],
+          "unexpected_contacts": 0
+        },
+        {
+          "actual_contacts": [
+            {
+              "classification": "INTENTIONAL_STAFF_OR_OWN_BARLINE",
+              "component": "staff",
+              "pixels": 42
+            }
+          ],
+          "case": "missing-tie-m35-11/4",
+          "clipped": false,
+          "endpoint_geometry": "PRESERVED_SOURCE_RELATIVE_OFFSETS",
+          "endpoint_head_center_clearances_px": [
+            5.0,
+            5.385164807134504
+          ],
+          "kind": "tie",
+          "target_curve": [
+            [
+              1321,
+              3277.5
+            ],
+            [
+              1337,
+              3260.5
+            ],
+            [
+              1376,
+              3260.5
+            ],
+            [
+              1392,
+              3277.5
+            ]
+          ],
+          "unexpected_contacts": 0
+        }
+      ],
+      "previous_first_five_systems": "Unchanged frozen hashes; earlier safety reports retained, not independent re-recognition.",
+      "target": "G"
+    }
+  ],
+  "guards_pass": true,
+  "independent_ground_truth": 0,
+  "musical_outputs_regenerated": false,
+  "new_owner_approvals": 0,
+  "output_directory": "/private/tmp/capomatic-v4-gt17c/gt17c-frozen-output",
+  "owner_answers_filled": 0,
+  "owner_cases": 211,
+  "owner_measure_groups": 26,
+  "producer_sha256": "8d7af09362e1830ccdd20717875bc359dbe549f85521c005dbaec24aff3ce764",
+  "raw_sig_proposals": {
+    "ENDING_NUMERAL_PUNCTUATION_CANDIDATE": 2,
+    "KOREAN_LYRIC_GLYPH_STROKE_CANDIDATE": 7,
+    "LYRIC_CONTINUATION_STROKE_CANDIDATE": 19
+  },
+  "recognition_completeness": "UNVERIFIED",
+  "rendering_safety": "Frozen GT17B owner masks unchanged; no rendering changes authorized or performed.",
+  "source_hashes": {
+    "graph_sha256": "f8725c39beaaecc877ccf48b803b79a419c2d6e60aa73bc9428a39de11596508",
+    "omr_sha256": "857c787b23d4244cb17fbcc9de80c8a3bbfe7de606aabf818643be1fbf9f6638",
+    "source_sha256": "eced6bfc4481924efad36d5be300c40f568e3f8678df568940cd5fad894a43de"
+  },
+  "source_only_visual_review": "Native delta source context and highlighted boxes inspected; owner review readability only, not independent musical validation.",
+  "source_scope": [
+    9,
+    37
+  ],
+  "starting_sha": "ff4dd9dbb12a21807ba3b3672eac5b519ebbc5f3",
+  "status": "AUDIT_COMPLETE_OWNER_APPROVAL_PENDING",
+  "tests": {
+    "full_acceptance_run": false,
+    "passed": 612,
+    "skip_reason": "Existing MuseScore not installed test_omr_v3_gate.py:190",
+    "skipped": 1
+  }
+}
