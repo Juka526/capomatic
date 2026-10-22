@@ -45,7 +45,7 @@ FROM python:3.12-slim
 # font exceptions) and fonts-nanum so Korean lyrics and titles render.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 libglib2.0-0 libgomp1 fonts-dejavu-core \
-    poppler-utils musescore3 fonts-nanum && \
+    poppler-utils musescore3 fonts-nanum fonts-freefont-ttf && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=jre /opt/java/openjdk /opt/java/openjdk

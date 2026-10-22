@@ -1,0 +1,33 @@
+{
+  "starting_commit": "b6e38b24c14b8038912dc37f2c932bf3eb4b5177",
+  "glyph_algorithm_ast_identical": true,
+  "research_source": "/private/tmp/capomatic-v4-gt17f/scripts/research/gt05_raster_anchor.py",
+  "research_source_sha256": "1c8e02a08c87db86b4a956b8c989244bbd021265365116c36e0f2a902f2c81b0",
+  "ported_file_sha256": "cbacdcdc2c2c9fd52447257a2f4d9715e4455f7d6432fb488e117d0efa578b5e",
+  "unchanged_files_sha256": {
+    "backend/omr_v3/music_guard.py": "9f27db149414fe38991b86230f4c15fae90c2ecd1bb5205ecfd56892fa992b43",
+    "docs/SCORE_GEOMETRY_EVALUATION.md": "8bfc419f91fba25bcf89d3e9b77ab8f221b31050f9c94af6ff6ccc57ec5502c7",
+    "docs/evidence/SCORE_GEOMETRY_EVALUATION.json": "59fb329793529a3409cd958a786e230bbaf2885e9fa63df1c9fb4370a538f03b"
+  },
+  "font_sha256": "c1dd2270ff624d66a7f1cd23075b5ce05a662f560be06a70a9599065ce008355",
+  "source_font_basis": "Debian fonts-freefont-ttf installed in isolated container; matches GT-05 font identity",
+  "targeted_tests": {
+    "passed": 565,
+    "seconds": 36.12,
+    "warnings": "optional ccache unavailable"
+  },
+  "v4_anchor_tests": {
+    "passed": 12,
+    "seconds": 0.16,
+    "assertions_modified": false,
+    "implementation": "ported raster_anchor module substituted at import"
+  },
+  "v4_header_whole_note_tests": {
+    "passed": 31,
+    "deselected": 19,
+    "seconds": 3.65,
+    "scope": "generic header semantic-anchor and open whole-note raster tests; score-specific approval controls excluded",
+    "assertions_modified": false,
+    "font_path_redirect": "same SHA-256 FreeSerif from standard Debian package"
+  }
+}

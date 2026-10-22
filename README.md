@@ -1,6 +1,6 @@
 ---
 
-> Experimental source-coordinate score API: [implementation status and limitations](docs/SCORE_GEOMETRY_LOCKED.md). PDF/PNG/ZIP score rendering currently refuses all unproved replacements; editable single-page MusicXML is supported.
+> Source-coordinate score API: [current implementation, outputs and limitations](docs/RENDERER_COMPLETION_REPORT.md). Verified source-object PDFs support a narrow whole-note transposition profile. Ordinary scanned scores currently support lossless PDF identity only; nonzero transposition remains incomplete.
 
 title: Capomatic API
 emoji: 🎸

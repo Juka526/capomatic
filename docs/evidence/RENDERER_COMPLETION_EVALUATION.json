@@ -1,0 +1,1776 @@
+{
+  "status": "FUNCTIONALLY_INCOMPLETE_FOR_ORDINARY_SCANNED_SCORES",
+  "dataset": "development inputs; no hidden/independent validation set",
+  "counts": {
+    "real_identity_success": 5,
+    "real_nonzero_success": 0,
+    "real_safe_evidence_rejections": 10,
+    "controlled_identity_success": 2,
+    "controlled_nonzero_success": 2,
+    "controlled_unsupported_rejections": 2
+  },
+  "raw_evaluation_sha256": "006b868b23211d11bfe07f3551ae0f473425d417eade4d382e80a8d189cc7868",
+  "raw_artifacts": "/private/tmp/capomatic-renderer-results/evaluation-final",
+  "real": [
+    {
+      "input": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "index": 1,
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "shift": 0,
+      "detect_http": 200,
+      "render_http": 200,
+      "response_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "render_path": "lossless_original_pdf_identity",
+      "output_pdf_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "page_boxes_equal": true,
+      "all_original_bytes_preserved": true,
+      "preservation_contract_pass": true,
+      "nonzero_demonstrated": false,
+      "artifact_response": "real-1/+0-response.bin"
+    },
+    {
+      "input": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "index": 1,
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "shift": 1,
+      "detect_http": 200,
+      "render_http": 422,
+      "response_sha256": "df8a980a9086f1007cedfe4530a94e63619d7b920010b2da5a569a3e1995886b",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        }
+      ],
+      "preservation_contract_pass": false,
+      "readiness": {
+        "semantic_ready": false,
+        "geometry_ready": false,
+        "lyric_layer_ready": false,
+        "render_ready": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "omr_reported_object_kinds": {
+            "barline": 33,
+            "clef": 6,
+            "key-alter": 6,
+            "key": 6,
+            "time-number": 2,
+            "time-pair": 1,
+            "beam": 96,
+            "beam-hook": 10,
+            "beam-group": 54,
+            "ledger": 3,
+            "head": 174,
+            "stem": 174,
+            "staff-barline": 31,
+            "head-chord": 174,
+            "slur": 59,
+            "rest": 27,
+            "articulation": 27,
+            "flag": 11,
+            "dynamics": 19,
+            "rest-chord": 27,
+            "augmentation-dot": 16
+          },
+          "recognition_warnings": [
+            {
+              "type": "bar_length",
+              "measure": 9,
+              "index": 8,
+              "expected_quarters": 4.0,
+              "found_quarters": 1.5
+            }
+          ],
+          "recognition_decision": {
+            "mode": "full_score",
+            "reason": "full_score_allowed",
+            "preflight_score": 0.942,
+            "post_omr_confidence": 0.92
+          }
+        }
+      ],
+      "artifact_response": "real-1/+1-response.bin"
+    },
+    {
+      "input": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "index": 1,
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "shift": -1,
+      "detect_http": 200,
+      "render_http": 422,
+      "response_sha256": "6a1edfd978a1c554e77c7deed02e0fdb0ba3e6a3380694315ad285b8300ff813",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        }
+      ],
+      "preservation_contract_pass": false,
+      "readiness": {
+        "semantic_ready": false,
+        "geometry_ready": false,
+        "lyric_layer_ready": false,
+        "render_ready": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "omr_reported_object_kinds": {
+            "barline": 33,
+            "clef": 6,
+            "key-alter": 6,
+            "key": 6,
+            "time-number": 2,
+            "time-pair": 1,
+            "beam": 96,
+            "beam-hook": 10,
+            "beam-group": 54,
+            "ledger": 3,
+            "head": 174,
+            "stem": 174,
+            "staff-barline": 31,
+            "head-chord": 174,
+            "slur": 59,
+            "rest": 27,
+            "articulation": 27,
+            "flag": 11,
+            "dynamics": 19,
+            "rest-chord": 27,
+            "augmentation-dot": 16
+          },
+          "recognition_warnings": [
+            {
+              "type": "bar_length",
+              "measure": 9,
+              "index": 8,
+              "expected_quarters": 4.0,
+              "found_quarters": 1.5
+            }
+          ],
+          "recognition_decision": {
+            "mode": "full_score",
+            "reason": "full_score_allowed",
+            "preflight_score": 0.942,
+            "post_omr_confidence": 0.92
+          }
+        }
+      ],
+      "artifact_response": "real-1/-1-response.bin"
+    },
+    {
+      "input": "2 자유_1758826857.pdf",
+      "index": 2,
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "shift": 0,
+      "detect_http": 422,
+      "render_http": 200,
+      "response_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "render_path": "lossless_original_pdf_identity",
+      "output_pdf_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "page_boxes_equal": true,
+      "all_original_bytes_preserved": true,
+      "preservation_contract_pass": true,
+      "nonzero_demonstrated": false,
+      "artifact_response": "real-2/+0-response.bin"
+    },
+    {
+      "input": "2 자유_1758826857.pdf",
+      "index": 2,
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "shift": 1,
+      "detect_http": 422,
+      "render_http": 422,
+      "response_sha256": "52b2be80533b6dadde48f5b9ad044de5f51266bd8dea146631c4efdd4a7aedff",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "SOURCE_LAYOUT_UNAVAILABLE"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "RECOGNITION_FAILED",
+          "message": "PDF raster size does not match page transform",
+          "report": {}
+        }
+      ],
+      "preservation_contract_pass": false,
+      "readiness": {
+        "semantic_ready": false,
+        "geometry_ready": false,
+        "lyric_layer_ready": false,
+        "render_ready": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SOURCE_LAYOUT_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "RECOGNITION_FAILED",
+              "message": "PDF raster size does not match page transform",
+              "report": {}
+            }
+          ],
+          "omr_reported_object_kinds": {},
+          "recognition_warnings": [],
+          "recognition_decision": null
+        }
+      ],
+      "artifact_response": "real-2/+1-response.bin"
+    },
+    {
+      "input": "2 자유_1758826857.pdf",
+      "index": 2,
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "shift": -1,
+      "detect_http": 422,
+      "render_http": 422,
+      "response_sha256": "754fcd07d0eac55b0539af1d17fda7a382c22dfc962e83c9f5311ee2d80352d9",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "SOURCE_LAYOUT_UNAVAILABLE"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "RECOGNITION_FAILED",
+          "message": "PDF raster size does not match page transform",
+          "report": {}
+        }
+      ],
+      "preservation_contract_pass": false,
+      "readiness": {
+        "semantic_ready": false,
+        "geometry_ready": false,
+        "lyric_layer_ready": false,
+        "render_ready": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SOURCE_LAYOUT_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "RECOGNITION_FAILED",
+              "message": "PDF raster size does not match page transform",
+              "report": {}
+            }
+          ],
+          "omr_reported_object_kinds": {},
+          "recognition_warnings": [],
+          "recognition_decision": null
+        }
+      ],
+      "artifact_response": "real-2/-1-response.bin"
+    },
+    {
+      "input": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "index": 3,
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "shift": 0,
+      "detect_http": 200,
+      "render_http": 200,
+      "response_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "render_path": "lossless_original_pdf_identity",
+      "output_pdf_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "page_boxes_equal": true,
+      "all_original_bytes_preserved": true,
+      "preservation_contract_pass": true,
+      "nonzero_demonstrated": false,
+      "artifact_response": "real-3/+0-response.bin"
+    },
+    {
+      "input": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "index": 3,
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "shift": 1,
+      "detect_http": 200,
+      "render_http": 422,
+      "response_sha256": "4c06d90b77c2ece99e9d0953aff2b15dd1cb14e7929136a71f0a4199eed22f82",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        }
+      ],
+      "preservation_contract_pass": false,
+      "readiness": {
+        "semantic_ready": false,
+        "geometry_ready": false,
+        "lyric_layer_ready": false,
+        "render_ready": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "omr_reported_object_kinds": {
+            "barline": 60,
+            "clef": 7,
+            "key-alter": 28,
+            "key": 7,
+            "time-number": 2,
+            "time-pair": 1,
+            "beam": 36,
+            "beam-group": 36,
+            "ledger": 21,
+            "head": 235,
+            "stem": 235,
+            "staff-barline": 57,
+            "head-chord": 235,
+            "slur": 58,
+            "flag": 61,
+            "articulation": 103,
+            "rest": 34,
+            "dynamics": 16,
+            "rest-chord": 34,
+            "augmentation-dot": 11,
+            "fermata": 1,
+            "pedal": 2,
+            "alter": 7
+          },
+          "recognition_warnings": [
+            {
+              "type": "bar_length",
+              "measure": 9,
+              "index": 9,
+              "expected_quarters": 4.0,
+              "found_quarters": 1.0
+            },
+            {
+              "type": "bar_length",
+              "measure": 36,
+              "index": 36,
+              "expected_quarters": 4.0,
+              "found_quarters": 1.0
+            }
+          ],
+          "recognition_decision": {
+            "mode": "full_score",
+            "reason": "full_score_allowed",
+            "preflight_score": 0.933,
+            "post_omr_confidence": 0.92
+          }
+        }
+      ],
+      "artifact_response": "real-3/+1-response.bin"
+    },
+    {
+      "input": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "index": 3,
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "shift": -1,
+      "detect_http": 200,
+      "render_http": 422,
+      "response_sha256": "445e0a7fae9553ab9ab29232a06b750d25652059a10a691df2823fa18b6ee254",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        }
+      ],
+      "preservation_contract_pass": false,
+      "readiness": {
+        "semantic_ready": false,
+        "geometry_ready": false,
+        "lyric_layer_ready": false,
+        "render_ready": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "omr_reported_object_kinds": {
+            "barline": 60,
+            "clef": 7,
+            "key-alter": 28,
+            "key": 7,
+            "time-number": 2,
+            "time-pair": 1,
+            "beam": 36,
+            "beam-group": 36,
+            "ledger": 21,
+            "head": 235,
+            "stem": 235,
+            "staff-barline": 57,
+            "head-chord": 235,
+            "slur": 58,
+            "flag": 61,
+            "articulation": 103,
+            "rest": 34,
+            "dynamics": 16,
+            "rest-chord": 34,
+            "augmentation-dot": 11,
+            "fermata": 1,
+            "pedal": 2,
+            "alter": 7
+          },
+          "recognition_warnings": [
+            {
+              "type": "bar_length",
+              "measure": 9,
+              "index": 9,
+              "expected_quarters": 4.0,
+              "found_quarters": 1.0
+            },
+            {
+              "type": "bar_length",
+              "measure": 36,
+              "index": 36,
+              "expected_quarters": 4.0,
+              "found_quarters": 1.0
+            }
+          ],
+          "recognition_decision": {
+            "mode": "full_score",
+            "reason": "full_score_allowed",
+            "preflight_score": 0.933,
+            "post_omr_confidence": 0.92
+          }
+        }
+      ],
+      "artifact_response": "real-3/-1-response.bin"
+    },
+    {
+      "input": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "index": 4,
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "shift": 0,
+      "detect_http": 200,
+      "render_http": 200,
+      "response_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "render_path": "lossless_original_pdf_identity",
+      "output_pdf_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "page_boxes_equal": true,
+      "all_original_bytes_preserved": true,
+      "preservation_contract_pass": true,
+      "nonzero_demonstrated": false,
+      "artifact_response": "real-4/+0-response.bin"
+    },
+    {
+      "input": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "index": 4,
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "shift": 1,
+      "detect_http": 200,
+      "render_http": 422,
+      "response_sha256": "3772ace38dc1fabd62531193820b7cc42d3fb3c645ebbc28e91bb5168d7da869",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        }
+      ],
+      "preservation_contract_pass": false,
+      "readiness": {
+        "semantic_ready": false,
+        "geometry_ready": false,
+        "lyric_layer_ready": false,
+        "render_ready": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "omr_reported_object_kinds": {
+            "barline": 32,
+            "clef": 5,
+            "time-number": 2,
+            "time-pair": 1,
+            "beam": 75,
+            "beam-group": 47,
+            "ledger": 49,
+            "head": 146,
+            "stem": 146,
+            "staff-barline": 27,
+            "head-chord": 146,
+            "slur": 37,
+            "repeat-dot": 4,
+            "rest": 18,
+            "alter": 1,
+            "flag": 11,
+            "fermata": 3,
+            "articulation": 41,
+            "dynamics": 17,
+            "breath-mark": 1,
+            "rest-chord": 18,
+            "augmentation-dot": 7,
+            "ending": 3,
+            "beam-hook": 6,
+            "tuplet": 1
+          },
+          "recognition_warnings": [
+            {
+              "type": "bar_length",
+              "measure": 5,
+              "index": 5,
+              "expected_quarters": 4.0,
+              "found_quarters": 4.25
+            },
+            {
+              "type": "bar_length",
+              "measure": 15,
+              "index": 15,
+              "expected_quarters": 4.0,
+              "found_quarters": 3.75
+            }
+          ],
+          "recognition_decision": {
+            "mode": "chord_only",
+            "reason": "omr:too_many_inconsistent_bars",
+            "preflight_score": 0.928,
+            "post_omr_confidence": 0.818
+          }
+        }
+      ],
+      "artifact_response": "real-4/+1-response.bin"
+    },
+    {
+      "input": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "index": 4,
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "shift": -1,
+      "detect_http": 200,
+      "render_http": 422,
+      "response_sha256": "bf4c54c168577481adcad20f36854e87729ca9bec7d55c579a57db930247ef66",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        }
+      ],
+      "preservation_contract_pass": false,
+      "readiness": {
+        "semantic_ready": false,
+        "geometry_ready": false,
+        "lyric_layer_ready": false,
+        "render_ready": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "omr_reported_object_kinds": {
+            "barline": 32,
+            "clef": 5,
+            "time-number": 2,
+            "time-pair": 1,
+            "beam": 75,
+            "beam-group": 47,
+            "ledger": 49,
+            "head": 146,
+            "stem": 146,
+            "staff-barline": 27,
+            "head-chord": 146,
+            "slur": 37,
+            "repeat-dot": 4,
+            "rest": 18,
+            "alter": 1,
+            "flag": 11,
+            "fermata": 3,
+            "articulation": 41,
+            "dynamics": 17,
+            "breath-mark": 1,
+            "rest-chord": 18,
+            "augmentation-dot": 7,
+            "ending": 3,
+            "beam-hook": 6,
+            "tuplet": 1
+          },
+          "recognition_warnings": [
+            {
+              "type": "bar_length",
+              "measure": 5,
+              "index": 5,
+              "expected_quarters": 4.0,
+              "found_quarters": 4.25
+            },
+            {
+              "type": "bar_length",
+              "measure": 15,
+              "index": 15,
+              "expected_quarters": 4.0,
+              "found_quarters": 3.75
+            }
+          ],
+          "recognition_decision": {
+            "mode": "chord_only",
+            "reason": "omr:too_many_inconsistent_bars",
+            "preflight_score": 0.928,
+            "post_omr_confidence": 0.818
+          }
+        }
+      ],
+      "artifact_response": "real-4/-1-response.bin"
+    },
+    {
+      "input": "본향을 향해-1_1758828084.pdf",
+      "index": 5,
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "shift": 0,
+      "detect_http": 422,
+      "render_http": 200,
+      "response_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "render_path": "lossless_original_pdf_identity",
+      "output_pdf_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "page_boxes_equal": true,
+      "all_original_bytes_preserved": true,
+      "preservation_contract_pass": true,
+      "nonzero_demonstrated": false,
+      "artifact_response": "real-5/+0-response.bin"
+    },
+    {
+      "input": "본향을 향해-1_1758828084.pdf",
+      "index": 5,
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "shift": 1,
+      "detect_http": 422,
+      "render_http": 422,
+      "response_sha256": "2bc2be1c809fb56573756d2b8e9ebe2382926ceea6e8d1a9b966403a5939a453",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "SOURCE_LAYOUT_UNAVAILABLE"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "RECOGNITION_FAILED",
+          "message": "PDF raster size does not match page transform",
+          "report": {}
+        }
+      ],
+      "preservation_contract_pass": false,
+      "readiness": {
+        "semantic_ready": false,
+        "geometry_ready": false,
+        "lyric_layer_ready": false,
+        "render_ready": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SOURCE_LAYOUT_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "RECOGNITION_FAILED",
+              "message": "PDF raster size does not match page transform",
+              "report": {}
+            }
+          ],
+          "omr_reported_object_kinds": {},
+          "recognition_warnings": [],
+          "recognition_decision": null
+        }
+      ],
+      "artifact_response": "real-5/+1-response.bin"
+    },
+    {
+      "input": "본향을 향해-1_1758828084.pdf",
+      "index": 5,
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "shift": -1,
+      "detect_http": 422,
+      "render_http": 422,
+      "response_sha256": "2a6aff2d9ee997ea465665dd9ffd8bf23c00fe0349f81baba9da079c17ef7c5d",
+      "recognition_accuracy": "UNVERIFIED",
+      "source_unchanged": true,
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "SOURCE_LAYOUT_UNAVAILABLE"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "RECOGNITION_FAILED",
+          "message": "PDF raster size does not match page transform",
+          "report": {}
+        }
+      ],
+      "preservation_contract_pass": false,
+      "readiness": {
+        "semantic_ready": false,
+        "geometry_ready": false,
+        "lyric_layer_ready": false,
+        "render_ready": false
+      },
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SOURCE_LAYOUT_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "RECOGNITION_FAILED",
+              "message": "PDF raster size does not match page transform",
+              "report": {}
+            }
+          ],
+          "omr_reported_object_kinds": {},
+          "recognition_warnings": [],
+          "recognition_decision": null
+        }
+      ],
+      "artifact_response": "real-5/-1-response.bin"
+    }
+  ],
+  "controlled": [
+    {
+      "control": "C",
+      "shift": 0,
+      "http": 200,
+      "response_sha256": "949c7106163e0dbf8b1330dd863449b9443e5e95767ed7cb89f3298e5de7298b",
+      "render_path": "native_identity",
+      "checks": {
+        "paired_reference_pixel_difference": 0,
+        "lyric_pixel_difference": 0,
+        "preserved_lyric_ink_pixels": 5856,
+        "protected_pixel_difference": 0,
+        "old_music_residual_pixels": 0,
+        "source_staff_reconstructed_pixels": 66,
+        "original_preserved_pixels": 1116308,
+        "notehead_observations": [
+          {
+            "pitch": "C5",
+            "target": [
+              550,
+              216.0
+            ],
+            "observed": [
+              550.5,
+              216.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          },
+          {
+            "pitch": "E5",
+            "target": [
+              825,
+              192.0
+            ],
+            "observed": [
+              825.5,
+              192.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          },
+          {
+            "pitch": "A4",
+            "target": [
+              1100,
+              240.0
+            ],
+            "observed": [
+              1100.5,
+              240.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          },
+          {
+            "pitch": "F4",
+            "target": [
+              1375,
+              264.0
+            ],
+            "observed": [
+              1375.5,
+              264.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          }
+        ],
+        "page_boxes_equal": true,
+        "pdf_embedded_pixels_equal_png": true,
+        "unexplained_alpha_collisions": 0,
+        "recognition_accuracy": "UNVERIFIED; native source-provided semantics",
+        "pdf_raster_pixel_difference": 0
+      },
+      "pdf_sha256": "bd5fc86e2f3780685d18a59602f362ab11569aa93815d1fd481b72bdca654cda",
+      "png_sha256": "02b77b06f3878424c75a1fa2e734b1a7af5bf32900e0ea81714a0e9b3b0f3a56",
+      "musicxml_sha256": "6d9fba150eddf111fdbc8f87972e9d6de1b61246065072d49a2b857e678f5054",
+      "native_semantic_accuracy": "source provided, not independently measured OMR",
+      "standalone_png_pdf_http_verified": true,
+      "artifact_directory": "controlled-C",
+      "source_sha256": "41d9487a239f58fb8252e75cbf3e408e8cd91797794beb015af55de503944361"
+    },
+    {
+      "control": "C",
+      "shift": 1,
+      "http": 422,
+      "response_sha256": "974310f5aa2d801511562f3a9e54da91b8c284d5ed1f1ef97e06ebf771e847b0",
+      "first_blocker": {
+        "code": "UNSUPPORTED_FLAT_SIGNATURE_ANCHOR",
+        "page": 1
+      },
+      "artifact_directory": "controlled-C"
+    },
+    {
+      "control": "C",
+      "shift": -1,
+      "http": 200,
+      "response_sha256": "870c902c5f2997232b1dfbc45e49abd61cbbf24540748bfc6445a563c279a981",
+      "render_path": "native_geometry_transposition",
+      "checks": {
+        "paired_reference_pixel_difference": 0,
+        "lyric_pixel_difference": 0,
+        "preserved_lyric_ink_pixels": 5856,
+        "protected_pixel_difference": 0,
+        "old_music_residual_pixels": 0,
+        "source_staff_reconstructed_pixels": 66,
+        "original_preserved_pixels": 1111970,
+        "notehead_observations": [
+          {
+            "pitch": "B4",
+            "target": [
+              550,
+              228.0
+            ],
+            "observed": [
+              550.5,
+              228.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          },
+          {
+            "pitch": "D#5",
+            "target": [
+              825,
+              204.0
+            ],
+            "observed": [
+              825.5,
+              204.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          },
+          {
+            "pitch": "G#4",
+            "target": [
+              1100,
+              252.0
+            ],
+            "observed": [
+              1100.5,
+              252.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          },
+          {
+            "pitch": "E4",
+            "target": [
+              1375,
+              276.0
+            ],
+            "observed": [
+              1375.5,
+              276.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          }
+        ],
+        "page_boxes_equal": true,
+        "pdf_embedded_pixels_equal_png": true,
+        "unexplained_alpha_collisions": 0,
+        "recognition_accuracy": "UNVERIFIED; native source-provided semantics",
+        "pdf_raster_pixel_difference": 0
+      },
+      "pdf_sha256": "919d33ef2be842d96c83885f502f398df2b9108850aba3fdbbe205207c356f30",
+      "png_sha256": "9dccadd8da0b4c2a5d72966883fb6d34a313bef91ea81b65c131952adc393882",
+      "musicxml_sha256": "b0dfa61f09928249e4db924dfec4b76792ecfbfb66cc139ae9a0d8c5a9cd59bd",
+      "native_semantic_accuracy": "source provided, not independently measured OMR",
+      "standalone_png_pdf_http_verified": true,
+      "artifact_directory": "controlled-C",
+      "source_sha256": "41d9487a239f58fb8252e75cbf3e408e8cd91797794beb015af55de503944361"
+    },
+    {
+      "control": "B",
+      "shift": 0,
+      "http": 200,
+      "response_sha256": "4443836347c9bb56cedcdf32c76815765df1f478b10f05d91502f8c2a4b21ff8",
+      "render_path": "native_identity",
+      "checks": {
+        "paired_reference_pixel_difference": 0,
+        "lyric_pixel_difference": 0,
+        "preserved_lyric_ink_pixels": 5856,
+        "protected_pixel_difference": 0,
+        "old_music_residual_pixels": 0,
+        "source_staff_reconstructed_pixels": 280,
+        "original_preserved_pixels": 1113238,
+        "notehead_observations": [
+          {
+            "pitch": "B4",
+            "target": [
+              550,
+              228.0
+            ],
+            "observed": [
+              550.5,
+              228.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          },
+          {
+            "pitch": "D#5",
+            "target": [
+              825,
+              204.0
+            ],
+            "observed": [
+              825.5,
+              204.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          },
+          {
+            "pitch": "G#4",
+            "target": [
+              1100,
+              252.0
+            ],
+            "observed": [
+              1100.5,
+              252.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          },
+          {
+            "pitch": "E4",
+            "target": [
+              1375,
+              276.0
+            ],
+            "observed": [
+              1375.5,
+              276.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          }
+        ],
+        "page_boxes_equal": true,
+        "pdf_embedded_pixels_equal_png": true,
+        "unexplained_alpha_collisions": 0,
+        "recognition_accuracy": "UNVERIFIED; native source-provided semantics",
+        "pdf_raster_pixel_difference": 0
+      },
+      "pdf_sha256": "919d33ef2be842d96c83885f502f398df2b9108850aba3fdbbe205207c356f30",
+      "png_sha256": "9dccadd8da0b4c2a5d72966883fb6d34a313bef91ea81b65c131952adc393882",
+      "musicxml_sha256": "d01396642959b86fc5e5220cf0590394ac02031125cff4d4396d74fc74738898",
+      "native_semantic_accuracy": "source provided, not independently measured OMR",
+      "standalone_png_pdf_http_verified": true,
+      "artifact_directory": "controlled-B",
+      "source_sha256": "d0b13a328fd7d918019e425371e009ab1434760abd6fa7b462317106651bb9c3"
+    },
+    {
+      "control": "B",
+      "shift": 1,
+      "http": 200,
+      "response_sha256": "82e19cd1ff1d47ce233db9dd18ef9ae1f137c955a27b2f670705723c8b1007eb",
+      "render_path": "native_geometry_transposition",
+      "checks": {
+        "paired_reference_pixel_difference": 0,
+        "lyric_pixel_difference": 0,
+        "preserved_lyric_ink_pixels": 5856,
+        "protected_pixel_difference": 0,
+        "old_music_residual_pixels": 0,
+        "source_staff_reconstructed_pixels": 280,
+        "original_preserved_pixels": 1111970,
+        "notehead_observations": [
+          {
+            "pitch": "C5",
+            "target": [
+              550,
+              216.0
+            ],
+            "observed": [
+              550.5,
+              216.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          },
+          {
+            "pitch": "E5",
+            "target": [
+              825,
+              192.0
+            ],
+            "observed": [
+              825.5,
+              192.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          },
+          {
+            "pitch": "A4",
+            "target": [
+              1100,
+              240.0
+            ],
+            "observed": [
+              1100.5,
+              240.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          },
+          {
+            "pitch": "F4",
+            "target": [
+              1375,
+              264.0
+            ],
+            "observed": [
+              1375.5,
+              264.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ]
+          }
+        ],
+        "page_boxes_equal": true,
+        "pdf_embedded_pixels_equal_png": true,
+        "unexplained_alpha_collisions": 0,
+        "recognition_accuracy": "UNVERIFIED; native source-provided semantics",
+        "pdf_raster_pixel_difference": 0
+      },
+      "pdf_sha256": "bd5fc86e2f3780685d18a59602f362ab11569aa93815d1fd481b72bdca654cda",
+      "png_sha256": "02b77b06f3878424c75a1fa2e734b1a7af5bf32900e0ea81714a0e9b3b0f3a56",
+      "musicxml_sha256": "3d64cbdad934f49885bf5af6f76833ae0164b1e559457446564106659742ce50",
+      "native_semantic_accuracy": "source provided, not independently measured OMR",
+      "standalone_png_pdf_http_verified": true,
+      "artifact_directory": "controlled-B",
+      "source_sha256": "d0b13a328fd7d918019e425371e009ab1434760abd6fa7b462317106651bb9c3"
+    },
+    {
+      "control": "B",
+      "shift": -1,
+      "http": 422,
+      "response_sha256": "3d09314b94755b71d10f5739f44113296e2a82a9783ab447ecfc963b52e75b0c",
+      "first_blocker": {
+        "code": "UNSUPPORTED_FLAT_SIGNATURE_ANCHOR",
+        "page": 1
+      },
+      "artifact_directory": "controlled-B"
+    }
+  ],
+  "raster_rounding_diagnosis": [
+    {
+      "input": "2 자유_1758826857.pdf",
+      "expected_rational_size": [
+        2481,
+        3507
+      ],
+      "pdftoppm_size": [
+        2481,
+        3508
+      ],
+      "pdftocairo_size": [
+        2481,
+        3508
+      ]
+    },
+    {
+      "input": "본향을 향해-1_1758828084.pdf",
+      "expected_rational_size": [
+        2717,
+        3507
+      ],
+      "pdftoppm_size": [
+        2717,
+        3508
+      ],
+      "pdftocairo_size": [
+        2717,
+        3508
+      ]
+    }
+  ],
+  "visual_review": {
+    "reviewer": "agent; not independent musician",
+    "real_identity_previews_opened": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "nonzero_comparisons_opened": [
+      "controlled-C/-1-comparison.png",
+      "controlled-B/+1-comparison.png"
+    ],
+    "result": "Legible at native size; original real PDFs unchanged; no visual double heads/clipping in controls"
+  },
+  "code_sha256": {
+    "backend/api/score.py": "0848852318487e2237287699250da91fdcf27448848b25aa8812f100d6aeb6bf",
+    "backend/omr_v3/native_pdf.py": "34b0a443cfcdd8e19d01aa04daa4f605818ffa6ae2b78859ad1d7a3d7c53b526",
+    "backend/omr_v3/source_layout.py": "120d6d7746048d35bb7793a369b33efefe67dfe27d016c909153cbce605f1d8f",
+    "backend/omr_v3/raster_anchor.py": "cbacdcdc2c2c9fd52447257a2f4d9715e4455f7d6432fb488e117d0efa578b5e",
+    "backend/omr_v3/music_guard.py": "9f27db149414fe38991b86230f4c15fae90c2ecd1bb5205ecfd56892fa992b43",
+    "scripts/controlled_native_score.py": "56b9470317d80ce73c3e044029190067551a043e4940c249d35e700813a6387d",
+    "scripts/renderer_completion_eval.py": "0ea07419a96f4f1eeb707055c3f6970b68c809996605d71f551e31edd0738c76"
+  },
+  "independent_fixed_x_checks": [
+    {
+      "label": "C",
+      "shift": "-1",
+      "checks": {
+        "paired_reference_pixel_difference": 0,
+        "lyric_pixel_difference": 0,
+        "preserved_lyric_ink_pixels": 5856,
+        "protected_pixel_difference": 0,
+        "old_music_residual_pixels": 0,
+        "source_staff_reconstructed_pixels": 66,
+        "original_preserved_pixels": 1111970,
+        "notehead_observations": [
+          {
+            "pitch": "B4",
+            "target": [
+              550,
+              228.0
+            ],
+            "observed": [
+              550.5,
+              228.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ],
+            "source_observed_x": 550.5,
+            "fixed_x_displacement_px": 0.0
+          },
+          {
+            "pitch": "D#5",
+            "target": [
+              825,
+              204.0
+            ],
+            "observed": [
+              825.5,
+              204.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ],
+            "source_observed_x": 825.5,
+            "fixed_x_displacement_px": 0.0
+          },
+          {
+            "pitch": "G#4",
+            "target": [
+              1100,
+              252.0
+            ],
+            "observed": [
+              1100.5,
+              252.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ],
+            "source_observed_x": 1100.5,
+            "fixed_x_displacement_px": 0.0
+          },
+          {
+            "pitch": "E4",
+            "target": [
+              1375,
+              276.0
+            ],
+            "observed": [
+              1375.5,
+              276.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ],
+            "source_observed_x": 1375.5,
+            "fixed_x_displacement_px": 0.0
+          }
+        ],
+        "page_boxes_equal": true,
+        "pdf_embedded_pixels_equal_png": true,
+        "unexplained_alpha_collisions": 0,
+        "recognition_accuracy": "UNVERIFIED; native source-provided semantics"
+      }
+    },
+    {
+      "label": "B",
+      "shift": "+1",
+      "checks": {
+        "paired_reference_pixel_difference": 0,
+        "lyric_pixel_difference": 0,
+        "preserved_lyric_ink_pixels": 5856,
+        "protected_pixel_difference": 0,
+        "old_music_residual_pixels": 0,
+        "source_staff_reconstructed_pixels": 280,
+        "original_preserved_pixels": 1111970,
+        "notehead_observations": [
+          {
+            "pitch": "C5",
+            "target": [
+              550,
+              216.0
+            ],
+            "observed": [
+              550.5,
+              216.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ],
+            "source_observed_x": 550.5,
+            "fixed_x_displacement_px": 0.0
+          },
+          {
+            "pitch": "E5",
+            "target": [
+              825,
+              192.0
+            ],
+            "observed": [
+              825.5,
+              192.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ],
+            "source_observed_x": 825.5,
+            "fixed_x_displacement_px": 0.0
+          },
+          {
+            "pitch": "A4",
+            "target": [
+              1100,
+              240.0
+            ],
+            "observed": [
+              1100.5,
+              240.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ],
+            "source_observed_x": 1100.5,
+            "fixed_x_displacement_px": 0.0
+          },
+          {
+            "pitch": "F4",
+            "target": [
+              1375,
+              264.0
+            ],
+            "observed": [
+              1375.5,
+              264.0
+            ],
+            "error": [
+              0.5,
+              0.0
+            ],
+            "source_observed_x": 1375.5,
+            "fixed_x_displacement_px": 0.0
+          }
+        ],
+        "page_boxes_equal": true,
+        "pdf_embedded_pixels_equal_png": true,
+        "unexplained_alpha_collisions": 0,
+        "recognition_accuracy": "UNVERIFIED; native source-provided semantics"
+      }
+    }
+  ],
+  "supplemental_validation": "Fixed x checks were additionally run against the actual saved HTTP artifacts; no outputs or engine code changed.",
+  "input_manifest_container_paths": [
+    "/inputs/악보/1 주님 난 알고 싶어요_1758826856.pdf",
+    "/inputs/악보/2 자유_1758826857.pdf",
+    "/inputs/악보/3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+    "/inputs/악보/나의 꿈, 내 소망-1_1758828086.pdf",
+    "/inputs/악보/본향을 향해-1_1758828084.pdf"
+  ],
+  "committed_artifacts_sha256": {
+    "docs/pr-assets/geometry-renderer/B-plus1-comparison.png": "75c74ce26f24fc1ca4bfa4d5d6c38504235465b31db410fcfdb2f15f3f4b39d8",
+    "docs/pr-assets/geometry-renderer/B-plus1.json": "4a0f5443e8ab4bd124328f812c2f5117b6c46c8433d7ce91385894109ed24444",
+    "docs/pr-assets/geometry-renderer/B-plus1.musicxml": "3d64cbdad934f49885bf5af6f76833ae0164b1e559457446564106659742ce50",
+    "docs/pr-assets/geometry-renderer/B-plus1.pdf": "bd5fc86e2f3780685d18a59602f362ab11569aa93815d1fd481b72bdca654cda",
+    "docs/pr-assets/geometry-renderer/B-plus1.png": "02b77b06f3878424c75a1fa2e734b1a7af5bf32900e0ea81714a0e9b3b0f3a56",
+    "docs/pr-assets/geometry-renderer/B-source.pdf": "d0b13a328fd7d918019e425371e009ab1434760abd6fa7b462317106651bb9c3",
+    "docs/pr-assets/geometry-renderer/C-minus1-comparison.png": "9b7d155fef8312974913b56688a40f5d3e2365048e6765d88b08542859a2241c",
+    "docs/pr-assets/geometry-renderer/C-minus1.json": "8056e19408d6f302c63561e9c4f58ef0bf66f23437209656024ae08d3df903ce",
+    "docs/pr-assets/geometry-renderer/C-minus1.musicxml": "b0dfa61f09928249e4db924dfec4b76792ecfbfb66cc139ae9a0d8c5a9cd59bd",
+    "docs/pr-assets/geometry-renderer/C-minus1.pdf": "919d33ef2be842d96c83885f502f398df2b9108850aba3fdbbe205207c356f30",
+    "docs/pr-assets/geometry-renderer/C-minus1.png": "9dccadd8da0b4c2a5d72966883fb6d34a313bef91ea81b65c131952adc393882",
+    "docs/pr-assets/geometry-renderer/C-source.pdf": "41d9487a239f58fb8252e75cbf3e408e8cd91797794beb015af55de503944361"
+  }
+}

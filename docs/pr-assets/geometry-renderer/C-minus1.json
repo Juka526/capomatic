@@ -1,0 +1,775 @@
+{
+  "render_path": "native_geometry_transposition",
+  "semitones": -1,
+  "pages": [
+    {
+      "page": 1,
+      "semantic_ready": true,
+      "geometry_ready": true,
+      "lyric_layer_ready": true,
+      "render_ready": true,
+      "render_path": "native_geometry_transposition",
+      "semitones": -1,
+      "integrity": {
+        "ok": true,
+        "measures": [
+          4,
+          4
+        ],
+        "events": [
+          4,
+          4
+        ],
+        "chords": [
+          0,
+          0
+        ],
+        "issues": []
+      },
+      "source_ink_safety": {
+        "status": "VERIFIED_NATIVE_PROFILE",
+        "objects": [
+          {
+            "object": "clef",
+            "kind": "clef",
+            "alpha_sha256": "c4a3601f839f64ec3eafb9a71e18ffc8a1366ea028b2d88928fdae9494ffdae1",
+            "requested_anchor": [
+              73.72399999999999,
+              237.36
+            ],
+            "raster_placement_anchor": [
+              73.5,
+              237.0
+            ],
+            "font_outline_anchor": [
+              42.0,
+              267.0
+            ],
+            "baseline": [
+              42,
+              267
+            ],
+            "canonical_baseline_phase": [
+              0,
+              0
+            ],
+            "canonical_alpha_sha256": "15990f04a81d117c97fa120c310ad6cb3dae13930c4a09634cf461f36e42dbbc",
+            "rendered_bounds": [
+              53,
+              180,
+              95,
+              295
+            ],
+            "raster_ink_bbox_center": [
+              73.5,
+              237.0
+            ],
+            "anchor_residual": [
+              -0.22399999999998954,
+              -0.36000000000001364
+            ],
+            "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold"
+          },
+          {
+            "object": "note-0",
+            "kind": "whole-note",
+            "alpha_sha256": "594b6ef6f156a399ffa59cbcfaa3775a5229e6dafc57f751dbfea5bbae7ecbda",
+            "requested_anchor": [
+              550.0,
+              216.0
+            ],
+            "raster_placement_anchor": [
+              550.5,
+              216.0
+            ],
+            "font_outline_anchor": [
+              532.0,
+              225.0
+            ],
+            "baseline": [
+              532,
+              225
+            ],
+            "canonical_baseline_phase": [
+              0,
+              0
+            ],
+            "canonical_alpha_sha256": "c064c8610270fd4f2bf3472b5230344d4f1ba852ae4a143baefb12fa8fea91c7",
+            "rendered_bounds": [
+              535,
+              207,
+              567,
+              226
+            ],
+            "raster_ink_bbox_center": [
+              550.5,
+              216.0
+            ],
+            "anchor_residual": [
+              0.5,
+              0.0
+            ],
+            "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold",
+            "measure": 1,
+            "written_pitch": "C5",
+            "target_anchor": [
+              550.0,
+              216.0
+            ],
+            "relations": []
+          },
+          {
+            "object": "note-1",
+            "kind": "whole-note",
+            "alpha_sha256": "cf8007241d41e620fc9bc017832a71aa736b143a627de50bd672ae45a93b9f4b",
+            "requested_anchor": [
+              825.0,
+              192.0
+            ],
+            "raster_placement_anchor": [
+              825.5,
+              192.0
+            ],
+            "font_outline_anchor": [
+              807.0,
+              201.0
+            ],
+            "baseline": [
+              807,
+              201
+            ],
+            "canonical_baseline_phase": [
+              0,
+              0
+            ],
+            "canonical_alpha_sha256": "c064c8610270fd4f2bf3472b5230344d4f1ba852ae4a143baefb12fa8fea91c7",
+            "rendered_bounds": [
+              810,
+              183,
+              842,
+              202
+            ],
+            "raster_ink_bbox_center": [
+              825.5,
+              192.0
+            ],
+            "anchor_residual": [
+              0.5,
+              0.0
+            ],
+            "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold",
+            "measure": 2,
+            "written_pitch": "E5",
+            "target_anchor": [
+              825.0,
+              192.0
+            ],
+            "relations": []
+          },
+          {
+            "object": "note-2",
+            "kind": "whole-note",
+            "alpha_sha256": "ca23aec807b1d19dcc9b6d92581af661d2a322ce20c3e2095a8561445a90c7d8",
+            "requested_anchor": [
+              1100.0,
+              240.0
+            ],
+            "raster_placement_anchor": [
+              1100.5,
+              240.0
+            ],
+            "font_outline_anchor": [
+              1082.0,
+              249.0
+            ],
+            "baseline": [
+              1082,
+              249
+            ],
+            "canonical_baseline_phase": [
+              0,
+              0
+            ],
+            "canonical_alpha_sha256": "c064c8610270fd4f2bf3472b5230344d4f1ba852ae4a143baefb12fa8fea91c7",
+            "rendered_bounds": [
+              1085,
+              231,
+              1117,
+              250
+            ],
+            "raster_ink_bbox_center": [
+              1100.5,
+              240.0
+            ],
+            "anchor_residual": [
+              0.5,
+              0.0
+            ],
+            "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold",
+            "measure": 3,
+            "written_pitch": "A4",
+            "target_anchor": [
+              1100.0,
+              240.0
+            ],
+            "relations": []
+          },
+          {
+            "object": "note-3",
+            "kind": "whole-note",
+            "alpha_sha256": "4b983f9dbd33c87cde869c5fc6ced58b8ac355afe734ce8ba3a5ddce5df8bb0e",
+            "requested_anchor": [
+              1375.0,
+              264.0
+            ],
+            "raster_placement_anchor": [
+              1375.5,
+              264.0
+            ],
+            "font_outline_anchor": [
+              1357.0,
+              273.0
+            ],
+            "baseline": [
+              1357,
+              273
+            ],
+            "canonical_baseline_phase": [
+              0,
+              0
+            ],
+            "canonical_alpha_sha256": "c064c8610270fd4f2bf3472b5230344d4f1ba852ae4a143baefb12fa8fea91c7",
+            "rendered_bounds": [
+              1360,
+              255,
+              1392,
+              274
+            ],
+            "raster_ink_bbox_center": [
+              1375.5,
+              264.0
+            ],
+            "anchor_residual": [
+              0.5,
+              0.0
+            ],
+            "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold",
+            "measure": 4,
+            "written_pitch": "F4",
+            "target_anchor": [
+              1375.0,
+              264.0
+            ],
+            "relations": []
+          }
+        ],
+        "owned_pixel_count": 3692,
+        "reconstructed_staff_pixels": 66,
+        "reconstructed_background_pixels": 3626,
+        "preserved_unrelated_source_pixels": 1111970
+      },
+      "lyrics": {
+        "regions": [
+          {
+            "object": "lyrics-0",
+            "source_region": [
+              441,
+              375,
+              1421,
+              416
+            ],
+            "ink_pixels": 2837,
+            "alpha_sha256": "04dbe56ef9d0f4d7298577480330d7699853d4899147fa98e5f482f0d10dcd10"
+          },
+          {
+            "object": "lyrics-1",
+            "source_region": [
+              441,
+              460,
+              1421,
+              501
+            ],
+            "ink_pixels": 3019,
+            "alpha_sha256": "914dbe6fd6c2bdfeaf554d8dc61921d7028ec247213c660cb1bc58f56e0b3c0f"
+          }
+        ],
+        "pixel_difference": 0,
+        "preserved_ink_pixels": 5856,
+        "ocr_replacement": false
+      },
+      "fixed_anchor_displacement_px": 0,
+      "target_objects": [
+        {
+          "object": "clef",
+          "kind": "clef",
+          "alpha_sha256": "c4a3601f839f64ec3eafb9a71e18ffc8a1366ea028b2d88928fdae9494ffdae1",
+          "requested_anchor": [
+            73.72399999999999,
+            237.36
+          ],
+          "raster_placement_anchor": [
+            73.5,
+            237.0
+          ],
+          "font_outline_anchor": [
+            42.0,
+            267.0
+          ],
+          "baseline": [
+            42,
+            267
+          ],
+          "canonical_baseline_phase": [
+            0,
+            0
+          ],
+          "canonical_alpha_sha256": "15990f04a81d117c97fa120c310ad6cb3dae13930c4a09634cf461f36e42dbbc",
+          "rendered_bounds": [
+            53,
+            180,
+            95,
+            295
+          ],
+          "raster_ink_bbox_center": [
+            73.5,
+            237.0
+          ],
+          "anchor_residual": [
+            -0.22399999999998954,
+            -0.36000000000001364
+          ],
+          "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold"
+        },
+        {
+          "object": "key-0",
+          "kind": "key-signature",
+          "alpha_sha256": "4f482ba3267961238317f1a5d7b389535850c096532766b796819e07cc3f3015",
+          "requested_anchor": [
+            122.0,
+            180.0
+          ],
+          "raster_placement_anchor": [
+            122.0,
+            180.5
+          ],
+          "font_outline_anchor": [
+            109.0,
+            194.0
+          ],
+          "baseline": [
+            109,
+            194
+          ],
+          "canonical_baseline_phase": [
+            0,
+            0
+          ],
+          "canonical_alpha_sha256": "1c41c7fcb6888b6f2914500a07faed4d498c99d057bc3ba31d71e73138e87afc",
+          "rendered_bounds": [
+            112,
+            150,
+            133,
+            212
+          ],
+          "raster_ink_bbox_center": [
+            122.0,
+            180.5
+          ],
+          "anchor_residual": [
+            0.0,
+            0.5
+          ],
+          "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold"
+        },
+        {
+          "object": "key-1",
+          "kind": "key-signature",
+          "alpha_sha256": "a32bd0c9f918ea0f4de79aa3de43b55f20c99c748cd563a0223f03810b3427f2",
+          "requested_anchor": [
+            170.0,
+            216.0
+          ],
+          "raster_placement_anchor": [
+            170.0,
+            216.5
+          ],
+          "font_outline_anchor": [
+            157.0,
+            230.0
+          ],
+          "baseline": [
+            157,
+            230
+          ],
+          "canonical_baseline_phase": [
+            0,
+            0
+          ],
+          "canonical_alpha_sha256": "1c41c7fcb6888b6f2914500a07faed4d498c99d057bc3ba31d71e73138e87afc",
+          "rendered_bounds": [
+            160,
+            186,
+            181,
+            248
+          ],
+          "raster_ink_bbox_center": [
+            170.0,
+            216.5
+          ],
+          "anchor_residual": [
+            0.0,
+            0.5
+          ],
+          "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold"
+        },
+        {
+          "object": "key-2",
+          "kind": "key-signature",
+          "alpha_sha256": "a7084efd64b08d1afc529eea20f1467857b94bd766fcc9d48d559e0a24e41aa5",
+          "requested_anchor": [
+            218.0,
+            168.0
+          ],
+          "raster_placement_anchor": [
+            218.0,
+            168.5
+          ],
+          "font_outline_anchor": [
+            205.0,
+            182.0
+          ],
+          "baseline": [
+            205,
+            182
+          ],
+          "canonical_baseline_phase": [
+            0,
+            0
+          ],
+          "canonical_alpha_sha256": "1c41c7fcb6888b6f2914500a07faed4d498c99d057bc3ba31d71e73138e87afc",
+          "rendered_bounds": [
+            208,
+            138,
+            229,
+            200
+          ],
+          "raster_ink_bbox_center": [
+            218.0,
+            168.5
+          ],
+          "anchor_residual": [
+            0.0,
+            0.5
+          ],
+          "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold"
+        },
+        {
+          "object": "key-3",
+          "kind": "key-signature",
+          "alpha_sha256": "bd4ea81e507cdd28b83c0e9646c4305b57c2148b68af3dad8c26617ee9e71013",
+          "requested_anchor": [
+            266.0,
+            204.0
+          ],
+          "raster_placement_anchor": [
+            266.0,
+            204.5
+          ],
+          "font_outline_anchor": [
+            253.0,
+            218.0
+          ],
+          "baseline": [
+            253,
+            218
+          ],
+          "canonical_baseline_phase": [
+            0,
+            0
+          ],
+          "canonical_alpha_sha256": "1c41c7fcb6888b6f2914500a07faed4d498c99d057bc3ba31d71e73138e87afc",
+          "rendered_bounds": [
+            256,
+            174,
+            277,
+            236
+          ],
+          "raster_ink_bbox_center": [
+            266.0,
+            204.5
+          ],
+          "anchor_residual": [
+            0.0,
+            0.5
+          ],
+          "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold"
+        },
+        {
+          "object": "key-4",
+          "kind": "key-signature",
+          "alpha_sha256": "c0117f18a9f1c8310f0efe19f0bfa2e50ada6709033d943d47f2b6c639073f00",
+          "requested_anchor": [
+            314.0,
+            240.0
+          ],
+          "raster_placement_anchor": [
+            314.0,
+            240.5
+          ],
+          "font_outline_anchor": [
+            301.0,
+            254.0
+          ],
+          "baseline": [
+            301,
+            254
+          ],
+          "canonical_baseline_phase": [
+            0,
+            0
+          ],
+          "canonical_alpha_sha256": "1c41c7fcb6888b6f2914500a07faed4d498c99d057bc3ba31d71e73138e87afc",
+          "rendered_bounds": [
+            304,
+            210,
+            325,
+            272
+          ],
+          "raster_ink_bbox_center": [
+            314.0,
+            240.5
+          ],
+          "anchor_residual": [
+            0.0,
+            0.5
+          ],
+          "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold"
+        },
+        {
+          "object": "note-0",
+          "kind": "whole-note",
+          "alpha_sha256": "687949915bb44a0ec69cb5b45c741ca8036304bccd7c728c5f7ab83202190875",
+          "requested_anchor": [
+            550.0,
+            228.0
+          ],
+          "raster_placement_anchor": [
+            550.5,
+            228.0
+          ],
+          "font_outline_anchor": [
+            532.0,
+            237.0
+          ],
+          "baseline": [
+            532,
+            237
+          ],
+          "canonical_baseline_phase": [
+            0,
+            0
+          ],
+          "canonical_alpha_sha256": "c064c8610270fd4f2bf3472b5230344d4f1ba852ae4a143baefb12fa8fea91c7",
+          "rendered_bounds": [
+            535,
+            219,
+            567,
+            238
+          ],
+          "raster_ink_bbox_center": [
+            550.5,
+            228.0
+          ],
+          "anchor_residual": [
+            0.5,
+            0.0
+          ],
+          "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold",
+          "measure": 1,
+          "written_pitch": "B4",
+          "target_anchor": [
+            550.0,
+            228.0
+          ],
+          "relations": []
+        },
+        {
+          "object": "note-1",
+          "kind": "whole-note",
+          "alpha_sha256": "77819290e387c17783330b237a7f47e531e394d930bb804b2ba293d0596448a4",
+          "requested_anchor": [
+            825.0,
+            204.0
+          ],
+          "raster_placement_anchor": [
+            825.5,
+            204.0
+          ],
+          "font_outline_anchor": [
+            807.0,
+            213.0
+          ],
+          "baseline": [
+            807,
+            213
+          ],
+          "canonical_baseline_phase": [
+            0,
+            0
+          ],
+          "canonical_alpha_sha256": "c064c8610270fd4f2bf3472b5230344d4f1ba852ae4a143baefb12fa8fea91c7",
+          "rendered_bounds": [
+            810,
+            195,
+            842,
+            214
+          ],
+          "raster_ink_bbox_center": [
+            825.5,
+            204.0
+          ],
+          "anchor_residual": [
+            0.5,
+            0.0
+          ],
+          "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold",
+          "measure": 2,
+          "written_pitch": "D#5",
+          "target_anchor": [
+            825.0,
+            204.0
+          ],
+          "relations": []
+        },
+        {
+          "object": "note-2",
+          "kind": "whole-note",
+          "alpha_sha256": "1db7b9c246b6be0b2f288fd843c26face1e47370332407e591e5f0d88b2040c5",
+          "requested_anchor": [
+            1100.0,
+            252.0
+          ],
+          "raster_placement_anchor": [
+            1100.5,
+            252.0
+          ],
+          "font_outline_anchor": [
+            1082.0,
+            261.0
+          ],
+          "baseline": [
+            1082,
+            261
+          ],
+          "canonical_baseline_phase": [
+            0,
+            0
+          ],
+          "canonical_alpha_sha256": "c064c8610270fd4f2bf3472b5230344d4f1ba852ae4a143baefb12fa8fea91c7",
+          "rendered_bounds": [
+            1085,
+            243,
+            1117,
+            262
+          ],
+          "raster_ink_bbox_center": [
+            1100.5,
+            252.0
+          ],
+          "anchor_residual": [
+            0.5,
+            0.0
+          ],
+          "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold",
+          "measure": 3,
+          "written_pitch": "G#4",
+          "target_anchor": [
+            1100.0,
+            252.0
+          ],
+          "relations": []
+        },
+        {
+          "object": "note-3",
+          "kind": "whole-note",
+          "alpha_sha256": "1faaefa9fc5a19b4d0682e322408de4ffe283b498eefc113cfa61f450aa8dd16",
+          "requested_anchor": [
+            1375.0,
+            276.0
+          ],
+          "raster_placement_anchor": [
+            1375.5,
+            276.0
+          ],
+          "font_outline_anchor": [
+            1357.0,
+            285.0
+          ],
+          "baseline": [
+            1357,
+            285
+          ],
+          "canonical_baseline_phase": [
+            0,
+            0
+          ],
+          "canonical_alpha_sha256": "c064c8610270fd4f2bf3472b5230344d4f1ba852ae4a143baefb12fa8fea91c7",
+          "rendered_bounds": [
+            1360,
+            267,
+            1392,
+            286
+          ],
+          "raster_ink_bbox_center": [
+            1375.5,
+            276.0
+          ],
+          "anchor_residual": [
+            0.5,
+            0.0
+          ],
+          "placement_method": "fixed-phase raster bbox center; nearest integer translation; no resizing/alpha threshold",
+          "measure": 4,
+          "written_pitch": "E4",
+          "target_anchor": [
+            1375.0,
+            276.0
+          ],
+          "relations": []
+        }
+      ],
+      "note_anchor_max_error_xy_px": [
+        0.5,
+        0.0
+      ],
+      "unexplained_alpha_collisions": 0,
+      "duplicate_music_pixels": 0,
+      "clipping": 0,
+      "source_raster_sha256": "d675827390b486436e839d0c636934afd33674318919e7375a037f421c6557cb",
+      "output_raster_sha256": "f4fe3d4819f81ce3bfc2bd07d965ddb2395109d488ac1669756fdfc2775cb421",
+      "recognition_accuracy": "UNVERIFIED; native semantic input, not OMR recognition",
+      "serialized_integrity": {
+        "ok": true,
+        "measures": [
+          4,
+          4
+        ],
+        "events": [
+          4,
+          4
+        ],
+        "chords": [
+          0,
+          0
+        ],
+        "issues": []
+      }
+    }
+  ],
+  "render_ready": true,
+  "semantic_ready": true,
+  "geometry_ready": true,
+  "lyric_layer_ready": true,
+  "source_sha256": "41d9487a239f58fb8252e75cbf3e408e8cd91797794beb015af55de503944361",
+  "accuracy": "UNVERIFIED; source-provided native semantics, not OMR accuracy"
+}

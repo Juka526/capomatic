@@ -219,6 +219,14 @@ def readiness(page: SourcePage | None, semantic_ready: bool, number: int,
     """Evaluate requested rendering separately from detection and V3 consistency."""
     evidence = page.evidence if page else {'geometry_ready': False, 'objects': [],
                                           'issues': ['SOURCE_LAYOUT_UNAVAILABLE']}
+    if page and evidence.get('native_profile_verified'):
+        return {'semantic_ready': True, 'geometry_ready': True, 'lyric_layer_ready': True,
+                'render_ready': False, 'render_request': {'semitones': semitones},
+                'can_plan_geometry_render': True, 'reasons': [],
+                'source_ink_safety': {'status': 'VERIFIED_NATIVE_SOURCE_ONLY',
+                    'edit_authorized': False, 'target_plan_required': True,
+                    'objects': evidence['objects'], 'reasons': []},
+                'lyric_regions': evidence['lyric_regions']}
     reasons = [{'page': number, 'measure': None, 'object': None, 'code': code}
                for code in evidence['issues']]
     if not semantic_ready:

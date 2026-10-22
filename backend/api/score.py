@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+import io
+import zipfile
 import json
 import hashlib
 import os
@@ -59,10 +61,15 @@ def recognize(data: bytes, filename: str, chord_detector) -> core.Result:
     suffix = '.pdf' if data.startswith(b'%PDF-') else Path(filename).suffix.lower()
     core.validate(data, suffix)
     try:
-        result = core.process(data, suffix, 0, 'key', recognition_only=True,
-                              preserve_notation=True,
-                              retain_source_layout=suffix not in {'.xml', '.musicxml', '.mxl'},
-                              chord_detector=chord_detector)
+        result = None
+        if suffix == '.pdf' and b'/CapomaticSource' in data:
+            from backend.omr_v3 import native_pdf
+            result = native_pdf.recognize(data)
+        if result is None:
+            result = core.process(data, suffix, 0, 'key', recognition_only=True,
+                                  preserve_notation=True,
+                                  retain_source_layout=suffix not in {'.xml', '.musicxml', '.mxl'},
+                                  chord_detector=chord_detector)
     except core.ScoreError as exc:
         if exc.status != 422:
             raise
@@ -147,6 +154,8 @@ def summary(result: core.Result, semitones: int | None = None) -> dict:
         semantic_ready = bool(row['can_render_full_score'] and not bundle
                               and page.report.get('input', {}).get('source') == 'musicxml'
                               and not page.report.get('warnings')) if page else False
+        if source_page and source_page.evidence.get('native_profile_verified'):
+            semantic_ready = True
         row.update(readiness(source_page, semantic_ready, number, semitones))
         if page and page.report.get('recognition_failure'):
             row['reasons'].append({'page': number, 'measure': None, 'object': None,
@@ -192,8 +201,25 @@ def render(result: core.Result, semitones: int, output_format: str) -> Response:
         raise core.ScoreError(str(exc)) from exc
     detection = summary(result, semitones)
     if output_format != 'musicxml':
-        # All pages must be authorized before any canvas is modified. No
-        # MuseScore fallback, even at zero semitones or inside a ZIP.
+        bundle = result.source_layout
+        if bundle and bundle.pages and all(
+                page and page.evidence.get('native_profile_verified') for page in bundle.pages):
+            return _render_native(result, semitones, output_format, detection)
+        if (semitones == 0 and bundle and bundle.suffix == '.pdf'
+                and b'/CapomaticSource' not in bundle.source and output_format in {'pdf', 'zip'}):
+            from backend.omr_v3.source_layout import pdf_metadata
+            metadata = pdf_metadata(bundle.source)
+            report = {'render_path': 'lossless_original_pdf_identity', 'semitones': 0,
+                      'identity_only': True, 'nonzero_transposition_demonstrated': False,
+                      'source_sha256': bundle.sha256, 'output_sha256': bundle.sha256,
+                      'page_count': len(metadata), 'page_metadata': metadata,
+                      'all_original_bytes_preserved': True,
+                      'accuracy': 'unverified', 'source_detection': detection}
+            return _output(bundle.source, [], report, [], output_format, identity=True)
+        reasons = [reason for p in detection['pages'] for reason in p['reasons']]
+        detection['first_blocker'] = reasons[0] if reasons else {'code': 'COMPLETE_OWNERSHIP_IMPLEMENTATION_REQUIRED'}
+        detection['secondary_blockers'] = reasons[1:]
+        detection['collision_assessment'] = 'NOT_EVALUABLE_WITHOUT_COMPLETE_OWNERSHIP'
         raise core.ScoreError(
             'Geometry-locked rendering is not ready: source pixel ownership, '
             'lyric separation or semantic relationships need verification', 422, detection)
@@ -210,4 +236,53 @@ def render(result: core.Result, semitones: int, output_format: str) -> Response:
         'Cache-Control': 'no-store', 'X-Capomatic-Mode': 'editable_semantics',
         'X-Capomatic-Preservation': 'No source layout or lyric pixel preservation guarantee',
         'X-OMR-Accuracy': 'unverified',
+    })
+
+
+def _render_native(result, semitones, output_format, detection):
+    from backend.omr_v3 import native_pdf
+    bundle = result.source_layout
+    if output_format == 'png' and len(bundle.pages) != 1:
+        raise core.ScoreError('PNG requires one page; use PDF or ZIP', 422, detection)
+    try:
+        images, reports, xml_pages = native_pdf.compose(bundle.source, semitones)
+        pdf = native_pdf.lossless_pdf(images, [p.metadata for p in bundle.pages])
+    except core.ScoreError as exc:
+        if exc.status != 422:
+            raise
+        blocker = {'code': exc.report.get('first_blocker', str(exc)),
+                   **{k: v for k, v in exc.report.items() if k != 'first_blocker'}}
+        report = {**detection, 'first_blocker': blocker,
+                  'secondary_blockers': [], 'render_ready': False}
+        raise core.ScoreError(str(exc), 422, report) from exc
+    report = {'render_path': 'native_geometry_transposition' if semitones else 'native_identity',
+              'semitones': semitones, 'pages': reports, 'render_ready': True,
+              'semantic_ready': True, 'geometry_ready': True, 'lyric_layer_ready': True,
+              'source_sha256': bundle.sha256,
+              'accuracy': 'UNVERIFIED; source-provided native semantics, not OMR accuracy'}
+    return _output(pdf, images, report, xml_pages, output_format, identity=semitones==0)
+
+
+def _output(pdf, images, report, xml_pages, output_format, *, identity=False):
+    if output_format == 'png':
+        out = io.BytesIO(); images[0].save(out, format='PNG', dpi=(core.PDF_DPI, core.PDF_DPI))
+        data, media, name = out.getvalue(), 'image/png', 'transposed.png'
+    elif output_format == 'zip':
+        out = io.BytesIO()
+        with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr('transposed.pdf', pdf)
+            archive.writestr('conversion-report.json', json.dumps(report, ensure_ascii=False, indent=2))
+            for i, image in enumerate(images, 1):
+                png = io.BytesIO(); image.save(png, format='PNG', dpi=(core.PDF_DPI, core.PDF_DPI))
+                archive.writestr(f'page-{i:03d}.png', png.getvalue())
+            for i, xml in enumerate(xml_pages, 1):
+                archive.writestr(f'page-{i:03d}.musicxml', xml)
+        data, media, name = out.getvalue(), 'application/zip', 'geometry-score.zip'
+    else:
+        data, media, name = pdf, 'application/pdf', 'transposed.pdf'
+    return Response(data, media_type=media, headers={
+        'Content-Disposition': f'attachment; filename="{name}"', 'Cache-Control': 'no-store',
+        'X-Capomatic-Mode': report['render_path'], 'X-OMR-Accuracy': 'unverified',
+        'X-Capomatic-Identity': 'true' if identity else 'false',
+        'X-Capomatic-Source-SHA256': report['source_sha256'],
     })
