@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from paddleocr import PaddleOCR as _PaddleOCRType
 
-_ocr_instances: "dict[tuple[str, float | None, float | None, float | None], _PaddleOCRType]" = {}
+_ocr_instances: "dict[tuple, _PaddleOCRType]" = {}
 _title_ocr = None
 _title_recognizer = None
 _SECTION_MARKERS_CASEFOLD = {marker.casefold() for marker in SECTION_MARKERS}
@@ -538,7 +538,8 @@ def get_ocr(
             "CHORDTAYLOR_OCR_DET_MODEL must be one of "
             f"{sorted(_DET_MODEL_NAMES)}, got {det_variant!r}"
         )
-    cache_key = (det_variant, det_db_thresh, det_db_box_thresh, det_db_unclip_ratio)
+    rec_model = os.environ.get("CHORDTAYLOR_OCR_REC_MODEL")
+    cache_key = (det_variant, det_db_thresh, det_db_box_thresh, det_db_unclip_ratio, rec_model)
     if cache_key not in _ocr_instances:
         from paddleocr import PaddleOCR  # noqa: PLC0415
         kwargs: dict = dict(
@@ -571,6 +572,10 @@ def get_ocr(
         model_name = _DET_MODEL_NAMES[det_variant]
         if model_name:
             kwargs["text_detection_model_name"] = model_name
+        if rec_model:
+            kwargs["text_recognition_model_name"] = rec_model
+        if os.environ.get("PADDLE_OCR_CPU_THREADS"):
+            kwargs["cpu_threads"] = int(os.environ["PADDLE_OCR_CPU_THREADS"])
         _ocr_instances[cache_key] = PaddleOCR(**kwargs)
     return _ocr_instances[cache_key]
 

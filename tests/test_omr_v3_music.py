@@ -118,6 +118,26 @@ def test_clean_lyrics_drops_footer_and_primes():
     assert [[ly.text for ly in n.lyrics] for n in ns] == [['주님도'], ['이리'], ['아프'], []]
 
 
+def test_clean_lyrics_keeps_verse_numbers_across_gaps_and_xml(tmp_path):
+    s = _score(0, ['C4', 'D4', 'E4', 'F4'])
+    ns = list(s.recurse().notes)
+    ns[0].addLyric('첫째', lyricNumber=1)
+    ns[0].addLyric('둘째', lyricNumber=2)
+    ns[1].addLyric('둘째′', lyricNumber=2)
+    ns[2].addLyric('© copyright', lyricNumber=1)
+    ns[2].addLyric('계속', lyricNumber=2)
+    ns[3].addLyric('첫째', lyricNumber=1)
+    ns[3].addLyric('둘째', lyricNumber=2)
+
+    assert cleanup.clean_lyrics(s) == 1
+    transpose_score(s, 1)
+    restored = _roundtrip(s, tmp_path)
+    assert [[(ly.number, ly.text) for ly in n.lyrics] for n in restored.recurse().notes] == [
+        [(1, '첫째'), (2, '둘째')], [(2, '둘째')], [(2, '계속')],
+        [(1, '첫째'), (2, '둘째')],
+    ]
+
+
 def test_chord_words_become_symbols_and_marks_are_removed():
     from music21 import articulations, dynamics
 

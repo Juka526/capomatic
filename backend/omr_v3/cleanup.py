@@ -40,7 +40,7 @@ def drop_rest_only_voices(score) -> int:
 
 
 def clean_lyrics(score) -> int:
-    """Drop footer/garbage lyrics and Audiveris' prime marks. Returns lyrics removed."""
+    """Drop junk and prime marks, preserving verse numbers. Returns lyrics removed."""
     from music21 import note
 
     notes = [n for n in score.recurse().getElementsByClass(note.Note) if n.lyrics]
@@ -57,8 +57,6 @@ def clean_lyrics(score) -> int:
             ly.text = text
             kept.append(ly)
         n.lyrics = kept
-        for i, ly in enumerate(n.lyrics, 1):
-            ly.number = i
     return removed
 
 

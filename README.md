@@ -1,4 +1,7 @@
 ---
+
+> Experimental source-coordinate score API: [implementation status and limitations](docs/SCORE_GEOMETRY_LOCKED.md). PDF/PNG/ZIP score rendering currently refuses all unproved replacements; editable single-page MusicXML is supported.
+
 title: Capomatic API
 emoji: 🎸
 colorFrom: red

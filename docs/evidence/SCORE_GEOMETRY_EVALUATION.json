@@ -1,0 +1,1055 @@
+{
+  "dataset": "development inputs, no independent hidden test set",
+  "historical_input_hash_match": "UNVERIFIED: no previous five-input hash manifest found",
+  "raw_artifacts": "/private/tmp/capomatic-score-geometry-results/evaluation-verified",
+  "raw_evaluation_sha256": "27e8e9d585bd47ee0cb5e1d90456cf4db5feae220435192115dbc59488e290cc",
+  "code_sha256": {
+    "backend/api/main.py": "db12f158b6ea5815e52a53729a640a0f8677e623c5891999915209ca3880db3b",
+    "backend/api/score.py": "e29b0860d54063245e0acfa7713d43bd3054623d6ca4b021219864d66d162236",
+    "backend/omr_v3/source_layout.py": "9941e0d53e711f75cc47d64b445d10bedfdd395ec6918067d655df21f27d9709",
+    "backend/omr_v3/core.py": "8d3c3b3a2023e220abfb26647ff046c74dd1a48c5d34b069994b5f66e04bc26d",
+    "backend/omr_v3/transpose.py": "ca73c35e061730f781d232176924ab4f6bbd06d53a15897255165804ddc16efc",
+    "backend/omr_v3/music_guard.py": "9f27db149414fe38991b86230f4c15fae90c2ecd1bb5205ecfd56892fa992b43",
+    "scripts/score_geometry_eval.py": "147835b8435f5f9c2dae1c20a7f3cc1c2ee5fa08e506afff20e87600d774f710"
+  },
+  "detect_requests": 5,
+  "render_requests": 15,
+  "detect_http_200": 3,
+  "detect_http_422": 2,
+  "render_http_200": 0,
+  "verified_contract_render_count": 0,
+  "diagnosed_render_http_422": 15,
+  "recognition_accuracy": "UNVERIFIED",
+  "verified_end_to_end_success_rate": null,
+  "rows": [
+    {
+      "score": 1,
+      "name": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": 0,
+      "detect_http": 200,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "0330a034cfc61eda37a4f2d62332a83bbd39e9340e1999e9373e83c6996832ab",
+      "seconds_since_detect_start": 40.15,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 956
+        }
+      ]
+    },
+    {
+      "score": 1,
+      "name": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": 1,
+      "detect_http": 200,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "c67cd37c2d64b6011b9d063c1d7b428f78e5d868d7b786d193a225ab5279ca8d",
+      "seconds_since_detect_start": 40.23,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 956
+        }
+      ]
+    },
+    {
+      "score": 1,
+      "name": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": -1,
+      "detect_http": 200,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "fc472cca4809e471291a749ce183d9b64f5b9be8e90c9ed94ee6284422fe0d89",
+      "seconds_since_detect_start": 40.32,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 956
+        }
+      ]
+    },
+    {
+      "score": 2,
+      "name": "2 자유_1758826857.pdf",
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": 0,
+      "detect_http": 422,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "875234d0d2a93869e584283fdfa32de57abe2d859898c7424135c3d0c67e324b",
+      "seconds_since_detect_start": 1.55,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SOURCE_LAYOUT_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "RECOGNITION_FAILED",
+              "message": "PDF raster size does not match page transform",
+              "report": {}
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 0
+        }
+      ]
+    },
+    {
+      "score": 2,
+      "name": "2 자유_1758826857.pdf",
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": 1,
+      "detect_http": 422,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "a96b57b9501d7c09ce377f506e2b8aa1fc3770094e8ef2c69faee8c1e942de57",
+      "seconds_since_detect_start": 1.64,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SOURCE_LAYOUT_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "RECOGNITION_FAILED",
+              "message": "PDF raster size does not match page transform",
+              "report": {}
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 0
+        }
+      ]
+    },
+    {
+      "score": 2,
+      "name": "2 자유_1758826857.pdf",
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": -1,
+      "detect_http": 422,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "670e97d589a34d36062036fc0ca952e2bca24961be8b00e4e2a9510018bd69dc",
+      "seconds_since_detect_start": 1.69,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SOURCE_LAYOUT_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "RECOGNITION_FAILED",
+              "message": "PDF raster size does not match page transform",
+              "report": {}
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 0
+        }
+      ]
+    },
+    {
+      "score": 3,
+      "name": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": 0,
+      "detect_http": 200,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "f130a4f0f7e2ced3f5a8a55217125e4e561a99e6436d480b0563c5fececde29a",
+      "seconds_since_detect_start": 39.25,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 1287
+        }
+      ]
+    },
+    {
+      "score": 3,
+      "name": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": 1,
+      "detect_http": 200,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "a69858933235fd2f8351624125a1b5237325a693a1c02e481b260c30dbc812b0",
+      "seconds_since_detect_start": 39.72,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 1287
+        }
+      ]
+    },
+    {
+      "score": 3,
+      "name": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": -1,
+      "detect_http": 200,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "98401edb541199bfa73e5be9052857d0266e59e179c86cebfa4174236c23f5d7",
+      "seconds_since_detect_start": 40.03,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_DESKEW_TRANSFORM_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 1287
+        }
+      ]
+    },
+    {
+      "score": 4,
+      "name": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": 0,
+      "detect_http": 200,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "8f0cc0ea97948f63a0247b12efb2f35baba4abed7a3b854033542df960352ceb",
+      "seconds_since_detect_start": 26.38,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 844
+        }
+      ]
+    },
+    {
+      "score": 4,
+      "name": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": 1,
+      "detect_http": 200,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "7d7864d9e3853918efad5998e59042e9ff21d5d5b51cf004499471081987dc6b",
+      "seconds_since_detect_start": 26.72,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 844
+        }
+      ]
+    },
+    {
+      "score": 4,
+      "name": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": -1,
+      "detect_http": 200,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "83f70d274f6d1bf4dc9d5cf0210ffef2e15695bdbe7d063dd07a5578d5249765",
+      "seconds_since_detect_start": 26.91,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 844
+        }
+      ]
+    },
+    {
+      "score": 5,
+      "name": "본향을 향해-1_1758828084.pdf",
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": 0,
+      "detect_http": 422,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "212d8e1044503e70c8ccac3dfff428fb9619af421fb638832998ba4b191c7489",
+      "seconds_since_detect_start": 1.54,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SOURCE_LAYOUT_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "RECOGNITION_FAILED",
+              "message": "PDF raster size does not match page transform",
+              "report": {}
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 0
+        }
+      ]
+    },
+    {
+      "score": 5,
+      "name": "본향을 향해-1_1758828084.pdf",
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": 1,
+      "detect_http": 422,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "6c226921223882a39d168224cd1b27c10f8a473f8cf9cc9741158ea8c46f612e",
+      "seconds_since_detect_start": 1.9,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SOURCE_LAYOUT_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "RECOGNITION_FAILED",
+              "message": "PDF raster size does not match page transform",
+              "report": {}
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 0
+        }
+      ]
+    },
+    {
+      "score": 5,
+      "name": "본향을 향해-1_1758828084.pdf",
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "historical_hash_match": "UNVERIFIED",
+      "shift": -1,
+      "detect_http": 422,
+      "recognition_accuracy": "UNVERIFIED",
+      "visual_review": "NOT_APPLICABLE_NO_OUTPUT",
+      "fixed_anchor_displacement_px": null,
+      "note_raster_error_xy_px": null,
+      "lyric_pixel_difference": null,
+      "ink_replacement_safety": "UNVERIFIED",
+      "alpha_collisions": null,
+      "disconnected_relations": null,
+      "duplicate_symbols": null,
+      "clipping": null,
+      "render_http": 422,
+      "semantic_ready": false,
+      "geometry_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "response_sha256": "698be9126982b8c9e0a9532d323b82e3b4d92ef6f714c93f9ba2cf52b1da5536",
+      "seconds_since_detect_start": 2.06,
+      "source_unchanged": true,
+      "pages": [
+        {
+          "page": 1,
+          "reasons": [
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SOURCE_LAYOUT_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+            },
+            {
+              "page": 1,
+              "measure": null,
+              "object": null,
+              "code": "RECOGNITION_FAILED",
+              "message": "PDF raster size does not match page transform",
+              "report": {}
+            }
+          ],
+          "measurements": {
+            "fixed_anchor_displacement_px": null,
+            "note_raster_error_xy_px": null,
+            "lyric_pixel_difference": null,
+            "alpha_collisions": null,
+            "disconnected_relations": null,
+            "duplicate_symbols": null,
+            "clipping": null
+          },
+          "source_ink_status": "UNVERIFIED",
+          "source_ink_edit_authorized": false,
+          "source_object_count": 0
+        }
+      ]
+    }
+  ]
+}

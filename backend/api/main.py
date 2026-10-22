@@ -3,8 +3,8 @@
 Endpoints
 ---------
 GET  /health          — liveness probe
-POST /detect          — detect chords in an uploaded sheet image, return JSON + detection_id
-POST /render          — transpose + render both overlay modes from cached detection
+POST /detect          — recognize PDF scores or image chords, return JSON + detection_id
+POST /render          — transpose cached scores to PDF/XML/ZIP or render image overlays
 POST /overlay         — legacy: detect, transpose, render overlay image, return PNG
 
 Usage
@@ -31,7 +31,7 @@ import uuid
 from collections import OrderedDict
 from typing import Callable, Iterator, Optional
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from PIL import Image, ImageOps
@@ -44,6 +44,7 @@ from backend.chords.transpose import transpose_chord, compute_target_key
 from backend.chords.key_detect import infer_key
 from backend.overlay.render import _get_staff_systems, render_overlay
 from backend.auth.auth0 import get_token_payload
+from backend.api import score as score_api
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +83,8 @@ _VALID_KEYS = frozenset({
 # ---------------------------------------------------------------------------
 _MAX_CACHE = 20
 _MAX_CACHE_PIXELS = 80_000_000
+_MAX_SCORE_CACHE_BYTES = 32 * 1024 * 1024
+_SCORE_CACHE_TTL_SECONDS = 1800
 _detection_cache: OrderedDict[str, dict] = OrderedDict()
 # Keep Paddle requests serialized, but run them off the event loop so health
 # checks and other lightweight endpoints stay responsive during OCR.
@@ -99,6 +102,7 @@ def _cache_put(detection_id: str, data: dict) -> None:
     _detection_cache.move_to_end(detection_id)
     while (
         len(_detection_cache) > _MAX_CACHE
+        or sum(entry.get('score_bytes', 0) for entry in _detection_cache.values()) > _MAX_SCORE_CACHE_BYTES
         or sum(
             entry["img"].width * entry["img"].height
             for entry in _detection_cache.values()
@@ -110,6 +114,10 @@ def _cache_put(detection_id: str, data: dict) -> None:
 
 def _cache_get(detection_id: str) -> dict | None:
     if detection_id in _detection_cache:
+        entry = _detection_cache[detection_id]
+        if entry.get('expires_at', float('inf')) <= time.monotonic():
+            del _detection_cache[detection_id]
+            return None
         _detection_cache.move_to_end(detection_id)
         return _detection_cache[detection_id]
     return None
@@ -127,8 +135,8 @@ app.add_middleware(
     allow_origins=[o.strip() for o in _cors_origins.split(",")],
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
-    expose_headers=["X-OMR-Total-Ms", "X-OMR-Accuracy", "X-OMR-Review-Warnings",
-                    "X-Capomatic-Mode", "X-Capomatic-Fallback-Reason"],
+    expose_headers=["Content-Disposition", "X-OMR-Total-Ms", "X-OMR-Accuracy", "X-OMR-Review-Warnings",
+                    "X-Capomatic-Mode", "X-Capomatic-Fallback-Reason", "X-Capomatic-Preservation"],
 )
 
 
@@ -436,22 +444,52 @@ def root() -> dict:
 
 @app.post("/detect")
 async def detect(
+    request: Request,
     image: UploadFile = File(...),
     original_key: Optional[str] = Form(None),
     ocr_engine: str = Form("paddle"),
+    processing: str = Form("auto"),
 ) -> dict:
-    """Detect chord symbols in *image* and return raw results with a detection_id.
+    """Recognize PDF scores or detect image chords and return a detection_id.
 
     The detection results and original image are cached server-side so that
     subsequent ``/render`` calls can transpose and render without re-running OCR.
 
     Parameters
     ----------
-    image        : JPEG or PNG sheet music image.
+    image        : PDF/MusicXML score or JPEG/PNG sheet image.
     original_key : Optional override for the original key of the song.
                    When omitted, auto-detected from the chord progression.
     """
     request_started = time.perf_counter()
+    if processing not in {"auto", "chords", "score"}:
+        raise HTTPException(422, "processing must be auto, chords or score")
+    # PDFs select note/chord transposition; existing images keep chord overlays.
+    prefix = await image.read(5)
+    await image.seek(0)
+    if score_api.is_score(prefix, image.filename or "", processing):
+        if original_key is not None:
+            raise HTTPException(422, "Full scores use recognized key signatures; edit the MusicXML to correct them")
+        owner = await score_api.caller(request)
+        data = await image.read(omr_v3.MAX_BYTES + 1)
+        result = await score_api.execute(owner, functools.partial(
+            score_api.recognize, data, image.filename or "", score_api.isolated_chords))
+        details = await asyncio.to_thread(score_api.summary, result)
+        detection_id = uuid.uuid4().hex
+        score_bytes = score_api.cache_bytes(result)
+        if score_bytes > _MAX_SCORE_CACHE_BYTES:
+            raise HTTPException(413, "Recognized document exceeds the score cache budget")
+        _cache_put(detection_id, {
+            "score": result, "owner": owner,
+            "score_bytes": score_bytes,
+            "expires_at": time.monotonic() + _SCORE_CACHE_TTL_SECONDS,
+        })
+        if result.report.get('failure_status') == 422:
+            raise HTTPException(422, {
+                "detection_id": detection_id,
+                "message": result.report['recognition_failure']['message'], "report": details,
+            })
+        return {"detection_id": detection_id, **details}
     if original_key is not None and original_key not in _VALID_KEYS:
         raise HTTPException(
             status_code=422,
@@ -532,12 +570,14 @@ async def refine_detection(
 
 @app.post("/render")
 async def render(
+    request: Request,
     detection_id: str = Form(...),
     semitones: int = Form(0),
     mode: str = Form("both"),
     chords_override: Optional[str] = Form(None),
+    output_format: str = Form("pdf"),
 ) -> dict:
-    """Transpose and render overlay image(s) from a cached detection.
+    """Transpose a cached full score or render legacy chord-overlay images.
 
     Parameters
     ----------
@@ -554,7 +594,7 @@ async def render(
             status_code=422,
             detail=f"semitones must be between -11 and 11, got {semitones}",
         )
-    if mode not in {"replace", "above", "both"}:
+    if mode not in {"replace", "above", "both", "key"}:
         raise HTTPException(
             status_code=422,
             detail=f"mode must be one of: replace, above, both; got {mode!r}",
@@ -566,6 +606,17 @@ async def render(
             status_code=404,
             detail="detection_id not found — it may have expired. Please re-upload.",
         )
+
+    if "score" in cached:
+        owner = await score_api.caller(request)
+        if owner != cached["owner"]:
+            raise HTTPException(404, "detection_id not found")
+        if mode not in {"both", "key"} or chords_override is not None:
+            raise HTTPException(422, "Full scores use mode=key and do not accept chord-only overrides")
+        return await score_api.execute(owner, functools.partial(
+            score_api.render, cached["score"], semitones, output_format))
+    if mode == "key":
+        raise HTTPException(422, "Image chord overlays use replace, above or both")
 
     if chords_override is not None:
         items = _parse_chords_override(chords_override, cached["img"].size)

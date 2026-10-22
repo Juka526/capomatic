@@ -17,8 +17,9 @@ from __future__ import annotations
 from typing import Literal
 
 from backend.chords.transpose import compute_target_key
+from backend.chords.parser import parse_chord
 
-from .chords import chord_symbol_from_text, chord_text, transpose_chord_text
+from .chords import chord_text, transpose_chord_text
 
 Mode = Literal['key', 'capo']
 CAPO_MAX = 7
@@ -57,7 +58,7 @@ def validate_request(mode: str, semitones: int) -> None:
 
 def transpose_score(score, semitones: int, mode: Mode = 'key') -> dict:
     """Transpose *score* in place. Returns a summary for the conversion report."""
-    from music21 import harmony, key, note, stream
+    from music21 import harmony, key, note, pitch, stream
 
     validate_request(mode, semitones)
     part_keys: list[dict] = []
@@ -94,9 +95,21 @@ def transpose_score(score, semitones: int, mode: Mode = 'key') -> dict:
                 except ValueError:
                     unparsed.append(str(cs.figure))
                     continue
-                site, offset = cs.activeSite, cs.offset
-                site.remove(cs)
-                site.insert(offset, chord_symbol_from_text(new))
+                # Preserve imported kind/degrees, offsets and display settings.
+                # Rebuilding from text loses alternate encodings such as 7sus4.
+                cs.transpose(ivl, inPlace=True)
+                # Use the public chord spelling policy for root and slash bass.
+                # e.g. A7/C# -> A#7/D, not A#7/C## (unreadable on re-import).
+                parsed = parse_chord(new)
+                root_octave = cs.root().octave
+                bass_octave = cs.bass().octave
+                root = pitch.Pitch(parsed.root.replace('b', '-'))
+                root.octave = root_octave
+                bass = pitch.Pitch((parsed.bass or parsed.root).replace('b', '-'))
+                bass.octave = bass_octave
+                cs.root(root)
+                cs.bass(bass, allow_add=True)
+                cs.editorial.capomaticText = new
         part_keys.append({'regions': regions})
     return {'mode': mode, 'semitones': semitones,
             'capo': -semitones if mode == 'capo' else None,

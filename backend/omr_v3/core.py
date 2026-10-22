@@ -24,7 +24,10 @@ import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
+
+if TYPE_CHECKING:
+    from .source_layout import SourceLayoutBundle
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
@@ -70,6 +73,7 @@ class Result:
     mode: str = 'full_score'          # 'full_score' or 'chord_only'
     png: bytes | None = None          # chord-only page image
     pages: tuple[Result | None, ...] = ()
+    source_layout: SourceLayoutBundle | None = None  # immutable SourceLayoutBundle; API-only
 
     @property
     def warning(self) -> str:
@@ -183,21 +187,46 @@ def _pdf_pages(path: Path, timeout_seconds: float, home: Path) -> int:
     return int(m.group(1))
 
 
-def rasterize(source: Path, suffix: str, out: Path, timeout_seconds: float, home: Path) -> dict:
-    """Write the single page to *out* as a grayscale PNG the OMR and chord OCR share."""
+def rasterize(source: Path, suffix: str, out: Path, timeout_seconds: float, home: Path,
+              *, retain_source_layout: bool = False) -> dict:
+    """Write the shared OMR raster; the locked path retains native size and colour."""
     if suffix == '.pdf':
         pages = _pdf_pages(source, timeout_seconds, home)
         if pages != 1:
             raise ScoreError('This pilot accepts exactly one PDF page')
+        metadata = None
+        if retain_source_layout:
+            from .source_layout import pdf_metadata, pdf_transform
+            metadata = pdf_metadata(source.read_bytes())[0]
+            transform, expected_size = pdf_transform(metadata, PDF_DPI)
+            if expected_size[0] * expected_size[1] > MAX_PIXELS:
+                raise ScoreError('PDF page too large', 413)
         stem = out.with_suffix('')
         _run([_bin('CAPOMATIC_PDFTOPPM_BIN', 'pdftoppm'), '-r', str(PDF_DPI), '-f', '1', '-l', '1',
-              '-gray', '-png', '-singlefile', str(source), str(stem)], timeout_seconds, home, 'PDF rasterization')
+              *(['-cropbox'] if retain_source_layout else ['-gray']),
+              '-png', '-singlefile', str(source), str(stem)], timeout_seconds, home, 'PDF rasterization')
         with Image.open(out) as im:
             width, height = im.size
         if width * height > MAX_PIXELS:
             raise ScoreError('PDF page too large', 413)
-        return {'source': 'pdf', 'width': width, 'height': height, 'scale': 1.0}
+        info = {'source': 'pdf', 'width': width, 'height': height, 'scale': 1.0}
+        if metadata is not None:
+            if (width, height) != expected_size:
+                raise ScoreError('PDF raster size does not match page transform')
+            info.update(metadata, raster_size=[width, height], dpi=PDF_DPI,
+                        pdf_to_raster=transform.values, raster_to_pdf=transform.inverse().values)
+        return info
     with Image.open(source) as im:
+        if retain_source_layout:
+            if im.getexif().get(274, 1) != 1:
+                raise ScoreError('Image EXIF transform is not verified')
+            if im.mode not in {'L', 'RGB'}:
+                raise ScoreError('Image colour/alpha transform is not verified')
+            im.save(out, format='PNG')
+            return {'source': 'image', 'width': im.width, 'height': im.height,
+                    'raster_size': im.size, 'scale': 1.0,
+                    'image_to_raster': [1, 0, 0, 1, 0, 0],
+                    'raster_to_image': [1, 0, 0, 1, 0, 0]}
         im = ImageOps.exif_transpose(im).convert('L')
         scale = 1.0
         if im.width < TARGET_WIDTH:
@@ -211,10 +240,13 @@ def rasterize(source: Path, suffix: str, out: Path, timeout_seconds: float, home
         return {'source': 'image', 'width': im.width, 'height': im.height, 'scale': float(scale)}
 
 
-def run_audiveris(page: Path, out_dir: Path, timeout_seconds: float, home: Path) -> tuple[Path, Path]:
+def run_audiveris(page: Path, out_dir: Path, timeout_seconds: float, home: Path,
+                  *, disable_text_ocr: bool = False) -> tuple[Path, Path]:
     out_dir.mkdir()
     _run([_bin('CAPOMATIC_AUDIVERIS_BIN', 'audiveris', 'Audiveris'), '-batch',
           '-constant', f'org.audiveris.omr.text.Language.defaultSpecification={OCR_LANGUAGES}',
+          *(['-constant', 'org.audiveris.omr.text.tesseract.TesseractOCR.useOCR=false']
+            if disable_text_ocr else []),
           '-export', '-output', str(out_dir), '--', str(page)], timeout_seconds, home, 'Audiveris')
     scores = sorted(p for p in out_dir.rglob('*') if p.suffix.lower() in {'.mxl', '.musicxml'})
     books = sorted(out_dir.rglob('*.omr'))
@@ -320,6 +352,11 @@ def _process_page(data: bytes, suffix: str, semitones: int, mode: str = 'key', *
             chord_detector: ChordDetector | None = None,
             chord_only_renderer: ChordOnlyRenderer | None = None,
             gate: bool = True,
+            recognition_only: bool = False,
+            preserve_notation: bool = False,
+            display_title: str | None = None,
+            retain_source_layout: bool = False,
+            musicxml_only: bool = False,
             safety_timeout_seconds: float | None = None) -> Result:
     """Run the conversion and fail closed on tool errors.
 
@@ -354,8 +391,9 @@ def _process_page(data: bytes, suffix: str, semitones: int, mode: str = 'key', *
         source = root / ('source' + suffix)
         source.write_bytes(data)
         page = root / 'page.png'
-        title = None
+        title = display_title
         geometry = None
+        book = None
         ocr_items: list[dict] | None = None
         preflight = None
 
@@ -364,7 +402,8 @@ def _process_page(data: bytes, suffix: str, semitones: int, mode: str = 'key', *
             report['input'] = {'source': 'musicxml'}
         else:
             t = time.monotonic()
-            report['input'] = rasterize(source, suffix, page, safety_timeout_seconds, home)
+            report['input'] = rasterize(source, suffix, page, safety_timeout_seconds, home,
+                                        **({'retain_source_layout': True} if retain_source_layout else {}))
             if report['input'].get('scale', 1.0) > 2:
                 report['warnings'].append({'type': 'low_resolution_input',
                                            'upscale': report['input']['scale'],
@@ -386,16 +425,17 @@ def _process_page(data: bytes, suffix: str, semitones: int, mode: str = 'key', *
                         logger.exception('Chord OCR failed')
                         report['warnings'].append({'type': 'chord_ocr_failed'})
                         return None
-                    title = (meta or {}).get('song_title') or None
+                    title = (meta or {}).get('song_title') or title
                     return items
 
-                if gate and preflight.mode is quality.ProcessingMode.CHORD_ONLY:
+                if gate and not recognition_only and preflight.mode is quality.ProcessingMode.CHORD_ONLY:
                     decision = reliability.decide(preflight, None)
                     report['decision'] = decision.to_dict()
                     items = chord_items()
                     lap('chord_ocr_wait', t)
                     return _chord_only(page, items, semitones, chord_only_renderer, report, stages, started)
-                recognized, book = run_audiveris(page, root / 'omr', safety_timeout_seconds, home)
+                recognized, book = run_audiveris(page, root / 'omr', safety_timeout_seconds, home,
+                                                 **({'disable_text_ocr': True} if retain_source_layout else {}))
                 t = lap('omr', t)
                 ocr_items = chord_items()
                 t = lap('chord_ocr_wait', t)
@@ -417,7 +457,7 @@ def _process_page(data: bytes, suffix: str, semitones: int, mode: str = 'key', *
         if len(score.parts) > 1:
             report['warnings'].append({'type': 'multiple_parts', 'count': len(score.parts)})
 
-        report['repairs'] = {
+        report['repairs'] = {} if preserve_notation else {
             'rest_only_voices_removed': cleanup.drop_rest_only_voices(score),
             'lyrics_removed': cleanup.clean_lyrics(score),
             'chord_words': cleanup.chord_words_to_symbols(score),
@@ -428,7 +468,7 @@ def _process_page(data: bytes, suffix: str, semitones: int, mode: str = 'key', *
         aligned = geometry is not None and (
             geometry.remap_to_measures([m.measureNumberWithSuffix() for m in measures])
             or geometry.measure_count == len(measures))
-        if aligned:
+        if aligned and not retain_source_layout:
             report['repairs']['ledger_notes_fixed'] = cleanup.fix_missed_ledgers(score, geometry, page)
         if ocr_items is not None and aligned:
             placed = align_ocr_chords(ocr_items, geometry, report)
@@ -455,7 +495,7 @@ def _process_page(data: bytes, suffix: str, semitones: int, mode: str = 'key', *
             report['post_omr'] = signals.to_dict()
             decision = reliability.decide(preflight, signals)
             report['decision'] = decision.to_dict()
-            if gate and decision.mode is quality.ProcessingMode.CHORD_ONLY:
+            if gate and not recognition_only and decision.mode is quality.ProcessingMode.CHORD_ONLY:
                 lap('analyse', t)
                 return _chord_only(page, ocr_items, semitones, chord_only_renderer, report, stages, started)
         else:
@@ -463,6 +503,17 @@ def _process_page(data: bytes, suffix: str, semitones: int, mode: str = 'key', *
 
         recognized_xml = root / 'recognized.musicxml'
         score.write('musicxml', fp=str(recognized_xml))
+        if recognition_only:
+            stages['total'] = round((time.monotonic() - started) * 1000, 1)
+            report['review_required'] = True
+            bundle = None
+            if retain_source_layout and page.exists():
+                from .source_layout import SourceLayoutBundle, SourcePage
+                captured = SourcePage.capture(page.read_bytes(), book.read_bytes() if book else b'',
+                                              report['input'])
+                bundle = SourceLayoutBundle(data, suffix, (captured,))
+            return Result(b'', None, recognized_xml.read_bytes(), stages, report,
+                          mode=report['decision']['mode'], source_layout=bundle)
         summary = transpose_score(score, semitones, mode)  # type: ignore[arg-type]
         report['transposition'] = summary
         _add_header(score, title, summary)
@@ -477,16 +528,19 @@ def _process_page(data: bytes, suffix: str, semitones: int, mode: str = 'key', *
         t = lap('integrity_check', t)
         if not guard.ok:
             logger.error('Transposition integrity check failed: %s', guard.issues[:5])
-            raise ScoreError('Transposition integrity check failed; no result was produced', 500)
+            raise ScoreError('Transposition integrity check failed; no result was produced', 500,
+                             {'integrity': guard.to_dict()})
 
         pdf = root / 'transposed.pdf'
-        render_pdf(xml, pdf, safety_timeout_seconds, home)
+        if not musicxml_only:
+            render_pdf(xml, pdf, safety_timeout_seconds, home)
         lap('render', t)
         stages['total'] = round((time.monotonic() - started) * 1000, 1)
         report['review_required'] = True
         report['warning'] = ('Experimental OMR: check notes, rhythm, chords and accidentals before use. '
                              f"{len(bar_warnings)} bar(s) flagged.")
-        return Result(pdf.read_bytes(), xml.read_bytes(), recognized_xml.read_bytes(), stages, report)
+        return Result(pdf.read_bytes() if pdf.exists() else b'', xml.read_bytes(),
+                      recognized_xml.read_bytes(), stages, report)
 
 
 def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', **kwargs) -> Result:
@@ -541,8 +595,9 @@ def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', **kwarg
                 output.write_bytes(result.pdf)
             pdfs.append(str(output))
         combined = root / 'combined.pdf'
-        _run([_bin('CAPOMATIC_PDFUNITE_BIN', 'pdfunite'), *pdfs, str(combined)],
-             timeout, root, 'PDF combination')
+        if not kwargs.get('recognition_only'):
+            _run([_bin('CAPOMATIC_PDFUNITE_BIN', 'pdfunite'), *pdfs, str(combined)],
+                 timeout, root, 'PDF combination')
         failures = sum(r is None for r in results)
         report = {'document': {'page_count': count, 'successful_pages': count - failures,
                                'failed_pages': failures, 'complete': failures == 0},
@@ -550,6 +605,15 @@ def process(data: bytes, suffix: str, semitones: int, mode: str = 'key', **kwarg
                   'warning': 'Review each page. Failure placeholders are not transposed scores.'}
         modes = {r.mode for r in results if r is not None}
         result_mode = 'partial_failure' if failures else (next(iter(modes)) if len(modes) == 1 else 'mixed')
-        return Result(combined.read_bytes(), None, None,
+        bundle = None
+        if kwargs.get('retain_source_layout'):
+            from .source_layout import SourceLayoutBundle
+            bundle = SourceLayoutBundle(data, suffix, tuple(
+                r.source_layout.pages[0] if r and r.source_layout else None for r in results))
+            # Only the document retains the original bytes; child page bundles
+            # are unnecessary duplicates of the pdfseparate output.
+            from dataclasses import replace
+            results = [replace(r, source_layout=None) if r else None for r in results]
+        return Result(combined.read_bytes() if combined.exists() else b'', None, None,
                       {'total': round((time.monotonic() - started) * 1000, 1)},
-                      report, mode=result_mode, pages=tuple(results))
+                      report, mode=result_mode, pages=tuple(results), source_layout=bundle)

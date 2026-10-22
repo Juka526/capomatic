@@ -1,0 +1,42 @@
+{
+  "source_head": "11c686b",
+  "source_workspace": "/private/tmp/capomatic-score-api",
+  "files": [
+    {
+      "path": "backend/api/main.py",
+      "sha256": "1e9a43489b763204ed6c721e54dba678155f85b2588eae9b1a07a0816e940ac5"
+    },
+    {
+      "path": "backend/api/score.py",
+      "sha256": "949ea3cdc4d48d4c66832a8b29acda9c6d102e27eff6ebf437ef0c2842d74cb3"
+    },
+    {
+      "path": "backend/ocr/paddle_ocr.py",
+      "sha256": "5d11b745937ee4016ad1a8db0348974543b6e3e359227dbc65ca072f4dd63670"
+    },
+    {
+      "path": "backend/ocr/score_worker.py",
+      "sha256": "8216c0973272103eed4ef8a2e2e937d1457309e8e33223091552a23ca26a07b4"
+    },
+    {
+      "path": "backend/omr_v3/core.py",
+      "sha256": "29a47b97ebbfde145fca6f30e26bf809b788ff9bc9efa7a4a326738987464a65"
+    },
+    {
+      "path": "backend/omr_v3/transpose.py",
+      "sha256": "ca73c35e061730f781d232176924ab4f6bbd06d53a15897255165804ddc16efc"
+    },
+    {
+      "path": "tests/test_score_api.py",
+      "sha256": "0bc869add3f8bbf7881f8e25e22eb7d0c873c1b144fe1846fb9d2f364e08308b"
+    },
+    {
+      "path": "tests/test_omr_v3_music.py",
+      "sha256": "31e36a1b6f4c76c49d557ed6995bcd1dd67c80cc236876c00a3e262aacdc7b91"
+    },
+    {
+      "path": "backend/omr_v3/cleanup.py",
+      "sha256": "233aa669cb6d257c73083470f5630a22596859ed616860e7b3f0e7ad6ad39dd7"
+    }
+  ]
+}

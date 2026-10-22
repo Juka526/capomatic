@@ -23,3 +23,5 @@ music21==9.9.1       # MusicXML parsing/transposition; resolves with numpy 1.26.
 # Section 6 (Auth0 token verification)
 PyJWT[crypto]==2.15.0
 cryptography==50.0.1
+
+pypdf==6.1.1         # retain PDF page boxes/rotation; never reflow the score
