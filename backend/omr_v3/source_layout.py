@@ -15,6 +15,7 @@ import zipfile
 from xml.etree import ElementTree as ET
 
 from PIL import Image
+import numpy as np
 
 from .core import MAX_PIXELS, ScoreError
 
@@ -123,7 +124,8 @@ def _omr_inventory(data: bytes, source_png: bytes) -> dict:
         issues = []
         with Image.open(io.BytesIO(source_png)) as source:
             size = source.size
-            source_gray = source.convert('L').tobytes()
+            # Audiveris Picture.adjustImageFormat uses maxRgbToGray, not luma.
+            source_gray = np.asarray(source.convert('RGB')).max(axis=2).tobytes()
         if gray_png is None:
             issues.append('OMR_SOURCE_RASTER_IDENTITY_UNVERIFIED')
         else:
@@ -133,10 +135,10 @@ def _omr_inventory(data: bytes, source_png: bytes) -> dict:
         if dimensions != size:
             issues.append('OMR_RASTER_DIMENSION_MISMATCH')
         skew = root.find('skew')
-        # Audiveris stores coordinates in its page plane. A deskewed image
-        # needs a measured inverse; equal dimensions alone do not prove one.
-        if skew is None or float(skew.get('slope', 'nan')) != 0:
-            issues.append('OMR_DESKEW_TRANSFORM_UNVERIFIED')
+        raster_identity_ready = not issues
+        # A skew estimate does not establish whether any coordinate moved.
+        # The adapter has no execution-bound object-plane proof, even at zero.
+        issues.append('OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED')
         objects = []
         for system in root.findall('.//page/system'):
             relations = [(r.get('source'), r.get('target'), r.tag)
@@ -148,8 +150,15 @@ def _omr_inventory(data: bytes, source_png: bytes) -> dict:
                                 'relations': [r for r in relations if ident in r[:2]],
                                 'status': 'UNVERIFIED',
                                 'reasons': ['COMPLETE_SOURCE_PIXEL_OWNERSHIP_UNAVAILABLE']})
-        return {'geometry_ready': not issues, 'issues': issues, 'objects': objects,
-                'omr_size': dimensions, 'omr_sha256': digest(data)}
+        return {'geometry_ready': False, 'raster_identity_ready': raster_identity_ready,
+                'issues': issues, 'objects': objects,
+                'omr_size': dimensions, 'omr_sha256': digest(data),
+                'gray_sha256': digest(gray_png) if gray_png else None,
+                'skew_slope': float(skew.get('slope')) if skew is not None else None,
+                'staff_model_count': len(root.findall('.//staff')),
+                'glyph_count': len(root.findall('.//glyph')),
+                'coordinate_plane': 'UNVERIFIED',
+                'ownership_ready': False}
     except (zipfile.BadZipFile, ET.ParseError, ValueError, TypeError, AttributeError,
             KeyError, RuntimeError, OSError, Image.DecompressionBombError) as exc:
         return {'geometry_ready': False, 'issues': ['OMR_GEOMETRY_UNREADABLE'],
@@ -181,9 +190,19 @@ class SourcePage:
             if image.width*image.height > MAX_PIXELS:
                 raise ScoreError('Source raster too large', 413)
             size = image.size
+            rgb_sha256 = digest(image.convert('RGB').tobytes())
         if tuple(metadata['raster_size']) != size:
             raise ScoreError('Source raster size does not match coordinate contract')
-        if 'pdf_to_raster' in metadata:
+        if metadata.get('raster_basis') == 'embedded_jpeg_rgb':
+            if rgb_sha256 != metadata['decoded_rgb_sha256']:
+                raise ScoreError('Embedded image RGB digest mismatch')
+            a, b, c, d, e, f = metadata['image_placement']
+            w, h = size
+            transform = Affine(a/w, b/w, -c/h, -d/h, c+e, d+f)
+            if (tuple(metadata['raster_to_pdf']) != transform.values
+                    or tuple(metadata['pdf_to_raster']) != transform.inverse().values):
+                raise ScoreError('Embedded image coordinate transform mismatch')
+        elif 'pdf_to_raster' in metadata:
             transform, expected = pdf_transform(metadata, metadata['dpi'])
             if size != expected:
                 raise ScoreError('PDF raster size does not match page transform')

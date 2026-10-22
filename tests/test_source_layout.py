@@ -75,7 +75,7 @@ def test_singular_or_nonfinite_transform_rejected():
 
 @pytest.mark.parametrize('size,slope,reason', [
     ((101, 80), 0, 'OMR_RASTER_DIMENSION_MISMATCH'),
-    ((100, 80), 0.01, 'OMR_DESKEW_TRANSFORM_UNVERIFIED'),
+    ((100, 80), 0.01, 'OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED'),
 ])
 def test_same_size_does_not_prove_deskew_transform(size, slope, reason):
     captured = SourcePage.capture(png(), omr(size, slope), {'raster_size': [100, 80]})
@@ -92,7 +92,8 @@ def test_raster_mismatch_is_rejected_without_resize():
 def test_omr_relations_and_bboxes_do_not_authorize_ink_replacement():
     for shift in [0, 1, -1]:
         state = readiness(page(), True, 7, shift)
-        assert state['geometry_ready']
+        assert not state['geometry_ready']
+        assert page().evidence['raster_identity_ready']
         assert not state['lyric_layer_ready'] and not state['render_ready']
         safety = state['source_ink_safety']
         assert not safety['edit_authorized']
@@ -137,6 +138,7 @@ def test_new_omr_path_disables_only_audiveris_text_ocr(tmp_path, monkeypatch):
     monkeypatch.setattr(core, '_run', run)
     core.run_audiveris(tmp_path/'page.png', tmp_path/'omr', 30, tmp_path, disable_text_ocr=True)
     assert 'org.audiveris.omr.text.tesseract.TesseractOCR.useOCR=false' in commands[0]
+    assert 'org.audiveris.omr.sheet.ProcessingSwitches.keepGrayImages=true' in commands[0]
 
 
 @pytest.mark.parametrize('rotation', [0, 90, 180, 270])
@@ -163,3 +165,25 @@ def test_equal_dimensions_and_zero_skew_do_not_prove_raster_identity():
     captured = SourcePage.capture(altered.getvalue(), original.omr, {'raster_size': [100, 80]})
     assert not captured.evidence['geometry_ready']
     assert 'OMR_SOURCE_RASTER_IDENTITY_MISMATCH' in captured.evidence['issues']
+
+
+def test_zero_skew_and_matching_gray_do_not_prove_object_coordinate_plane():
+    captured = page()
+    assert captured.evidence['raster_identity_ready']
+    assert not captured.evidence['geometry_ready']
+    assert captured.evidence['coordinate_plane'] == 'UNVERIFIED'
+    assert 'OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED' in captured.evidence['issues']
+
+
+def test_audiveris_rgb_max_gray_identity_is_not_pillow_luminance():
+    source = io.BytesIO()
+    Image.new('RGB', (100, 80), (20, 80, 130)).save(source, format='PNG')
+    gray = io.BytesIO()
+    Image.new('L', (100, 80), 130).save(gray, format='PNG')
+    archive = io.BytesIO()
+    with zipfile.ZipFile(io.BytesIO(omr())) as original, zipfile.ZipFile(archive, 'w') as changed:
+        for name in original.namelist():
+            changed.writestr(name, gray.getvalue() if name.endswith('GRAY.png') else original.read(name))
+    captured = SourcePage.capture(source.getvalue(), archive.getvalue(), {'raster_size': [100, 80]})
+    assert captured.evidence['raster_identity_ready']
+    assert not captured.evidence['geometry_ready']

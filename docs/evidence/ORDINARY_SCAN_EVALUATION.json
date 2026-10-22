@@ -1,0 +1,1279 @@
+{
+  "status": "FUNCTIONALLY_INCOMPLETE",
+  "base_commit": "2a0398bd152e63d26ea5de02ed37a58471b11c58",
+  "branch": "feature/ordinary-scan-first-transposition",
+  "raw_artifacts": "/private/tmp/capomatic-ordinary-scan-results",
+  "dataset": "five development scores; no hidden validation set",
+  "counts": {
+    "detect_http_200": 5,
+    "pdf_identity_http_200": 5,
+    "pdf_nonzero_http_422": 10,
+    "png_nonzero_http_422": 10,
+    "nonzero_http_success": 0,
+    "nonzero_preservation_pass": 0,
+    "music_review_pass": 0
+  },
+  "selection": {
+    "status": "BLOCKED_INSUFFICIENT_MEASUREMENTS",
+    "selected_input": null,
+    "selected_shift": null,
+    "unknowns_are_not_zero": true,
+    "rows": [
+      {
+        "index": 1,
+        "shift": -1,
+        "geometry_verification_failures": 1,
+        "unresolved_required_semantic_items": "UNKNOWN",
+        "unsupported_required_kinds": "UNKNOWN",
+        "unsupported_required_count": "UNKNOWN",
+        "unresolved_touching_components": "UNKNOWN",
+        "expected_fixed_layout_collisions": "UNKNOWN",
+        "replacement_object_count": "UNKNOWN",
+        "total_sig_objects": 960,
+        "eligible": false
+      },
+      {
+        "index": 1,
+        "shift": 1,
+        "geometry_verification_failures": 1,
+        "unresolved_required_semantic_items": "UNKNOWN",
+        "unsupported_required_kinds": "UNKNOWN",
+        "unsupported_required_count": "UNKNOWN",
+        "unresolved_touching_components": "UNKNOWN",
+        "expected_fixed_layout_collisions": "UNKNOWN",
+        "replacement_object_count": "UNKNOWN",
+        "total_sig_objects": 960,
+        "eligible": false
+      },
+      {
+        "index": 2,
+        "shift": -1,
+        "geometry_verification_failures": 1,
+        "unresolved_required_semantic_items": "UNKNOWN",
+        "unsupported_required_kinds": "UNKNOWN",
+        "unsupported_required_count": "UNKNOWN",
+        "unresolved_touching_components": "UNKNOWN",
+        "expected_fixed_layout_collisions": "UNKNOWN",
+        "replacement_object_count": "UNKNOWN",
+        "total_sig_objects": 1295,
+        "eligible": false
+      },
+      {
+        "index": 2,
+        "shift": 1,
+        "geometry_verification_failures": 1,
+        "unresolved_required_semantic_items": "UNKNOWN",
+        "unsupported_required_kinds": "UNKNOWN",
+        "unsupported_required_count": "UNKNOWN",
+        "unresolved_touching_components": "UNKNOWN",
+        "expected_fixed_layout_collisions": "UNKNOWN",
+        "replacement_object_count": "UNKNOWN",
+        "total_sig_objects": 1295,
+        "eligible": false
+      },
+      {
+        "index": 3,
+        "shift": -1,
+        "geometry_verification_failures": 1,
+        "unresolved_required_semantic_items": "UNKNOWN",
+        "unsupported_required_kinds": "UNKNOWN",
+        "unsupported_required_count": "UNKNOWN",
+        "unresolved_touching_components": "UNKNOWN",
+        "expected_fixed_layout_collisions": "UNKNOWN",
+        "replacement_object_count": "UNKNOWN",
+        "total_sig_objects": 1308,
+        "eligible": false
+      },
+      {
+        "index": 3,
+        "shift": 1,
+        "geometry_verification_failures": 1,
+        "unresolved_required_semantic_items": "UNKNOWN",
+        "unsupported_required_kinds": "UNKNOWN",
+        "unsupported_required_count": "UNKNOWN",
+        "unresolved_touching_components": "UNKNOWN",
+        "expected_fixed_layout_collisions": "UNKNOWN",
+        "replacement_object_count": "UNKNOWN",
+        "total_sig_objects": 1308,
+        "eligible": false
+      },
+      {
+        "index": 4,
+        "shift": -1,
+        "geometry_verification_failures": 1,
+        "unresolved_required_semantic_items": "UNKNOWN",
+        "unsupported_required_kinds": "UNKNOWN",
+        "unsupported_required_count": "UNKNOWN",
+        "unresolved_touching_components": "UNKNOWN",
+        "expected_fixed_layout_collisions": "UNKNOWN",
+        "replacement_object_count": "UNKNOWN",
+        "total_sig_objects": 857,
+        "eligible": false
+      },
+      {
+        "index": 4,
+        "shift": 1,
+        "geometry_verification_failures": 1,
+        "unresolved_required_semantic_items": "UNKNOWN",
+        "unsupported_required_kinds": "UNKNOWN",
+        "unsupported_required_count": "UNKNOWN",
+        "unresolved_touching_components": "UNKNOWN",
+        "expected_fixed_layout_collisions": "UNKNOWN",
+        "replacement_object_count": "UNKNOWN",
+        "total_sig_objects": 857,
+        "eligible": false
+      },
+      {
+        "index": 5,
+        "shift": -1,
+        "geometry_verification_failures": 1,
+        "unresolved_required_semantic_items": "UNKNOWN",
+        "unsupported_required_kinds": "UNKNOWN",
+        "unsupported_required_count": "UNKNOWN",
+        "unresolved_touching_components": "UNKNOWN",
+        "expected_fixed_layout_collisions": "UNKNOWN",
+        "replacement_object_count": "UNKNOWN",
+        "total_sig_objects": 1288,
+        "eligible": false
+      },
+      {
+        "index": 5,
+        "shift": 1,
+        "geometry_verification_failures": 1,
+        "unresolved_required_semantic_items": "UNKNOWN",
+        "unsupported_required_kinds": "UNKNOWN",
+        "unsupported_required_count": "UNKNOWN",
+        "unresolved_touching_components": "UNKNOWN",
+        "expected_fixed_layout_collisions": "UNKNOWN",
+        "replacement_object_count": "UNKNOWN",
+        "total_sig_objects": 1288,
+        "eligible": false
+      }
+    ]
+  },
+  "scans": [
+    {
+      "index": 1,
+      "name": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "source_coordinates": {
+        "boxes": {
+          "artbox": [
+            0.0,
+            0.0,
+            567.12,
+            802.08
+          ],
+          "bleedbox": [
+            0.0,
+            0.0,
+            567.12,
+            802.08
+          ],
+          "cropbox": [
+            0.0,
+            0.0,
+            567.12,
+            802.08
+          ],
+          "mediabox": [
+            0.0,
+            0.0,
+            567.12,
+            802.08
+          ],
+          "trimbox": [
+            0.0,
+            0.0,
+            567.12,
+            802.08
+          ]
+        },
+        "coordinate_contract": "IMAGE_GRID_WITH_EXPLICIT_PDF_PAGE_CLIP",
+        "decoded_rgb_sha256": "a30b5fc6f8eacb5968230285a0c361b568d47bf6c395d5f8b3b3e841f7362a52",
+        "height": 3342,
+        "image_name": "/Im0",
+        "image_placement": [
+          567.1199951,
+          0.0,
+          0.0,
+          802.0800171,
+          0.0,
+          0.0
+        ],
+        "jpeg_stream_sha256": "d5567c6a67bbccb7ce69c2404a2b53f25a088d816b6ec3df31b580241bef8fb7",
+        "omr_sha256": "0cc140b4903ec13da036b3ba01e3291c40222df55a3a8db6634b3c39f3730a80",
+        "omr_to_raster": null,
+        "output_to_raster": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "pdf_page_clip": [
+          0.0,
+          0.0,
+          567.12,
+          802.08
+        ],
+        "pdf_to_raster": [
+          4.166666702667278,
+          0.0,
+          -0.0,
+          -4.166666577835131,
+          -0.0,
+          3342.0
+        ],
+        "png_sha256": "07e06ebe15a20aee4a3280baa69d4a855fc4599798ae2ea0631ccdd85694c60f",
+        "raster_basis": "embedded_jpeg_rgb",
+        "raster_size": [
+          2363,
+          3342
+        ],
+        "raster_to_omr": null,
+        "raster_to_output": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "raster_to_pdf": [
+          0.23999999792636478,
+          0.0,
+          -0.0,
+          -0.24000000511669659,
+          0.0,
+          802.0800171
+        ],
+        "rotation": 0,
+        "scale": 1.0,
+        "source": "pdf",
+        "user_unit": 1.0,
+        "width": 2363
+      },
+      "evidence_folder": "/private/tmp/capomatic-ordinary-scan-results/source-evidence/ed08d6804d83b92125e164f2d3b68db9f0fa9968a7184abed939dcc0a80fe183",
+      "raster_identity_ready": true,
+      "geometry_ready": false,
+      "skew_slope": -0.00284,
+      "objects": 960,
+      "glyphs": 1847,
+      "glyph_support_status": {
+        "SUPPORTED": 1847
+      },
+      "foreground_samples": 683707,
+      "unsupported_foreground_samples": 0,
+      "object_kinds": {
+        "barline": 33,
+        "clef": 6,
+        "key-alter": 6,
+        "key": 6,
+        "time-number": 2,
+        "time-pair": 1,
+        "beam": 95,
+        "beam-hook": 11,
+        "beam-group": 54,
+        "ledger": 3,
+        "head": 174,
+        "stem": 174,
+        "staff-barline": 31,
+        "head-chord": 174,
+        "slur": 58,
+        "rest": 28,
+        "articulation": 29,
+        "dynamics": 19,
+        "flag": 11,
+        "rest-chord": 28,
+        "augmentation-dot": 16,
+        "pedal": 1
+      },
+      "blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        }
+      ],
+      "ownership": "UNVERIFIED",
+      "lyric_separation": "UNKNOWN",
+      "protected_region": "ENTIRE_SOURCE_PAGE",
+      "music_review": "NOT_RUN_NO_SELECTED_NONZERO_OUTPUT"
+    },
+    {
+      "index": 2,
+      "name": "2 자유_1758826857.pdf",
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "source_coordinates": {
+        "boxes": {
+          "artbox": [
+            0.0,
+            0.0,
+            595.44,
+            841.68
+          ],
+          "bleedbox": [
+            0.0,
+            0.0,
+            595.44,
+            841.68
+          ],
+          "cropbox": [
+            0.0,
+            0.0,
+            595.44,
+            841.68
+          ],
+          "mediabox": [
+            0.0,
+            0.0,
+            595.44,
+            841.68
+          ],
+          "trimbox": [
+            0.0,
+            0.0,
+            595.44,
+            841.68
+          ]
+        },
+        "coordinate_contract": "IMAGE_GRID_WITH_EXPLICIT_PDF_PAGE_CLIP",
+        "decoded_rgb_sha256": "c51a6d584df9a2ec77524882b3e3bbeff4ccf7650156f3fbfc4439f3f2281d0a",
+        "height": 3507,
+        "image_name": "/Im0",
+        "image_placement": [
+          595.4400024,
+          0.0,
+          0.0,
+          841.6799927,
+          0.0,
+          0.0
+        ],
+        "jpeg_stream_sha256": "98d640a326fc0b1b6450ef10842d0ebc4a600d4cfa9e88b26f6e4befbdb2b1e4",
+        "omr_sha256": "a0cda944ed7205542c28457533d10c337004b3ceba4879908d007d3337dc12d4",
+        "omr_to_raster": null,
+        "output_to_raster": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "pdf_page_clip": [
+          0.0,
+          0.0,
+          595.44,
+          841.68
+        ],
+        "pdf_to_raster": [
+          4.166666649872363,
+          0.0,
+          -0.0,
+          -4.166666702804708,
+          -0.0,
+          3506.9999999999995
+        ],
+        "png_sha256": "ddffa4e5ace9af1660c10ea03d05886231d2a75ac3625776993e2726024b921b",
+        "raster_basis": "embedded_jpeg_rgb",
+        "raster_size": [
+          2481,
+          3507
+        ],
+        "raster_to_omr": null,
+        "raster_to_output": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "raster_to_pdf": [
+          0.24000000096735188,
+          0.0,
+          -0.0,
+          -0.2399999979184488,
+          0.0,
+          841.6799927
+        ],
+        "rotation": 0,
+        "scale": 1.0,
+        "source": "pdf",
+        "user_unit": 1.0,
+        "width": 2481
+      },
+      "evidence_folder": "/private/tmp/capomatic-ordinary-scan-results/source-evidence/563b6c4ff5ba0c7f922634b6bf186186647f8937172a0c2d7ab598d572abe9d8",
+      "raster_identity_ready": true,
+      "geometry_ready": false,
+      "skew_slope": -0.00272,
+      "objects": 1295,
+      "glyphs": 2085,
+      "glyph_support_status": {
+        "SUPPORTED": 2085
+      },
+      "foreground_samples": 867429,
+      "unsupported_foreground_samples": 0,
+      "object_kinds": {
+        "barline": 45,
+        "clef": 8,
+        "key-alter": 8,
+        "key": 8,
+        "time-number": 2,
+        "time-pair": 1,
+        "beam": 115,
+        "beam-hook": 4,
+        "beam-group": 66,
+        "ledger": 16,
+        "head": 249,
+        "stem": 249,
+        "staff-barline": 41,
+        "head-chord": 249,
+        "slur": 81,
+        "articulation": 61,
+        "rest": 25,
+        "dynamics": 15,
+        "rest-chord": 25,
+        "augmentation-dot": 11,
+        "flag": 14,
+        "fermata": 2
+      },
+      "blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        }
+      ],
+      "ownership": "UNVERIFIED",
+      "lyric_separation": "UNKNOWN",
+      "protected_region": "ENTIRE_SOURCE_PAGE",
+      "music_review": "NOT_RUN_NO_SELECTED_NONZERO_OUTPUT"
+    },
+    {
+      "index": 3,
+      "name": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "source_coordinates": {
+        "boxes": {
+          "artbox": [
+            0.0,
+            0.0,
+            907.2,
+            907.2
+          ],
+          "bleedbox": [
+            0.0,
+            0.0,
+            907.2,
+            907.2
+          ],
+          "cropbox": [
+            0.0,
+            0.0,
+            907.2,
+            907.2
+          ],
+          "mediabox": [
+            0.0,
+            0.0,
+            907.2,
+            907.2
+          ],
+          "trimbox": [
+            0.0,
+            0.0,
+            907.2,
+            907.2
+          ]
+        },
+        "coordinate_contract": "IMAGE_GRID_WITH_EXPLICIT_PDF_PAGE_CLIP",
+        "decoded_rgb_sha256": "a4fc4d06d516a6667c87a239e70c0efa2cdcaf0ab374b14f9c85e7b2a7271832",
+        "height": 3780,
+        "image_name": "/Im0",
+        "image_placement": [
+          907.2000122,
+          0.0,
+          0.0,
+          907.2000122,
+          0.0,
+          0.0
+        ],
+        "jpeg_stream_sha256": "794b87976dfb0328cbf85458c47dafd01555dda738de17ec53092fcb43fee05f",
+        "omr_sha256": "58f302e6b0bfd91523603d1700f471eac53431b8490a5e2dd0f157a810f9a63d",
+        "omr_to_raster": null,
+        "output_to_raster": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "pdf_page_clip": [
+          0.0,
+          0.0,
+          907.2,
+          907.2
+        ],
+        "pdf_to_raster": [
+          4.166666610633452,
+          0.0,
+          -0.0,
+          -4.166666610633452,
+          -0.0,
+          3779.9999999999995
+        ],
+        "png_sha256": "e1610ea039bb06cb5493a3dbeb089c52ee1f097c4f07575b96f392349417bb85",
+        "raster_basis": "embedded_jpeg_rgb",
+        "raster_size": [
+          3780,
+          3780
+        ],
+        "raster_to_omr": null,
+        "raster_to_output": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "raster_to_pdf": [
+          0.24000000322751322,
+          0.0,
+          -0.0,
+          -0.24000000322751322,
+          0.0,
+          907.2000122
+        ],
+        "rotation": 0,
+        "scale": 1.0,
+        "source": "pdf",
+        "user_unit": 1.0,
+        "width": 3780
+      },
+      "evidence_folder": "/private/tmp/capomatic-ordinary-scan-results/source-evidence/8b2fcb48ed22e27eb0291519dc9510c8641905ed35289f5323aa5e4e87a23913",
+      "raster_identity_ready": true,
+      "geometry_ready": false,
+      "skew_slope": -0.00534,
+      "objects": 1308,
+      "glyphs": 1821,
+      "glyph_support_status": {
+        "SUPPORTED": 1821
+      },
+      "foreground_samples": 1069356,
+      "unsupported_foreground_samples": 0,
+      "object_kinds": {
+        "barline": 60,
+        "clef": 7,
+        "key-alter": 28,
+        "key": 7,
+        "time-number": 2,
+        "time-pair": 1,
+        "beam": 36,
+        "beam-group": 36,
+        "ledger": 21,
+        "head": 235,
+        "stem": 235,
+        "staff-barline": 57,
+        "head-chord": 235,
+        "slur": 64,
+        "articulation": 115,
+        "flag": 61,
+        "rest": 35,
+        "dynamics": 14,
+        "rest-chord": 35,
+        "augmentation-dot": 12,
+        "pedal": 3,
+        "fermata": 2,
+        "alter": 7
+      },
+      "blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        }
+      ],
+      "ownership": "UNVERIFIED",
+      "lyric_separation": "UNKNOWN",
+      "protected_region": "ENTIRE_SOURCE_PAGE",
+      "music_review": "NOT_RUN_NO_SELECTED_NONZERO_OUTPUT"
+    },
+    {
+      "index": 4,
+      "name": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "source_coordinates": {
+        "boxes": {
+          "artbox": [
+            0.0,
+            0.0,
+            708.72,
+            620.64
+          ],
+          "bleedbox": [
+            0.0,
+            0.0,
+            708.72,
+            620.64
+          ],
+          "cropbox": [
+            0.0,
+            0.0,
+            708.72,
+            620.64
+          ],
+          "mediabox": [
+            0.0,
+            0.0,
+            708.72,
+            620.64
+          ],
+          "trimbox": [
+            0.0,
+            0.0,
+            708.72,
+            620.64
+          ]
+        },
+        "coordinate_contract": "IMAGE_GRID_WITH_EXPLICIT_PDF_PAGE_CLIP",
+        "decoded_rgb_sha256": "84442f9a23061887c348edd840ed5aaad0c0003825c0b69a0f06b6fcdecd70ab",
+        "height": 2586,
+        "image_name": "/Im0",
+        "image_placement": [
+          708.7199707,
+          0.0,
+          0.0,
+          620.6400146,
+          0.0,
+          0.0
+        ],
+        "jpeg_stream_sha256": "5b3b4f8472c202d33e043c2386b5e27bca1763e932e950ff9c79acc1945d2b87",
+        "omr_sha256": "de8037f9922d075d83eccfafc4fede1a43e12c8a0829f36fe3f7071802e2201a",
+        "omr_to_raster": null,
+        "output_to_raster": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "pdf_page_clip": [
+          0.0,
+          0.0,
+          708.72,
+          620.64
+        ],
+        "pdf_to_raster": [
+          4.166666838925582,
+          0.0,
+          -0.0,
+          -4.1666665686495685,
+          -0.0,
+          2585.9999999999995
+        ],
+        "png_sha256": "0fb0e6f4562e61e989af4f77585adf45f29d2a9dbf1fa8bc46a4a5841662802f",
+        "raster_basis": "embedded_jpeg_rgb",
+        "raster_size": [
+          2953,
+          2586
+        ],
+        "raster_to_omr": null,
+        "raster_to_output": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "raster_to_pdf": [
+          0.2399999900778869,
+          0.0,
+          -0.0,
+          -0.240000005645785,
+          0.0,
+          620.6400146
+        ],
+        "rotation": 0,
+        "scale": 1.0,
+        "source": "pdf",
+        "user_unit": 1.0,
+        "width": 2953
+      },
+      "evidence_folder": "/private/tmp/capomatic-ordinary-scan-results/source-evidence/549264d7a27834140fb36748a5345f2e7431eee20f29fa8ab1cc603745959565",
+      "raster_identity_ready": true,
+      "geometry_ready": false,
+      "skew_slope": 0.0,
+      "objects": 857,
+      "glyphs": 1578,
+      "glyph_support_status": {
+        "SUPPORTED": 1578
+      },
+      "foreground_samples": 506323,
+      "unsupported_foreground_samples": 0,
+      "object_kinds": {
+        "barline": 33,
+        "clef": 5,
+        "time-number": 2,
+        "time-pair": 1,
+        "beam": 75,
+        "beam-group": 47,
+        "ledger": 49,
+        "head": 146,
+        "stem": 146,
+        "staff-barline": 27,
+        "head-chord": 146,
+        "slur": 34,
+        "repeat-dot": 4,
+        "rest": 18,
+        "alter": 1,
+        "flag": 11,
+        "fermata": 3,
+        "articulation": 51,
+        "dynamics": 24,
+        "breath-mark": 1,
+        "rest-chord": 18,
+        "augmentation-dot": 6,
+        "ending": 3,
+        "beam-hook": 6
+      },
+      "blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        }
+      ],
+      "ownership": "UNVERIFIED",
+      "lyric_separation": "UNKNOWN",
+      "protected_region": "ENTIRE_SOURCE_PAGE",
+      "music_review": "NOT_RUN_NO_SELECTED_NONZERO_OUTPUT"
+    },
+    {
+      "index": 5,
+      "name": "본향을 향해-1_1758828084.pdf",
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "source_coordinates": {
+        "boxes": {
+          "artbox": [
+            0.0,
+            0.0,
+            652.08,
+            841.68
+          ],
+          "bleedbox": [
+            0.0,
+            0.0,
+            652.08,
+            841.68
+          ],
+          "cropbox": [
+            0.0,
+            0.0,
+            652.08,
+            841.68
+          ],
+          "mediabox": [
+            0.0,
+            0.0,
+            652.08,
+            841.68
+          ],
+          "trimbox": [
+            0.0,
+            0.0,
+            652.08,
+            841.68
+          ]
+        },
+        "coordinate_contract": "IMAGE_GRID_WITH_EXPLICIT_PDF_PAGE_CLIP",
+        "decoded_rgb_sha256": "9d6946d8a188810acc72b5f24e27247a50d1b19c9172f0a5ab96236b6969ec8b",
+        "height": 3507,
+        "image_name": "/Im0",
+        "image_placement": [
+          652.0800171,
+          0.0,
+          0.0,
+          841.6799927,
+          0.0,
+          0.0
+        ],
+        "jpeg_stream_sha256": "3e3aeb2ecd7ea89fef9dad835ee38932cfbbe9727cd8e852114f9a3988b28810",
+        "omr_sha256": "a6d62268adb8d11bc71614556db40e7a337bb888a2574cd70d1910f9a0e1cbaa",
+        "omr_to_raster": null,
+        "output_to_raster": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "pdf_page_clip": [
+          0.0,
+          0.0,
+          652.08,
+          841.68
+        ],
+        "pdf_to_raster": [
+          4.166666557400936,
+          0.0,
+          -0.0,
+          -4.166666702804709,
+          -0.0,
+          3507.0
+        ],
+        "png_sha256": "9041eb7ada48dff49e1093afd28e869f87ea851a668060bfd8ceccc06d4ccb4c",
+        "raster_basis": "embedded_jpeg_rgb",
+        "raster_size": [
+          2717,
+          3507
+        ],
+        "raster_to_omr": null,
+        "raster_to_output": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "raster_to_pdf": [
+          0.24000000629370627,
+          0.0,
+          -0.0,
+          -0.2399999979184488,
+          0.0,
+          841.6799927
+        ],
+        "rotation": 0,
+        "scale": 1.0,
+        "source": "pdf",
+        "user_unit": 1.0,
+        "width": 2717
+      },
+      "evidence_folder": "/private/tmp/capomatic-ordinary-scan-results/source-evidence/57bc7518c3170c0ca0f25eaa9b23de3e994a9eb1004fda1617375dd39810c73e",
+      "raster_identity_ready": true,
+      "geometry_ready": false,
+      "skew_slope": 0.0,
+      "objects": 1288,
+      "glyphs": 1880,
+      "glyph_support_status": {
+        "SUPPORTED": 1880
+      },
+      "foreground_samples": 845867,
+      "unsupported_foreground_samples": 0,
+      "object_kinds": {
+        "barline": 44,
+        "clef": 8,
+        "key-alter": 16,
+        "key": 8,
+        "time-number": 2,
+        "time-pair": 1,
+        "beam": 118,
+        "beam-group": 74,
+        "ledger": 19,
+        "head": 239,
+        "stem": 239,
+        "staff-barline": 40,
+        "head-chord": 239,
+        "slur": 41,
+        "rest": 42,
+        "articulation": 77,
+        "dynamics": 19,
+        "rest-chord": 42,
+        "augmentation-dot": 7,
+        "beam-hook": 6,
+        "alter": 1,
+        "flag": 6
+      },
+      "blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        }
+      ],
+      "ownership": "UNVERIFIED",
+      "lyric_separation": "UNKNOWN",
+      "protected_region": "ENTIRE_SOURCE_PAGE",
+      "music_review": "NOT_RUN_NO_SELECTED_NONZERO_OUTPUT"
+    }
+  ],
+  "http_rows": [
+    {
+      "index": 1,
+      "name": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "historical_hash_match": true,
+      "shift": 0,
+      "detect_http": 200,
+      "pdf_http": 200,
+      "response_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "identity_only": true,
+      "all_original_bytes_preserved": true
+    },
+    {
+      "index": 1,
+      "name": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "historical_hash_match": true,
+      "shift": 1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "28ec684f0298ebfdad6b6d4859295b5bc7585dbffad8ef6988784af18306ed54",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 1,
+      "name": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "historical_hash_match": true,
+      "shift": -1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "08f75870c582c41897db489914217df4f44e895eb19ee25af8e04aca1128d9e1",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 2,
+      "name": "2 자유_1758826857.pdf",
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "historical_hash_match": true,
+      "shift": 0,
+      "detect_http": 200,
+      "pdf_http": 200,
+      "response_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "identity_only": true,
+      "all_original_bytes_preserved": true
+    },
+    {
+      "index": 2,
+      "name": "2 자유_1758826857.pdf",
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "historical_hash_match": true,
+      "shift": 1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "46a541c7c1198cf7b7fe303ebe81223173cf6ffc8936346b944b796abc0a5b68",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 2,
+      "name": "2 자유_1758826857.pdf",
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "historical_hash_match": true,
+      "shift": -1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "0d8e3cfd43b8276a7ff4847397335ff8ac5adc9ccf1d6a84f7329e56245d8bfe",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 3,
+      "name": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "historical_hash_match": true,
+      "shift": 0,
+      "detect_http": 200,
+      "pdf_http": 200,
+      "response_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "identity_only": true,
+      "all_original_bytes_preserved": true
+    },
+    {
+      "index": 3,
+      "name": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "historical_hash_match": true,
+      "shift": 1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "d0dab6d3bbeeaa06538f0aa3ea20f380c1c38916d4ed67404b5df9ed7afebda0",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 3,
+      "name": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "historical_hash_match": true,
+      "shift": -1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "640cb92a9103aadf1c5b18dd0a5260ad425ae1e8ab0b3180add7157a90abf780",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 4,
+      "name": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "historical_hash_match": true,
+      "shift": 0,
+      "detect_http": 200,
+      "pdf_http": 200,
+      "response_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "identity_only": true,
+      "all_original_bytes_preserved": true
+    },
+    {
+      "index": 4,
+      "name": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "historical_hash_match": true,
+      "shift": 1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "00f90623a890f946c80d3a34ab529c05437b9a2bc6fb4d918eb97ca3aa310fa3",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 4,
+      "name": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "historical_hash_match": true,
+      "shift": -1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "2166a5f26cd3c8163be919cd7d3c632f65dc48d7abeff4cb055b3366c534b94e",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 5,
+      "name": "본향을 향해-1_1758828084.pdf",
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "historical_hash_match": true,
+      "shift": 0,
+      "detect_http": 200,
+      "pdf_http": 200,
+      "response_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "identity_only": true,
+      "all_original_bytes_preserved": true
+    },
+    {
+      "index": 5,
+      "name": "본향을 향해-1_1758828084.pdf",
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "historical_hash_match": true,
+      "shift": 1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "64f506c6f8aa34c8eeed69f8168af3b8afa07f2a70088dbbd2838ddca354bb28",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 5,
+      "name": "본향을 향해-1_1758828084.pdf",
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "historical_hash_match": true,
+      "shift": -1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "1b1712a80fc301d54d01652938e7b3c19f1d4b2b3eb5afbd42bcdfd865c47280",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    }
+  ],
+  "regression": {
+    "full_suite_passed": 862,
+    "full_suite_skipped": 11,
+    "final_coordinate_recheck_passed": 41,
+    "evaluator_test_passed": 1
+  },
+  "code_review": "cold code review only; no independent music review performed",
+  "code_sha256": {
+    "backend/omr_v3/core.py": "5f588acb0dfba48cd6b1a5be55fd57b4dbd09a5802c02ec0d523801551345602",
+    "backend/omr_v3/source_layout.py": "12a21c4afd44fa342a0e4336f1534d7cc86e8a44dbaa7b1dde3b4253ec7a1fa6",
+    "backend/omr_v3/scan_pdf.py": "ed23a10818d05243638e34403fd29f2a8af9d3de7c282c2059c0325dc311739e",
+    "scripts/ordinary_scan_evidence_server.py": "7052bb668b273f2b1e7dc46377b8750c1a60840bd70390be5e61b70564096de3",
+    "scripts/ordinary_scan_inventory.py": "e8698c1d9dc2ba0b3e6b14b90fd067f1b4b6de7b7ee9fa1abdd651ce1aefd17f",
+    "scripts/score_geometry_eval.py": "65ff161711ffe1e18578b7e4309b9bbdf1dfba5eba8cc3082d1bc38b0c51f419"
+  },
+  "historical_evidence_sha256": {
+    "docs/evidence/RENDERER_COMPLETION_EVALUATION.json": "21cda3b6bbc6fd91a9cefd0b07a65bcfd7923cfdb0a1fd67796fb49c11e0fe36",
+    "docs/evidence/RENDERER_PRESERVATION.json": "c36eddd27a2fe1d51d5e479fc7e423c8d9c43a2d143de1a9113b11e001d0a5f0",
+    "docs/evidence/SCORE_GEOMETRY_EVALUATION.json": "59fb329793529a3409cd958a786e230bbaf2885e9fa63df1c9fb4370a538f03b"
+  },
+  "raw_artifact_sha256": {
+    "final-http/evaluation.json": "2c27325e14291b5322a19a8effabaee117131f93740cd12ae13f2dfed7dbd00c",
+    "final-http/score-1/+0.response": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+    "final-http/score-1/+1.png-response.json": "28ec684f0298ebfdad6b6d4859295b5bc7585dbffad8ef6988784af18306ed54",
+    "final-http/score-1/+1.response": "28ec684f0298ebfdad6b6d4859295b5bc7585dbffad8ef6988784af18306ed54",
+    "final-http/score-1/-1.png-response.json": "08f75870c582c41897db489914217df4f44e895eb19ee25af8e04aca1128d9e1",
+    "final-http/score-1/-1.response": "08f75870c582c41897db489914217df4f44e895eb19ee25af8e04aca1128d9e1",
+    "final-http/score-1/detect.json": "6424ff2ca4a210aabeca314105d9593539b72b9df6e742fdd76fe88ff10b823b",
+    "final-http/score-2/+0.response": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+    "final-http/score-2/+1.png-response.json": "46a541c7c1198cf7b7fe303ebe81223173cf6ffc8936346b944b796abc0a5b68",
+    "final-http/score-2/+1.response": "46a541c7c1198cf7b7fe303ebe81223173cf6ffc8936346b944b796abc0a5b68",
+    "final-http/score-2/-1.png-response.json": "0d8e3cfd43b8276a7ff4847397335ff8ac5adc9ccf1d6a84f7329e56245d8bfe",
+    "final-http/score-2/-1.response": "0d8e3cfd43b8276a7ff4847397335ff8ac5adc9ccf1d6a84f7329e56245d8bfe",
+    "final-http/score-2/detect.json": "4ceeb1600114c8c7989c84fc0276f25a8fdfa2897b22404be2aef689cbc461dd",
+    "final-http/score-3/+0.response": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+    "final-http/score-3/+1.png-response.json": "d0dab6d3bbeeaa06538f0aa3ea20f380c1c38916d4ed67404b5df9ed7afebda0",
+    "final-http/score-3/+1.response": "d0dab6d3bbeeaa06538f0aa3ea20f380c1c38916d4ed67404b5df9ed7afebda0",
+    "final-http/score-3/-1.png-response.json": "640cb92a9103aadf1c5b18dd0a5260ad425ae1e8ab0b3180add7157a90abf780",
+    "final-http/score-3/-1.response": "640cb92a9103aadf1c5b18dd0a5260ad425ae1e8ab0b3180add7157a90abf780",
+    "final-http/score-3/detect.json": "785f3316824c69ca8ad436f9fd23c41dd67108b83ca3574f98b72f6308eab753",
+    "final-http/score-4/+0.response": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+    "final-http/score-4/+1.png-response.json": "00f90623a890f946c80d3a34ab529c05437b9a2bc6fb4d918eb97ca3aa310fa3",
+    "final-http/score-4/+1.response": "00f90623a890f946c80d3a34ab529c05437b9a2bc6fb4d918eb97ca3aa310fa3",
+    "final-http/score-4/-1.png-response.json": "2166a5f26cd3c8163be919cd7d3c632f65dc48d7abeff4cb055b3366c534b94e",
+    "final-http/score-4/-1.response": "2166a5f26cd3c8163be919cd7d3c632f65dc48d7abeff4cb055b3366c534b94e",
+    "final-http/score-4/detect.json": "a8f59f5e2490ceb74a193215194ad903431602801aecd29d19a08d9aca333f77",
+    "final-http/score-5/+0.response": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+    "final-http/score-5/+1.png-response.json": "64f506c6f8aa34c8eeed69f8168af3b8afa07f2a70088dbbd2838ddca354bb28",
+    "final-http/score-5/+1.response": "64f506c6f8aa34c8eeed69f8168af3b8afa07f2a70088dbbd2838ddca354bb28",
+    "final-http/score-5/-1.png-response.json": "1b1712a80fc301d54d01652938e7b3c19f1d4b2b3eb5afbd42bcdfd865c47280",
+    "final-http/score-5/-1.response": "1b1712a80fc301d54d01652938e7b3c19f1d4b2b3eb5afbd42bcdfd865c47280",
+    "final-http/score-5/detect.json": "799e8b740d00b30a39046b39ddb7f182c24ca03164864041dc44fe9da84045bb",
+    "source-evidence/549264d7a27834140fb36748a5345f2e7431eee20f29fa8ab1cc603745959565/coordinates.json": "9412c59a54f906875a1a270b14fb448547c2d0a031d40aee24819f126a0566f5",
+    "source-evidence/549264d7a27834140fb36748a5345f2e7431eee20f29fa8ab1cc603745959565/ownership.json": "9128a9494e26606d2457c9ccbbcba2ea5ad226938d09a5385339dd99274f91bb",
+    "source-evidence/549264d7a27834140fb36748a5345f2e7431eee20f29fa8ab1cc603745959565/pixel-support.json": "ea0653fdf4070588f5eda93c910f37367819efe392a7e1053a1dbe6aba335d86",
+    "source-evidence/549264d7a27834140fb36748a5345f2e7431eee20f29fa8ab1cc603745959565/recognition.omr": "de8037f9922d075d83eccfafc4fede1a43e12c8a0829f36fe3f7071802e2201a",
+    "source-evidence/549264d7a27834140fb36748a5345f2e7431eee20f29fa8ab1cc603745959565/source.png": "0fb0e6f4562e61e989af4f77585adf45f29d2a9dbf1fa8bc46a4a5841662802f",
+    "source-evidence/563b6c4ff5ba0c7f922634b6bf186186647f8937172a0c2d7ab598d572abe9d8/coordinates.json": "f075015dcc03f24237ff106c0a311c53ac91aebce5d0a4d808f021cf8c06e103",
+    "source-evidence/563b6c4ff5ba0c7f922634b6bf186186647f8937172a0c2d7ab598d572abe9d8/ownership.json": "c03bfefb9d8175f76d6d36b6fef59ec95680e3436dac123af9844814f4441811",
+    "source-evidence/563b6c4ff5ba0c7f922634b6bf186186647f8937172a0c2d7ab598d572abe9d8/pixel-support.json": "02f8cec5b56f67be65fe714221521a17953e533ff744481f88089283b4802e08",
+    "source-evidence/563b6c4ff5ba0c7f922634b6bf186186647f8937172a0c2d7ab598d572abe9d8/recognition.omr": "a0cda944ed7205542c28457533d10c337004b3ceba4879908d007d3337dc12d4",
+    "source-evidence/563b6c4ff5ba0c7f922634b6bf186186647f8937172a0c2d7ab598d572abe9d8/source.png": "ddffa4e5ace9af1660c10ea03d05886231d2a75ac3625776993e2726024b921b",
+    "source-evidence/57bc7518c3170c0ca0f25eaa9b23de3e994a9eb1004fda1617375dd39810c73e/coordinates.json": "87357d54c4f98f597bd8bdf809b9c08d649b7764b25e76bb9b8271bc5f88b69d",
+    "source-evidence/57bc7518c3170c0ca0f25eaa9b23de3e994a9eb1004fda1617375dd39810c73e/ownership.json": "23844553a73b54342f6cfce8c195d7bc4ab7124beecd2776d970620b38749f0d",
+    "source-evidence/57bc7518c3170c0ca0f25eaa9b23de3e994a9eb1004fda1617375dd39810c73e/pixel-support.json": "39b967a1fff45b6961000a6695af094639e96eacdbdc47e8141b19a563117bd1",
+    "source-evidence/57bc7518c3170c0ca0f25eaa9b23de3e994a9eb1004fda1617375dd39810c73e/recognition.omr": "a6d62268adb8d11bc71614556db40e7a337bb888a2574cd70d1910f9a0e1cbaa",
+    "source-evidence/57bc7518c3170c0ca0f25eaa9b23de3e994a9eb1004fda1617375dd39810c73e/source.png": "9041eb7ada48dff49e1093afd28e869f87ea851a668060bfd8ceccc06d4ccb4c",
+    "source-evidence/8b2fcb48ed22e27eb0291519dc9510c8641905ed35289f5323aa5e4e87a23913/coordinates.json": "5460ce0f6bab6bb20ade7e7f17f3828d3ef70014b053498ad8893b2c7dda065b",
+    "source-evidence/8b2fcb48ed22e27eb0291519dc9510c8641905ed35289f5323aa5e4e87a23913/ownership.json": "2d876700c2a159f9d1e046ba64c084c1c3d951be60edb82459d7be3ab98fa2b4",
+    "source-evidence/8b2fcb48ed22e27eb0291519dc9510c8641905ed35289f5323aa5e4e87a23913/pixel-support.json": "8862f6c2cfdc09391d270b6d37bfd28ce533d63f7f1f6a3c6cebc4b2b31e95ca",
+    "source-evidence/8b2fcb48ed22e27eb0291519dc9510c8641905ed35289f5323aa5e4e87a23913/recognition.omr": "58f302e6b0bfd91523603d1700f471eac53431b8490a5e2dd0f157a810f9a63d",
+    "source-evidence/8b2fcb48ed22e27eb0291519dc9510c8641905ed35289f5323aa5e4e87a23913/source.png": "e1610ea039bb06cb5493a3dbeb089c52ee1f097c4f07575b96f392349417bb85",
+    "source-evidence/ed08d6804d83b92125e164f2d3b68db9f0fa9968a7184abed939dcc0a80fe183/coordinates.json": "fa08a886bc9ae601065d46cf0536cf9eadb410ff03df00fa7d7bc462fbaa7a5e",
+    "source-evidence/ed08d6804d83b92125e164f2d3b68db9f0fa9968a7184abed939dcc0a80fe183/ownership.json": "618245e683cdd0ee473b050361b0cb45833da1fa97f041480bdcf68349ec38f6",
+    "source-evidence/ed08d6804d83b92125e164f2d3b68db9f0fa9968a7184abed939dcc0a80fe183/pixel-support.json": "7677cd32a86ef0857bb2d2f35781e1eccf1c17f751fd8c066330f1175338134a",
+    "source-evidence/ed08d6804d83b92125e164f2d3b68db9f0fa9968a7184abed939dcc0a80fe183/recognition.omr": "0cc140b4903ec13da036b3ba01e3291c40222df55a3a8db6634b3c39f3730a80",
+    "source-evidence/ed08d6804d83b92125e164f2d3b68db9f0fa9968a7184abed939dcc0a80fe183/source.png": "07e06ebe15a20aee4a3280baa69d4a855fc4599798ae2ea0631ccdd85694c60f",
+    "inputs.json": "d7224096c01a1b0d6187abb459c430ee1da58e02f7320c608035a5c5d3aae4ec",
+    "build_report.py": "7d00a962e2cbbba6adc0bae920cbb31d1f7b657697e545c28a0613a2b601c712",
+    "report-review.txt": "62635f4411502f8a174cc38e5c630ed64c588f5430ae74d5c3d35bb947e76974",
+    "run_eval.py": "6931f8196c17eea13247869721f224d918448220f67e878b601ae5c4a8980549",
+    "review.txt": "dd2474b4840aaec544a874234fdb57d9aaa9d68ac7c127e2fb2e8bfe7aa83003",
+    "final-pytest.log": "9f89d235dd921c2047dbd76612a67fa5d1ddc01a4f4f26572f4381eb5ad12dc3",
+    "final-coordinate-tests.log": "b3b79fbeb237cad266e62757648e79c558c2fa381f532dbe5460ea2cfd50f2e7",
+    "evaluator-tests.log": "5b19689a97d618d5cdfce632de67285a8efa3c57100a80350a5bb7ca9e05ae34",
+    "final-eval.log": "ec17c16c49fa7e3dc02951280c6302e6dd37a2be1c4ced92a547311278c2523a",
+    "pixel-inventory.log": "813dd654ef78f655b896c2387788ec2c90bd64d8067eeb168137731bdf7c294b"
+  }
+}

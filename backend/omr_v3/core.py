@@ -196,6 +196,12 @@ def rasterize(source: Path, suffix: str, out: Path, timeout_seconds: float, home
             raise ScoreError('This pilot accepts exactly one PDF page')
         metadata = None
         if retain_source_layout:
+            from .scan_pdf import extract_scan
+            scan = extract_scan(source.read_bytes())
+            if scan is not None:
+                png, info = scan
+                out.write_bytes(png)
+                return info
             from .source_layout import pdf_metadata, pdf_transform
             metadata = pdf_metadata(source.read_bytes())[0]
             transform, expected_size = pdf_transform(metadata, PDF_DPI)
@@ -245,7 +251,8 @@ def run_audiveris(page: Path, out_dir: Path, timeout_seconds: float, home: Path,
     out_dir.mkdir()
     _run([_bin('CAPOMATIC_AUDIVERIS_BIN', 'audiveris', 'Audiveris'), '-batch',
           '-constant', f'org.audiveris.omr.text.Language.defaultSpecification={OCR_LANGUAGES}',
-          *(['-constant', 'org.audiveris.omr.text.tesseract.TesseractOCR.useOCR=false']
+          *(['-constant', 'org.audiveris.omr.sheet.ProcessingSwitches.keepGrayImages=true',
+             '-constant', 'org.audiveris.omr.text.tesseract.TesseractOCR.useOCR=false']
             if disable_text_ocr else []),
           '-export', '-output', str(out_dir), '--', str(page)], timeout_seconds, home, 'Audiveris')
     scores = sorted(p for p in out_dir.rglob('*') if p.suffix.lower() in {'.mxl', '.musicxml'})

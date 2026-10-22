@@ -61,6 +61,10 @@ def main():
                         (folder / f'{shift:+d}.pdf').write_bytes(response.content)
                         record['output_sha256'] = hashlib.sha256(response.content).hexdigest()
                         record['visual_review'] = 'PENDING'
+                        record['identity_only'] = response.headers.get('X-Capomatic-Identity') == 'true'
+                        if record['identity_only']:
+                            assert shift == 0 and response.content == data
+                            record['all_original_bytes_preserved'] = True
                     else:
                         detail = response.json().get('detail', {})
                         report = detail.get('report', {}) if isinstance(detail, dict) else {}
@@ -69,6 +73,13 @@ def main():
                         record['report'] = report
                         for key in ('semantic_ready', 'geometry_ready', 'lyric_layer_ready', 'render_ready'):
                             record[key] = report.get(key)
+                    if shift != 0:
+                        png = client.post('/render', data={
+                            'detection_id': detection['detection_id'], 'semitones': shift,
+                            'mode': 'key', 'output_format': 'png'})
+                        record['png_http'] = png.status_code
+                        (folder / f'{shift:+d}.png-response').write_bytes(png.content)
+                        record['png_response_sha256'] = hashlib.sha256(png.content).hexdigest()
                     (folder / f'{shift:+d}-response.bin').write_bytes(response.content)
                     record['response_sha256'] = hashlib.sha256(response.content).hexdigest()
                 else:
@@ -80,6 +91,9 @@ def main():
                            'recognition_accuracy': 'UNVERIFIED',
                            'verified_end_to_end_success_rate': None, 'rows': rows,
                            'http_200_count': sum(r.get('render_http') == 200 for r in rows),
+                           'nonzero_http_200_count': sum(r.get('render_http') == 200
+                               and r['shift'] != 0 for r in rows),
+                           'identity_http_200_count': sum(r.get('identity_only', False) for r in rows),
                            'contract_pass_count': 0,
                            'intended_422_count': sum(r.get('render_http') == 422
                                and r.get('report', {}).get('render_ready') is False for r in rows)}
