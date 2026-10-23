@@ -1,0 +1,43 @@
+Frozen independent source-only reading, 2026-10-22
+Sources inspected: source-1.png, source-2.png, source-4.png, source-5.png only, plus crops made directly from their pixels. No transcript, implementation, OMR, or neighboring file read.
+
+Notation: scientific pitch, middle C=C4. q=quarter, e=eighth, s=sixteenth, h=half; dot means dotted duration; R=rest. Numbering in parentheses counts PITCHED EVENTS ONLY, restarting in each measure; rests are not counted. Measures are left-to-right within first system; source 4 pickup is separately numbered p. Key-signature alterations are included in sounding pitch names; explicit accidentals are listed separately. Each printed tied notehead remains an individual event.
+
+SOURCE 1 — treble, 4/4, key signature one flat (Bb)
+m1: R q; (1) A4 e; (2) G4 s; (3) A4 s; (4) A4 q; R e; (5) A4 s; (6) A4 s.
+m2: (1) G4 e; (2) F4 s; (3) G4 s; (4) G4 e; (5) F4 s; (6) G4 s; (7) G4 e; R e; (8) A4 dotted-e; (9) G4 s.
+m3: (1) F4 dotted-q; (2) F4 s; (3) E4 s; (4) E4 e; (5) A4 e; (6) A4 e; R s; (7) C4 s.
+m4: (1) D4 e; (2) F4 s; (3) F4 s; (4) F4 s; (5) G4 s; (6) G4 s; (7) G4 s; (8) G4 dotted-q; R e.
+Visible same-pitch ties: m1 3->4; m2 3->4 and 6->7; m3 3->4 and 5->6; m4 2->3, 5->6, 7->8.
+Visible different-pitch slurs: none.
+Explicit melody accidentals: none (the Bb in key signature is not a local accidental).
+
+SOURCE 2 — treble, 4/4, key signature one flat (Bb)
+m1: (1) C4 e; (2) C4 s; (3) C4 s; (4) C4 e; (5) A4 s; (6) A4 s; (7) A4 e; (8) G4 s; (9) G4 s; (10) G4 q.
+m2: (1) F4 s; (2) F4 s; (3) F4 s; (4) F4 s; (5) F4 e; (6) A4 s; (7) A4 s; (8) A4 s; (9) E4 dotted-e; R q.
+m3: (1) D4 s; (2) D4 s; (3) D4 s; (4) D4 s; (5) D4 e; (6) F4 s; (7) F4 s; (8) F4 e; (9) C4 s; (10) C4 s; (11) C4 q.
+m4: (1) D4 s; (2) D4 s; (3) D4 s; (4) D4 s; (5) D4 e; (6) A4 s; (7) A4 s; (8) A4 s; (9) G4 dotted-e; R q.
+Visible same-pitch ties: m1 3->4, 6->7, 9->10; m2 4->5, 7->8; m3 4->5, 7->8, 10->11; m4 4->5, 7->8.
+Visible different-pitch slurs: none.
+Explicit melody accidentals: none. Chord-symbol accidentals above staff are not melody accidentals.
+
+SOURCE 4 — treble, 4/4, no key-signature accidentals
+Pickup p: (1) G4 e; (2) E4 e; then start-repeat barline.
+m1: (1) G3 dotted-q; R s; (2) G3 s; (3) G#3 e; (4) C4 e; (5) G4 e; (6) F4 e.
+m2: (1) F4 e; (2) E4 dotted-q; R q; (3) G4 e; (4) E4 e.
+m3: (1) G3 q; R e; (2) G3 s; (3) G3 s; (4) A3 e; (5) A4 s; (6) A4 s; (7) A4 e; (8) G4 e.
+m4: (1) F4 h; R q; (2) G4 e; (3) F4 e.
+Visible same-pitch ties: m3 6->7 only.
+Visible different-pitch slurs: none.
+Explicit melody accidental: m1 event 3 sharp on G3, producing G#3.
+
+SOURCE 5 — treble, 4/4, key signature F# and C#
+m1: R e; (1) F#4 s; (2) F#4 s; (3) F#4 e; (4) E4 s; (5) E4 s; (6) E4 s; (7) D4 s; (8) D4 e; R e; (9) A3 s; (10) B3 s.
+m2: (1) D4 e; (2) B3 e; (3) D4 s; (4) E4 s; (5) F#4 s; (6) F#4 s; (7) F#4 q; R q.
+m3: R e; (1) F#4 s; (2) F#4 s; (3) F#4 e; (4) F#4 e; (5) A4 s; (6) B4 s; R e; (7) D4 e; (8) B3 e.
+m4: (1) D4 s; (2) D4 s; (3) D4 s; (4) D4 s; (5) F-natural4 s; (6) E4 s; (7) D4 s; (8) D4 s; (9) D4 q; R q.
+Visible same-pitch ties: m1 5->6 and 7->8; m2 6->7; m4 8->9.
+Visible different-pitch slur: m4 5->6 (F-natural4 to E4).
+Explicit melody accidental: m4 event 5 natural on F4, cancelling the key-signature F#.
+
+Uncertainty: no unresolved pitch or rhythm ambiguity in this reading. The source-5 m4 F-natural4->E4 curve is classified by its different endpoint pitches as a slur, not a tie. No music outside the first systems was transcribed.

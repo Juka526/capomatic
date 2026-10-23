@@ -1,0 +1,42 @@
+FROZEN INDEPENDENT SOURCE-ONLY TRANSCRIPTION — SOURCE 4
+Only source pixels viewed. No OCR, OMR, repository, implementation output, or ground truth consulted.
+Treble clef; no key signature; 4/4. Durations are quarter-note units. R = rest. ~ joins a tie, including across a barline. Pitches use scientific octave notation. Chords in brackets occur in printed order within the measure; exact chord onset times were not independently encoded. No additional slurs identified.
+Coverage: pickup and all 21 written measures, five systems. Repeats are not expanded.
+
+SYSTEM 1
+Pickup: G4/.5 E4/.5
+M1: G3/1.5 R/.25 G3/.25 G#3/.5 C4/.5 G4/.5 F4/.5 [C,Caug]
+M2: F4/.5 E4/1.5 R/1 G4/.5 E4/.5 [Am7,C7]
+M3: G3/1 R/.5 G3/.25 G3/.25 A3/.5 A4/.25 A4/.25~A4/.5 G4/.5 [FM9,A7]
+M4: F4/2 R/1 G4/.5 F4/.5 [Dm7,G7]
+
+SYSTEM 2
+M5: E4/.5 E4/.5 E4/.5 E4/.25 E4/.25~E4/.5 R/.5 E4/.5 D4/.5 [FM7,FmM7]
+M6: G3/.5 G4/.25 G4/.25~G4/.5 A4/.25 G4/.25~G4/.5 R/.5 G4/.5 E4/.5 [Em7,A7]
+M7: G3/1 G4/.5 E4/.25 G3/.25~G3/.5 R/.5 A3/.5 C4/.5 [Dm11,G7sus4]
+M8: C4/2 R/1.5 C4/.5 [C,Gm7,Gb7]
+First ending begins at M8 and continues through M16.
+
+SYSTEM 3
+M9: C4/.5 A4/.25 A4/.25~A4/.5 A4/.25 A4/.25~A4/.5 G4/.25 F4/.25~F4/.25 G4/.5 G4/.25~ [FM7,G/F]
+M10: ~G4/2 R/1.5 B3/.25 C4/.25 [C/E]
+M11: C4/.5 A4/.25 A4/.25~A4/.5 A4/.25 A4/.25~A4/.5 G4/.25 F4/.25~F4/.25 G4/.5 E4/.25~ [FM7,G7]
+M12: ~E4/2 R/1.5 B3/.25 C4/.25 [C,Gm7,Gb7]
+
+SYSTEM 4
+M13: C4/.5 A4/.25 A4/.25~A4/.5 A4/.25 B4/.25~B4/.5 R/.5 B4/.5 A4/.5 [FM7,B7]
+M14: G4/.5 G4/.25 G4/.25~G4/.5 A4/.25 E4/.25~E4/1 R/.5 C4/.25 D4/.25 [Em7,E/G#,Am7]
+M15: E4/.5 E4/.25 E4/.25~E4/.5 A4/.25 A4/.25~A4/.5 A4/.25 A4/.25~A4/.25 G4/.5 E4/.25 [Dm9,D/F#]
+M16: A4/.5 G4/.25 G4/.25~G4/.5 E4/.25 G4/.25~G4/.5 R/.5 G4/.5 E4/.5 [G7sus4,G7]
+Repeat end at M16.
+
+SYSTEM 5
+Second ending begins at M17.
+M17: C4/2 R/1 G4/.5 F4/.5 [C]
+M18: E4/.5 E4/.5 E4/.5 E4/.25 E4/.25~E4/.5 R/.5 E4/.5 D4/.5 [FM7,FmM7]
+M19: G3/.5 G4/.25 G4/.25~G4/.5 A4/.25 G4/.25~G4/.5 R/.5 G4/.5 E4/.5 [Em7,A7]
+M20: G3/1 G4/.5 E4/.25 G3/.25~G3/.5 R/.5 A3/.5 C4/.5 [Dm11,G7sus4]
+M21: C4/3 R/1 [C]
+Final bar.
+
+Limitations: independent manual visual reading, not externally validated. Chord names and order transcribed, but exact chord-change timing not encoded. Printed repeat structure reported without playback expansion. No unreadable measure omitted.

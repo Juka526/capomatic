@@ -23,7 +23,8 @@ def main():
         folder.mkdir(exist_ok=True)
         for name, data in [('source.png', page.png), ('recognition.omr', page.omr),
                            ('coordinates.json', page.metadata_json),
-                           ('ownership.json', page.evidence_json)]:
+                           ('ownership.json', page.evidence_json),
+                           ('ink-masks.zip', page.ink_masks)]:
             (folder / name).write_bytes(data)
         return page
 

@@ -1,0 +1,7 @@
+{
+  "1": {"status": "SOURCE_READERS_DISAGREE", "location": "measure 4 tie endpoints", "notes": "First and second blind readers disagree. The initial selected-check disagreement with OMR is not an adjudicated OMR error."},
+  "2": {"status": "SOURCE_READERS_VS_OMR_TIE_DISAGREEMENT", "location": "measure 1 first C4", "notes": "Both source-only first-system readings omit the initial C4 tie present in recognized MusicXML."},
+  "3": {"status": "UNSUPPORTED_REVIEW_MAPPING", "location": "measure 4 rest / multiple exported voices", "notes": "The frozen source reader reports a full-measure rest. The export contains multivoice timing that the conservative review mapper refuses to flatten. No accuracy verdict is inferred from flattened notes."},
+  "4": {"status": "SOURCE_READERS_VS_OMR_TIE_DISAGREEMENT", "location": "measure 3 adjacent G3 sixteenths", "notes": "Both source-only first-system readings omit a G3 tie present in recognized MusicXML."},
+  "5": {"status": "SOURCE_READERS_VS_OMR_ACCIDENTAL_DISAGREEMENT", "location": "measure 4 F4 sixteenth", "notes": "Both blind source readings report F natural while recognized MusicXML gives F sharp. This is a review disagreement, not musician-adjudicated ground truth."}
+}

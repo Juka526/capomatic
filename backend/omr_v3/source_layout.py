@@ -139,14 +139,16 @@ def _omr_inventory(data: bytes, source_png: bytes) -> dict:
         # A skew estimate does not establish whether any coordinate moved.
         # The adapter has no execution-bound object-plane proof, even at zero.
         issues.append('OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED')
+        from .scan_ink import relations as read_relations
         objects = []
         for system in root.findall('.//page/system'):
-            relations = [(r.get('source'), r.get('target'), r.tag)
-                         for r in system.findall('sig/relations/*')]
+            relations = [(r['source'], r['target'], r['kind']) for r in read_relations(system)]
             for obj in system.findall('sig/inters/*'):
                 ident = obj.get('id')
                 objects.append({'object': ident, 'kind': obj.tag, 'system': system.get('id'),
                                 'measure': obj.get('measure'), 'glyph': obj.get('glyph'),
+                                'evidence_region': dict(obj.find('bounds').attrib)
+                                    if obj.find('bounds') is not None else None,
                                 'relations': [r for r in relations if ident in r[:2]],
                                 'status': 'UNVERIFIED',
                                 'reasons': ['COMPLETE_SOURCE_PIXEL_OWNERSHIP_UNAVAILABLE']})
@@ -171,6 +173,7 @@ class SourcePage:
     omr: bytes
     metadata_json: bytes
     evidence_json: bytes
+    ink_masks: bytes = b''
 
     @property
     def metadata(self):
@@ -182,7 +185,7 @@ class SourcePage:
 
     @property
     def byte_size(self):
-        return sum(map(len, (self.png, self.omr, self.metadata_json, self.evidence_json)))
+        return sum(map(len, (self.png, self.omr, self.metadata_json, self.evidence_json, self.ink_masks)))
 
     @classmethod
     def capture(cls, png: bytes, omr: bytes, metadata: dict):
@@ -209,13 +212,22 @@ class SourcePage:
             if tuple(metadata['pdf_to_raster']) != transform.values:
                 raise ScoreError('PDF coordinate transform mismatch')
         evidence = _omr_inventory(omr, png)
+        masks = b''
+        if omr and 'OMR_GEOMETRY_UNREADABLE' not in evidence['issues']:
+            from .scan_ink import analyze_source
+            try:
+                ink, masks = analyze_source(png, omr)
+                evidence['component_analysis'] = ink
+            except (ValueError, TypeError, KeyError, ET.ParseError, zipfile.BadZipFile, OSError) as exc:
+                evidence['component_analysis'] = {'status': 'UNAVAILABLE',
+                    'edit_authorized': False, 'reason': str(exc)[:300]}
         metadata = {**metadata, 'png_sha256': digest(png), 'omr_sha256': digest(omr),
                     'raster_to_output': Affine().values,
                     'output_to_raster': Affine().values,
                     'raster_to_omr': Affine().values if evidence['geometry_ready'] else None,
                     'omr_to_raster': Affine().values if evidence['geometry_ready'] else None}
         return cls(png, omr, json.dumps(metadata, sort_keys=True).encode(),
-                   json.dumps(evidence, sort_keys=True).encode())
+                   json.dumps(evidence, sort_keys=True).encode(), masks)
 
 
 @dataclass(frozen=True)
@@ -255,6 +267,8 @@ def readiness(page: SourcePage | None, semantic_ready: bool, number: int,
     # of absent lyrics; an unrecognised word may touch a stem or a slur.
     reasons.append({'page': number, 'measure': None, 'object': None,
                     'code': 'AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE'})
+    reasons.append({'page': number, 'measure': None, 'object': None,
+                    'code': 'COMPLETE_SOURCE_PIXEL_OWNERSHIP_UNAVAILABLE'})
     return {
         'semantic_ready': semantic_ready, 'geometry_ready': evidence['geometry_ready'],
         'lyric_layer_ready': False, 'render_ready': False,
@@ -262,6 +276,7 @@ def readiness(page: SourcePage | None, semantic_ready: bool, number: int,
         'reasons': reasons,
         'source_ink_safety': {'status': 'UNVERIFIED', 'edit_authorized': False,
                               'protected_region': 'ENTIRE_SOURCE_PAGE',
+                              'component_analysis': evidence.get('component_analysis'),
                               'objects': [{'page': number, **obj} for obj in evidence['objects']],
                               'reasons': ['COMPLETE_SOURCE_PIXEL_OWNERSHIP_UNAVAILABLE']},
         'measurements': {key: None for key in (

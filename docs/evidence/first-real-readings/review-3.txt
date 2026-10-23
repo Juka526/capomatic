@@ -1,0 +1,62 @@
+FROZEN INDEPENDENT SOURCE-ONLY READING: source-3.png
+Title: 우리가 주를 더욱 사랑하고. Treble, four sharps (F#,C#,G#,D#), 4/4. Entire page: pickup plus 49 full measures covered. Source pixels only, no OCR or implementation outputs read. Durations in quarter-note units. R=rest; ~=visible same-pitch tie; trailing ~ crosses barline. 'natural' overrides key. Number first full measure after pickup as 1. All full-bar duration totals checked to equal 4.
+Pickup B3(.5)
+1 E4(.5) F#4(1) F#4(.5)~F#4(.5) E4(1) F#4(.5)~
+2 F#4(.5) E4(1) F#4(.5)~F#4(.5) G#4(1) E4(.5)~
+3 E4(1) R(3 dotted-half)
+4 whole-measure rest (4)
+5 E4(.5) F#4(1) F#4(.5)~F#4(.5) E4(1) F#4(.5)~
+6 F#4(.5) G#4(1) E4(.5)~E4(.5) R(1) E4(.5)
+7 G#4(.5) A4(.5) G#4(.5) F#4(.5)~F#4(.5) E4(1) F#4(.5)~
+8 F#4(1) R(3 dotted-half)
+9 E4(.5) F#4(1) F#4(.5)~F#4(.5) F#4(.5) E4(.5) F#4(.5)~
+10 F#4(.5) G#4(1) G#4(.5) R(1) C#4(.5) E4(.5)
+11 F#4(1) R(.5) F#4(.5)~F#4(.5) G#4(.5) E4(.5) F#4(.5)~
+12 F#4(1) R(2) R(.5) E4(.5)
+13 E4(.5) F#4(1) F#4(.5)~F#4(.5) R(1) B4(.5)~
+14 B4(.5) E4(1) F#4(.5)~F#4(.5) R(1) E4(.5)
+15 B4(1) B4(.5) B4(.5)~B4(.5) A4(1) A4(.5)~
+16 A4(2) R(2)
+17 G#4(.5) A4(.5) B4(.5) G#4(.5)~G#4(.5) A4(.5) B4(.5) G#4(.5)~
+18 G#4(.5) A4(.5) B4(.5) G#4(.5)~G#4(.5) F#4(.5) E4(.5) F#4(.5)~
+19 F#4(.5) E4(1.5) R(2)
+20 whole-measure rest (4)
+21 =17
+22 G#4(1) R(.5) G#4(.5)~G#4(.5) F#4(.5) E4(.5) F#4(.5)~
+23 F#4(2) R(2)
+24 whole-measure rest (4)
+25 =17
+26 =18
+27 =19
+28 R(3 dotted-half) R(.5) E4(.5)
+29 E4(.5) F#4(1) F#4(.5) R(1) E4(.5) F#4(.5)~
+30 F#4(.5) G-natural4(1) F#4(.5)~F#4(.5) E4(1) B4(.5)~
+31 B4(3) R(1)
+32 R(.5) C#4(.5) E4(.5) C#4(.5) E4(.5) C#4(.5) E4(.5) C#4(.5)
+33 F#4(1.5) F#4(.5) R(.5) E4(1) E4(.5)
+34 =32
+35 F#4(1.5) F#4(.5)~F#4(.5) G#4(1) E4(.5)
+36 R(.5) C#4(.5) E4(.5) C#4(.5) E4(.5) C#4(.5) F#4(.5) G#4(.5)
+37 G#4(1) E4(.5) E4(.5)~E4(.5) F#4(1) F#4(.5)~
+38 F#4(1) R(1) E4(.5) F#4(.5) E4(.5) G-natural4(.5)~
+39 G-natural4(.5) G-natural4(1) G-natural4(.5)~G-natural4(.5) F#4(.5) E4(.5) F#4(.5)
+40 =32
+41 =33
+42 =32
+43 =35, with final E4 tied into m44
+44 E4(1) R(1) E4(.5) F#4(.5) G-natural4(.5) A4(.5)
+45 B4(1) B4(.5) B4(.5)~B4(.5) A4(.5) G-natural4(.5) A4(.5)~
+46 A4(.5) B4(.5) E4(.5) E4(.5) R(.5) E4(.5) G-natural4(.5) E4(.5)
+47 B4(1.5) B4(.5)~B4(.5) A4(.5) G-natural4(.5) A4(.5)
+48 R(2) A4(1) A4(1)
+49 G#4(1.5) A4(.5) B4(2); slur over these three notes.
+Harmony (each at measure start unless later symbol explicitly listed):
+1 Eadd2; 2 none; 3 Dadd2 beat1,C#m7 beat4; 4 C;
+5 Eadd2; 6 none; 7 Dadd2 beat1,C#m7 beat4; 8 C;
+9 Eadd2; 10 none; 11 Dadd2; 12 none; 13 C#m7; 14 none; 15 CM7; 16 A/B;
+17 F#m9; 18 E/G#; 19 Aadd2; 20 none; 21 F#m7; 22 E/G#; 23 A6; 24 none;
+25 F#m9; 26 E/G#; 27 Aadd2; 28 none; 29 F#m7; 30 E/G#; 31 CM7;
+32 A/B; 33 Eadd2; 34 none; 35 A6; 36 none;
+37 F#m9; 38 none; 39 CM7; 40 A/B; 41 Eadd2; 42 none;
+43 A6; 44 none; 45 F#m7; 46 E/G#; 47 CM7; 48 A/B; 49 Eadd2.
+UNCERTAINTIES/LIMITS: Chord placement assigned to measure starts except explicit beat4 chords in first system; first-system C#m7 beat4 placement is visual horizontal alignment, not a printed beat number. 'none' means no new written chord symbol, not no harmony. Same-pitch curves read as ties; final three-note curve read as slur. No unresolved pitch/rest-duration ambiguity identified in source-only pass, but independent human verification was not performed. Lyrics, geometry and expressive text are outside coverage. Source3 m4 whole-measure rest remains the original frozen source reading, unchanged.

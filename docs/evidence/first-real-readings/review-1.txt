@@ -1,0 +1,45 @@
+FROZEN INDEPENDENT SOURCE-ONLY TRANSCRIPTION — SOURCE 1
+Only source pixels viewed. No OCR, OMR, repository, implementation output, or ground truth consulted.
+Treble clef; Bb key signature; 4/4. Durations are quarter-note units. R = rest. ~ joins a tie, including across a barline. Pitches use scientific octave notation and include key-signature alterations. Chords in brackets occur in printed order within the measure; exact chord onset times were not independently encoded.
+Coverage: all 25 written measures, six systems. System 1 below is the final corrected reading and supersedes earlier preliminary messages.
+
+SYSTEM 1
+M1: R/1 A4/.5 G4/.25 A4/.25~A4/1 R/.5 A4/.25 A4/.25 [F]
+M2: G4/.5 F4/.25 G4/.25~G4/.5 F4/.25 G4/.25~G4/.5 R/.5 A4/.75 G4/.25 [C/E]
+M3: F4/1.5 F4/.25 E4/.25~E4/.5 A4/.5~A4/.5 R/.25 C4/.25 [Dm7]
+M4: D4/.5 F4/.25 F4/.25~F4/.25 G4/.25 G4/.25 G4/.25~G4/1.5 R/.5 [Bbadd2,Bbm6]
+
+SYSTEM 2
+M5: R/.75 A4/.25 A4/.5 G4/.25 A4/.25~A4/1 R/.5 A4/.25 A4/.25 [F]
+M6: G4/.5 F4/.25 G4/.25~G4/.5 F4/.25 G4/.25~G4/.5 R/.5 A4/.75 G4/.25 [C/E]
+M7: F4/1 R/1 E4/.5 E4/.25 A4/.25~A4/.75 C4/.25 [Dm7]
+M8: D4/3 R/1 [Bbadd2,Bbm6]
+
+SYSTEM 3
+M9: R/1 A4/.5 G4/.25 A4/.25~A4/1 R/.5 A4/.25 A4/.25 [F]
+M10: G4/.5 F4/.25 G4/.25~G4/.5 F4/.25 G4/.25~G4/.5 R/.5 A4/.75 G4/.25 [C/E]
+M11: F4/1.5 F4/.25 E4/.25~E4/.5 A4/.5~A4/.5 R/.5 [Dm7]
+M12: D4/.5 F4/.25 F4/.25~F4/.25 G4/.5 G4/.25~G4/1.5 R/.5 [Bbadd2,Bbm6]
+
+SYSTEM 4
+M13: R/1 A4/.5 G4/.25 A4/.25~A4/1.5 A4/.25 A4/.25 [F/A]
+M14: G4/.5 A4/.25 C5/.25~C5/.5 C5/.25 C5/.25~C5/.75 C5/.25 D5/.5 F4/.5~ [C/E]
+M15: ~F4/1.5 R/.25 F4/.25 E4/.5 E4/.25 A4/.25~A4/.75 C4/.25 [Dm7]
+M16: D4/3 R/1 [Bbadd2,Bbm6]
+M17: whole-measure rest (4) [Bb/C]
+
+SYSTEM 5
+M18: A4/.5 A4/1 A4/.5 G4/.5 A4/.25 C5/.25~C5/.5 C5/.25 F4/.25~ [F,C/E]
+M19: ~F4/1 R/.5 F4/.25 E4/.25~E4/.5 E4/.25 A4/.25~A4/.5 A4/.25 A4/.25~ [Dm7,Am7/C]
+M20: ~A4/1 R/.5 A4/.25 A4/.25~A4/.5 G4/.25 F4/.25~F4/.5 G4/.25 A4/.25 [BbM7,F/A]
+M21: Bb4/.5 C5/.25 A4/.25~A4/.25 Bb4/.5 A4/.25 G4/1 R/.5 A4/.5 [Gm7,C7]
+Slur in M21: from the final short A4 (duration .25) to following G4 (duration 1). This is a different-pitch slur, not a tie.
+
+SYSTEM 6
+M22: A4/1 R/.5 A4/.25 A4/.25 G4/.5 A4/.25 C5/.25~C5/.5 C5/.25 F4/.25~ [F,C/E]
+M23: ~F4/1 R/.5 F4/.25 F4/.25 E4/.5 E4/.25 A4/.25~A4/.5 A4/.25 A4/.25~ [Dm7,Am7/C]
+M24: ~A4/1 R/.5 A4/.25 A4/.25~A4/.5 G4/.25 F4/.25~F4/.5 G4/.25 A4/.25 [BbM7,F/A]
+M25: Bb4/.5 C5/.25 A4/.25~A4/.5 G4/.25 F4/.25~F4/1.5 R/.5 [Gm7,C7,F]
+Final bar.
+
+Limitations: independent manual visual reading, not externally validated. Chord names and order transcribed, but exact chord-change timing not encoded. No unreadable measure omitted.

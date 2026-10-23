@@ -1,0 +1,55 @@
+Frozen independent source-only transcription: source-5.png
+Viewed only original pixels and crops. No OCR, repository, implementation output, or ground truth.
+Treble clef; key signature F#, C#; 4/4 throughout. Durations are quarter units. R=rest; ~=tie to following note. Chords printed left-to-right within each measure. Octaves are written octaves. Tied written events are retained separately.
+
+SYSTEM 1
+m1 chords D, E: R(.5), F#4(.25), F#4(.25), F#4(.5), E4(.25), E4(.25)~E4(.25), D4(.25)~D4(.5), R(.5), A3(.25), B3(.25).
+m2 chords G, D, A/C#: D4(.5), B3(.5), D4(.25), E4(.25), F#4(.25), F#4(.25)~F#4(1), R(1).
+m3 chords Bm7, E7: R(.5), F#4(.25), F#4(.25), F#4(.5), F#4(.5), A4(.25), B4(.25), R(.5), D4(.5), B3(.5).
+m4 chords Em7, A7, D: D4(.25), D4(.25), D4(.25), D4(.25), F-natural4(.25), E4(.25), D4(.25), D4(.25)~D4(1), R(1). Slur F-natural4 to E4.
+
+SYSTEM 2
+m5 chords D, E: R(.5), F#4(.25), F#4(.25), F#4(.5), E4(.25), E4(.25), E4(.25), D4(.25)~D4(.5), R(.5), A3(.25), B3(.25). Unlike m1, no E4-E4 tie is visible.
+m6 chords G, D, A/C#: D4(.25), B3(.25), D4(.25), B3(.25), D4(.25), E4(.25), F#4(.25), F#4(.25)~F#4(1), R(1). Slur fifth note D4 to sixth note E4.
+m7 chords Bm7, E7: R(.5), F#4(.5), F#4(.5), F#4(.5), A4(.5), B4(.5), B3(.5), D4(.25), B3(.25).
+m8 chords Em7, A7, D: D4(.25), D4(.25), D4(.25), D4(.25), F-natural4(.25), E4(.25), D4(.25), D4(.25)~D4(1), R(1). Slur F-natural4 to E4.
+
+SYSTEM 3
+m9 chords G: R(.5), F#4(.5), G4(.5), F#4(.5), G4(.5), F#4(.5), G4(.5), A4(.5).
+m10 chords D/F#: F#4(2), R(2). Cross-bar slur m9 A4 to m10 F#4.
+m11 chords Em: R(.5), F#4(.5), G4(.5), F#4(.5), G4(.5), F#4(.5), G4(.5), A4(.5).
+m12 chords D/F#: F#4(2), R(2). Cross-bar slur m11 A4 to m12 F#4.
+
+SYSTEM 4
+m13 chords G, F#7: R(.5), G4(.5), G4(.5), G4(.5), A#4(.5), A#4(.5), A#4(.5), C#5(.5). Explicit sharp on first A4; remaining A4s inherit it.
+m14 chords Bm7, E7: D5(.5), D4(.25), D4(.25), E4(.25), D4(.25), F#4(.25), D4(.25)~D4(1), R(1). Slur E4 to following D4.
+m15 chords Em7, A7: R(.5), D4(.5), D4(.5), E4(.5), F#4(.5), F#4(.5), E4(.25), D4(.5), D4(.25)~m16 D4.
+m16 chords D: D4(.5), R(1.5), R(.5), A4(.5), B4(.5), D5(.5).
+
+SYSTEM 5
+m17 chords D, E: D5(1), R(.5), F#5(.25), E5(.25)~E5(.25), D5(.75), R(.75), A4(.25).
+m18 chords G, D, A/C#: D5(.5), D5(.5), D5(.25), E5(.25), F#5(.25), F#5(.25)~F#5(1), E5(.5), D5(.5). Slur final E5 to D5.
+m19 chords Bm7, E7: R(.5), D5(.5), D5(.5), D5(.5), E5(.5), D5(.25), D5(.25)~D5(.5), R(.5).
+m20 chords Em7, A7: D5(.5), D5(.5), E5(.5), D5(.25), E5(.25), R(.5), A4(.5), B4(.5), D5(.5).
+
+SYSTEM 6
+m21 chords D, E: D5(1), R(.5), A4(.25), E5(.25)~E5(1), R(.75), A4(.25).
+m22 chords G, D, A/C#: D5(.5), D5(.5), D5(.25), E5(.25), F#5(.25), F#5(.25)~F#5(1), R(1).
+m23 chords Bm7, E7: R(.5), D5(.5), D5(.5), D5(.5), E5(.5), D5(.25), D5(.25)~D5(.5), R(.25), A4(.25).
+m24 chords Em7, A7, D: D5(.5), D5(.5), E5(.5), F#5(.25), D5(.25)~D5(1), R(1).
+
+SYSTEM 7
+m25 chords D, E: R(.5), F#4(.25), F#4(.25), F#4(.5), E4(.25), E4(.25)~E4(.25), D4(.25)~D4(.5), R(.5), A3(.25), B3(.25).
+m26 chords G, D, A/C#: D4(.5), B3(.5), D4(.25), E4(.25), F#4(.25), F#4(.25)~F#4(1), R(1).
+m27 chords Bm7, E7: R(.5), F#4(.5), F#4(.5), F#4(.5), A4(.25), B4(.25), R(.75), D4(.25), D4(.25), B3(.25).
+m28 chords Em7, A7, D: D4(.25), D4(.25), D4(.25), D4(.25), F-natural4(.25), E4(.25), D4(.25), D4(.25)~D4(1), R(1). Slur F-natural4 to E4.
+
+SYSTEM 8
+m29 chords D, E: R(.5), F#4(.25), F#4(.25), F#4(.5), E4(.25), E4(.25)~E4(.25), D4(.5), D4(.25)~D4(.5), B3(.5).
+m30 chords G, D, A/C#: D4(.5), D4(.25), D4(.25), D4(.25), E4(.25), F#4(.25), F#4(.25)~F#4(1), R(1). Slur fourth D4 to E4.
+m31 chords Bm7, E7: R(.5), F#4(.5), F#4(.5), F#4(.5), A4(.25), B4(.75), D4(.25), B3(.25), D4(.25), B3(.25).
+m32 chords Em7, A7, D: D4(.25), D4(.25), D4(.25), D4(.25), F-natural4(.25), E4(.25), D4(.25), D4(.25)~D4(1), R(1). Slur F-natural4 to E4. Final barline.
+
+COVERAGE AND LIMITATIONS
+All 32 measures: notes, rests, durations, printed chord-symbol sequence, visible ties/slurs. Every transcribed bar totals 4 quarter units. No unresolved pitch/duration uncertainty remains in this reading, but this remains an independent visual transcription, not externally verified ground truth.
+Skipped lyrics and exact horizontal chord-change timing. No implementation comparison. This audit artifact must never be runtime input.

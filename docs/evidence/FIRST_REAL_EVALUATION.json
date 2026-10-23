@@ -1,0 +1,1081 @@
+{
+  "status": "FUNCTIONALLY_INCOMPLETE",
+  "base_commit": "e4fb603fae2edaa5ce405cb3ae955a6d659d7d4d",
+  "branch": "feature/ordinary-scan-first-real-success",
+  "raw_artifacts": "/private/tmp/capomatic-first-real-results",
+  "dataset": "five existing development scans; not hidden validation",
+  "counts": {
+    "detect_http_200": 5,
+    "identity_pdf_success": 5,
+    "nonzero_pdf_http_success": 0,
+    "nonzero_pdf_http_422": 10,
+    "nonzero_png_http_422": 10,
+    "verified_nonzero_preservation_pass": 0,
+    "output_music_review_pass": 0
+  },
+  "selection": {
+    "status": "NO_VERIFIED_ELIGIBLE_CANDIDATE",
+    "input": null,
+    "shift": null,
+    "recognition_correction_out_of_scope": true,
+    "unresolved_required_semantic_counts": "UNKNOWN; selected checks are lower-bound evidence only",
+    "target_collision_counts": "UNKNOWN; no admissible full-page target plan"
+  },
+  "validation": {
+    "full_suite_passed": 881,
+    "full_suite_skipped": 11,
+    "skipped_cases": [
+      "SKIPPED [1] tests/integration/test_admin_endpoints.py:18: TEST_TOKEN not set",
+      "SKIPPED [1] tests/integration/test_admin_endpoints.py:22: TEST_TOKEN not set",
+      "SKIPPED [1] tests/integration/test_auth_flow.py:18: TEST_TOKEN not set",
+      "SKIPPED [1] tests/integration/test_auth_flow.py:26: TEST_TOKEN not set",
+      "SKIPPED [1] tests/integration/test_auth_flow.py:30: TEST_TOKEN not set",
+      "SKIPPED [1] tests/integration/test_auth_flow.py:41: TEST_TOKEN not set",
+      "SKIPPED [1] tests/integration/test_auth_flow.py:45: TEST_TOKEN not set",
+      "SKIPPED [1] tests/integration/test_auth_flow.py:53: TEST_TOKEN not set",
+      "SKIPPED [1] tests/integration/test_auth_flow.py:58: TEST_TOKEN not set",
+      "SKIPPED [1] tests/integration/test_auth_flow.py:62: TEST_TOKEN not set",
+      "SKIPPED [1] tests/test_preprocess.py:188: untracked local-only fixture missing: fixtures/images/순간이-삶이-되어.png"
+    ],
+    "test_log_sha256": "7e3dbbdd2b2df7f745efa0607c9d9b6b2886844da85dfbd79222ca9c2332c8a8",
+    "targeted_counts_not_added": true
+  },
+  "recognition_accuracy": null,
+  "music_review_status": "SOURCE_ONLY_READINGS; NO_VALIDATED_NONZERO_OUTPUT",
+  "scans": [
+    {
+      "index": 1,
+      "name": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "raster_size": [
+        2363,
+        3342
+      ],
+      "raster_identity_ready": true,
+      "geometry_ready": false,
+      "semantic_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "admission": {
+        "status": "SOURCE_READERS_DISAGREE",
+        "location": "measure 4 tie endpoints",
+        "notes": "First and second blind readers disagree. The initial selected-check disagreement with OMR is not an adjudicated OMR error."
+      },
+      "selection_eligible": false,
+      "direction_selected": null,
+      "component_coverage_pixels": 0,
+      "protected_pixels": 7897146,
+      "unresolved_contact_pixels": 888685,
+      "raw_component_blocker_count": 58,
+      "raw_component_blocker_codes": {
+        "MUSIC_STAFF_COMPONENT_REQUIRES_RECONSTRUCTION_PROOF": 5,
+        "MUSIC_PROTECTED_GLYPH_CONTACT": 5,
+        "UNASSIGNED_SOURCE_RGB_OR_JPEG_EDGE": 58
+      },
+      "structure_issues": [],
+      "protected_residual_candidates_not_verified_lyrics": 11369,
+      "object_regions": 659,
+      "mask_partition_verified": true,
+      "evidence_path": "verified-source-evidence/e41b07d1d4de92631dd3eb62275222066266e31851849699abf9bae27dc4662a",
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "COMPLETE_SOURCE_PIXEL_OWNERSHIP_UNAVAILABLE"
+        }
+      ],
+      "measurements": {
+        "fixed_anchor_displacement_px": null,
+        "note_raster_error_xy_px": null,
+        "lyric_pixel_difference": null,
+        "alpha_collisions": null,
+        "disconnected_relations": null,
+        "duplicate_symbols": null,
+        "clipping": null
+      },
+      "missing_persisted_source_images": false,
+      "genuine_unavoidable_collisions": null,
+      "unsupported_required_notation_count": null
+    },
+    {
+      "index": 2,
+      "name": "2 자유_1758826857.pdf",
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "raster_size": [
+        2481,
+        3507
+      ],
+      "raster_identity_ready": true,
+      "geometry_ready": false,
+      "semantic_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "admission": {
+        "status": "SOURCE_READERS_VS_OMR_TIE_DISAGREEMENT",
+        "location": "measure 1 first C4",
+        "notes": "Both source-only first-system readings omit the initial C4 tie present in recognized MusicXML."
+      },
+      "selection_eligible": false,
+      "direction_selected": null,
+      "component_coverage_pixels": 0,
+      "protected_pixels": 8700867,
+      "unresolved_contact_pixels": 1150148,
+      "raw_component_blocker_count": 64,
+      "raw_component_blocker_codes": {
+        "UNASSIGNED_SOURCE_RGB_OR_JPEG_EDGE": 64,
+        "MUSIC_STAFF_COMPONENT_REQUIRES_RECONSTRUCTION_PROOF": 6,
+        "MUSIC_PROTECTED_GLYPH_CONTACT": 9
+      },
+      "structure_issues": [],
+      "protected_residual_candidates_not_verified_lyrics": 12090,
+      "object_regions": 897,
+      "mask_partition_verified": true,
+      "evidence_path": "verified-source-evidence/35946f62004e773b9e0a9bd1f9cc1931d0a4e14621f7f41e32959f8f6618a438",
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "COMPLETE_SOURCE_PIXEL_OWNERSHIP_UNAVAILABLE"
+        }
+      ],
+      "measurements": {
+        "fixed_anchor_displacement_px": null,
+        "note_raster_error_xy_px": null,
+        "lyric_pixel_difference": null,
+        "alpha_collisions": null,
+        "disconnected_relations": null,
+        "duplicate_symbols": null,
+        "clipping": null
+      },
+      "missing_persisted_source_images": false,
+      "genuine_unavoidable_collisions": null,
+      "unsupported_required_notation_count": null
+    },
+    {
+      "index": 3,
+      "name": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "raster_size": [
+        3780,
+        3780
+      ],
+      "raster_identity_ready": true,
+      "geometry_ready": false,
+      "semantic_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "admission": {
+        "status": "UNSUPPORTED_REVIEW_MAPPING",
+        "location": "measure 4 rest / multiple exported voices",
+        "notes": "The frozen source reader reports a full-measure rest. The export contains multivoice timing that the conservative review mapper refuses to flatten. No accuracy verdict is inferred from flattened notes."
+      },
+      "selection_eligible": false,
+      "direction_selected": null,
+      "component_coverage_pixels": 0,
+      "protected_pixels": 14288400,
+      "unresolved_contact_pixels": 1881358,
+      "raw_component_blocker_count": 51,
+      "raw_component_blocker_codes": {
+        "MUSIC_STAFF_COMPONENT_REQUIRES_RECONSTRUCTION_PROOF": 5,
+        "MUSIC_PROTECTED_GLYPH_CONTACT": 8,
+        "UNASSIGNED_SOURCE_RGB_OR_JPEG_EDGE": 51
+      },
+      "structure_issues": [],
+      "protected_residual_candidates_not_verified_lyrics": 11121,
+      "object_regions": 930,
+      "mask_partition_verified": true,
+      "evidence_path": "verified-source-evidence/7f676117a8584dabaaf781bd3d5930036d1cca7b2f695ac669b408a994eb6201",
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "COMPLETE_SOURCE_PIXEL_OWNERSHIP_UNAVAILABLE"
+        }
+      ],
+      "measurements": {
+        "fixed_anchor_displacement_px": null,
+        "note_raster_error_xy_px": null,
+        "lyric_pixel_difference": null,
+        "alpha_collisions": null,
+        "disconnected_relations": null,
+        "duplicate_symbols": null,
+        "clipping": null
+      },
+      "missing_persisted_source_images": false,
+      "genuine_unavoidable_collisions": null,
+      "unsupported_required_notation_count": null
+    },
+    {
+      "index": 4,
+      "name": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "raster_size": [
+        2953,
+        2586
+      ],
+      "raster_identity_ready": true,
+      "geometry_ready": false,
+      "semantic_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "admission": {
+        "status": "SOURCE_READERS_VS_OMR_TIE_DISAGREEMENT",
+        "location": "measure 3 adjacent G3 sixteenths",
+        "notes": "Both source-only first-system readings omit a G3 tie present in recognized MusicXML."
+      },
+      "selection_eligible": false,
+      "direction_selected": null,
+      "component_coverage_pixels": 0,
+      "protected_pixels": 7636458,
+      "unresolved_contact_pixels": 990292,
+      "raw_component_blocker_count": 26,
+      "raw_component_blocker_codes": {
+        "MUSIC_STAFF_COMPONENT_REQUIRES_RECONSTRUCTION_PROOF": 3,
+        "MUSIC_PROTECTED_GLYPH_CONTACT": 5,
+        "UNASSIGNED_SOURCE_RGB_OR_JPEG_EDGE": 26
+      },
+      "structure_issues": [],
+      "protected_residual_candidates_not_verified_lyrics": 6594,
+      "object_regions": 613,
+      "mask_partition_verified": true,
+      "evidence_path": "verified-source-evidence/2530102ffbdba0f16de326c9dc6e3a4813100a3105e965829adf719ccd6ea585",
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "COMPLETE_SOURCE_PIXEL_OWNERSHIP_UNAVAILABLE"
+        }
+      ],
+      "measurements": {
+        "fixed_anchor_displacement_px": null,
+        "note_raster_error_xy_px": null,
+        "lyric_pixel_difference": null,
+        "alpha_collisions": null,
+        "disconnected_relations": null,
+        "duplicate_symbols": null,
+        "clipping": null
+      },
+      "missing_persisted_source_images": false,
+      "genuine_unavoidable_collisions": null,
+      "unsupported_required_notation_count": null
+    },
+    {
+      "index": 5,
+      "name": "본향을 향해-1_1758828084.pdf",
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "raster_size": [
+        2717,
+        3507
+      ],
+      "raster_identity_ready": true,
+      "geometry_ready": false,
+      "semantic_ready": false,
+      "lyric_layer_ready": false,
+      "render_ready": false,
+      "admission": {
+        "status": "SOURCE_READERS_VS_OMR_ACCIDENTAL_DISAGREEMENT",
+        "location": "measure 4 F4 sixteenth",
+        "notes": "Both blind source readings report F natural while recognized MusicXML gives F sharp. This is a review disagreement, not musician-adjudicated ground truth."
+      },
+      "selection_eligible": false,
+      "direction_selected": null,
+      "component_coverage_pixels": 0,
+      "protected_pixels": 9528519,
+      "unresolved_contact_pixels": 1233657,
+      "raw_component_blocker_count": 40,
+      "raw_component_blocker_codes": {
+        "MUSIC_STAFF_COMPONENT_REQUIRES_RECONSTRUCTION_PROOF": 6,
+        "MUSIC_PROTECTED_GLYPH_CONTACT": 6,
+        "UNASSIGNED_SOURCE_RGB_OR_JPEG_EDGE": 40
+      },
+      "structure_issues": [],
+      "protected_residual_candidates_not_verified_lyrics": 10220,
+      "object_regions": 876,
+      "mask_partition_verified": true,
+      "evidence_path": "verified-source-evidence/e9f095f0a46dafebbde44786ea43123b211808765decdd971a40a832630c3c3c",
+      "first_blocker": {
+        "page": 1,
+        "measure": null,
+        "object": null,
+        "code": "OMR_OBJECT_COORDINATE_PLANE_UNVERIFIED"
+      },
+      "secondary_blockers": [
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "SEMANTIC_EVENTS_OR_RELATIONS_UNVERIFIED"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "AUTOMATIC_LYRIC_PIXEL_SEPARATION_UNAVAILABLE"
+        },
+        {
+          "page": 1,
+          "measure": null,
+          "object": null,
+          "code": "COMPLETE_SOURCE_PIXEL_OWNERSHIP_UNAVAILABLE"
+        }
+      ],
+      "measurements": {
+        "fixed_anchor_displacement_px": null,
+        "note_raster_error_xy_px": null,
+        "lyric_pixel_difference": null,
+        "alpha_collisions": null,
+        "disconnected_relations": null,
+        "duplicate_symbols": null,
+        "clipping": null
+      },
+      "missing_persisted_source_images": false,
+      "genuine_unavoidable_collisions": null,
+      "unsupported_required_notation_count": null
+    }
+  ],
+  "source_review_comparisons": [
+    {
+      "status": "SOURCE_REVIEW_DISAGREEMENT",
+      "full_page_accuracy": null,
+      "checked_measures": [
+        "4"
+      ],
+      "other_measures_unverified": true,
+      "checks": [
+        {
+          "measure": "4",
+          "event_index": 4,
+          "expected_from_source_review": {
+            "pitch": "G4",
+            "duration": "1/4",
+            "ties": []
+          },
+          "recognized": {
+            "pitch": "G4",
+            "duration": "1/4",
+            "ties": [
+              "start"
+            ]
+          },
+          "disagreement": true
+        }
+      ],
+      "sig_reference": {
+        "status": "SIG_SLOT_REFERENCE_ONLY",
+        "page": 1,
+        "system": "1",
+        "measure": "4",
+        "chord": "5012",
+        "object": "1604",
+        "glyph": "1603",
+        "region": {
+          "x": "2000",
+          "y": "528",
+          "w": "28",
+          "h": "24"
+        },
+        "relations": [
+          {
+            "source": "1604",
+            "target": "2828",
+            "kind": "head-stem",
+            "attributes": {
+              "head-side": "RIGHT",
+              "consistency": "1.2",
+              "dx": "-0.044",
+              "dy": "0",
+              "grade": "0.943"
+            }
+          },
+          {
+            "source": "5012",
+            "target": "1604",
+            "kind": "containment",
+            "attributes": {}
+          },
+          {
+            "source": "6290",
+            "target": "1604",
+            "kind": "slur-head",
+            "attributes": {
+              "side": "LEFT",
+              "grade": "1"
+            }
+          }
+        ]
+      },
+      "input_index": 1,
+      "source_read_sha256": "ee824bb1245cfca782db639e7d19c073ff13c83f8ad21c2dfa30d4ffa860d60b",
+      "source_image_sha256": "07e06ebe15a20aee4a3280baa69d4a855fc4599798ae2ea0631ccdd85694c60f",
+      "checks_sha256": "5489266eeab7093495c4edbe727eec56db7e11c593dba3d7346c9450862351ed",
+      "recognized_sha256": "6c9ed749f6edcf4a3ac444f719c08373eedf8cc6891a88169795765ba51d8aaf",
+      "runtime_injected": false,
+      "admission": {
+        "status": "SOURCE_READERS_DISAGREE",
+        "location": "measure 4 tie endpoints",
+        "notes": "First and second blind readers disagree. The initial selected-check disagreement with OMR is not an adjudicated OMR error."
+      }
+    },
+    {
+      "status": "SOURCE_REVIEW_DISAGREEMENT",
+      "full_page_accuracy": null,
+      "checked_measures": [
+        "1"
+      ],
+      "other_measures_unverified": true,
+      "checks": [
+        {
+          "measure": "1",
+          "event_index": 0,
+          "expected_from_source_review": {
+            "pitch": "C4",
+            "duration": "1/2",
+            "ties": []
+          },
+          "recognized": {
+            "pitch": "C4",
+            "duration": "1/2",
+            "ties": [
+              "start"
+            ]
+          },
+          "disagreement": true
+        }
+      ],
+      "sig_reference": {
+        "status": "SIG_SLOT_REFERENCE_ONLY",
+        "page": 1,
+        "system": "1",
+        "measure": "1",
+        "chord": "6332",
+        "object": "2254",
+        "glyph": "2253",
+        "region": {
+          "x": "288",
+          "y": "554",
+          "w": "28",
+          "h": "23"
+        },
+        "relations": [
+          {
+            "source": "2254",
+            "target": "3746",
+            "kind": "head-stem",
+            "attributes": {
+              "head-side": "RIGHT",
+              "consistency": "1.3",
+              "dx": "-0.027",
+              "dy": "0",
+              "grade": "0.965"
+            }
+          },
+          {
+            "source": "6332",
+            "target": "2254",
+            "kind": "containment",
+            "attributes": {}
+          },
+          {
+            "source": "6860",
+            "target": "2254",
+            "kind": "slur-head",
+            "attributes": {
+              "side": "LEFT",
+              "grade": "1"
+            }
+          }
+        ]
+      },
+      "input_index": 2,
+      "source_read_sha256": "9c31edb0381699f9875fece3bcc423d5097343dd889221e5ccf1d7ac0a4d32a0",
+      "source_image_sha256": "ddffa4e5ace9af1660c10ea03d05886231d2a75ac3625776993e2726024b921b",
+      "checks_sha256": "a8424e787932f53cd3612593cdeb8f4dfcde77f9a0367a3a764a46f2d09dae81",
+      "recognized_sha256": "b642af27e954bf78e472ec0b7a24ba30909a9062cf3893bc3b8d1372cc3fcb24",
+      "runtime_injected": false,
+      "admission": {
+        "status": "SOURCE_READERS_VS_OMR_TIE_DISAGREEMENT",
+        "location": "measure 1 first C4",
+        "notes": "Both source-only first-system readings omit the initial C4 tie present in recognized MusicXML."
+      }
+    },
+    {
+      "status": "REVIEW_MAPPING_UNSUPPORTED",
+      "error": "Unsupported multivoice/timing structure in measure 4",
+      "full_page_accuracy": null,
+      "sig_reference": {
+        "status": "UNVERIFIED_MULTIVOICE"
+      },
+      "input_index": 3,
+      "source_read_sha256": "dc4d07593bff4e5804c66959503dc24c06af091415b489979951a57c6666ca3a",
+      "source_image_sha256": "e1610ea039bb06cb5493a3dbeb089c52ee1f097c4f07575b96f392349417bb85",
+      "checks_sha256": "070fd24738284cf39851e77483d79821e1fb20b99f670b3f35b119afb0e7d2a4",
+      "recognized_sha256": "f692d6b1340b8568dc3ed591e894d5a5e21771df82a925a90b9623a6163cd80f",
+      "runtime_injected": false,
+      "admission": {
+        "status": "UNSUPPORTED_REVIEW_MAPPING",
+        "location": "measure 4 rest / multiple exported voices",
+        "notes": "The frozen source reader reports a full-measure rest. The export contains multivoice timing that the conservative review mapper refuses to flatten. No accuracy verdict is inferred from flattened notes."
+      }
+    },
+    {
+      "status": "SOURCE_REVIEW_DISAGREEMENT",
+      "full_page_accuracy": null,
+      "checked_measures": [
+        "3"
+      ],
+      "other_measures_unverified": true,
+      "checks": [
+        {
+          "measure": "3",
+          "event_index": 2,
+          "expected_from_source_review": {
+            "pitch": "G3",
+            "duration": "1/4",
+            "ties": []
+          },
+          "recognized": {
+            "pitch": "G3",
+            "duration": "1/4",
+            "ties": [
+              "start"
+            ]
+          },
+          "disagreement": true
+        }
+      ],
+      "sig_reference": {
+        "status": "SIG_SLOT_REFERENCE_ONLY",
+        "page": 1,
+        "system": "1",
+        "measure": "3",
+        "chord": "3425",
+        "object": "1354",
+        "glyph": "1353",
+        "region": {
+          "x": "1928",
+          "y": "611",
+          "w": "27",
+          "h": "22"
+        },
+        "relations": [
+          {
+            "source": "1354",
+            "target": "2114",
+            "kind": "head-stem",
+            "attributes": {
+              "head-side": "RIGHT",
+              "consistency": "1.7",
+              "dx": "-0.03",
+              "dy": "0",
+              "grade": "0.961"
+            }
+          },
+          {
+            "source": "3425",
+            "target": "1354",
+            "kind": "containment",
+            "attributes": {}
+          },
+          {
+            "source": "3853",
+            "target": "1354",
+            "kind": "slur-head",
+            "attributes": {
+              "side": "LEFT",
+              "grade": "1"
+            }
+          }
+        ]
+      },
+      "input_index": 4,
+      "source_read_sha256": "867121bffbec122213179ad5526514abdef1872ce02ce70efceeb11733a88604",
+      "source_image_sha256": "0fb0e6f4562e61e989af4f77585adf45f29d2a9dbf1fa8bc46a4a5841662802f",
+      "checks_sha256": "530164774b84f974fdc0a653b1d991b061c19628e858a5b036389e5ffb048699",
+      "recognized_sha256": "53de1a33892f72530f7d3a5f89749091758fe946cd30e04639a0b88f3e60ab8a",
+      "runtime_injected": false,
+      "admission": {
+        "status": "SOURCE_READERS_VS_OMR_TIE_DISAGREEMENT",
+        "location": "measure 3 adjacent G3 sixteenths",
+        "notes": "Both source-only first-system readings omit a G3 tie present in recognized MusicXML."
+      }
+    },
+    {
+      "status": "SOURCE_REVIEW_DISAGREEMENT",
+      "full_page_accuracy": null,
+      "checked_measures": [
+        "4"
+      ],
+      "other_measures_unverified": true,
+      "checks": [
+        {
+          "measure": "4",
+          "event_index": 4,
+          "expected_from_source_review": {
+            "pitch": "F4",
+            "duration": "1/4"
+          },
+          "recognized": {
+            "pitch": "F#4",
+            "duration": "1/4"
+          },
+          "disagreement": true
+        }
+      ],
+      "sig_reference": {
+        "status": "SIG_SLOT_REFERENCE_ONLY",
+        "page": 1,
+        "system": "1",
+        "measure": "4",
+        "chord": "5814",
+        "object": "2253",
+        "glyph": "2252",
+        "region": {
+          "x": "2245",
+          "y": "519",
+          "w": "28",
+          "h": "24"
+        },
+        "relations": [
+          {
+            "source": "2253",
+            "target": "3685",
+            "kind": "head-stem",
+            "attributes": {
+              "head-side": "RIGHT",
+              "consistency": "1.4",
+              "dx": "-0.07",
+              "dy": "0",
+              "grade": "0.908"
+            }
+          },
+          {
+            "source": "5814",
+            "target": "2253",
+            "kind": "containment",
+            "attributes": {}
+          },
+          {
+            "source": "6045",
+            "target": "2253",
+            "kind": "slur-head",
+            "attributes": {
+              "side": "LEFT",
+              "grade": "1"
+            }
+          }
+        ]
+      },
+      "input_index": 5,
+      "source_read_sha256": "7dff81c82021351a2b03463262e7ba4ff01bff9cb0a1d5106198899f0b06a008",
+      "source_image_sha256": "9041eb7ada48dff49e1093afd28e869f87ea851a668060bfd8ceccc06d4ccb4c",
+      "checks_sha256": "67b717e53a0acf391de7b2ea67a5c8f33ce9a5846c2c0e85e1d47b0f4c65fad6",
+      "recognized_sha256": "db41dc36e03ce1b5cbc598492ac1efcd3e17b22011f59ed3494de5c9b1e12816",
+      "runtime_injected": false,
+      "admission": {
+        "status": "SOURCE_READERS_VS_OMR_ACCIDENTAL_DISAGREEMENT",
+        "location": "measure 4 F4 sixteenth",
+        "notes": "Both blind source readings report F natural while recognized MusicXML gives F sharp. This is a review disagreement, not musician-adjudicated ground truth."
+      }
+    }
+  ],
+  "http_rows": [
+    {
+      "index": 1,
+      "name": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "historical_hash_match": true,
+      "shift": 0,
+      "detect_http": 200,
+      "pdf_http": 200,
+      "response_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "identity_only": true,
+      "all_original_bytes_preserved": true
+    },
+    {
+      "index": 1,
+      "name": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "historical_hash_match": true,
+      "shift": 1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "2eec5f1024e0861b07a1281b0cf953adeca1c0d39313a87dd5cce7c0b746dcb9",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 1,
+      "name": "1 주님 난 알고 싶어요_1758826856.pdf",
+      "source_sha256": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+      "historical_hash_match": true,
+      "shift": -1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "06671277bf26173dcf2dfb8952245ba9e87c7391e40158d6ef79629ef4af2d85",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 2,
+      "name": "2 자유_1758826857.pdf",
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "historical_hash_match": true,
+      "shift": 0,
+      "detect_http": 200,
+      "pdf_http": 200,
+      "response_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "identity_only": true,
+      "all_original_bytes_preserved": true
+    },
+    {
+      "index": 2,
+      "name": "2 자유_1758826857.pdf",
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "historical_hash_match": true,
+      "shift": 1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "2849be31df57f1135949a31d95f6f5d621f9d5077a109390225206bd6d4f790e",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 2,
+      "name": "2 자유_1758826857.pdf",
+      "source_sha256": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+      "historical_hash_match": true,
+      "shift": -1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "1bd691daf0b9042642eebdf82cec08579546b5239444fe789e20c06e5ef63a2e",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 3,
+      "name": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "historical_hash_match": true,
+      "shift": 0,
+      "detect_http": 200,
+      "pdf_http": 200,
+      "response_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "identity_only": true,
+      "all_original_bytes_preserved": true
+    },
+    {
+      "index": 3,
+      "name": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "historical_hash_match": true,
+      "shift": 1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "586dc1a3a8a02d050fdaad7221aa8df4f7372655bfc84176bab314aa003fd783",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 3,
+      "name": "3 우리가 주를 더욱 사랑하고_1758826857.pdf",
+      "source_sha256": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+      "historical_hash_match": true,
+      "shift": -1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "4dff31d5da1dd9c9f7fade7fa646b4189cb52ebbb9701e4b0edead96874a3344",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 4,
+      "name": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "historical_hash_match": true,
+      "shift": 0,
+      "detect_http": 200,
+      "pdf_http": 200,
+      "response_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "identity_only": true,
+      "all_original_bytes_preserved": true
+    },
+    {
+      "index": 4,
+      "name": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "historical_hash_match": true,
+      "shift": 1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "94ed2be9bc97e37e37621073ff4864a75063081cd9a797fe92eaf512b40b2dac",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 4,
+      "name": "나의 꿈, 내 소망-1_1758828086.pdf",
+      "source_sha256": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+      "historical_hash_match": true,
+      "shift": -1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "735bc61b4b1f7d5d933ad50a3253d11d827486b4844b1b5339da36828f66229e",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 5,
+      "name": "본향을 향해-1_1758828084.pdf",
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "historical_hash_match": true,
+      "shift": 0,
+      "detect_http": 200,
+      "pdf_http": 200,
+      "response_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "identity_only": true,
+      "all_original_bytes_preserved": true
+    },
+    {
+      "index": 5,
+      "name": "본향을 향해-1_1758828084.pdf",
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "historical_hash_match": true,
+      "shift": 1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "475602101507c1b0b9f6116b41ac4bad88def2577d29d368a0296b5feb2188f8",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    },
+    {
+      "index": 5,
+      "name": "본향을 향해-1_1758828084.pdf",
+      "source_sha256": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+      "historical_hash_match": true,
+      "shift": -1,
+      "detect_http": 200,
+      "pdf_http": 422,
+      "response_sha256": "60e5e527e482422a529cf865efc3763f71f63c130058f59f12358d35e21dcc54",
+      "source_unchanged": true,
+      "preservation_contract_pass": false,
+      "music_review": "NOT_RUN_NO_NONZERO_OUTPUT",
+      "png_http": 422
+    }
+  ],
+  "http_code_sha256": {
+    "backend/omr_v3/scan_ink.py": "55bf86dad4e6130f4ead2a0816e61e33677e4f07d251ec5461d79968b0c4c63e",
+    "backend/omr_v3/source_layout.py": "020c67d96e4d5727b17cfbb94ac3152fafaad43eeb58085a99164bbf043fe876",
+    "backend/api/score.py": "0848852318487e2237287699250da91fdcf27448848b25aa8812f100d6aeb6bf",
+    "backend/omr_v3/core.py": "5f588acb0dfba48cd6b1a5be55fd57b4dbd09a5802c02ec0d523801551345602",
+    "backend/omr_v3/scan_pdf.py": "ed23a10818d05243638e34403fd29f2a8af9d3de7c282c2059c0325dc311739e",
+    "backend/omr_v3/transpose.py": "ca73c35e061730f781d232176924ab4f6bbd06d53a15897255165804ddc16efc",
+    "backend/omr_v3/music_guard.py": "9f27db149414fe38991b86230f4c15fae90c2ecd1bb5205ecfd56892fa992b43",
+    "scripts/ordinary_scan_evidence_server.py": "962e0d31bdb9777ae6f6a11374dd52030f2fee33fe9d737b30b36bb10de40af4"
+  },
+  "offline_tool_sha256": {
+    "first_real_report.py": "1659238f23ec66a8d76c62ccc59e05314608d17299918ce9f2630253c5d6cbea",
+    "scan_review_compare.py": "4c2aad655511c8a721f980aa8dd616b6f0d98b5d79a0c64c41c902a1e27c027a"
+  },
+  "artifact_sha256": {
+    "verified-http/evaluation.json": "4b26f041d71b49298a63cf89830af31b2048f11fcbd4fe8a7e2fc7913b009329",
+    "verified-http/score-1/+0.response": "ebf05b279a54b2ad764668d3b0cd7c609f7264e54610f3e7095f309b0459855f",
+    "verified-http/score-1/+1.png-response.json": "2eec5f1024e0861b07a1281b0cf953adeca1c0d39313a87dd5cce7c0b746dcb9",
+    "verified-http/score-1/+1.response": "2eec5f1024e0861b07a1281b0cf953adeca1c0d39313a87dd5cce7c0b746dcb9",
+    "verified-http/score-1/-1.png-response.json": "06671277bf26173dcf2dfb8952245ba9e87c7391e40158d6ef79629ef4af2d85",
+    "verified-http/score-1/-1.response": "06671277bf26173dcf2dfb8952245ba9e87c7391e40158d6ef79629ef4af2d85",
+    "verified-http/score-1/detect.json": "2fb17eb48032e4319507e24e69ffb735c11d1c994e4005f25b20c2a25411c3e6",
+    "verified-http/score-1/recognized.musicxml": "6c9ed749f6edcf4a3ac444f719c08373eedf8cc6891a88169795765ba51d8aaf",
+    "verified-http/score-2/+0.response": "a952070c62870cb1988e70d934c9fadbef0ea10369260996bb10a27b62c3de5b",
+    "verified-http/score-2/+1.png-response.json": "2849be31df57f1135949a31d95f6f5d621f9d5077a109390225206bd6d4f790e",
+    "verified-http/score-2/+1.response": "2849be31df57f1135949a31d95f6f5d621f9d5077a109390225206bd6d4f790e",
+    "verified-http/score-2/-1.png-response.json": "1bd691daf0b9042642eebdf82cec08579546b5239444fe789e20c06e5ef63a2e",
+    "verified-http/score-2/-1.response": "1bd691daf0b9042642eebdf82cec08579546b5239444fe789e20c06e5ef63a2e",
+    "verified-http/score-2/detect.json": "1b00a14ce88ee3c4b88b77c1de1be4a35b35cfa90378eb9d0c6bade1055fcdef",
+    "verified-http/score-2/recognized.musicxml": "b642af27e954bf78e472ec0b7a24ba30909a9062cf3893bc3b8d1372cc3fcb24",
+    "verified-http/score-3/+0.response": "764b183f928a5512e54cb3552ef424c5b59e5d86406806f9ee80214247973e0d",
+    "verified-http/score-3/+1.png-response.json": "586dc1a3a8a02d050fdaad7221aa8df4f7372655bfc84176bab314aa003fd783",
+    "verified-http/score-3/+1.response": "586dc1a3a8a02d050fdaad7221aa8df4f7372655bfc84176bab314aa003fd783",
+    "verified-http/score-3/-1.png-response.json": "4dff31d5da1dd9c9f7fade7fa646b4189cb52ebbb9701e4b0edead96874a3344",
+    "verified-http/score-3/-1.response": "4dff31d5da1dd9c9f7fade7fa646b4189cb52ebbb9701e4b0edead96874a3344",
+    "verified-http/score-3/detect.json": "43c9f650fe382a7c6a449df28cc1adec49ccde6582df76b97dcffcc0150762d7",
+    "verified-http/score-3/recognized.musicxml": "f692d6b1340b8568dc3ed591e894d5a5e21771df82a925a90b9623a6163cd80f",
+    "verified-http/score-4/+0.response": "c07c97ad73c6ad4b35fbedd64dfd68ca0ffccecda0a394ad9d9a8dce2076c947",
+    "verified-http/score-4/+1.png-response.json": "94ed2be9bc97e37e37621073ff4864a75063081cd9a797fe92eaf512b40b2dac",
+    "verified-http/score-4/+1.response": "94ed2be9bc97e37e37621073ff4864a75063081cd9a797fe92eaf512b40b2dac",
+    "verified-http/score-4/-1.png-response.json": "735bc61b4b1f7d5d933ad50a3253d11d827486b4844b1b5339da36828f66229e",
+    "verified-http/score-4/-1.response": "735bc61b4b1f7d5d933ad50a3253d11d827486b4844b1b5339da36828f66229e",
+    "verified-http/score-4/detect.json": "c5de5462739d0fa87a8195dd25f03e52b57d9b6c256ccac9ef9e3e4e0d999db8",
+    "verified-http/score-4/recognized.musicxml": "53de1a33892f72530f7d3a5f89749091758fe946cd30e04639a0b88f3e60ab8a",
+    "verified-http/score-5/+0.response": "eac073142db40d73ab5e72759ae28208ee284f8185c5d31f0e9c966afe5ffaee",
+    "verified-http/score-5/+1.png-response.json": "475602101507c1b0b9f6116b41ac4bad88def2577d29d368a0296b5feb2188f8",
+    "verified-http/score-5/+1.response": "475602101507c1b0b9f6116b41ac4bad88def2577d29d368a0296b5feb2188f8",
+    "verified-http/score-5/-1.png-response.json": "60e5e527e482422a529cf865efc3763f71f63c130058f59f12358d35e21dcc54",
+    "verified-http/score-5/-1.response": "60e5e527e482422a529cf865efc3763f71f63c130058f59f12358d35e21dcc54",
+    "verified-http/score-5/detect.json": "a7724e9b8a134e585a8a43063f7fd53c5f0e023b12f276741a84abd37d2e2797",
+    "verified-http/score-5/recognized.musicxml": "db41dc36e03ce1b5cbc598492ac1efcd3e17b22011f59ed3494de5c9b1e12816",
+    "verified-source-evidence/2530102ffbdba0f16de326c9dc6e3a4813100a3105e965829adf719ccd6ea585/coordinates.json": "284ec1af916f523cc770a5838d06d6beeb583aa060d4381e080d93f35d08fecf",
+    "verified-source-evidence/2530102ffbdba0f16de326c9dc6e3a4813100a3105e965829adf719ccd6ea585/ink-masks.zip": "e4d93bc7ee0d1a85483eedaa0a1b8d7e0d11451a3c5a7b6db3505e1b02ca7ada",
+    "verified-source-evidence/2530102ffbdba0f16de326c9dc6e3a4813100a3105e965829adf719ccd6ea585/ownership.json": "7bcc434dce237034ab538ca6ba01b1bf5c83c1977e175148c864b7fe46d6af06",
+    "verified-source-evidence/2530102ffbdba0f16de326c9dc6e3a4813100a3105e965829adf719ccd6ea585/recognition.omr": "81e4b4c01de497af765ce0f5e56493c50e7675767c1003ef6448e654fedd962c",
+    "verified-source-evidence/2530102ffbdba0f16de326c9dc6e3a4813100a3105e965829adf719ccd6ea585/source.png": "0fb0e6f4562e61e989af4f77585adf45f29d2a9dbf1fa8bc46a4a5841662802f",
+    "verified-source-evidence/35946f62004e773b9e0a9bd1f9cc1931d0a4e14621f7f41e32959f8f6618a438/coordinates.json": "010537f7561894bdb0ab91cfc5103504f473aa5ae723d1fa403a8c6bf4a31b0f",
+    "verified-source-evidence/35946f62004e773b9e0a9bd1f9cc1931d0a4e14621f7f41e32959f8f6618a438/ink-masks.zip": "49232ff36fe4e5d9d8e7f071047fe7c38973ba20184ccdba554d6bce41aee5c4",
+    "verified-source-evidence/35946f62004e773b9e0a9bd1f9cc1931d0a4e14621f7f41e32959f8f6618a438/ownership.json": "6a9fb2e4dbb37a3d5022b04ad30a85fb941e8f82ad90d41ced489ac0183344f2",
+    "verified-source-evidence/35946f62004e773b9e0a9bd1f9cc1931d0a4e14621f7f41e32959f8f6618a438/recognition.omr": "8473925b99a3ec0b28207b84ce2840c645c34c6d5799cb79c2654b689d15e28a",
+    "verified-source-evidence/35946f62004e773b9e0a9bd1f9cc1931d0a4e14621f7f41e32959f8f6618a438/source.png": "ddffa4e5ace9af1660c10ea03d05886231d2a75ac3625776993e2726024b921b",
+    "verified-source-evidence/7f676117a8584dabaaf781bd3d5930036d1cca7b2f695ac669b408a994eb6201/coordinates.json": "f4523b77e576ec706c510e9aadabbb90f8d41bfcc0bf65dcd2cb795ae9e2be39",
+    "verified-source-evidence/7f676117a8584dabaaf781bd3d5930036d1cca7b2f695ac669b408a994eb6201/ink-masks.zip": "797f3b42569d42847b3030e5186d64a9fe5cc9ef536cf3986a17035c5a08d187",
+    "verified-source-evidence/7f676117a8584dabaaf781bd3d5930036d1cca7b2f695ac669b408a994eb6201/ownership.json": "e82bcba1203b3b29892192fdb394c63e7c2e8dcc94688f5edca58a666a17ebef",
+    "verified-source-evidence/7f676117a8584dabaaf781bd3d5930036d1cca7b2f695ac669b408a994eb6201/recognition.omr": "4b592d04703ccf518e2f2d09dd716247313734be788b5a088e0b96e8eec2fd27",
+    "verified-source-evidence/7f676117a8584dabaaf781bd3d5930036d1cca7b2f695ac669b408a994eb6201/source.png": "e1610ea039bb06cb5493a3dbeb089c52ee1f097c4f07575b96f392349417bb85",
+    "verified-source-evidence/e41b07d1d4de92631dd3eb62275222066266e31851849699abf9bae27dc4662a/coordinates.json": "d5f54dc56b9660c5f16d613997b28c8e9fd32b2582d1a4ac0d1c264bf729dd0b",
+    "verified-source-evidence/e41b07d1d4de92631dd3eb62275222066266e31851849699abf9bae27dc4662a/ink-masks.zip": "8c451f561bdbb3e3376f30658bdef9a879b29ba4e47ade380171d727a80706b7",
+    "verified-source-evidence/e41b07d1d4de92631dd3eb62275222066266e31851849699abf9bae27dc4662a/ownership.json": "da0f512e9ea62a55851bd5912c439219398d54ca16eb8937b4c0d3be18ef6ec0",
+    "verified-source-evidence/e41b07d1d4de92631dd3eb62275222066266e31851849699abf9bae27dc4662a/recognition.omr": "dcebe6aba5ef79a5a03b71a45f4b4ca8393b94d81fef0e033de7f96f0e36769f",
+    "verified-source-evidence/e41b07d1d4de92631dd3eb62275222066266e31851849699abf9bae27dc4662a/source.png": "07e06ebe15a20aee4a3280baa69d4a855fc4599798ae2ea0631ccdd85694c60f",
+    "verified-source-evidence/e9f095f0a46dafebbde44786ea43123b211808765decdd971a40a832630c3c3c/coordinates.json": "01a03d53e8b29e210f51a9a9c7fedf2904cc3e634416e1bd93702af3f5888390",
+    "verified-source-evidence/e9f095f0a46dafebbde44786ea43123b211808765decdd971a40a832630c3c3c/ink-masks.zip": "6fad140a9a856db8d7e3427aef87342f35b9d82b4179c4f45cf442ccd9f8e0a7",
+    "verified-source-evidence/e9f095f0a46dafebbde44786ea43123b211808765decdd971a40a832630c3c3c/ownership.json": "2716ba4647025ceb39d2104337e58a259bbedd6a016f3ee69edb0b2bd045df38",
+    "verified-source-evidence/e9f095f0a46dafebbde44786ea43123b211808765decdd971a40a832630c3c3c/recognition.omr": "8d95bb65ccf07296531812aa0c974aa202e13d741eb4c6b5bb6b61e053181bf7",
+    "verified-source-evidence/e9f095f0a46dafebbde44786ea43123b211808765decdd971a40a832630c3c3c/source.png": "9041eb7ada48dff49e1093afd28e869f87ea851a668060bfd8ceccc06d4ccb4c",
+    "source-review/admission.json": "c8bda1a3bcd5bfcacc069d4f8833a19b52b3c12a09c102f73f8574e4f3b2e4c3",
+    "source-review/checks-1.json": "5489266eeab7093495c4edbe727eec56db7e11c593dba3d7346c9450862351ed",
+    "source-review/checks-2.json": "a8424e787932f53cd3612593cdeb8f4dfcde77f9a0367a3a764a46f2d09dae81",
+    "source-review/checks-3.json": "070fd24738284cf39851e77483d79821e1fb20b99f670b3f35b119afb0e7d2a4",
+    "source-review/checks-4.json": "530164774b84f974fdc0a653b1d991b061c19628e858a5b036389e5ffb048699",
+    "source-review/checks-5.json": "67b717e53a0acf391de7b2ea67a5c8f33ce9a5846c2c0e85e1d47b0f4c65fad6",
+    "source-review/comparison-1.json": "509d21be583d3bed07e43a2aca32d78c231ae26a14f87de76655d01435e77662",
+    "source-review/comparison-2.json": "5354a1e07638308c23c5fcfb07ed55fbc5c14615c0002932b34000e739200ce7",
+    "source-review/comparison-3.json": "169e989ac7a37a7fa843f9fe7edf26680bb4fd4ba474544caf8eb3eebddd8a13",
+    "source-review/comparison-4.json": "0a88cb860a391af258a4373c56bd7c0942d5e72727f301fdba1be704e7ed8f5d",
+    "source-review/comparison-5.json": "6db2df67a6e97f8aff5c750170c4611597c8d6af5d6a0b7a5970a914a296fa74",
+    "source-review/comparisons.json": "031627a68bd50007c4329479c65baecfe84a42c2c3d16e184368b430b580c59f",
+    "source-review/review-1.txt": "ee824bb1245cfca782db639e7d19c073ff13c83f8ad21c2dfa30d4ffa860d60b",
+    "source-review/review-2.txt": "9c31edb0381699f9875fece3bcc423d5097343dd889221e5ccf1d7ac0a4d32a0",
+    "source-review/review-3.txt": "dc4d07593bff4e5804c66959503dc24c06af091415b489979951a57c6666ca3a",
+    "source-review/review-4.txt": "867121bffbec122213179ad5526514abdef1872ce02ce70efceeb11733a88604",
+    "source-review/review-5.txt": "7dff81c82021351a2b03463262e7ba4ff01bff9cb0a1d5106198899f0b06a008",
+    "source-review/second-read.txt": "14032d6a1a6d4c5a01ffe662d0dd4de5baea70072c8912acbd28ea046821f391",
+    "source-review/source-1.png": "07e06ebe15a20aee4a3280baa69d4a855fc4599798ae2ea0631ccdd85694c60f",
+    "source-review/source-2.png": "ddffa4e5ace9af1660c10ea03d05886231d2a75ac3625776993e2726024b921b",
+    "source-review/source-3.png": "e1610ea039bb06cb5493a3dbeb089c52ee1f097c4f07575b96f392349417bb85",
+    "source-review/source-4.png": "0fb0e6f4562e61e989af4f77585adf45f29d2a9dbf1fa8bc46a4a5841662802f",
+    "source-review/source-5.png": "9041eb7ada48dff49e1093afd28e869f87ea851a668060bfd8ceccc06d4ccb4c",
+    "run_final_eval.py": "571a9ccd98741aeb559ebb4855d4c8adffd6108736d235ce723f830198a83d0c",
+    "http-code-hashes.json": "3c6f7f54efc7931084c7da6f7cbc02956278fd18e8877f33d451406df7a4f649",
+    "verified-http.log": "3ff01f0bba3826de7871364cc95d69396bf9e6df8b80002074b02b0f1c278650",
+    "final-full-pytest.log": "7e3dbbdd2b2df7f745efa0607c9d9b6b2886844da85dfbd79222ca9c2332c8a8",
+    "resumed-pytest.log": "6b3185b5b34d4afaaf00bd8001120e260a3306cd8a801f4d4e5a894947f1439b",
+    "code-review.txt": "8d7d8f3b0186942ac6ec7ba8686e89e547cec864e68b666bd1c74f7b7dd798f3",
+    "report-review.txt": "94200cf1344d33b05e66897ceb4dcc2f8b24872f5f8a24898fdc3f51166f352b"
+  }
+}

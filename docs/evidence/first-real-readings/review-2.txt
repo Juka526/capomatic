@@ -1,0 +1,45 @@
+FROZEN INDEPENDENT SOURCE-ONLY READING: source-2.png
+Title: 자유. Treble, key signature one flat (Bb), 4/4. Entire page, measures 1-33 covered. Source pixels only, no OCR or implementation outputs read. Durations in quarter-note units. R=rest; ~=visible same-pitch tie; trailing ~ ties across barline. x4 means four separate repeated notes; only fourth ties onward. All full-bar duration totals checked to equal 4.
+1 C4(.5) C4(.25) C4(.25)~C4(.5) A4(.25) A4(.25)~A4(.5) G4(.25) G4(.25)~G4(1)
+2 F4(.25)x4~F4(.5) A4(.25) A4(.25)~A4(.25) E4(.75) R(1)
+3 D4(.25)x4~D4(.5) F4(.25) F4(.25)~F4(.5) C4(.25) C4(.25)~C4(1)
+4 D4(.25)x4~D4(.5) A4(.25) A4(.25)~A4(.25) G4(.75) R(1)
+5 F4(.5) F4(.25) F4(.25)~F4(.5) A4(.25) A4(.25)~A4(.5) E4(.25) E4(.25)~E4(.5) R(.5)
+6 D4(.5) D4(.25) D4(.25)~D4(.5) C5(.25) C5(.25)~C5(.5) Bb4(.25) A4(.25)~A4(.5) A4(.25) A4(.25)~
+7 A4(.25) Bb4(.25) G4(.5)~G4(1) R(1) D4(.25) E4(.25) F4(.25) A4(.25)~
+8 A4(.5) G4(.5) Bb4(.5) Bb4(.5)~Bb4(1) R(1)
+9 C4(1) C5(1) C5(.5) Bb4(.5) A4(.5) A4(.5)~
+10 A4(.25) Bb4(.25) G4(.5) R(.75) F4(.25) F4(.5) G4(.25) G4(.25)~G4(.5) R(.5)
+11 =9
+12 =10
+13 F4(.25)x4~F4(.5) A4(.25) A4(.25)~A4(.5) E4(.25) E4(.25)~E4(.5) R(.5)
+14 D4(.25)x4~D4(.5) C5(.25) C5(.25)~C5(.5) Bb4(.25) A4(.25)~A4(.5) A4(.25) A4(.25)~
+15 A4(.25) Bb4(.25) G4(.5)~G4(2) R(1)
+16 R(1.5) C4(.5) A4(.5) Bb4(.5) E4(.5) F4(.5)~
+17 F4(1) R(.5) C5(.5) C5(.5) Bb4(.5) A4(.5) G4(.5)~
+18 G4(.5) A4(.5) Bb4(.5) A4(.5)~A4(1) R(1). Slur first through fourth note additionally.
+19 R(1.5) C5(.5) C5(.5) Bb4(.5) A4(.5) G4(.5)~
+20 G4(1.5) C4(.5) A4(.5) Bb4(.5) E4(.5) F4(.5)~
+21 =17
+22 =18 (including slur)
+23 =19
+24 G4(2) R(2)
+25 C4(.25)x4~C4(.5) A4(.25) A4(.25)~A4(.5) G4(.25) G4(.25)~G4(1)
+26 F4(.25)x4~F4(.5) A4(.25) A4(.25)~A4(.25) E4(.25) E4(.5) R(1)
+27 D4(.25)x4~D4(.5) D4(.25) E5(.25) D5(.5) F4(.25) F4(.25)~F4(1)
+28 D4(.5) D4(.25) D4(.25)~D4(.25) D4(.25) F4(.25) A4(.25)~A4(.25) G4(.75) R(1)
+29 F4(.25)x4~F4(.5) A4(.25) A4(.25)~A4(.25) E4(.75)~E4(.5) R(.5)
+30 D4(.5) D4(.25) D4(.25)~D4(.5) C5(.25) C5(.25)~C5(.5) Bb4(.25) A4(.25)~A4(.5) A4(.5)~
+31 A4(.25) Bb4(.25) G4(.5)~G4(2) R(1)
+32 R(.75) D4(.25) D4(.25) E4(.25) F4(.5) A4(.5) Bb4(.5) E4(.5) F4(.5)~
+33 F4(2) R(2)
+Harmony ordered by measure:
+1 F,C/E; 2 Bb/D,Am/C; 3 BbM7,F/A; 4 G/B,A7/C#;
+5 Dm7,Am/C; 6 BbM7,F/A,Ab6; 7 Gm7; 8 C7sus4,Bb/D,C/E;
+9 F,F/A; 10 BbM7,C7sus4,C/E; 11 F,F/A; 12 BbM7,A7/C#;
+13 Dm7,Am/C; 14 Bbadd9,F/A,Ab6; 15 Gm7; 16 C7sus4,C/Bb;
+17 F/A,BbM9; 18 A7/C#,Dm7; 19 F/A,BbM9; 20 C7,C/Bb;
+21 F/A,BbM9; 22 A7/C#,Dm7; 23 F/A,BbM9; 24 C7sus4;
+25 F,C/E; 26 Bb/D,Am/C; 27 BbM7,F/A; 28 G/B,A7/C#;
+29 Dm7,Am/C; 30 BbM7,F/A,Ab6; 31 Gm7; 32 C7sus4; 33 no new symbol.
+UNCERTAINTIES/LIMITS: Chord order and measure identity transcribed, exact chord beat timing NOT exhaustively determined and must not be inferred from this record. Short adjacent same-pitch curves interpreted as ties; longer m18/m22 curves as slurs. No unresolved pitch/rest-duration ambiguity identified during source-only reading, but independent human verification was not performed. Lyrics, engraving geometry, fingering and expressive text are outside coverage. Repeated-bar references repeat pitches/durations, while cross-bar ties follow the explicit preceding/following notation.
